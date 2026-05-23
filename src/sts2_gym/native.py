@@ -40,6 +40,30 @@ _lib.Sts2_Create.argtypes       = [ctypes.c_int]
 _lib.Sts2_Reset.restype         = None
 _lib.Sts2_Reset.argtypes        = [ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
 
+_lib.Sts2_ResetEncounter.restype  = None
+_lib.Sts2_ResetEncounter.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+]
+
+_lib.Sts2_ResetWithDeck.restype  = None
+_lib.Sts2_ResetWithDeck.argtypes = [
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+]
+
+_lib.Sts2_ResetWithDeckAndEncounter.restype  = None
+_lib.Sts2_ResetWithDeckAndEncounter.argtypes = [
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+]
+
 _lib.Sts2_Step.restype          = ctypes.c_int
 _lib.Sts2_Step.argtypes         = [
     ctypes.c_int,
@@ -47,6 +71,12 @@ _lib.Sts2_Step.argtypes         = [
     ctypes.POINTER(ctypes.c_int),
     ctypes.POINTER(ctypes.c_float),
 ]
+
+_lib.Sts2_PlayerWon.restype     = ctypes.c_int
+_lib.Sts2_PlayerWon.argtypes    = [ctypes.c_int]
+
+_lib.Sts2_EncounterId.restype    = ctypes.c_int
+_lib.Sts2_EncounterId.argtypes   = [ctypes.c_int]
 
 _lib.Sts2_ActionCount.restype   = ctypes.c_int
 _lib.Sts2_ActionCount.argtypes  = [ctypes.c_int]
@@ -70,6 +100,27 @@ def reset(handle: int, obs_buf: ctypes.Array) -> None:
     _lib.Sts2_Reset(handle, obs_buf)
 
 
+def reset_encounter(handle: int, encounter_id: int, obs_buf: ctypes.Array) -> None:
+    _lib.Sts2_ResetEncounter(handle, encounter_id, obs_buf)
+
+
+def reset_with_deck(handle: int, deck_ids: list[int], obs_buf: ctypes.Array) -> None:
+    deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
+    _lib.Sts2_ResetWithDeck(handle, deck_buf, len(deck_ids), obs_buf)
+
+
+def reset_with_deck_and_encounter(
+    handle: int,
+    deck_ids: list[int],
+    encounter_id: int,
+    obs_buf: ctypes.Array,
+) -> None:
+    deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
+    _lib.Sts2_ResetWithDeckAndEncounter(
+        handle, deck_buf, len(deck_ids), encounter_id, obs_buf
+    )
+
+
 def step(
     handle: int,
     action: int,
@@ -84,6 +135,14 @@ def valid_actions(handle: int, max_actions: int) -> ctypes.Array:
     buf = (ctypes.c_int * max_actions)()
     _lib.Sts2_ValidActions(handle, buf, max_actions)
     return buf
+
+
+def player_won(handle: int) -> bool:
+    return bool(_lib.Sts2_PlayerWon(handle))
+
+
+def encounter_id(handle: int) -> int:
+    return int(_lib.Sts2_EncounterId(handle))
 
 
 def destroy(handle: int) -> None:

@@ -27,7 +27,8 @@ public static class CombatEngine
         var def = GeneratedData.Cards.Get(card.DefId);
 
         int effectiveCost = EffectiveCost(def, state);
-        if (effectiveCost > state.Energy)
+        int energyToSpend = Math.Max(0, effectiveCost);
+        if (def.Unplayable || energyToSpend > state.Energy)
             return StepResult.Invalid;
 
         // Snapshot HP before effects.
@@ -36,7 +37,7 @@ public static class CombatEngine
         for (int i = 0; i < state.Enemies.Count; i++)
             enemyHpsBefore[i] = state.Enemies[i].Hp;
 
-        state.Energy -= effectiveCost;
+        state.Energy -= energyToSpend;
         state.Hand.RemoveAt(handIndex);
 
         Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
@@ -82,8 +83,14 @@ public static class CombatEngine
         // Rage expires at end of player turn.
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Rage);
 
-        // Move hand to discard.
-        state.DiscardPile.AddRange(state.Hand);
+        // Move hand to discard, exhausting ethereal cards.
+        foreach (var card in state.Hand)
+        {
+            if (GeneratedData.Cards.Get(card.DefId).Ethereal)
+                Effects.CardEffects.ExhaustCard(state, card);
+            else
+                state.DiscardPile.Add(card);
+        }
         state.Hand.Clear();
 
         // Tick enemy debuffs before enemies act (Vulnerable/Weak on enemies tick down).
@@ -180,7 +187,9 @@ public static class CombatEngine
         for (int i = 0; i < state.Hand.Count; i++)
         {
             var def = GeneratedData.Cards.Get(state.Hand[i].DefId);
-            if (EffectiveCost(def, state) <= state.Energy)
+            int effectiveCost = EffectiveCost(def, state);
+            int energyToSpend = Math.Max(0, effectiveCost);
+            if (!def.Unplayable && energyToSpend <= state.Energy)
                 actions.Add(i);
         }
 

@@ -31,6 +31,29 @@ directly in-process, the same way it would call a C library.
 
 ---
 
+## Current Status
+
+The repository currently has a working NativeAOT C# combat emulator, Python `ctypes` bindings,
+`Sts2CombatEnv` for single-combat RL, and an experimental `Sts2RunEnv` wrapper for deterministic
+card rewards and map encounter choices between combats. The modeled combat scope includes
+highest-difficulty Ironclad starts, random Act 1 selection between Overgrowth and Underdocks,
+act-specific first-three weak encounter pools, explicit unplayable/ethereal/exhaust card behavior,
+status-card mechanics, enemy powers, deterministic seeded resets, reward shaping,
+trace/evaluation scripts, and regression coverage in C# and Python. `scripts/evaluate.py` supports
+forced encounters and per-encounter metrics; normal encounters like Chompers remain available for
+forced evaluation but are no longer sampled as opening fights.
+
+## Remaining Next Steps
+
+1. Validate emulator-vs-real-game traces with STS2MCP for fixed seeds and fixed action sequences.
+2. Fill out missing mechanics for currently simplified weak encounters, especially Shrinker
+   Beetle's Shrink and Toadpole's Thorns.
+3. Add rest-site, shop, relic, elite, boss, and richer map node layers for full-run training.
+4. Run longer MaskablePPO training experiments and use forced/per-encounter `scripts/evaluate.py`
+   metrics to guide combat tuning.
+
+---
+
 ## Project Structure
 
 ```txt

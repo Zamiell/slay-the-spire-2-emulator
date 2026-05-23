@@ -19,7 +19,12 @@
     <LinkerArg Include="/EXPORT:Sts2_ObsSize=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ObsSize" />
     <LinkerArg Include="/EXPORT:Sts2_Create=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Create" />
     <LinkerArg Include="/EXPORT:Sts2_Reset=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Reset" />
+    <LinkerArg Include="/EXPORT:Sts2_ResetEncounter=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetEncounter" />
+    <LinkerArg Include="/EXPORT:Sts2_ResetWithDeck=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetWithDeck" />
+    <LinkerArg Include="/EXPORT:Sts2_ResetWithDeckAndEncounter=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetWithDeckAndEncounter" />
     <LinkerArg Include="/EXPORT:Sts2_Step=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Step" />
+    <LinkerArg Include="/EXPORT:Sts2_PlayerWon=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_PlayerWon" />
+    <LinkerArg Include="/EXPORT:Sts2_EncounterId=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_EncounterId" />
     <LinkerArg Include="/EXPORT:Sts2_ActionCount=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ActionCount" />
     <LinkerArg Include="/EXPORT:Sts2_ValidActions=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ValidActions" />
     <LinkerArg Include="/EXPORT:Sts2_Destroy=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Destroy" />

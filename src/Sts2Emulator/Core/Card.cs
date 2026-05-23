@@ -12,7 +12,8 @@ public readonly record struct CardDef(
     int UpgradeBlock,
     CardType Type,
     bool Ethereal = false,
-    bool Exhaust = false
+    bool Exhaust = false,
+    bool Unplayable = false
 );
 
 public readonly record struct CardInstance(int DefId, bool Upgraded);

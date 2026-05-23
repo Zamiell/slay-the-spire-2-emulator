@@ -5,6 +5,21 @@ public static class BuffSystem
     public static void Apply(List<BuffState> buffs, BuffId id, int magnitude)
     {
         if (magnitude == 0) return;
+
+        if (magnitude > 0 && IsDebuff(id))
+        {
+            int artifact = Get(buffs, BuffId.Artifact);
+            if (artifact > 0)
+            {
+                int artifactIdx = buffs.FindIndex(b => b.Id == BuffId.Artifact);
+                if (artifact == 1)
+                    buffs.RemoveAt(artifactIdx);
+                else
+                    buffs[artifactIdx] = buffs[artifactIdx] with { Magnitude = artifact - 1 };
+                return;
+            }
+        }
+
         int idx = buffs.FindIndex(b => b.Id == id);
         if (idx >= 0)
             buffs[idx] = buffs[idx] with { Magnitude = buffs[idx].Magnitude + magnitude };
@@ -56,4 +71,12 @@ public static class BuffSystem
         if (Get(buffs, BuffId.Frail) > 0) block *= 0.75f;
         return Math.Max(0, (int)block);
     }
+
+    private static bool IsDebuff(BuffId id) =>
+        id is BuffId.Vulnerable
+            or BuffId.Weak
+            or BuffId.Frail
+            or BuffId.Poison
+            or BuffId.Burn
+            or BuffId.Shrink;
 }

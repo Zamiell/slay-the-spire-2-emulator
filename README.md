@@ -8,7 +8,7 @@ This repository contains a high-performance emulator for a subset of Slay the Sp
 - `src\Sts2Emulator\Core`: combat state, turn flow, card effects, buffs, enemy AI, potions, relic data types, and reward calculation.
 - `src\Sts2Emulator\Generated`: generated card, enemy, potion, power, and relic definitions.
 - `src\Sts2Emulator\Interop`: native exports used by Python.
-- `src\sts2_gym`: Python `ctypes` bindings and a Gymnasium-compatible environment.
+- `src\sts2_gym`: Python `ctypes` bindings, the single-combat Gymnasium environment, and an experimental run wrapper.
 - `scripts`: build, data extraction, patch update, and MaskablePPO training scripts.
 - `src\Sts2Emulator.Tests`: xUnit tests for combat behavior.
 
@@ -36,15 +36,20 @@ The Python environment calls the native library in-process, avoiding sockets or 
 
 The current combat factory starts an Ironclad-style combat with:
 
-- 80 player HP and 3 energy.
-- A starter deck of 5 Strikes and 4 Defends.
-- A single Calcified Cultist encounter.
+- 64/80 player HP and 3 energy, matching the highest difficulty starting HP.
+- A starter deck of 5 Strikes, 4 Defends, 1 Bash, and 1 unplayable, ethereal Ascender's Bane.
+- Seeded Act 1 selection between Overgrowth and Underdocks.
+- First-combat sampling from the act-specific weak encounter pools: Overgrowth uses Nibbit, Slimes, Shrinker Beetle, or Fuzzy Wurm Crawler; Underdocks uses Corpse Slugs, Seapunk, Sludge Spinner, or Toadpoles.
+- Forced evaluation support for modeled normal encounters such as Cultists, Chompers, Inklets, Two-Tailed Rats, and Gremlin Merc.
 - A fixed-size integer observation vector.
 - Maskable discrete actions for playable cards, end turn, and potions.
+- Seeded per-instance RNG for deterministic resets and rollouts.
 - Dense reward shaping based on enemy HP damage, player HP loss, and terminal win/loss bonus.
 - A default 50-step Gymnasium truncation cap.
+- Encounter identity in Python `info`, allowing evaluation by encounter type.
+- An experimental `Sts2RunEnv` wrapper that adds deterministic card reward choices, act-specific first-three weak combats, map encounter choices after the opening fights, and run deck tracking.
 
-This is not yet a full game emulator. Run progression, map navigation, rewards, shops, rests, and broad encounter coverage are still future work.
+This is not yet a full game emulator. Shops, rests, relics, elites, bosses, and richer map node types are still future work.
 
 ## Requirements
 
@@ -94,6 +99,24 @@ Run a short training job:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\train.py --timesteps 5000 --n-envs 2
+```
+
+Evaluate a simple baseline policy over fixed seeds, including per-encounter win rates:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\evaluate.py --episodes 100 --policy first-valid
+```
+
+Force a specific encounter and use the starter-deck-aware baseline:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\evaluate.py --episodes 100 --policy starter-aggressive --encounter chompers
+```
+
+Emit a deterministic emulator trace for comparison against real-game traces:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\trace.py --seed 0 --actions 0 1 2
 ```
 
 ## Training

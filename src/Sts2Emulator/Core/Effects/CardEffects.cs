@@ -6,6 +6,10 @@ public static class CardEffects
     {
         switch (def.Id)
         {
+            case ST.Slimed:
+                DrawCards(state, 1, rng);
+                break;
+
             // ── Ironclad Attacks ─────────────────────────────────────────────────
 
             case IC.Anger: // 0-cost, 6/8 dmg + add copy to discard
@@ -316,6 +320,9 @@ public static class CardEffects
     private static void DealDamageToEnemy(CombatState state, EnemyState target, int amount)
     {
         int damage = BuffSystem.IncomingDamage(amount, state.PlayerBuffs, target.Buffs);
+        int cap = BuffSystem.Get(target.Buffs, BuffId.HardToKill);
+        if (cap > 0)
+            damage = Math.Min(damage, cap);
         int absorbed = Math.Min(target.Block, damage);
         target.Block -= absorbed;
         target.Hp = Math.Max(0, target.Hp - (damage - absorbed));
@@ -398,6 +405,7 @@ public static class CardEffects
 public static class IC
 {
     // Basic
+    public const int AscendersBane = 10001;
     public const int StrikeIronclad = 472;
     public const int DefendIronclad = 131;
 
@@ -473,4 +481,10 @@ public static class IC
     public const int Inflame     = 265;
     public const int Juggernaut  = 272;
     public const int Rupture     = 404;
+}
+
+public static class ST
+{
+    public const int Dazed = 10002;
+    public const int Slimed = 440;
 }

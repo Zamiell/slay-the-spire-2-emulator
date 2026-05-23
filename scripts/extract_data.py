@@ -18,7 +18,7 @@ RELICS_DIR  = DECOMPILED / "MegaCrit.Sts2.Core.Models.Relics"
 # ── patterns ──────────────────────────────────────────────────────────────────
 
 # Constructor: base(cost, CardType.Attack, ...)
-CARD_CTOR  = re.compile(r"base\((\d+),\s*CardType\.(\w+)")
+CARD_CTOR  = re.compile(r"base\((-?\d+),\s*CardType\.(\w+)")
 # DamageVar(6m, ...) or DamageVar(6, ...)
 DAMAGE_VAR = re.compile(r"new DamageVar\((\d+(?:\.\d+)?)m?,")
 # BlockVar(5m, ...)
@@ -54,6 +54,11 @@ def decimal_to_int(s: str) -> int:
 
 # ── card extraction ───────────────────────────────────────────────────────────
 
+SPECIAL_CARD_IDS = {
+    "AscendersBane": 10001,
+    "Dazed": 10002,
+}
+
 def extract_cards() -> str:
     entries: list[str] = []
     card_id = 1
@@ -73,6 +78,8 @@ def extract_cards() -> str:
 
         cost        = int(ctor.group(1))
         card_type   = ctor.group(2)   # Attack / Skill / Power / Status / Curse
+        if cost < 0 and name not in SPECIAL_CARD_IDS:
+            continue
 
         dmg_m  = DAMAGE_VAR.search(text)
         blk_m  = BLOCK_VAR.search(text)
@@ -84,13 +91,24 @@ def extract_cards() -> str:
         upg_dmg   = decimal_to_int(upg_dmg_m.group(1))   if upg_dmg_m   else 0
         upg_block = decimal_to_int(upg_blk_m.group(1))   if upg_blk_m   else 0
 
+        def_id = SPECIAL_CARD_IDS.get(name, card_id)
+        flags = []
+        if "CardKeyword.Ethereal" in text:
+            flags.append("Ethereal: true")
+        if "CardKeyword.Exhaust" in text:
+            flags.append("Exhaust: true")
+        if "CardKeyword.Unplayable" in text:
+            flags.append("Unplayable: true")
+        flags_cs = f", {', '.join(flags)}" if flags else ""
+
         entries.append(
-            f"        new CardDef(Id: {card_id}, Name: \"{name}\", "
+            f"        new CardDef(Id: {def_id}, Name: \"{name}\", "
             f"Cost: {cost}, BaseDamage: {base_dmg}, BaseBlock: {base_block}, "
             f"UpgradeDamage: {upg_dmg}, UpgradeBlock: {upg_block}, "
-            f"Type: CardType.{card_type}),"
+            f"Type: CardType.{card_type}{flags_cs}),"
         )
-        card_id += 1
+        if name not in SPECIAL_CARD_IDS:
+            card_id += 1
 
     if not entries:
         entries = ["        // No cards extracted — check CARDS_DIR path."]
@@ -107,12 +125,12 @@ internal static class Cards
     ];
 
     public static CardDef Get(int id) =>
-        Array.Find(_all, c => c.Id == id) is {{ Id: > 0 }} def
+        Array.Find(_all, c => c.Id == id) is {{ Id: not 0 }} def
             ? def
             : throw new ArgumentException($"Unknown card id {{id}}");
 
     public static int? FindId(string name) =>
-        Array.Find(_all, c => c.Name == name) is {{ Id: > 0 }} def
+        Array.Find(_all, c => c.Name == name) is {{ Id: not 0 }} def
             ? def.Id
             : null;
 }}

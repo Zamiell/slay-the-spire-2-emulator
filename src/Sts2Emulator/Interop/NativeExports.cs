@@ -29,8 +29,51 @@ public static class NativeExports
     public const int MAX_ENEMIES = 3;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
+    private static ReadOnlySpan<int> StarterDeckIds =>
+    [
+        472, 472, 472, 472, 472,
+        131, 131, 131, 131,
+        30,
+        10001,
+    ];
 
-    private static readonly CombatState?[] _pool = new CombatState?[256];
+    private sealed class NativeCombat
+    {
+        public readonly int Seed;
+        public readonly CombatState State = new();
+        public Random Rng { get; private set; }
+        public bool LastPlayerWon { get; set; }
+
+        public NativeCombat(int seed)
+        {
+            Seed = seed;
+            Rng = new Random(seed);
+            CombatFactory.Reset(State, Rng);
+        }
+
+        public void Reset()
+        {
+            Rng = new Random(Seed);
+            LastPlayerWon = false;
+            CombatFactory.Reset(State, Rng);
+        }
+
+        public void Reset(ReadOnlySpan<int> deckIds)
+        {
+            Rng = new Random(Seed);
+            LastPlayerWon = false;
+            CombatFactory.Reset(State, Rng, deckIds);
+        }
+
+        public void Reset(ReadOnlySpan<int> deckIds, int encounterId)
+        {
+            Rng = new Random(Seed);
+            LastPlayerWon = false;
+            CombatFactory.Reset(State, Rng, deckIds, encounterId);
+        }
+    }
+
+    private static readonly NativeCombat?[] _pool = new NativeCombat?[256];
 
     [UnmanagedCallersOnly]
     public static int Sts2_ObsSize() => OBS_SIZE;
@@ -38,12 +81,12 @@ public static class NativeExports
     [UnmanagedCallersOnly]
     public static int Sts2_Create(int seed)
     {
-        var state = CombatFactory.NewCombat(seed);
+        var combat = new NativeCombat(seed);
         for (int i = 0; i < _pool.Length; i++)
         {
             if (_pool[i] is null)
             {
-                _pool[i] = state;
+                _pool[i] = combat;
                 return i;
             }
         }
@@ -53,32 +96,69 @@ public static class NativeExports
     [UnmanagedCallersOnly]
     public static unsafe void Sts2_Reset(int handle, int* obsBuf)
     {
-        var state = _pool[handle]!;
-        CombatFactory.Reset(state);
-        WriteObs(state, obsBuf);
+        var combat = _pool[handle]!;
+        combat.Reset();
+        WriteObs(combat.State, obsBuf);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe void Sts2_ResetEncounter(int handle, int encounterId, int* obsBuf)
+    {
+        var combat = _pool[handle]!;
+        combat.Reset(StarterDeckIds, encounterId);
+        WriteObs(combat.State, obsBuf);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe void Sts2_ResetWithDeck(int handle, int* deckIds, int deckLen, int* obsBuf)
+    {
+        var combat = _pool[handle]!;
+        combat.Reset(new ReadOnlySpan<int>(deckIds, deckLen));
+        WriteObs(combat.State, obsBuf);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe void Sts2_ResetWithDeckAndEncounter(
+        int handle, int* deckIds, int deckLen, int encounterId, int* obsBuf)
+    {
+        var combat = _pool[handle]!;
+        combat.Reset(new ReadOnlySpan<int>(deckIds, deckLen), encounterId);
+        WriteObs(combat.State, obsBuf);
     }
 
     [UnmanagedCallersOnly]
     public static unsafe int Sts2_Step(int handle, int action, int* obsBuf, float* rewardOut)
     {
-        var state = _pool[handle]!;
-        var rng = new Random(); // seeded per-instance — replace with stored rng
-        var result = CombatEngine.Step(state, action, rng);
-        WriteObs(state, obsBuf);
+        var combat = _pool[handle]!;
+        var result = CombatEngine.Step(combat.State, action, combat.Rng);
+        combat.LastPlayerWon = result.Terminal && result.PlayerWon;
+        WriteObs(combat.State, obsBuf);
         *rewardOut = result.Reward;
         return result.Terminal ? 1 : 0;
     }
 
     [UnmanagedCallersOnly]
+    public static int Sts2_PlayerWon(int handle)
+    {
+        return _pool[handle]!.LastPlayerWon ? 1 : 0;
+    }
+
+    [UnmanagedCallersOnly]
+    public static int Sts2_EncounterId(int handle)
+    {
+        return _pool[handle]!.State.EncounterId;
+    }
+
+    [UnmanagedCallersOnly]
     public static int Sts2_ActionCount(int handle)
     {
-        return CombatEngine.ValidActions(_pool[handle]!).Length;
+        return CombatEngine.ValidActions(_pool[handle]!.State).Length;
     }
 
     [UnmanagedCallersOnly]
     public static unsafe void Sts2_ValidActions(int handle, int* maskBuf, int maxActions)
     {
-        var valid = CombatEngine.ValidActions(_pool[handle]!);
+        var valid = CombatEngine.ValidActions(_pool[handle]!.State);
         for (int i = 0; i < maxActions; i++)
             maskBuf[i] = 0;
         foreach (int a in valid)

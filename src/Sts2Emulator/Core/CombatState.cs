@@ -23,6 +23,7 @@ public sealed class CombatState
 
     // Enemies
     public List<EnemyState> Enemies = [];
+    public int EncounterId;
 
     // Turn tracking
     public int Turn;
