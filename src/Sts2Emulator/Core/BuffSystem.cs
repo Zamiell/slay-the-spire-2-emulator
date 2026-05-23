@@ -48,6 +48,7 @@ public static class BuffSystem
                 case BuffId.Vulnerable:
                 case BuffId.Weak:
                 case BuffId.Frail:
+                case BuffId.Shrink:
                     buffs[i] = b with { Magnitude = b.Magnitude - 1 };
                     if (buffs[i].Magnitude <= 0) buffs.RemoveAt(i);
                     break;
@@ -60,6 +61,7 @@ public static class BuffSystem
         float dmg = baseDamage;
         dmg += Get(attackerBuffs, BuffId.Strength);
         if (Get(attackerBuffs, BuffId.Weak) > 0) dmg *= 0.75f;
+        if (Get(attackerBuffs, BuffId.Shrink) > 0) dmg *= 0.70f;
         if (Get(defenderBuffs, BuffId.Vulnerable) > 0) dmg *= 1.5f;
         return Math.Max(0, (int)dmg);
     }
@@ -78,5 +80,8 @@ public static class BuffSystem
             or BuffId.Frail
             or BuffId.Poison
             or BuffId.Burn
-            or BuffId.Shrink;
+            or BuffId.Shrink
+            or BuffId.Tangled
+            or BuffId.Constrict
+            or BuffId.Smoggy;
 }

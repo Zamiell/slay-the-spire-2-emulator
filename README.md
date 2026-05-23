@@ -40,7 +40,7 @@ The current combat factory starts an Ironclad-style combat with:
 - A starter deck of 5 Strikes, 4 Defends, 1 Bash, and 1 unplayable, ethereal Ascender's Bane.
 - Seeded Act 1 selection between Overgrowth and Underdocks.
 - First-combat sampling from the act-specific weak encounter pools: Overgrowth uses Nibbit, Slimes, Shrinker Beetle, or Fuzzy Wurm Crawler; Underdocks uses Corpse Slugs, Seapunk, Sludge Spinner, or Toadpoles.
-- Forced evaluation support for modeled normal encounters such as Cultists, Chompers, Inklets, Two-Tailed Rats, and Gremlin Merc.
+- Forced evaluation support for modeled normal encounters, including Chompers plus the Act 1 Overgrowth and Underdocks normal pools.
 - A fixed-size integer observation vector.
 - Maskable discrete actions for playable cards, end turn, and potions.
 - Seeded per-instance RNG for deterministic resets and rollouts.
@@ -48,6 +48,7 @@ The current combat factory starts an Ironclad-style combat with:
 - A default 50-step Gymnasium truncation cap.
 - Encounter identity in Python `info`, allowing evaluation by encounter type.
 - An experimental `Sts2RunEnv` wrapper that adds deterministic card reward choices, act-specific first-three weak combats, map encounter choices after the opening fights, and run deck tracking.
+- Modeled enemy powers for supported fights include Artifact, Hard to Kill, Shrink, Thorns, Ravenous, Slippery, Surprise, Two-Tailed Rat backup calls, Plating, Tangled, Constrict, Smoggy, Illusion, and Gas Bomb minions.
 
 This is not yet a full game emulator. Shops, rests, relics, elites, bosses, and richer map node types are still future work.
 
@@ -117,6 +118,18 @@ Emit a deterministic emulator trace for comparison against real-game traces:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\trace.py --seed 0 --actions 0 1 2
+```
+
+Emit a trace from a running Slay the Spire 2 instance with the STS2MCP mod enabled:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\trace_real_game.py --actions 0 1 2
+```
+
+Compare two trace JSON files on their normalized player/enemy fields:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\compare_traces.py emulator-trace.json real-game-trace.json
 ```
 
 ## Training

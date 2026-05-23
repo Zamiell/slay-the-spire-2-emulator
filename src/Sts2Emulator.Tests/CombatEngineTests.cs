@@ -183,6 +183,432 @@ public class CombatEngineTests
         Assert.Equal(2, state.DiscardPile.Count(c => c.DefId == ST.Slimed));
     }
 
+    [Fact]
+    public void Shrink_ReducesPoweredAttackDamageByThirtyPercent()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.ExhaustPile.Clear();
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 56,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Attack, 0),
+                Buffs = [],
+            },
+        ];
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 3;
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.Shrink, 1);
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(16, state.Enemies[0].Hp);
+    }
+
+    [Fact]
+    public void Thorns_RetaliatesAgainstPoweredAttacks()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.ExhaustPile.Clear();
+        state.PlayerHp = 64;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 93,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Attack, 0),
+                Buffs = [new BuffState(BuffId.Thorns, 2)],
+            },
+        ];
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(62, state.PlayerHp);
+        Assert.Equal(14, state.Enemies[0].Hp);
+    }
+
+    [Fact]
+    public void Toadpole_SpikeSpitConsumesThornsBeforeAttacking()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerBlock = 0;
+        state.PlayerHp = 64;
+        var enemy = new EnemyState
+        {
+            DefId = 93,
+            Hp = 22,
+            MaxHp = 22,
+            CurrentIntent = new Intent(IntentType.Attack, 12),
+            Buffs = [new BuffState(BuffId.Thorns, 2)],
+            MoveIndex = 2,
+        };
+
+        EnemyAI.ExecuteIntent(enemy, state, new Random(0));
+
+        Assert.Equal(0, BuffSystem.Get(enemy.Buffs, BuffId.Thorns));
+        Assert.Equal(52, state.PlayerHp);
+    }
+
+    [Fact]
+    public void Ravenous_StrengthensAndStunsCorpseSlugWhenAllyDies()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.ExhaustPile.Clear();
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 17,
+                Hp = 1,
+                MaxHp = 25,
+                CurrentIntent = new Intent(IntentType.Attack, 6),
+                Buffs = [new BuffState(BuffId.Ravenous, 5)],
+            },
+            new EnemyState
+            {
+                DefId = 17,
+                Hp = 25,
+                MaxHp = 25,
+                CurrentIntent = new Intent(IntentType.Attack, 6),
+                Buffs = [new BuffState(BuffId.Ravenous, 5)],
+            },
+        ];
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, state.Enemies[0].Hp);
+        Assert.Equal(5, BuffSystem.Get(state.Enemies[1].Buffs, BuffId.Strength));
+        Assert.Equal(1, BuffSystem.Get(state.Enemies[1].Buffs, BuffId.Stunned));
+
+        EnemyAI.ExecuteIntent(state.Enemies[1], state, new Random(0));
+
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[1].Buffs, BuffId.Stunned));
+        Assert.Equal(64, state.PlayerHp);
+    }
+
+    [Fact]
+    public void Slippery_CapsOneUnblockedHitThenExpires()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.ExhaustPile.Clear();
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 42,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Attack, 4),
+                Buffs = [new BuffState(BuffId.Slippery, 1)],
+            },
+        ];
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(13, state.Enemies[0].Hp);
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Slippery));
+    }
+
+    [Fact]
+    public void Surprise_SpawnsGremlinsWhenMercDies()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.ExhaustPile.Clear();
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 37,
+                Hp = 1,
+                MaxHp = 47,
+                CurrentIntent = new Intent(IntentType.Attack, 16),
+                Buffs = [new BuffState(BuffId.Surprise, 1)],
+            },
+        ];
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 3;
+
+        var result = CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.False(result.Terminal);
+        Assert.Contains(state.Enemies, e => e.DefId == 78 && e.Hp > 0);
+        Assert.Contains(state.Enemies, e => e.DefId == 28 && e.Hp > 0);
+        Assert.Contains(state.Enemies, e => e.DefId == 78 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
+        Assert.Contains(state.Enemies, e => e.DefId == 28 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
+    }
+
+    [Fact]
+    public void TwoTailedRat_CallForBackupSummonsRatAndTracksLimit()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 101,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Buff, 0),
+                Buffs = [],
+            },
+        ];
+
+        EnemyAI.ExecuteIntent(state.Enemies[0], state, new Random(0));
+
+        Assert.Equal(2, state.Enemies.Count(e => e.DefId == 101));
+        Assert.All(state.Enemies.Where(e => e.DefId == 101),
+            rat => Assert.Equal(1, BuffSystem.Get(rat.Buffs, BuffId.BackupCount)));
+        Assert.Contains(state.Enemies, e => e.DefId == 101 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
+    }
+
+    [Fact]
+    public void ForcedNormalEncounters_CreateExpectedShapes()
+    {
+        var expectedEnemyIds = new Dictionary<int, int>
+        {
+            [14] = 53,  // Mawler
+            [15] = 56,  // Nibbits
+            [16] = 47,  // Large slimes include LeafSlimeM
+            [17] = 30,  // Flyconid encounter
+            [18] = 77,  // Snapping Jaxfruit
+            [19] = 20,  // Cubex Construct
+            [20] = 103, // Vine Shambler
+            [21] = 71,  // Shrinker Beetle + Fuzzy
+            [22] = 14,  // Calcified Cultist + Seapunk
+            [23] = 32,  // Fossil Stalker
+            [24] = 65,  // Punch Construct
+            [25] = 70,  // Sewer Clam
+            [26] = 39,  // Haunted Ship
+            [27] = 74,  // Slithering Strangler
+            [28] = 5,   // Ruby Raiders
+            [29] = 31,  // Fogmog
+            [30] = 49,  // Living Fog
+        };
+
+        foreach (var (encounterId, enemyId) in expectedEnemyIds)
+        {
+            var state = CombatFactory.NewCombat(seed: encounterId);
+
+            CombatFactory.Reset(state, new Random(encounterId), StarterDeckIds, encounterId);
+
+            Assert.Equal(encounterId, state.EncounterId);
+            Assert.Contains(state.Enemies, enemy => enemy.DefId == enemyId);
+        }
+    }
+
+    [Fact]
+    public void SewerClam_PlatingAddsBlockAndDecays()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var enemy = new EnemyState
+        {
+            DefId = 70,
+            Hp = 45,
+            MaxHp = 45,
+            CurrentIntent = new Intent(IntentType.Attack, 11),
+            Buffs = [new BuffState(BuffId.Plating, 9)],
+        };
+
+        EnemyAI.ExecuteIntent(enemy, state, new Random(0));
+
+        Assert.Equal(9, enemy.Block);
+        Assert.Equal(8, BuffSystem.Get(enemy.Buffs, BuffId.Plating));
+    }
+
+    [Fact]
+    public void HauntedShip_HauntAppliesWeakAndDazed()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var enemy = new EnemyState
+        {
+            DefId = 39,
+            Hp = 67,
+            MaxHp = 67,
+            CurrentIntent = new Intent(IntentType.Debuff, 5),
+            Buffs = [],
+        };
+
+        EnemyAI.ExecuteIntent(enemy, state, new Random(0));
+
+        Assert.Equal(3, BuffSystem.Get(state.PlayerBuffs, BuffId.Weak));
+        Assert.Equal(5, state.DiscardPile.Count(c => c.DefId == ST.Dazed));
+    }
+
+    [Fact]
+    public void VineShambler_GraspingVinesAppliesTangled()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerBlock = 0;
+        var enemy = new EnemyState
+        {
+            DefId = 103,
+            Hp = 65,
+            MaxHp = 65,
+            CurrentIntent = new Intent(IntentType.Debuff, 9),
+            Buffs = [],
+        };
+
+        EnemyAI.ExecuteIntent(enemy, state, new Random(0));
+
+        Assert.Equal(55, state.PlayerHp);
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Tangled));
+    }
+
+    [Fact]
+    public void Fogmog_IllusionSummonsEyeWithTeeth()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 31,
+                Hp = 78,
+                MaxHp = 78,
+                CurrentIntent = new Intent(IntentType.Buff, 0),
+                Buffs = [],
+            },
+        ];
+
+        EnemyAI.ExecuteIntent(state.Enemies[0], state, new Random(0));
+
+        Assert.Contains(state.Enemies, e => e.DefId == 26 && BuffSystem.Get(e.Buffs, BuffId.Illusion) == 1);
+        Assert.Contains(state.Enemies, e => e.DefId == 26 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
+    }
+
+    [Fact]
+    public void LivingFog_AdvancedGasAppliesSmoggy()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var enemy = new EnemyState
+        {
+            DefId = 49,
+            Hp = 82,
+            MaxHp = 82,
+            CurrentIntent = new Intent(IntentType.Debuff, 9),
+            Buffs = [],
+        };
+
+        EnemyAI.ExecuteIntent(enemy, state, new Random(0));
+
+        Assert.Equal(55, state.PlayerHp);
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Smoggy));
+    }
+
+    [Fact]
+    public void LivingFog_BloatSummonsGasBombAndAttacks()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var enemy = new EnemyState
+        {
+            DefId = 49,
+            Hp = 82,
+            MaxHp = 82,
+            CurrentIntent = new Intent(IntentType.Buff, 6),
+            Buffs = [],
+            MoveIndex = 1,
+        };
+
+        EnemyAI.ExecuteIntent(enemy, state, new Random(0));
+
+        Assert.Equal(58, state.PlayerHp);
+        Assert.Contains(state.Enemies, e => e.DefId == 35 && BuffSystem.Get(e.Buffs, BuffId.Minion) == 1);
+    }
+
+    [Fact]
+    public void Tangled_IncreasesAttackEnergyCostUntilNextTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 1;
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.Tangled, 1);
+
+        Assert.DoesNotContain(0, CombatEngine.ValidActions(state));
+        Assert.Equal(StepResult.Invalid, CombatEngine.Step(state, 0, new Random(0)));
+    }
+
+    [Fact]
+    public void Smoggy_BlocksAdditionalSkillsAfterSkillPlayed()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.ExhaustPile.Clear();
+        state.Hand.Add(new CardInstance(IC.DefendIronclad, false));
+        state.Hand.Add(new CardInstance(IC.DefendIronclad, false));
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.Smoggy, 1);
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.DoesNotContain(0, CombatEngine.ValidActions(state));
+        Assert.Equal(StepResult.Invalid, CombatEngine.Step(state, 0, new Random(0)));
+    }
+
+    [Fact]
+    public void Constrict_DamagesAtEndTurnAndExpiresWhenStranglerDies()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.ExhaustPile.Clear();
+        state.Enemies.Clear();
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.Constrict, 3);
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(61, state.PlayerHp);
+
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 74,
+                Hp = 1,
+                MaxHp = 56,
+                CurrentIntent = new Intent(IntentType.Debuff, 3),
+                Buffs = [],
+            },
+        ];
+        state.Energy = 3;
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.Constrict, 3);
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.Constrict));
+    }
+
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         IC.StrikeIronclad, IC.StrikeIronclad, IC.StrikeIronclad, IC.StrikeIronclad, IC.StrikeIronclad,

@@ -1,6 +1,7 @@
-out/
+.env
+*.pyc
 **/bin/
 **/obj/
 __pycache__/
-*.pyc
-.env
+node_modules/
+out/

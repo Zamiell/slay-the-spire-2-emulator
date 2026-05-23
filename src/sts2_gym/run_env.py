@@ -24,8 +24,12 @@ STARTER_DECK = [466] * 5 + [137] * 4 + [30, 10001]
 IRONCLAD_REWARD_POOL = np.array([13, 18, 265, 358, 433, 508, 519], dtype=np.int32)
 OVERGROWTH_WEAK_ENCOUNTERS = np.array([2, 3, 11, 8], dtype=np.int32)
 UNDERDOCKS_WEAK_ENCOUNTERS = np.array([9, 12, 10, 13], dtype=np.int32)
-OVERGROWTH_NORMAL_ENCOUNTERS = np.array([5, 2, 3, 8], dtype=np.int32)
-UNDERDOCKS_NORMAL_ENCOUNTERS = np.array([9, 0, 7, 6], dtype=np.int32)
+OVERGROWTH_NORMAL_ENCOUNTERS = np.array(
+    [5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32
+)
+UNDERDOCKS_NORMAL_ENCOUNTERS = np.array(
+    [9, 0, 7, 6, 22, 23, 24, 25, 26, 30], dtype=np.int32
+)
 
 
 class Sts2RunEnv(gym.Env):
@@ -93,7 +97,9 @@ class Sts2RunEnv(gym.Env):
         if self._phase == PHASE_MAP:
             return self._step_map(action)
 
-        terminal = native.step(self._handle, action, self._combat_obs_buf, self._rew_buf)
+        terminal = native.step(
+            self._handle, action, self._combat_obs_buf, self._rew_buf
+        )
         reward = float(self._rew_buf[0])
         truncated = not terminal and self._elapsed_steps >= self._max_episode_steps
 
@@ -135,11 +141,16 @@ class Sts2RunEnv(gym.Env):
         self._floor += 1
         if self._floor <= 3:
             self._phase = PHASE_COMBAT
-            self._reset_combat(self._seed + self._floor - 1, int(self._weak_encounters[self._floor - 1]))
+            self._reset_combat(
+                self._seed + self._floor - 1,
+                int(self._weak_encounters[self._floor - 1]),
+            )
             return self._obs(), 0.0, False, False, self._info()
 
         self._phase = PHASE_MAP
-        self._map_choices[:] = self._rng.choice(self._normal_encounter_pool(), size=MAP_CHOICES, replace=False)
+        self._map_choices[:] = self._rng.choice(
+            self._normal_encounter_pool(), size=MAP_CHOICES, replace=False
+        )
         return self._obs(), 0.0, False, False, self._info()
 
     def _step_map(self, action: int):
@@ -154,7 +165,9 @@ class Sts2RunEnv(gym.Env):
 
     def _enter_reward_phase(self):
         self._phase = PHASE_CARD_REWARD
-        self._reward_cards[:] = self._rng.choice(IRONCLAD_REWARD_POOL, size=3, replace=False)
+        self._reward_cards[:] = self._rng.choice(
+            IRONCLAD_REWARD_POOL, size=3, replace=False
+        )
 
     def _select_act_and_weak_encounters(self):
         if self._rng.integers(2) == 0:
@@ -166,7 +179,11 @@ class Sts2RunEnv(gym.Env):
         self._weak_encounters[:] = self._rng.choice(pool, size=3, replace=False)
 
     def _normal_encounter_pool(self) -> np.ndarray:
-        return OVERGROWTH_NORMAL_ENCOUNTERS if self._act == "overgrowth" else UNDERDOCKS_NORMAL_ENCOUNTERS
+        return (
+            OVERGROWTH_NORMAL_ENCOUNTERS
+            if self._act == "overgrowth"
+            else UNDERDOCKS_NORMAL_ENCOUNTERS
+        )
 
     def _reset_combat(self, seed: int, encounter_id: int | None = None):
         if self._handle is not None:
@@ -205,15 +222,23 @@ class Sts2RunEnv(gym.Env):
             "act": self._act,
             "deck_size": len(self._deck),
             "card_rewards": tuple(int(card_id) for card_id in self._reward_cards),
-            "map_choices": tuple(
-                ENCOUNTER_NAMES.get(int(encounter_id), f"unknown-{encounter_id}")
-                for encounter_id in self._map_choices
-            )
-            if self._phase == PHASE_MAP
-            else (),
-            "player_won": native.player_won(self._handle) if self._handle is not None else False,
-            "encounter_id": native.encounter_id(self._handle) if self._handle is not None else -1,
-            "encounter": ENCOUNTER_NAMES.get(native.encounter_id(self._handle), "none")
-            if self._handle is not None
-            else "none",
+            "map_choices": (
+                tuple(
+                    ENCOUNTER_NAMES.get(int(encounter_id), f"unknown-{encounter_id}")
+                    for encounter_id in self._map_choices
+                )
+                if self._phase == PHASE_MAP
+                else ()
+            ),
+            "player_won": (
+                native.player_won(self._handle) if self._handle is not None else False
+            ),
+            "encounter_id": (
+                native.encounter_id(self._handle) if self._handle is not None else -1
+            ),
+            "encounter": (
+                ENCOUNTER_NAMES.get(native.encounter_id(self._handle), "none")
+                if self._handle is not None
+                else "none"
+            ),
         }

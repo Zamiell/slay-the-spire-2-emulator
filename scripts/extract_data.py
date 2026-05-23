@@ -5,41 +5,46 @@ import re
 import sys
 from pathlib import Path
 
-REPO       = Path(__file__).parent.parent
+REPO = Path(__file__).parent.parent
 DECOMPILED = REPO / "decompiled"
-GENERATED  = REPO / "src" / "Sts2Emulator" / "Generated"
+GENERATED = REPO / "src" / "Sts2Emulator" / "Generated"
 
-CARDS_DIR   = DECOMPILED / "MegaCrit.Sts2.Core.Models.Cards"
+CARDS_DIR = DECOMPILED / "MegaCrit.Sts2.Core.Models.Cards"
 MONSTERS_DIR = DECOMPILED / "MegaCrit.Sts2.Core.Models.Monsters"
-POWERS_DIR  = DECOMPILED / "MegaCrit.Sts2.Core.Models.Powers"
+POWERS_DIR = DECOMPILED / "MegaCrit.Sts2.Core.Models.Powers"
 POTIONS_DIR = DECOMPILED / "MegaCrit.Sts2.Core.Models.Potions"
-RELICS_DIR  = DECOMPILED / "MegaCrit.Sts2.Core.Models.Relics"
+RELICS_DIR = DECOMPILED / "MegaCrit.Sts2.Core.Models.Relics"
 
 # ── patterns ──────────────────────────────────────────────────────────────────
 
 # Constructor: base(cost, CardType.Attack, ...)
-CARD_CTOR  = re.compile(r"base\((-?\d+),\s*CardType\.(\w+)")
+CARD_CTOR = re.compile(r"base\((-?\d+),\s*CardType\.(\w+)")
 # DamageVar(6m, ...) or DamageVar(6, ...)
 DAMAGE_VAR = re.compile(r"new DamageVar\((\d+(?:\.\d+)?)m?,")
 # BlockVar(5m, ...)
-BLOCK_VAR  = re.compile(r"new BlockVar\((\d+(?:\.\d+)?)m?,")
+BLOCK_VAR = re.compile(r"new BlockVar\((\d+(?:\.\d+)?)m?,")
 # UpgradeValueBy on damage / block
-UPGRADE_DMG   = re.compile(r"DynamicVars\.Damage\.UpgradeValueBy\((\d+(?:\.\d+)?)m?\)")
+UPGRADE_DMG = re.compile(r"DynamicVars\.Damage\.UpgradeValueBy\((\d+(?:\.\d+)?)m?\)")
 UPGRADE_BLOCK = re.compile(r"DynamicVars\.Block\.UpgradeValueBy\((\d+(?:\.\d+)?)m?\)")
 
 # HP: plain int or AscensionHelper (take the normal/non-ascension value = 2nd arg)
-HP_PLAIN      = re.compile(r"(?:Min|Max)InitialHp\s*=>\s*(\d+)\s*;")
-HP_ASCENSION  = re.compile(r"(?:Min|Max)InitialHp\s*=>.+?GetValueIfAscension\([^,]+,\s*\d+,\s*(\d+)\s*\)")
+HP_PLAIN = re.compile(r"(?:Min|Max)InitialHp\s*=>\s*(\d+)\s*;")
+HP_ASCENSION = re.compile(
+    r"(?:Min|Max)InitialHp\s*=>.+?GetValueIfAscension\([^,]+,\s*\d+,\s*(\d+)\s*\)"
+)
 
 # Monster move intents
 SINGLE_ATTACK = re.compile(r"new SingleAttackIntent\((\d+)\)")
-MULTI_ATTACK  = re.compile(r"new MultiAttackIntent\((\d+),\s*(\d+)\)")  # (damage, repeats)
+MULTI_ATTACK = re.compile(
+    r"new MultiAttackIntent\((\d+),\s*(\d+)\)"
+)  # (damage, repeats)
 
 # Power type
-POWER_TYPE    = re.compile(r"PowerType\.(Buff|Debuff)")
-POWER_STACK   = re.compile(r"PowerStackType\.(\w+)")
+POWER_TYPE = re.compile(r"PowerType\.(Buff|Debuff)")
+POWER_STACK = re.compile(r"PowerStackType\.(\w+)")
 
 # ── helpers ───────────────────────────────────────────────────────────────────
+
 
 def cs_header() -> str:
     return (
@@ -59,6 +64,7 @@ SPECIAL_CARD_IDS = {
     "Dazed": 10002,
 }
 
+
 def extract_cards() -> str:
     entries: list[str] = []
     card_id = 1
@@ -76,20 +82,20 @@ def extract_cards() -> str:
         if not ctor:
             continue
 
-        cost        = int(ctor.group(1))
-        card_type   = ctor.group(2)   # Attack / Skill / Power / Status / Curse
+        cost = int(ctor.group(1))
+        card_type = ctor.group(2)  # Attack / Skill / Power / Status / Curse
         if cost < 0 and name not in SPECIAL_CARD_IDS:
             continue
 
-        dmg_m  = DAMAGE_VAR.search(text)
-        blk_m  = BLOCK_VAR.search(text)
-        base_dmg   = decimal_to_int(dmg_m.group(1)) if dmg_m else 0
+        dmg_m = DAMAGE_VAR.search(text)
+        blk_m = BLOCK_VAR.search(text)
+        base_dmg = decimal_to_int(dmg_m.group(1)) if dmg_m else 0
         base_block = decimal_to_int(blk_m.group(1)) if blk_m else 0
 
-        upg_dmg_m   = UPGRADE_DMG.search(text)
-        upg_blk_m   = UPGRADE_BLOCK.search(text)
-        upg_dmg   = decimal_to_int(upg_dmg_m.group(1))   if upg_dmg_m   else 0
-        upg_block = decimal_to_int(upg_blk_m.group(1))   if upg_blk_m   else 0
+        upg_dmg_m = UPGRADE_DMG.search(text)
+        upg_blk_m = UPGRADE_BLOCK.search(text)
+        upg_dmg = decimal_to_int(upg_dmg_m.group(1)) if upg_dmg_m else 0
+        upg_block = decimal_to_int(upg_blk_m.group(1)) if upg_blk_m else 0
 
         def_id = SPECIAL_CARD_IDS.get(name, card_id)
         flags = []
@@ -102,7 +108,7 @@ def extract_cards() -> str:
         flags_cs = f", {', '.join(flags)}" if flags else ""
 
         entries.append(
-            f"        new CardDef(Id: {def_id}, Name: \"{name}\", "
+            f'        new CardDef(Id: {def_id}, Name: "{name}", '
             f"Cost: {cost}, BaseDamage: {base_dmg}, BaseBlock: {base_block}, "
             f"UpgradeDamage: {upg_dmg}, UpgradeBlock: {upg_block}, "
             f"Type: CardType.{card_type}{flags_cs}),"
@@ -136,7 +142,9 @@ internal static class Cards
 }}
 """
 
+
 # ── monster / enemy extraction ────────────────────────────────────────────────
+
 
 def extract_enemies() -> str:
     entries: list[str] = []
@@ -148,19 +156,29 @@ def extract_enemies() -> str:
 
         if "MonsterModel" not in text:
             continue
-        if name in ("DeprecatedMonster", "MultiAttackMoveMonster", "SingleAttackMoveMonster",
-                    "OneHpMonster", "TenHpMonster", "BigDummy", "FakeMerchantMonster",
-                    "BattleFriendV1", "BattleFriendV2", "BattleFriendV3", "TestSubject"):
+        if name in (
+            "DeprecatedMonster",
+            "MultiAttackMoveMonster",
+            "SingleAttackMoveMonster",
+            "OneHpMonster",
+            "TenHpMonster",
+            "BigDummy",
+            "FakeMerchantMonster",
+            "BattleFriendV1",
+            "BattleFriendV2",
+            "BattleFriendV3",
+            "TestSubject",
+        ):
             continue
 
         # HP — try AscensionHelper form first, then plain int
         min_hps = HP_ASCENSION.findall(text) or HP_PLAIN.findall(text)
-        min_hp  = int(min_hps[0]) if min_hps else 0
-        max_hp  = int(min_hps[1]) if len(min_hps) > 1 else min_hp
+        min_hp = int(min_hps[0]) if min_hps else 0
+        max_hp = int(min_hps[1]) if len(min_hps) > 1 else min_hp
 
         # Collect attack intents (damage values) for the move list
-        single_attacks = [(int(m), 1)   for m in SINGLE_ATTACK.findall(text)]
-        multi_attacks  = [(int(d), int(r)) for d, r in MULTI_ATTACK.findall(text)]
+        single_attacks = [(int(m), 1) for m in SINGLE_ATTACK.findall(text)]
+        multi_attacks = [(int(d), int(r)) for d, r in MULTI_ATTACK.findall(text)]
         attacks = single_attacks + multi_attacks
 
         # Encode moves as a compact int array: [damage, repeats, ...]
@@ -171,7 +189,7 @@ def extract_enemies() -> str:
             moves_cs = "Array.Empty<int>()"
 
         entries.append(
-            f"        new EnemyDef(Id: {enemy_id}, Name: \"{name}\", "
+            f'        new EnemyDef(Id: {enemy_id}, Name: "{name}", '
             f"MinHp: {min_hp}, MaxHp: {max_hp}, Moves: {moves_cs}),"
         )
         enemy_id += 1
@@ -216,7 +234,9 @@ internal static class Enemies
 }}
 """
 
+
 # ── power extraction ──────────────────────────────────────────────────────────
+
 
 def extract_powers() -> str:
     entries: list[str] = []
@@ -229,15 +249,15 @@ def extract_powers() -> str:
         if "PowerModel" not in text:
             continue
 
-        pt_m     = POWER_TYPE.search(text)
-        stack_m  = POWER_STACK.search(text)
-        is_buff  = pt_m.group(1) == "Buff" if pt_m else True
-        stack    = stack_m.group(1) if stack_m else "Counter"
-        ticks    = "TickDownDuration" in text
+        pt_m = POWER_TYPE.search(text)
+        stack_m = POWER_STACK.search(text)
+        is_buff = pt_m.group(1) == "Buff" if pt_m else True
+        stack = stack_m.group(1) if stack_m else "Counter"
+        ticks = "TickDownDuration" in text
 
         entries.append(
-            f"        new PowerDef(Id: {power_id}, Name: \"{name}\", "
-            f"IsBuff: {str(is_buff).lower()}, StackType: \"{stack}\", TicksDown: {str(ticks).lower()}),"
+            f'        new PowerDef(Id: {power_id}, Name: "{name}", '
+            f'IsBuff: {str(is_buff).lower()}, StackType: "{stack}", TicksDown: {str(ticks).lower()}),'
         )
         power_id += 1
 
@@ -267,7 +287,9 @@ internal static class Powers
 }}
 """
 
+
 # ── relic extraction ──────────────────────────────────────────────────────────
+
 
 def extract_relics() -> str:
     entries: list[str] = []
@@ -282,7 +304,7 @@ def extract_relics() -> str:
         if name == "DeprecatedRelic":
             continue
 
-        entries.append(f"        new RelicDef(Id: {relic_id}, Name: \"{name}\"),")
+        entries.append(f'        new RelicDef(Id: {relic_id}, Name: "{name}"),')
         relic_id += 1
 
     if not entries:
@@ -311,7 +333,9 @@ internal static class Relics
 }}
 """
 
+
 # ── potion extraction ─────────────────────────────────────────────────────────
+
 
 def extract_potions() -> str:
     entries: list[str] = []
@@ -323,12 +347,20 @@ def extract_potions() -> str:
 
         if "PotionModel" not in text:
             continue
-        if name in ("DeprecatedPotion", "PotionBody", "PotionBodyExtensions",
-                    "PotionOverlay", "PotionProcureFailureReason", "PotionProcureResult",
-                    "PotionRarity", "PotionRarityExtensions", "PotionUsage"):
+        if name in (
+            "DeprecatedPotion",
+            "PotionBody",
+            "PotionBodyExtensions",
+            "PotionOverlay",
+            "PotionProcureFailureReason",
+            "PotionProcureResult",
+            "PotionRarity",
+            "PotionRarityExtensions",
+            "PotionUsage",
+        ):
             continue
 
-        entries.append(f"        new PotionDef(Id: {potion_id}, Name: \"{name}\"),")
+        entries.append(f'        new PotionDef(Id: {potion_id}, Name: "{name}"),')
         potion_id += 1
 
     if not entries:
@@ -357,7 +389,9 @@ internal static class Potions
 }}
 """
 
+
 # ── main ──────────────────────────────────────────────────────────────────────
+
 
 def main() -> None:
     if not DECOMPILED.exists():
@@ -371,10 +405,10 @@ def main() -> None:
     GENERATED.mkdir(parents=True, exist_ok=True)
 
     for filename, content in [
-        ("Cards.g.cs",   extract_cards()),
+        ("Cards.g.cs", extract_cards()),
         ("Enemies.g.cs", extract_enemies()),
-        ("Powers.g.cs",  extract_powers()),
-        ("Relics.g.cs",  extract_relics()),
+        ("Powers.g.cs", extract_powers()),
+        ("Relics.g.cs", extract_relics()),
         ("Potions.g.cs", extract_potions()),
     ]:
         out = GENERATED / filename

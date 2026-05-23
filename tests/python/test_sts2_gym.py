@@ -8,7 +8,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 from sts2_gym import Sts2CombatEnv, Sts2RunEnv
 
-
 HAND_ID_INDICES = range(8, 28, 2)
 ENEMY_INTENT_INDICES = (47, 87, 127)
 ASCENDERS_BANE_OBS_ID = 10001
@@ -44,7 +43,9 @@ class Sts2GymTests(unittest.TestCase):
                 mask = env.action_masks()
 
                 self.assertFalse(mask[bane_index])
-                self.assertTrue(mask[len([card_id for card_id in hand_ids if card_id != 0])])
+                self.assertTrue(
+                    mask[len([card_id for card_id in hand_ids if card_id != 0])]
+                )
                 return
 
             self.fail("No tested seed put Ascender's Bane in the opening hand.")
@@ -98,7 +99,9 @@ class Sts2GymTests(unittest.TestCase):
                 if not any(int(obs[i]) == 3 for i in ENEMY_INTENT_INDICES):
                     continue
 
-                end_turn = len([int(obs[i]) for i in HAND_ID_INDICES if int(obs[i]) != 0])
+                end_turn = len(
+                    [int(obs[i]) for i in HAND_ID_INDICES if int(obs[i]) != 0]
+                )
                 obs, _, _, _, _ = env.step(end_turn)
 
                 self.assertGreaterEqual(int(obs[6]), 6)
@@ -117,7 +120,9 @@ class Sts2GymTests(unittest.TestCase):
 
             env._enter_reward_phase()
             mask = env.action_masks()
-            self.assertTrue(np.array_equal(mask[:4], np.array([True, True, True, True])))
+            self.assertTrue(
+                np.array_equal(mask[:4], np.array([True, True, True, True]))
+            )
             self.assertFalse(mask[4:].any())
 
             reward_card = env._reward_cards[0]

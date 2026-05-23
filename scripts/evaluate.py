@@ -65,7 +65,9 @@ def main() -> None:
             info = {"player_won": False}
 
             while True:
-                _, reward, terminated, truncated, info = env.step(choose_action(env, args.policy))
+                _, reward, terminated, truncated, info = env.step(
+                    choose_action(env, args.policy)
+                )
                 total_reward += reward
                 steps += 1
                 if terminated or truncated:

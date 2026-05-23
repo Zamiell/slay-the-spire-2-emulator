@@ -24,6 +24,23 @@ ENCOUNTER_NAMES = {
     11: "shrinker-beetle",
     12: "seapunk",
     13: "toadpoles",
+    14: "mawler",
+    15: "nibbits",
+    16: "large-slimes",
+    17: "slime-and-flyconid",
+    18: "jaxfruit-and-flyconid",
+    19: "cubex-construct",
+    20: "vine-shambler",
+    21: "shrinker-and-fuzzy",
+    22: "cultist-and-seapunk",
+    23: "fossil-stalker",
+    24: "punch-construct",
+    25: "sewer-clam",
+    26: "haunted-ship",
+    27: "slithering-strangler",
+    28: "ruby-raiders",
+    29: "fogmog",
+    30: "living-fog",
 }
 ENCOUNTER_IDS = {name: encounter_id for encounter_id, name in ENCOUNTER_NAMES.items()}
 
@@ -118,4 +135,6 @@ class Sts2CombatEnv(gym.Env):
             return ENCOUNTER_IDS[encounter]
         except KeyError as exc:
             valid = ", ".join(sorted(ENCOUNTER_IDS))
-            raise ValueError(f"Unknown encounter '{encounter}'. Valid encounters: {valid}") from exc
+            raise ValueError(
+                f"Unknown encounter '{encounter}'. Valid encounters: {valid}"
+            ) from exc

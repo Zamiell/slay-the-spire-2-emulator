@@ -28,4 +28,5 @@ public sealed class CombatState
     // Turn tracking
     public int Turn;
     public bool PlayerTurn = true;
+    public bool SkillPlayedWhileSmoggy;
 }

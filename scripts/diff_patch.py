@@ -9,13 +9,17 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO      = Path(__file__).parent.parent
+REPO = Path(__file__).parent.parent
 GENERATED = REPO / "src" / "Sts2Emulator" / "Generated"
 
 # Patterns to parse entries from generated files
-CARD_RE   = re.compile(r'new CardDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)",\s*Cost:\s*(\d+),\s*BaseDamage:\s*(\d+),\s*BaseBlock:\s*(\d+)')
-ENEMY_RE  = re.compile(r'new EnemyDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)",\s*MinHp:\s*(\d+),\s*MaxHp:\s*(\d+)')
-RELIC_RE  = re.compile(r'new RelicDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)"\)')
+CARD_RE = re.compile(
+    r'new CardDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)",\s*Cost:\s*(\d+),\s*BaseDamage:\s*(\d+),\s*BaseBlock:\s*(\d+)'
+)
+ENEMY_RE = re.compile(
+    r'new EnemyDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)",\s*MinHp:\s*(\d+),\s*MaxHp:\s*(\d+)'
+)
+RELIC_RE = re.compile(r'new RelicDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)"\)')
 
 
 def git_previous(path: Path) -> str | None:
@@ -23,14 +27,21 @@ def git_previous(path: Path) -> str | None:
     rel = path.relative_to(REPO)
     result = subprocess.run(
         ["git", "show", f"HEAD:{rel.as_posix()}"],
-        capture_output=True, text=True, cwd=REPO
+        capture_output=True,
+        text=True,
+        cwd=REPO,
     )
     return result.stdout if result.returncode == 0 else None
 
 
 def parse_cards(text: str) -> dict[int, dict]:
     return {
-        int(m[1]): {"name": m[2], "cost": int(m[3]), "damage": int(m[4]), "block": int(m[5])}
+        int(m[1]): {
+            "name": m[2],
+            "cost": int(m[3]),
+            "damage": int(m[4]),
+            "block": int(m[5]),
+        }
         for m in CARD_RE.finditer(text)
     }
 
@@ -69,25 +80,27 @@ def main() -> None:
     needs_review: list[str] = []
 
     for filename, parser, label, fields in [
-        ("Cards.g.cs",   parse_cards,   "Card",   ["cost", "damage", "block"]),
-        ("Enemies.g.cs", parse_enemies, "Enemy",  ["min_hp", "max_hp"]),
-        ("Relics.g.cs",  parse_relics,  "Relic",  []),
+        ("Cards.g.cs", parse_cards, "Card", ["cost", "damage", "block"]),
+        ("Enemies.g.cs", parse_enemies, "Enemy", ["min_hp", "max_hp"]),
+        ("Relics.g.cs", parse_relics, "Relic", []),
     ]:
         path = GENERATED / filename
         if not path.exists():
-            print(f"  {filename} not found — run extract_data.py first.", file=sys.stderr)
+            print(
+                f"  {filename} not found — run extract_data.py first.", file=sys.stderr
+            )
             continue
 
-        current_text  = path.read_text(encoding="utf-8")
+        current_text = path.read_text(encoding="utf-8")
         previous_text = git_previous(path) or ""
 
-        current  = parser(current_text)
+        current = parser(current_text)
         previous = parser(previous_text)
 
         diffs = diff_dicts(label, previous, current, fields)
         changes.extend(diffs)
 
-        new_count     = sum(1 for l in diffs if l.startswith("[NEW]"))
+        new_count = sum(1 for l in diffs if l.startswith("[NEW]"))
         removed_count = sum(1 for l in diffs if l.startswith("[REMOVED]"))
         if new_count:
             needs_review.append(f"{new_count} new {label.lower()}(s)")

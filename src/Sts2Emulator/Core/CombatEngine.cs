@@ -28,7 +28,7 @@ public static class CombatEngine
 
         int effectiveCost = EffectiveCost(def, state);
         int energyToSpend = Math.Max(0, effectiveCost);
-        if (def.Unplayable || energyToSpend > state.Energy)
+        if (def.Unplayable || energyToSpend > state.Energy || IsBlockedBySmoggy(def, state))
             return StepResult.Invalid;
 
         // Snapshot HP before effects.
@@ -39,8 +39,11 @@ public static class CombatEngine
 
         state.Energy -= energyToSpend;
         state.Hand.RemoveAt(handIndex);
+        if (def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Smoggy) > 0)
+            state.SkillPlayedWhileSmoggy = true;
 
         Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+        HandleEnemyDeaths(state, enemyHpsBefore, rng);
 
         // Rage: gain block when playing an Attack.
         if (def.Type == CardType.Attack)
@@ -83,6 +86,10 @@ public static class CombatEngine
         // Rage expires at end of player turn.
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Rage);
 
+        int constrict = BuffSystem.Get(state.PlayerBuffs, BuffId.Constrict);
+        if (constrict > 0)
+            state.PlayerHp = Math.Max(0, state.PlayerHp - constrict);
+
         // Move hand to discard, exhausting ethereal cards.
         foreach (var card in state.Hand)
         {
@@ -94,11 +101,11 @@ public static class CombatEngine
         state.Hand.Clear();
 
         // Tick enemy debuffs before enemies act (Vulnerable/Weak on enemies tick down).
-        foreach (var enemy in state.Enemies)
+        foreach (var enemy in state.Enemies.ToArray())
             BuffSystem.TickEndOfTurn(enemy.Buffs);
 
         // ── Enemy turns ───────────────────────────────────────────────────────
-        foreach (var enemy in state.Enemies.Where(e => e.Hp > 0))
+        foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToArray())
             EnemyAI.ExecuteIntent(enemy, state, rng);
 
         // FlameBarrier expires after enemies have acted.
@@ -119,6 +126,9 @@ public static class CombatEngine
 
         // Tick player debuffs at start of player turn (Vulnerable etc. tick down).
         BuffSystem.TickEndOfTurn(state.PlayerBuffs);
+        BuffSystem.Remove(state.PlayerBuffs, BuffId.Tangled);
+        BuffSystem.Remove(state.PlayerBuffs, BuffId.Smoggy);
+        state.SkillPlayedWhileSmoggy = false;
 
         // Draw five cards.
         Effects.CardEffects.DrawCards(state, 5, rng);
@@ -177,7 +187,17 @@ public static class CombatEngine
     {
         if (def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0)
             return 0;
-        return def.Cost;
+        int cost = def.Cost;
+        if (def.Type == CardType.Attack)
+            cost += BuffSystem.Get(state.PlayerBuffs, BuffId.Tangled);
+        return cost;
+    }
+
+    private static bool IsBlockedBySmoggy(CardDef def, CombatState state)
+    {
+        return def.Type == CardType.Skill
+            && state.SkillPlayedWhileSmoggy
+            && BuffSystem.Get(state.PlayerBuffs, BuffId.Smoggy) > 0;
     }
 
     public static int[] ValidActions(CombatState state)
@@ -189,7 +209,7 @@ public static class CombatEngine
             var def = GeneratedData.Cards.Get(state.Hand[i].DefId);
             int effectiveCost = EffectiveCost(def, state);
             int energyToSpend = Math.Max(0, effectiveCost);
-            if (!def.Unplayable && energyToSpend <= state.Energy)
+            if (!def.Unplayable && energyToSpend <= state.Energy && !IsBlockedBySmoggy(def, state))
                 actions.Add(i);
         }
 
@@ -200,6 +220,54 @@ public static class CombatEngine
                 actions.Add(state.Hand.Count + 1 + s);
 
         return [.. actions];
+    }
+
+    private static void HandleEnemyDeaths(CombatState state, ReadOnlySpan<int> enemyHpsBefore, Random rng)
+    {
+        for (int i = 0; i < state.Enemies.Count && i < enemyHpsBefore.Length; i++)
+        {
+            if (enemyHpsBefore[i] <= 0 || state.Enemies[i].Hp > 0)
+                continue;
+
+            if (BuffSystem.Get(state.Enemies[i].Buffs, BuffId.Surprise) > 0)
+                SpawnGremlinMercReinforcements(state, rng);
+
+            if (state.Enemies[i].DefId == KE.SlitheringStrangler)
+                BuffSystem.Remove(state.PlayerBuffs, BuffId.Constrict);
+
+            foreach (var enemy in state.Enemies.Where(e => e.Hp > 0))
+            {
+                int ravenous = BuffSystem.Get(enemy.Buffs, BuffId.Ravenous);
+                if (ravenous <= 0)
+                    continue;
+
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, ravenous);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, 1);
+            }
+        }
+    }
+
+    private static void SpawnGremlinMercReinforcements(CombatState state, Random rng)
+    {
+        state.Enemies.Add(CreateEnemy(78, rng, new Intent(IntentType.Unknown, 0), stunned: true));
+        state.Enemies.Add(CreateEnemy(28, rng, new Intent(IntentType.Unknown, 0), stunned: true));
+    }
+
+    private static EnemyState CreateEnemy(int defId, Random rng, Intent intent, bool stunned = false)
+    {
+        var def = GeneratedData.Enemies.Get(defId);
+        int hp = rng.Next(def.MinHp, def.MaxHp + 1);
+        var enemy = new EnemyState
+        {
+            DefId = defId,
+            Hp = hp,
+            MaxHp = hp,
+            CurrentIntent = intent,
+            Buffs = [],
+        };
+        if (stunned)
+            BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, 1);
+        return enemy;
     }
 }
 

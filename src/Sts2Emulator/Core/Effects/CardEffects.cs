@@ -319,13 +319,24 @@ public static class CardEffects
 
     private static void DealDamageToEnemy(CombatState state, EnemyState target, int amount)
     {
+        int thorns = BuffSystem.Get(target.Buffs, BuffId.Thorns);
+        if (thorns > 0)
+            state.PlayerHp = Math.Max(0, state.PlayerHp - thorns);
+
         int damage = BuffSystem.IncomingDamage(amount, state.PlayerBuffs, target.Buffs);
         int cap = BuffSystem.Get(target.Buffs, BuffId.HardToKill);
         if (cap > 0)
             damage = Math.Min(damage, cap);
         int absorbed = Math.Min(target.Block, damage);
         target.Block -= absorbed;
-        target.Hp = Math.Max(0, target.Hp - (damage - absorbed));
+        int hpLoss = damage - absorbed;
+        int slippery = BuffSystem.Get(target.Buffs, BuffId.Slippery);
+        if (slippery > 0 && hpLoss >= 1)
+        {
+            hpLoss = 1;
+            BuffSystem.Apply(target.Buffs, BuffId.Slippery, -1);
+        }
+        target.Hp = Math.Max(0, target.Hp - hpLoss);
     }
 
     public static void GainBlock(CombatState state, int amount)

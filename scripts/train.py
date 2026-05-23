@@ -17,25 +17,29 @@ from sts2_gym import Sts2CombatEnv
 
 # ── helper ────────────────────────────────────────────────────────────────────
 
+
 def make_env(rank: int):
     def _init():
         env = Sts2CombatEnv(seed=rank)
         env = ActionMasker(env, lambda e: e.action_masks())
         return env
+
     return _init
 
 
 # ── main ──────────────────────────────────────────────────────────────────────
+
 
 def main():
     import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--timesteps", type=int, default=1_000_000)
-    parser.add_argument("--n-envs",    type=int, default=4)
+    parser.add_argument("--n-envs", type=int, default=4)
     parser.add_argument("--save-path", type=str, default="checkpoints/maskable_ppo")
-    parser.add_argument("--check",     action="store_true",
-                        help="Run env sanity check then exit")
+    parser.add_argument(
+        "--check", action="store_true", help="Run env sanity check then exit"
+    )
     args = parser.parse_args()
 
     if args.check:

@@ -6,10 +6,11 @@ import sys
 from pathlib import Path
 
 _LIB_NAMES = {
-    "win32":  "Sts2Emulator.dll",
-    "linux":  "Sts2Emulator.so",
+    "win32": "Sts2Emulator.dll",
+    "linux": "Sts2Emulator.so",
     "darwin": "Sts2Emulator.dylib",
 }
+
 
 def _load_lib() -> ctypes.CDLL:
     name = _LIB_NAMES.get(sys.platform)
@@ -27,27 +28,28 @@ def _load_lib() -> ctypes.CDLL:
         f"Could not find {name}. Run scripts/build.sh first, or set STS2_LIB_PATH."
     )
 
+
 _lib = _load_lib()
 
 # ── function signatures ───────────────────────────────────────────────────────
 
-_lib.Sts2_ObsSize.restype       = ctypes.c_int
-_lib.Sts2_ObsSize.argtypes      = []
+_lib.Sts2_ObsSize.restype = ctypes.c_int
+_lib.Sts2_ObsSize.argtypes = []
 
-_lib.Sts2_Create.restype        = ctypes.c_int
-_lib.Sts2_Create.argtypes       = [ctypes.c_int]
+_lib.Sts2_Create.restype = ctypes.c_int
+_lib.Sts2_Create.argtypes = [ctypes.c_int]
 
-_lib.Sts2_Reset.restype         = None
-_lib.Sts2_Reset.argtypes        = [ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
+_lib.Sts2_Reset.restype = None
+_lib.Sts2_Reset.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
 
-_lib.Sts2_ResetEncounter.restype  = None
+_lib.Sts2_ResetEncounter.restype = None
 _lib.Sts2_ResetEncounter.argtypes = [
     ctypes.c_int,
     ctypes.c_int,
     ctypes.POINTER(ctypes.c_int),
 ]
 
-_lib.Sts2_ResetWithDeck.restype  = None
+_lib.Sts2_ResetWithDeck.restype = None
 _lib.Sts2_ResetWithDeck.argtypes = [
     ctypes.c_int,
     ctypes.POINTER(ctypes.c_int),
@@ -55,7 +57,7 @@ _lib.Sts2_ResetWithDeck.argtypes = [
     ctypes.POINTER(ctypes.c_int),
 ]
 
-_lib.Sts2_ResetWithDeckAndEncounter.restype  = None
+_lib.Sts2_ResetWithDeckAndEncounter.restype = None
 _lib.Sts2_ResetWithDeckAndEncounter.argtypes = [
     ctypes.c_int,
     ctypes.POINTER(ctypes.c_int),
@@ -64,28 +66,32 @@ _lib.Sts2_ResetWithDeckAndEncounter.argtypes = [
     ctypes.POINTER(ctypes.c_int),
 ]
 
-_lib.Sts2_Step.restype          = ctypes.c_int
-_lib.Sts2_Step.argtypes         = [
+_lib.Sts2_Step.restype = ctypes.c_int
+_lib.Sts2_Step.argtypes = [
     ctypes.c_int,
     ctypes.c_int,
     ctypes.POINTER(ctypes.c_int),
     ctypes.POINTER(ctypes.c_float),
 ]
 
-_lib.Sts2_PlayerWon.restype     = ctypes.c_int
-_lib.Sts2_PlayerWon.argtypes    = [ctypes.c_int]
+_lib.Sts2_PlayerWon.restype = ctypes.c_int
+_lib.Sts2_PlayerWon.argtypes = [ctypes.c_int]
 
-_lib.Sts2_EncounterId.restype    = ctypes.c_int
-_lib.Sts2_EncounterId.argtypes   = [ctypes.c_int]
+_lib.Sts2_EncounterId.restype = ctypes.c_int
+_lib.Sts2_EncounterId.argtypes = [ctypes.c_int]
 
-_lib.Sts2_ActionCount.restype   = ctypes.c_int
-_lib.Sts2_ActionCount.argtypes  = [ctypes.c_int]
+_lib.Sts2_ActionCount.restype = ctypes.c_int
+_lib.Sts2_ActionCount.argtypes = [ctypes.c_int]
 
-_lib.Sts2_ValidActions.restype  = None
-_lib.Sts2_ValidActions.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.c_int]
+_lib.Sts2_ValidActions.restype = None
+_lib.Sts2_ValidActions.argtypes = [
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+]
 
-_lib.Sts2_Destroy.restype       = None
-_lib.Sts2_Destroy.argtypes      = [ctypes.c_int]
+_lib.Sts2_Destroy.restype = None
+_lib.Sts2_Destroy.argtypes = [ctypes.c_int]
 
 # ── public wrappers ───────────────────────────────────────────────────────────
 

@@ -1,5 +1,6 @@
-gymnasium>=0.29
-numpy>=1.26
-torch>=2.3
-stable-baselines3>=2.3
-sb3-contrib>=2.3
+black==26.5.1
+gymnasium==1.2.3
+numpy==2.4.6
+sb3-contrib==2.8.0
+stable-baselines3==2.8.0
+torch==2.12.0

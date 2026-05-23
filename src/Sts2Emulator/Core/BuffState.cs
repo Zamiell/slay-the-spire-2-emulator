@@ -23,6 +23,18 @@ public enum BuffId
     HardToKill,   // damage taken per hit is capped at N
     Thorns,       // enemy: retaliatory damage, currently observed but not triggered
     Shrink,       // player debuff from Shrinker Beetle, currently observed but not otherwise modeled
+    Ravenous,     // enemy: gain Strength and skip next move when an ally dies
+    Stunned,      // enemy: skip the next intent
+    Slippery,     // enemy: each unblocked hit loses at most 1 HP, then decrements
+    Surprise,     // Gremlin Merc: spawn reinforcements on death
+    SummonCooldown, // Two-Tailed Rat: turns until Call for Backup is available
+    BackupCount,    // Two-Tailed Rat: number of successful backup calls
+    Plating,      // Sewer Clam: recurring block that decays each turn
+    Tangled,      // Vine Shambler card debuff, currently tracked as a player debuff
+    Constrict,    // Slithering Strangler pressure debuff, currently tracked
+    Smoggy,       // Living Fog card affliction debuff, currently tracked
+    Illusion,     // Fogmog summon marker
+    Minion,       // Living Fog Gas Bomb marker
 }
 
 public record struct BuffState(BuffId Id, int Magnitude);
