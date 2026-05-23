@@ -1,0 +1,72 @@
+"""Train MaskablePPO on the Sts2CombatEnv."""
+
+import sys
+import os
+from pathlib import Path
+
+# Allow running from project root: python scripts/train.py
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+import gymnasium as gym
+from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
+from sb3_contrib import MaskablePPO
+from sb3_contrib.common.wrappers import ActionMasker
+
+from sts2_gym import Sts2CombatEnv
+
+# ── helper ────────────────────────────────────────────────────────────────────
+
+def make_env(rank: int):
+    def _init():
+        env = Sts2CombatEnv(seed=rank)
+        env = ActionMasker(env, lambda e: e.action_masks())
+        return env
+    return _init
+
+
+# ── main ──────────────────────────────────────────────────────────────────────
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--timesteps", type=int, default=1_000_000)
+    parser.add_argument("--n-envs",    type=int, default=4)
+    parser.add_argument("--save-path", type=str, default="checkpoints/maskable_ppo")
+    parser.add_argument("--check",     action="store_true",
+                        help="Run env sanity check then exit")
+    args = parser.parse_args()
+
+    if args.check:
+        env = Sts2CombatEnv(seed=0)
+        check_env(env, warn=True, skip_render_check=True)
+        print("Env check passed.")
+        env.close()
+        return
+
+    os.makedirs(os.path.dirname(args.save_path) or ".", exist_ok=True)
+
+    vec_env = DummyVecEnv([make_env(i) for i in range(args.n_envs)])
+
+    model = MaskablePPO(
+        "MlpPolicy",
+        vec_env,
+        verbose=1,
+        tensorboard_log=None,
+        n_steps=256,
+        batch_size=64,
+        n_epochs=4,
+        gamma=0.99,
+        learning_rate=3e-4,
+    )
+
+    model.learn(total_timesteps=args.timesteps)
+    model.save(args.save_path)
+    print(f"Model saved to {args.save_path}")
+
+    vec_env.close()
+
+
+if __name__ == "__main__":
+    main()

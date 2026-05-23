@@ -4,6 +4,7 @@ public static class BuffSystem
 {
     public static void Apply(List<BuffState> buffs, BuffId id, int magnitude)
     {
+        if (magnitude == 0) return;
         int idx = buffs.FindIndex(b => b.Id == id);
         if (idx >= 0)
             buffs[idx] = buffs[idx] with { Magnitude = buffs[idx].Magnitude + magnitude };
@@ -17,6 +18,10 @@ public static class BuffSystem
         return idx >= 0 ? buffs[idx].Magnitude : 0;
     }
 
+    public static void Remove(List<BuffState> buffs, BuffId id)
+        => buffs.RemoveAll(b => b.Id == id);
+
+    // Called at end of turn for the owning side (tick debuffs down by 1).
     public static void TickEndOfTurn(List<BuffState> buffs)
     {
         for (int i = buffs.Count - 1; i >= 0; i--)
@@ -25,9 +30,6 @@ public static class BuffSystem
             switch (b.Id)
             {
                 case BuffId.Poison:
-                    buffs[i] = b with { Magnitude = b.Magnitude - 1 };
-                    if (buffs[i].Magnitude <= 0) buffs.RemoveAt(i);
-                    break;
                 case BuffId.Vulnerable:
                 case BuffId.Weak:
                 case BuffId.Frail:

@@ -6,7 +6,8 @@ public readonly record struct EnemyDef(
     int Id,
     string Name,
     int MinHp,
-    int MaxHp
+    int MaxHp,
+    int[] Moves   // flat [damage, repeats, damage, repeats, ...] pairs
 );
 
 public readonly record struct Intent(IntentType Type, int Magnitude);
@@ -18,6 +19,6 @@ public sealed class EnemyState
     public int MaxHp;
     public int Block;
     public Intent CurrentIntent;
-    public BuffState[] Buffs = [];
+    public List<BuffState> Buffs = [];
     public int MoveIndex;
 }

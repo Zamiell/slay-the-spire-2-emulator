@@ -32,10 +32,10 @@ public static class NativeExports
 
     private static readonly CombatState?[] _pool = new CombatState?[256];
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    [UnmanagedCallersOnly]
     public static int Sts2_ObsSize() => OBS_SIZE;
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    [UnmanagedCallersOnly]
     public static int Sts2_Create(int seed)
     {
         var state = CombatFactory.NewCombat(seed);
@@ -50,7 +50,7 @@ public static class NativeExports
         return -1; // pool exhausted
     }
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    [UnmanagedCallersOnly]
     public static unsafe void Sts2_Reset(int handle, int* obsBuf)
     {
         var state = _pool[handle]!;
@@ -58,7 +58,7 @@ public static class NativeExports
         WriteObs(state, obsBuf);
     }
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    [UnmanagedCallersOnly]
     public static unsafe int Sts2_Step(int handle, int action, int* obsBuf, float* rewardOut)
     {
         var state = _pool[handle]!;
@@ -69,13 +69,13 @@ public static class NativeExports
         return result.Terminal ? 1 : 0;
     }
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    [UnmanagedCallersOnly]
     public static int Sts2_ActionCount(int handle)
     {
         return CombatEngine.ValidActions(_pool[handle]!).Length;
     }
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    [UnmanagedCallersOnly]
     public static unsafe void Sts2_ValidActions(int handle, int* maskBuf, int maxActions)
     {
         var valid = CombatEngine.ValidActions(_pool[handle]!);
@@ -85,7 +85,7 @@ public static class NativeExports
             if (a < maxActions) maskBuf[a] = 1;
     }
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    [UnmanagedCallersOnly]
     public static void Sts2_Destroy(int handle)
     {
         _pool[handle] = null;
@@ -160,7 +160,7 @@ public static class NativeExports
                 o[b + 4] = en.CurrentIntent.Magnitude;
                 for (int bi = 0; bi < MAX_ENEMY_BUFFS; bi++)
                 {
-                    if (bi < en.Buffs.Length)
+                    if (bi < en.Buffs.Count)
                     {
                         o[b + 5 + bi * 2]     = (int)en.Buffs[bi].Id;
                         o[b + 5 + bi * 2 + 1] = en.Buffs[bi].Magnitude;

@@ -5,65 +5,99 @@ import re
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).parent.parent
+REPO       = Path(__file__).parent.parent
 DECOMPILED = REPO / "decompiled"
 GENERATED  = REPO / "src" / "Sts2Emulator" / "Generated"
 
+CARDS_DIR   = DECOMPILED / "MegaCrit.Sts2.Core.Models.Cards"
+MONSTERS_DIR = DECOMPILED / "MegaCrit.Sts2.Core.Models.Monsters"
+POWERS_DIR  = DECOMPILED / "MegaCrit.Sts2.Core.Models.Powers"
+POTIONS_DIR = DECOMPILED / "MegaCrit.Sts2.Core.Models.Potions"
+RELICS_DIR  = DECOMPILED / "MegaCrit.Sts2.Core.Models.Relics"
+
+# ── patterns ──────────────────────────────────────────────────────────────────
+
+# Constructor: base(cost, CardType.Attack, ...)
+CARD_CTOR  = re.compile(r"base\((\d+),\s*CardType\.(\w+)")
+# DamageVar(6m, ...) or DamageVar(6, ...)
+DAMAGE_VAR = re.compile(r"new DamageVar\((\d+(?:\.\d+)?)m?,")
+# BlockVar(5m, ...)
+BLOCK_VAR  = re.compile(r"new BlockVar\((\d+(?:\.\d+)?)m?,")
+# UpgradeValueBy on damage / block
+UPGRADE_DMG   = re.compile(r"DynamicVars\.Damage\.UpgradeValueBy\((\d+(?:\.\d+)?)m?\)")
+UPGRADE_BLOCK = re.compile(r"DynamicVars\.Block\.UpgradeValueBy\((\d+(?:\.\d+)?)m?\)")
+
+# HP: plain int or AscensionHelper (take the normal/non-ascension value = 2nd arg)
+HP_PLAIN      = re.compile(r"(?:Min|Max)InitialHp\s*=>\s*(\d+)\s*;")
+HP_ASCENSION  = re.compile(r"(?:Min|Max)InitialHp\s*=>.+?GetValueIfAscension\([^,]+,\s*\d+,\s*(\d+)\s*\)")
+
+# Monster move intents
+SINGLE_ATTACK = re.compile(r"new SingleAttackIntent\((\d+)\)")
+MULTI_ATTACK  = re.compile(r"new MultiAttackIntent\((\d+),\s*(\d+)\)")  # (damage, repeats)
+
+# Power type
+POWER_TYPE    = re.compile(r"PowerType\.(Buff|Debuff)")
+POWER_STACK   = re.compile(r"PowerStackType\.(\w+)")
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-def find_files(pattern: str) -> list[Path]:
-    return sorted(DECOMPILED.rglob(pattern))
+def cs_header() -> str:
+    return (
+        "// AUTO-GENERATED — do not edit. Re-run scripts/extract_data.py to update.\n"
+        "using Sts2Emulator.Core;\n"
+    )
 
 
-def first_int(text: str, name: str, default: int = 0) -> int:
-    m = re.search(rf"{re.escape(name)}\s*=\s*(-?\d+)", text)
-    return int(m.group(1)) if m else default
+def decimal_to_int(s: str) -> int:
+    return int(float(s))
 
-
-def cs_header(script: str) -> str:
-    return f"// AUTO-GENERATED — do not edit. Re-run scripts/{script} to update.\n"
 
 # ── card extraction ───────────────────────────────────────────────────────────
 
 def extract_cards() -> str:
-    """
-    Locate card definition classes in the decompiled source and emit Cards.g.cs.
-    Heuristic: look for classes that contain fields named 'damage', 'block', 'cost'
-    or inherit from a base card class.  Adjust regexes after first decompile.
-    """
     entries: list[str] = []
-
-    # TODO: update class_pattern to match actual STS2 card class names after decompile
-    class_pattern = re.compile(
-        r"class\s+(\w+Card\w*|Card\w+)\s*[:{]", re.IGNORECASE
-    )
-    cost_pattern   = re.compile(r"(?:cost|Cost)\s*[=:]\s*(-?\d+)")
-    damage_pattern = re.compile(r"(?:damage|Damage)\s*[=:]\s*(-?\d+)")
-    block_pattern  = re.compile(r"(?:block|Block)\s*[=:]\s*(-?\d+)")
-
     card_id = 1
-    for f in find_files("*.cs"):
+
+    for f in sorted(CARDS_DIR.glob("*.cs")):
+        name = f.stem
         text = f.read_text(encoding="utf-8", errors="replace")
-        for m in class_pattern.finditer(text):
-            name = m.group(1)
-            start = m.start()
-            snippet = text[start:start + 600]
-            cost   = first_int(snippet, "cost",   0)  if cost_pattern.search(snippet)   else 1
-            damage = first_int(snippet, "damage", 0)  if damage_pattern.search(snippet) else 0
-            block  = first_int(snippet, "block",  0)  if block_pattern.search(snippet)  else 0
-            entries.append(
-                f'        new CardDef(Id: {card_id}, Name: "{name}", '
-                f'Cost: {cost}, BaseDamage: {damage}, BaseBlock: {block}, '
-                f'Type: CardType.Attack),'
-            )
-            card_id += 1
+
+        if "CardModel" not in text:
+            continue
+        if name in ("DeprecatedCard", "Modded"):
+            continue
+
+        ctor = CARD_CTOR.search(text)
+        if not ctor:
+            continue
+
+        cost        = int(ctor.group(1))
+        card_type   = ctor.group(2)   # Attack / Skill / Power / Status / Curse
+
+        dmg_m  = DAMAGE_VAR.search(text)
+        blk_m  = BLOCK_VAR.search(text)
+        base_dmg   = decimal_to_int(dmg_m.group(1)) if dmg_m else 0
+        base_block = decimal_to_int(blk_m.group(1)) if blk_m else 0
+
+        upg_dmg_m   = UPGRADE_DMG.search(text)
+        upg_blk_m   = UPGRADE_BLOCK.search(text)
+        upg_dmg   = decimal_to_int(upg_dmg_m.group(1))   if upg_dmg_m   else 0
+        upg_block = decimal_to_int(upg_blk_m.group(1))   if upg_blk_m   else 0
+
+        entries.append(
+            f"        new CardDef(Id: {card_id}, Name: \"{name}\", "
+            f"Cost: {cost}, BaseDamage: {base_dmg}, BaseBlock: {base_block}, "
+            f"UpgradeDamage: {upg_dmg}, UpgradeBlock: {upg_block}, "
+            f"Type: CardType.{card_type}),"
+        )
+        card_id += 1
 
     if not entries:
-        print("  [extract_cards] No card classes found — decompiled/ may be empty.", file=sys.stderr)
-        entries = ["        // No cards extracted yet — run decompile.sh first."]
+        entries = ["        // No cards extracted — check CARDS_DIR path."]
 
+    print(f"  Cards: {card_id - 1} extracted.")
     lines = "\n".join(entries)
-    return f"""{cs_header("extract_data.py")}namespace Sts2Emulator.GeneratedData;
+    return f"""{cs_header()}namespace Sts2Emulator.GeneratedData;
 
 internal static class Cards
 {{
@@ -76,34 +110,60 @@ internal static class Cards
         Array.Find(_all, c => c.Id == id) is {{ Id: > 0 }} def
             ? def
             : throw new ArgumentException($"Unknown card id {{id}}");
+
+    public static int? FindId(string name) =>
+        Array.Find(_all, c => c.Name == name) is {{ Id: > 0 }} def
+            ? def.Id
+            : null;
 }}
 """
 
-# ── enemy extraction ──────────────────────────────────────────────────────────
+# ── monster / enemy extraction ────────────────────────────────────────────────
 
 def extract_enemies() -> str:
     entries: list[str] = []
-    # TODO: update to match actual STS2 enemy class structure after decompile
-    enemy_pattern = re.compile(r"class\s+(\w+(?:Enemy|Monster|Cultist|Guard|Louse)\w*)\s*[:{]", re.IGNORECASE)
-    hp_pattern    = re.compile(r"(?:maxHp|MaxHp|hp|HP)\s*[=:]\s*(-?\d+)")
-
     enemy_id = 1
-    for f in find_files("*.cs"):
+
+    for f in sorted(MONSTERS_DIR.glob("*.cs")):
+        name = f.stem
         text = f.read_text(encoding="utf-8", errors="replace")
-        for m in enemy_pattern.finditer(text):
-            name = m.group(1)
-            snippet = text[m.start():m.start() + 400]
-            hp = first_int(snippet, "maxHp", 48) if hp_pattern.search(snippet) else 48
-            entries.append(
-                f'        new EnemyDef(Id: {enemy_id}, Name: "{name}", MinHp: {hp}, MaxHp: {hp}),'
-            )
-            enemy_id += 1
+
+        if "MonsterModel" not in text:
+            continue
+        if name in ("DeprecatedMonster", "MultiAttackMoveMonster", "SingleAttackMoveMonster",
+                    "OneHpMonster", "TenHpMonster", "BigDummy", "FakeMerchantMonster",
+                    "BattleFriendV1", "BattleFriendV2", "BattleFriendV3", "TestSubject"):
+            continue
+
+        # HP — try AscensionHelper form first, then plain int
+        min_hps = HP_ASCENSION.findall(text) or HP_PLAIN.findall(text)
+        min_hp  = int(min_hps[0]) if min_hps else 0
+        max_hp  = int(min_hps[1]) if len(min_hps) > 1 else min_hp
+
+        # Collect attack intents (damage values) for the move list
+        single_attacks = [(int(m), 1)   for m in SINGLE_ATTACK.findall(text)]
+        multi_attacks  = [(int(d), int(r)) for d, r in MULTI_ATTACK.findall(text)]
+        attacks = single_attacks + multi_attacks
+
+        # Encode moves as a compact int array: [damage, repeats, ...]
+        if attacks:
+            move_arr = ", ".join(f"{d}, {r}" for d, r in attacks)
+            moves_cs = f"new int[] {{ {move_arr} }}"
+        else:
+            moves_cs = "Array.Empty<int>()"
+
+        entries.append(
+            f"        new EnemyDef(Id: {enemy_id}, Name: \"{name}\", "
+            f"MinHp: {min_hp}, MaxHp: {max_hp}, Moves: {moves_cs}),"
+        )
+        enemy_id += 1
 
     if not entries:
-        entries = ["        // No enemies extracted yet — run decompile.sh first."]
+        entries = ["        // No enemies extracted — check MONSTERS_DIR path."]
 
+    print(f"  Enemies: {enemy_id - 1} extracted.")
     lines = "\n".join(entries)
-    return f"""{cs_header("extract_data.py")}namespace Sts2Emulator.GeneratedData;
+    return f"""{cs_header()}namespace Sts2Emulator.GeneratedData;
 
 internal static class Enemies
 {{
@@ -119,14 +179,73 @@ internal static class Enemies
 
     public static Intent ChooseIntent(int enemyId, int moveIndex, int turn, Random rng)
     {{
-        // TODO: implement per-enemy move patterns after decompile
-        return new Intent(IntentType.Unknown, 0);
+        var def = Get(enemyId);
+        if (def.Moves.Length == 0) return new Intent(IntentType.Unknown, 0);
+        // Moves array: [damage0, repeats0, damage1, repeats1, ...]
+        // Cycle through move pairs based on moveIndex
+        int pairIndex = moveIndex % (def.Moves.Length / 2);
+        int damage  = def.Moves[pairIndex * 2];
+        int repeats = def.Moves[pairIndex * 2 + 1];
+        return damage == 0
+            ? new Intent(IntentType.Buff, 0)
+            : new Intent(IntentType.Attack, damage * repeats);
     }}
 
     public static void ApplyBuffIntent(EnemyState enemy, CombatState state, Random rng)
     {{
-        // TODO: implement after decompile
+        // Per-enemy buff logic is hand-implemented in Core/Effects after reviewing decompiled moves
     }}
+}}
+"""
+
+# ── power extraction ──────────────────────────────────────────────────────────
+
+def extract_powers() -> str:
+    entries: list[str] = []
+    power_id = 1
+
+    for f in sorted(POWERS_DIR.glob("*.cs")):
+        name = f.stem
+        text = f.read_text(encoding="utf-8", errors="replace")
+
+        if "PowerModel" not in text:
+            continue
+
+        pt_m     = POWER_TYPE.search(text)
+        stack_m  = POWER_STACK.search(text)
+        is_buff  = pt_m.group(1) == "Buff" if pt_m else True
+        stack    = stack_m.group(1) if stack_m else "Counter"
+        ticks    = "TickDownDuration" in text
+
+        entries.append(
+            f"        new PowerDef(Id: {power_id}, Name: \"{name}\", "
+            f"IsBuff: {str(is_buff).lower()}, StackType: \"{stack}\", TicksDown: {str(ticks).lower()}),"
+        )
+        power_id += 1
+
+    if not entries:
+        entries = ["        // No powers extracted — check POWERS_DIR path."]
+
+    print(f"  Powers: {power_id - 1} extracted.")
+    lines = "\n".join(entries)
+    return f"""{cs_header()}namespace Sts2Emulator.GeneratedData;
+
+internal static class Powers
+{{
+    private static readonly PowerDef[] _all =
+    [
+{lines}
+    ];
+
+    public static PowerDef Get(int id) =>
+        Array.Find(_all, p => p.Id == id) is {{ Id: > 0 }} def
+            ? def
+            : throw new ArgumentException($"Unknown power id {{id}}");
+
+    public static int? FindId(string name) =>
+        Array.Find(_all, p => p.Name == name) is {{ Id: > 0 }} def
+            ? def.Id
+            : null;
 }}
 """
 
@@ -134,21 +253,26 @@ internal static class Enemies
 
 def extract_relics() -> str:
     entries: list[str] = []
-    relic_pattern = re.compile(r"class\s+(\w+(?:Relic)\w*)\s*[:{]", re.IGNORECASE)
-
     relic_id = 1
-    for f in find_files("*.cs"):
+
+    for f in sorted(RELICS_DIR.glob("*.cs")):
+        name = f.stem
         text = f.read_text(encoding="utf-8", errors="replace")
-        for m in relic_pattern.finditer(text):
-            name = m.group(1)
-            entries.append(f'        new RelicDef(Id: {relic_id}, Name: "{name}"),')
-            relic_id += 1
+
+        if "RelicModel" not in text:
+            continue
+        if name == "DeprecatedRelic":
+            continue
+
+        entries.append(f"        new RelicDef(Id: {relic_id}, Name: \"{name}\"),")
+        relic_id += 1
 
     if not entries:
-        entries = ["        // No relics extracted yet — run decompile.sh first."]
+        entries = ["        // No relics extracted — check RELICS_DIR path."]
 
+    print(f"  Relics: {relic_id - 1} extracted.")
     lines = "\n".join(entries)
-    return f"""{cs_header("extract_data.py")}namespace Sts2Emulator.GeneratedData;
+    return f"""{cs_header()}namespace Sts2Emulator.GeneratedData;
 
 internal static class Relics
 {{
@@ -161,6 +285,57 @@ internal static class Relics
         Array.Find(_all, r => r.Id == id) is {{ Id: > 0 }} def
             ? def
             : throw new ArgumentException($"Unknown relic id {{id}}");
+
+    public static int? FindId(string name) =>
+        Array.Find(_all, r => r.Name == name) is {{ Id: > 0 }} def
+            ? def.Id
+            : null;
+}}
+"""
+
+# ── potion extraction ─────────────────────────────────────────────────────────
+
+def extract_potions() -> str:
+    entries: list[str] = []
+    potion_id = 1
+
+    for f in sorted(POTIONS_DIR.glob("*.cs")):
+        name = f.stem
+        text = f.read_text(encoding="utf-8", errors="replace")
+
+        if "PotionModel" not in text:
+            continue
+        if name in ("DeprecatedPotion", "PotionBody", "PotionBodyExtensions",
+                    "PotionOverlay", "PotionProcureFailureReason", "PotionProcureResult",
+                    "PotionRarity", "PotionRarityExtensions", "PotionUsage"):
+            continue
+
+        entries.append(f"        new PotionDef(Id: {potion_id}, Name: \"{name}\"),")
+        potion_id += 1
+
+    if not entries:
+        entries = ["        // No potions extracted — check POTIONS_DIR path."]
+
+    print(f"  Potions: {potion_id - 1} extracted.")
+    lines = "\n".join(entries)
+    return f"""{cs_header()}namespace Sts2Emulator.GeneratedData;
+
+internal static class Potions
+{{
+    private static readonly PotionDef[] _all =
+    [
+{lines}
+    ];
+
+    public static PotionDef Get(int id) =>
+        Array.Find(_all, p => p.Id == id) is {{ Id: > 0 }} def
+            ? def
+            : throw new ArgumentException($"Unknown potion id {{id}}");
+
+    public static int? FindId(string name) =>
+        Array.Find(_all, p => p.Name == name) is {{ Id: > 0 }} def
+            ? def.Id
+            : null;
 }}
 """
 
@@ -168,15 +343,21 @@ internal static class Relics
 
 def main() -> None:
     if not DECOMPILED.exists():
-        print("decompiled/ directory not found. Run scripts/decompile.sh first.", file=sys.stderr)
+        print("decompiled/ not found. Run scripts/decompile.sh first.", file=sys.stderr)
         sys.exit(1)
+
+    for d in (CARDS_DIR, MONSTERS_DIR, POWERS_DIR, RELICS_DIR, POTIONS_DIR):
+        if not d.exists():
+            print(f"Warning: {d.name} not found in decompiled/", file=sys.stderr)
 
     GENERATED.mkdir(parents=True, exist_ok=True)
 
     for filename, content in [
         ("Cards.g.cs",   extract_cards()),
         ("Enemies.g.cs", extract_enemies()),
+        ("Powers.g.cs",  extract_powers()),
         ("Relics.g.cs",  extract_relics()),
+        ("Potions.g.cs", extract_potions()),
     ]:
         out = GENERATED / filename
         out.write_text(content, encoding="utf-8")

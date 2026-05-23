@@ -8,6 +8,8 @@ public readonly record struct CardDef(
     int Cost,
     int BaseDamage,
     int BaseBlock,
+    int UpgradeDamage,
+    int UpgradeBlock,
     CardType Type,
     bool Ethereal = false,
     bool Exhaust = false

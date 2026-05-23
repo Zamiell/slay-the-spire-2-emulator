@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
+    <NativeLib>Shared</NativeLib>
     <TargetFramework>net9.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
@@ -8,4 +9,19 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="ILLink.Roots.xml" />
+    <UnmanagedEntryPointsAssembly Include="Sts2Emulator" />
+    <!--
+      ILC 9.x does not emit export aliases for [UnmanagedCallersOnly] in the primary assembly.
+      Wire them manually: short public name = NativeAOT mangled internal name.
+    -->
+    <LinkerArg Include="/EXPORT:Sts2_ObsSize=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ObsSize" />
+    <LinkerArg Include="/EXPORT:Sts2_Create=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Create" />
+    <LinkerArg Include="/EXPORT:Sts2_Reset=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Reset" />
+    <LinkerArg Include="/EXPORT:Sts2_Step=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Step" />
+    <LinkerArg Include="/EXPORT:Sts2_ActionCount=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ActionCount" />
+    <LinkerArg Include="/EXPORT:Sts2_ValidActions=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ValidActions" />
+    <LinkerArg Include="/EXPORT:Sts2_Destroy=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Destroy" />
+  </ItemGroup>
 </Project>

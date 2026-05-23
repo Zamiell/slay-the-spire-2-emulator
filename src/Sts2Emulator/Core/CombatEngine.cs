@@ -4,8 +4,6 @@ namespace Sts2Emulator.Core;
 //   0..hand.Count-1  → play card at that hand index (targeting first enemy)
 //   hand.Count       → end turn
 //   hand.Count+1..   → use potion at slot (index - hand.Count - 1)
-//
-// This will be expanded once card targeting and multi-enemy rooms are implemented.
 
 public static class CombatEngine
 {
@@ -28,17 +26,35 @@ public static class CombatEngine
         var card = state.Hand[handIndex];
         var def = GeneratedData.Cards.Get(card.DefId);
 
-        if (def.Cost > state.Energy)
+        int effectiveCost = EffectiveCost(def, state);
+        if (effectiveCost > state.Energy)
             return StepResult.Invalid;
 
-        state.Energy -= def.Cost;
+        // Snapshot HP before effects.
+        int playerHpBefore = state.PlayerHp;
+        Span<int> enemyHpsBefore = stackalloc int[3];
+        for (int i = 0; i < state.Enemies.Count; i++)
+            enemyHpsBefore[i] = state.Enemies[i].Hp;
+
+        state.Energy -= effectiveCost;
         state.Hand.RemoveAt(handIndex);
 
         Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
 
-        (state.DiscardPile, state.ExhaustPile) = def.Exhaust
-            ? (state.DiscardPile, [.. state.ExhaustPile, card])
-            : ([.. state.DiscardPile, card], state.ExhaustPile);
+        // Rage: gain block when playing an Attack.
+        if (def.Type == CardType.Attack)
+        {
+            int rage = BuffSystem.Get(state.PlayerBuffs, BuffId.Rage);
+            if (rage > 0) Effects.CardEffects.GainBlock(state, rage);
+        }
+
+        // Corruption: Skills exhaust instead of discard.
+        bool corruptedSkill = def.Type == CardType.Skill
+            && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0;
+        if (def.Exhaust || corruptedSkill)
+            Effects.CardEffects.ExhaustCard(state, card);
+        else
+            state.DiscardPile.Add(card);
 
         bool playerDead = state.PlayerHp <= 0;
         bool allDead = state.Enemies.All(e => e.Hp <= 0);
@@ -46,28 +62,61 @@ public static class CombatEngine
         return new StepResult(
             Terminal: playerDead || allDead,
             PlayerWon: allDead && !playerDead,
-            Reward: ComputeReward(state, playerDead, allDead)
+            Reward: ComputeReward(state, playerDead, allDead, playerHpBefore, enemyHpsBefore)
         );
     }
 
     private static StepResult EndTurn(CombatState state, Random rng)
     {
-        // Tick player end-of-turn buffs
-        BuffSystem.TickEndOfTurn(state.PlayerBuffs);
+        // Snapshot HP before enemies act.
+        int playerHpBefore = state.PlayerHp;
+        Span<int> enemyHpsBefore = stackalloc int[3];
+        for (int i = 0; i < state.Enemies.Count; i++)
+            enemyHpsBefore[i] = state.Enemies[i].Hp;
 
-        // Move hand to discard
+        // ── End of player turn ────────────────────────────────────────────────
+        // Metallicize: gain block at end of player turn.
+        int metallicize = BuffSystem.Get(state.PlayerBuffs, BuffId.Metallicize);
+        if (metallicize > 0) Effects.CardEffects.GainBlock(state, metallicize);
+
+        // Rage expires at end of player turn.
+        BuffSystem.Remove(state.PlayerBuffs, BuffId.Rage);
+
+        // Move hand to discard.
         state.DiscardPile.AddRange(state.Hand);
         state.Hand.Clear();
 
-        // Enemy turns
+        // Tick enemy debuffs before enemies act (Vulnerable/Weak on enemies tick down).
+        foreach (var enemy in state.Enemies)
+            BuffSystem.TickEndOfTurn(enemy.Buffs);
+
+        // ── Enemy turns ───────────────────────────────────────────────────────
         foreach (var enemy in state.Enemies.Where(e => e.Hp > 0))
             EnemyAI.ExecuteIntent(enemy, state, rng);
 
-        // Start next player turn
+        // FlameBarrier expires after enemies have acted.
+        BuffSystem.Remove(state.PlayerBuffs, BuffId.FlameBarrier);
+
+        // ── Start of next player turn ─────────────────────────────────────────
         state.Turn++;
         state.Energy = state.MaxEnergy;
-        state.PlayerBlock = 0;
-        DrawCards(state, 5, rng);
+
+        // Barricade: block does not reset.
+        if (BuffSystem.Get(state.PlayerBuffs, BuffId.Barricade) == 0)
+            state.PlayerBlock = 0;
+
+        // DemonForm: gain Strength at start of player turn.
+        int demonForm = BuffSystem.Get(state.PlayerBuffs, BuffId.DemonForm);
+        if (demonForm > 0)
+            BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, demonForm);
+
+        // Tick player debuffs at start of player turn (Vulnerable etc. tick down).
+        BuffSystem.TickEndOfTurn(state.PlayerBuffs);
+
+        // Draw five cards.
+        Effects.CardEffects.DrawCards(state, 5, rng);
+
+        // Enemies choose their next intent.
         EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng);
 
         bool playerDead = state.PlayerHp <= 0;
@@ -76,7 +125,7 @@ public static class CombatEngine
         return new StepResult(
             Terminal: playerDead || allDead,
             PlayerWon: allDead && !playerDead,
-            Reward: ComputeReward(state, playerDead, allDead)
+            Reward: ComputeReward(state, playerDead, allDead, playerHpBefore, enemyHpsBefore)
         );
     }
 
@@ -91,28 +140,37 @@ public static class CombatEngine
         return new StepResult(Terminal: false, PlayerWon: false, Reward: 0f);
     }
 
-    private static void DrawCards(CombatState state, int count, Random rng)
+    // Shaped reward: fraction of enemy HP dealt minus fraction of player HP lost,
+    // plus ±1 terminal bonus for win/death.
+    private static float ComputeReward(
+        CombatState state, bool playerDead, bool allDead,
+        int playerHpBefore, ReadOnlySpan<int> enemyHpsBefore)
     {
-        for (int i = 0; i < count; i++)
+        float totalMaxHp = 0f;
+        float dmgDealt = 0f;
+        for (int i = 0; i < state.Enemies.Count; i++)
         {
-            if (state.DrawPile.Count == 0)
-            {
-                state.DrawPile = state.DiscardPile.OrderBy(_ => rng.Next()).ToList();
-                state.DiscardPile.Clear();
-            }
-            if (state.DrawPile.Count == 0) break;
-
-            int idx = rng.Next(state.DrawPile.Count);
-            state.Hand.Add(state.DrawPile[idx]);
-            state.DrawPile.RemoveAt(idx);
+            totalMaxHp += state.Enemies[i].MaxHp;
+            if (i < enemyHpsBefore.Length)
+                dmgDealt += Math.Max(0, enemyHpsBefore[i] - state.Enemies[i].Hp);
         }
+
+        float dmgTaken = Math.Max(0, playerHpBefore - state.PlayerHp);
+
+        float shaped = (totalMaxHp > 0f ? dmgDealt / totalMaxHp : 0f)
+                     - dmgTaken / (float)state.PlayerMaxHp;
+
+        float terminal = (allDead && !playerDead) ? 1f : (playerDead ? -1f : 0f);
+
+        return shaped + terminal;
     }
 
-    private static float ComputeReward(CombatState state, bool playerDead, bool allDead)
+    // Returns the energy cost of a card after applying active powers (e.g. Corruption).
+    private static int EffectiveCost(CardDef def, CombatState state)
     {
-        if (allDead && !playerDead) return 1.0f;
-        if (playerDead) return -1.0f;
-        return 0f;
+        if (def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0)
+            return 0;
+        return def.Cost;
     }
 
     public static int[] ValidActions(CombatState state)
@@ -122,7 +180,7 @@ public static class CombatEngine
         for (int i = 0; i < state.Hand.Count; i++)
         {
             var def = GeneratedData.Cards.Get(state.Hand[i].DefId);
-            if (def.Cost <= state.Energy)
+            if (EffectiveCost(def, state) <= state.Energy)
                 actions.Add(i);
         }
 

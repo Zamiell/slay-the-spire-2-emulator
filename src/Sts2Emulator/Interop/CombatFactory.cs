@@ -1,9 +1,14 @@
 using Sts2Emulator.Core;
+using Sts2Emulator.Core.Effects;
 
 namespace Sts2Emulator.Interop;
 
 public static class CombatFactory
 {
+    // Ironclad starting deck card IDs (from Generated/Cards.g.cs).
+    private const int StrikeId = IC.StrikeIronclad; // 472
+    private const int DefendId = IC.DefendIronclad;  // 131
+
     public static CombatState NewCombat(int seed)
     {
         var state = new CombatState
@@ -19,8 +24,8 @@ public static class CombatFactory
 
     public static void Reset(CombatState state, int? seed = null)
     {
-        // Placeholder: build a minimal starting combat state.
-        // Will be replaced with proper encounter selection once generated data is available.
+        var rng = seed.HasValue ? new Random(seed.Value) : new Random();
+
         state.PlayerBlock  = 0;
         state.PlayerBuffs  = [];
         state.Hand         = [];
@@ -30,29 +35,30 @@ public static class CombatFactory
         state.Turn         = 0;
         state.PlayerTurn   = true;
 
-        // Stub draw pile: 5 Strikes + 4 Defends
+        // Standard Ironclad starter deck: 5 Strikes + 4 Defends.
         state.DrawPile = [
-            .. Enumerable.Repeat(new CardInstance(1, false), 5),
-            .. Enumerable.Repeat(new CardInstance(2, false), 4),
+            .. Enumerable.Repeat(new CardInstance(StrikeId, false), 5),
+            .. Enumerable.Repeat(new CardInstance(DefendId, false), 4),
         ];
 
-        // Stub enemy: single Cultist
-        state.Enemies = [
+        // Single CalcifiedCultist encounter (Act 1, normal difficulty).
+        int cultistHp = rng.Next(38, 42); // 38–41 inclusive
+        state.Enemies =
+        [
             new EnemyState
             {
-                DefId          = 1,
-                Hp             = 48,
-                MaxHp          = 48,
-                Block          = 0,
-                CurrentIntent  = new Intent(IntentType.Buff, 0),
-                Buffs          = [],
+                DefId         = KE.CalcifiedCultist, // 14
+                Hp            = cultistHp,
+                MaxHp         = cultistHp,
+                Block         = 0,
+                CurrentIntent = new Intent(IntentType.Buff, 0), // starts with Incantation
+                Buffs         = [],
+                MoveIndex     = 0,
             }
         ];
 
-        var rng = seed.HasValue ? new Random(seed.Value) : new Random();
-        // Initial draw
-        var shuffled = state.DrawPile.OrderBy(_ => rng.Next()).ToList();
-        state.DrawPile = shuffled;
+        // Shuffle draw pile and deal opening hand of 5.
+        state.DrawPile = state.DrawPile.OrderBy(_ => rng.Next()).ToList();
         for (int i = 0; i < 5 && state.DrawPile.Count > 0; i++)
         {
             state.Hand.Add(state.DrawPile[0]);
