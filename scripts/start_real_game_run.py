@@ -83,7 +83,9 @@ def option_names(state: dict[str, Any]) -> set[str]:
     return names
 
 
-def wait_for_menu(base_url: str, menu_screen: str, timeout: float = 10.0) -> dict[str, Any]:
+def wait_for_menu(
+    base_url: str, menu_screen: str, timeout: float = 10.0
+) -> dict[str, Any]:
     deadline = time.monotonic() + timeout
     state = get_state(base_url)
     while time.monotonic() < deadline:
@@ -107,7 +109,9 @@ def wait_for_run(base_url: str, seed: str, timeout: float = 30.0) -> dict[str, A
         time.sleep(0.5)
         state = get_state(base_url)
     observed = current_run_seed(base_url)
-    raise RuntimeError(f"Timed out waiting for seeded run {seed!r}; observed {observed!r}")
+    raise RuntimeError(
+        f"Timed out waiting for seeded run {seed!r}; observed {observed!r}"
+    )
 
 
 def wait_for_state_type(
@@ -129,7 +133,7 @@ def wait_for_combat_ready(base_url: str, timeout: float = 20.0) -> dict[str, Any
     while time.monotonic() < deadline:
         if (
             state.get("state_type") in {"monster", "elite", "boss"}
-            and len((state.get("player") or {}).get("hand") or []) > 0
+            and len((state.get("player") or {}).get("hand") or []) >= 5
         ):
             return state
         time.sleep(0.5)
@@ -151,7 +155,10 @@ def wait_for_event_options(base_url: str, timeout: float = 10.0) -> dict[str, An
 
 
 def abandon_existing_run(base_url: str) -> None:
-    main = wait_for_menu(base_url, "main")
+    state = get_state(base_url)
+    if state.get("state_type") != "menu" or state.get("menu_screen") != "main":
+        post_action(base_url, {"action": "return_to_main_menu"})
+    main = wait_for_menu(base_url, "main", timeout=30.0)
     if "abandon_run" not in option_names(main):
         return
 
@@ -169,7 +176,11 @@ def start_seeded_run(
     character: str,
     abandon_existing: bool,
 ) -> dict[str, Any]:
-    state = wait_for_menu(base_url, "main")
+    if abandon_existing:
+        abandon_existing_run(base_url)
+        state = wait_for_menu(base_url, "main")
+    else:
+        state = wait_for_menu(base_url, "main")
     if "singleplayer" not in option_names(state):
         if not abandon_existing:
             raise RuntimeError(
@@ -177,6 +188,7 @@ def start_seeded_run(
                 "Use --abandon-existing to replace it."
             )
         abandon_existing_run(base_url)
+        state = wait_for_menu(base_url, "main")
 
     post_menu(base_url, "singleplayer")
     wait_for_menu(base_url, "singleplayer")
@@ -215,7 +227,9 @@ def enter_first_combat(
                 None,
             )
             if proceed is None:
-                raise RuntimeError("Neow did not expose a proceed option after selection")
+                raise RuntimeError(
+                    "Neow did not expose a proceed option after selection"
+                )
             post_action(base_url, {"action": "choose_event_option", "index": proceed})
             state = wait_for_state_type(base_url, {"rewards", "map"})
 
@@ -238,12 +252,21 @@ def choose_neow_option(state: dict[str, Any]) -> int:
     options = (state.get("event") or {}).get("options") or []
     blocked_terms = (
         "add",
+        "arcane",
+        "brand",
         "choose",
+        "create",
+        "gold",
+        "greed",
         "transform",
         "upgrade",
         "potion",
+        "receive",
         "deck",
+        "heal",
+        "hp",
         "lose",
+        "max hp",
         "reward",
     )
     for option in options:
@@ -255,13 +278,7 @@ def choose_neow_option(state: dict[str, Any]) -> int:
             if isinstance(index, int):
                 return index
 
-    for option in options:
-        if isinstance(option, dict) and not option.get("is_locked"):
-            index = option.get("index")
-            if isinstance(index, int):
-                return index
-
-    raise RuntimeError("Neow did not expose an unlocked option")
+    raise RuntimeError("Neow did not expose a safe unlocked option")
 
 
 def main() -> None:

@@ -35,9 +35,15 @@ def get_path(value: Any, dotted_path: str) -> Any:
 
 def load_trace(path: Path) -> list[dict[str, Any]]:
     payload = json.loads(path.read_text(encoding="utf-8"))
+    return load_trace_from_payload(payload, str(path))
+
+
+def load_trace_from_payload(
+    payload: dict[str, Any], source: str = "<payload>"
+) -> list[dict[str, Any]]:
     trace = payload.get("trace")
     if not isinstance(trace, list):
-        raise ValueError(f"{path} does not contain a top-level trace list")
+        raise ValueError(f"{source} does not contain a top-level trace list")
     return trace
 
 

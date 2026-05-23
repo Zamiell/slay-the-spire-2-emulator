@@ -12,8 +12,8 @@ Build a high-performance STS2 combat emulator for reinforcement learning: C# gam
   - Enemy HP ranges are generated from max-ascension `ToughEnemies` values.
   - Deadly enemy move values are modeled for supported enemies.
 - Act 1 coverage includes Overgrowth and Underdocks weak/normal encounter pools, many enemy powers, status-card mechanics, and deterministic forced encounter evaluation.
-- STS2MCP live validation is working locally with seeded standard-run starts through `scripts\start_real_game_run.py`.
-- Recent live traces validated/fixed Toadpoles, Shrinker Beetle, Corpse Slugs, Seapunk, and Fuzzy Wurm Crawler on normalized combat fields.
+- STS2MCP live validation is working locally with seeded standard-run starts through `scripts\start_real_game_run.py`; seeded runs can now be replaced without restarting STS2.
+- Recent live traces validated the full first-combat weak pool on normalized end-turn fields: Nibbit, Slimes, Toadpoles, Sludge Spinner, Corpse Slugs, Fuzzy Wurm Crawler, Shrinker Beetle, and Seapunk.
 
 ## Build and test
 
@@ -60,7 +60,7 @@ Regenerate data from decompiled sources after a patch:
 
 ## Immediate next steps
 
-1. Continue seeded live trace validation across the remaining Act 1 weak encounters, then normal encounters.
+1. Extend seeded live trace validation beyond first-combat weak encounters into Act 1 normal encounters.
 2. Fix divergences found by live traces, prioritizing enemy HP/intents, damage, block, status stacks, and pile counts.
 3. Improve card draw-order parity so hand comparisons can be enabled in trace comparison.
 4. Expand validation scripts into repeatable sweeps over known seeds and encounters.
