@@ -19,15 +19,18 @@ namespace Sts2Emulator.Interop;
 //   [54..68]   enemy 0: hp, max_hp, block, intent_type, intent_mag, 5 buff slots × 2 ints
 //   [69..83]   enemy 1 (same layout)
 //   [84..98]   enemy 2 (same layout)
-//   [99..163]  reserved
+//   [99..113]  enemy 3 (same layout)
+//   [114..128] enemy 4 (same layout)
+//   [129..143] enemy 5 (same layout)
+//   [144..163] reserved
 //
-// Total: 164 ints. Enemies beyond index 2 are ignored for now.
+// Total: 164 ints. Enemies beyond index 5 are ignored for now.
 
 public static class NativeExports
 {
     public const int OBS_SIZE = 164;
     public const int MAX_HAND = 10;
-    public const int MAX_ENEMIES = 3;
+    public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
     private static ReadOnlySpan<int> StarterDeckIds =>

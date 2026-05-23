@@ -35,6 +35,7 @@ public enum BuffId
     Smoggy,       // Living Fog card affliction debuff, currently tracked
     Illusion,     // Fogmog summon marker
     Minion,       // Living Fog Gas Bomb marker
+    PaperCuts,    // Scroll of Biting max-HP chip at end of enemy action
 }
 
 public record struct BuffState(BuffId Id, int Magnitude);

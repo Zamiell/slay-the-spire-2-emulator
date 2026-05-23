@@ -24,7 +24,7 @@ def summarize_observation(obs: np.ndarray) -> dict:
         if int(obs[34 + i * 2]) != 0
     ]
     enemies = []
-    for enemy_index in range(3):
+    for enemy_index in range(6):
         base = 54 + enemy_index * 15
         hp = int(obs[base])
         max_hp = int(obs[base + 1])

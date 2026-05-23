@@ -498,4 +498,5 @@ public static class ST
 {
     public const int Dazed = 10002;
     public const int Slimed = 440;
+    public const int Toxic = 512;
 }

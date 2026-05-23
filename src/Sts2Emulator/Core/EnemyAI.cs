@@ -34,8 +34,12 @@ public static class EnemyAI
                     break;
                 }
 
+                int baseDamage = enemy.CurrentIntent.Magnitude;
+                if (enemy.DefId == KE.FlailKnight)
+                    baseDamage = Math.Max(0, baseDamage - BuffSystem.Get(enemy.Buffs, BuffId.Strength));
+
                 int damage = BuffSystem.IncomingDamage(
-                    enemy.CurrentIntent.Magnitude,
+                    baseDamage,
                     enemy.Buffs,
                     state.PlayerBuffs
                 );
@@ -53,6 +57,18 @@ public static class EnemyAI
                 }
                 if (enemy.DefId == KE.GasBomb)
                     enemy.Hp = 0;
+                if (enemy.DefId == KE.ThievingHopper && enemy.MoveIndex == 0)
+                    StealDrawOrDiscardCard(state);
+                if (enemy.DefId == KE.LouseProgenitor && enemy.MoveIndex == 0)
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 2);
+                if (enemy.DefId == KE.Fabricator)
+                    SummonFabricatorBots(enemy, state, rng, includeDefensive: false);
+                if (enemy.DefId == KE.ScrollOfBiting)
+                    ApplyPaperCuts(enemy, state);
+                if (enemy.DefId == KE.TurretOperator)
+                    enemy.Block += 25;
+                if (enemy.DefId == KE.PunchConstruct && enemy.MoveIndex % 3 == 1)
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 1);
                 break;
             }
 
@@ -76,6 +92,9 @@ public static class EnemyAI
         {
             enemy.Block += BuffSystem.IncomingBlock(6, enemy.Buffs);
         }
+
+        if (enemy.DefId == KE.BowlbugEgg && enemy.CurrentIntent.Type == IntentType.Attack)
+            enemy.Block += BuffSystem.IncomingBlock(8, enemy.Buffs);
 
         if (enemy.DefId == KE.TwoTailedRat && enemy.CurrentIntent.Type != IntentType.Buff)
             TickRatSummonCooldown(enemy);
@@ -173,12 +192,208 @@ public static class EnemyAI
                 return rng.Next(6) switch
                 {
                     0 or 1 or 2 => new Intent(IntentType.Debuff, 2),
-                    3 or 4 => new Intent(IntentType.Debuff, 9),
+                    3 or 4 => new Intent(IntentType.Attack, 9),
                     _ => new Intent(IntentType.Attack, 12),
                 };
 
             case KE.SnappingJaxfruit:
-                return new Intent(IntentType.Buff, 4);
+                return new Intent(IntentType.Attack, 4);
+
+            case KE.BowlbugRock:
+                return enemy.MoveIndex % 2 == 0
+                    ? new Intent(IntentType.Attack, 16)
+                    : new Intent(IntentType.Unknown, 0);
+
+            case KE.BowlbugEgg:
+                return new Intent(IntentType.Attack, 8);
+
+            case KE.BowlbugNectar:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    1 => new Intent(IntentType.Buff, 16),
+                    _ => new Intent(IntentType.Attack, 3),
+                };
+
+            case KE.BowlbugSilk:
+                return enemy.MoveIndex % 2 == 0
+                    ? new Intent(IntentType.Debuff, 1)
+                    : new Intent(IntentType.Attack, 10);
+
+            case KE.Tunneler:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 15),
+                    1 => new Intent(IntentType.Defend, 37),
+                    _ => new Intent(IntentType.Attack, 26),
+                };
+
+            case KE.ThievingHopper:
+                return (enemy.MoveIndex % 5) switch
+                {
+                    0 => new Intent(IntentType.Attack, 19),
+                    1 => new Intent(IntentType.Buff, 5),
+                    2 => new Intent(IntentType.Attack, 23),
+                    3 => new Intent(IntentType.Attack, 16),
+                    _ => new Intent(IntentType.Unknown, 0),
+                };
+
+            case KE.Myte:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => enemy.CurrentIntent.Type == IntentType.Attack
+                        ? new Intent(IntentType.Attack, 6)
+                        : new Intent(IntentType.Debuff, 2),
+                    1 => new Intent(IntentType.Attack, 15),
+                    _ => new Intent(IntentType.Attack, 6),
+                };
+
+            case KE.SlumberingBeetle:
+                return enemy.MoveIndex < 3
+                    ? new Intent(IntentType.Unknown, 0)
+                    : new Intent(IntentType.Attack, 18);
+
+            case KE.SpinyToad:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Buff, 5),
+                    1 => new Intent(IntentType.Attack, 25),
+                    _ => new Intent(IntentType.Attack, 19),
+                };
+
+            case KE.Ovicopter:
+                return (enemy.MoveIndex % 4) switch
+                {
+                    0 => new Intent(IntentType.Buff, 0),
+                    1 => new Intent(IntentType.Attack, 17),
+                    2 => new Intent(IntentType.Debuff, 8),
+                    _ => new Intent(IntentType.Buff, 4),
+                };
+
+            case KE.LouseProgenitor:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 10),
+                    1 => new Intent(IntentType.Defend, 18),
+                    _ => new Intent(IntentType.Attack, 16),
+                };
+
+            case KE.HunterKiller:
+                return enemy.MoveIndex == 0
+                    ? new Intent(IntentType.Debuff, 1)
+                    : new Intent(IntentType.Attack, rng.Next(3) == 0 ? 19 : 24);
+
+            case KE.Axebot:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Defend, 15),
+                    1 => new Intent(IntentType.Attack, 20),
+                    _ => new Intent(IntentType.Attack, 14),
+                };
+
+            case KE.DevotedSculptor:
+                return enemy.MoveIndex == 0
+                    ? new Intent(IntentType.Buff, 9)
+                    : new Intent(IntentType.Attack, 15);
+
+            case KE.Fabricator:
+                return rng.Next(2) == 0
+                    ? new Intent(IntentType.Buff, 0)
+                    : new Intent(IntentType.Attack, 21);
+
+            case KE.FrogKnight:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Buff, 5),
+                    1 => new Intent(IntentType.Attack, 23),
+                    _ => new Intent(IntentType.Attack, 14),
+                };
+
+            case KE.GlobeHead:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 14),
+                    1 => new Intent(IntentType.Attack, 21),
+                    _ => new Intent(IntentType.Attack, 17),
+                };
+
+            case KE.LivingShield:
+                return new Intent(IntentType.Attack, enemy.MoveIndex == 0 ? 6 : 18);
+
+            case KE.TurretOperator:
+                return (enemy.MoveIndex % 3) == 2
+                    ? new Intent(IntentType.Buff, 1)
+                    : new Intent(IntentType.Attack, 20);
+
+            case KE.OwlMagistrate:
+                return (enemy.MoveIndex % 4) switch
+                {
+                    0 => new Intent(IntentType.Attack, 17),
+                    1 => new Intent(IntentType.Attack, 24),
+                    2 => new Intent(IntentType.Buff, 1),
+                    _ => new Intent(IntentType.Attack, 36),
+                };
+
+            case KE.ScrollOfBiting:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 16),
+                    1 => new Intent(IntentType.Attack, 12),
+                    _ => new Intent(IntentType.Buff, 2),
+                };
+
+            case KE.SlimedBerserker:
+                return (enemy.MoveIndex % 4) switch
+                {
+                    0 => new Intent(IntentType.Debuff, 10),
+                    1 => new Intent(IntentType.Attack, 20),
+                    2 => new Intent(IntentType.Buff, 3),
+                    _ => new Intent(IntentType.Attack, 33),
+                };
+
+            case KE.TheLost:
+                return (enemy.MoveIndex % 2) == 0
+                    ? new Intent(IntentType.Debuff, 2)
+                    : new Intent(IntentType.Attack, 10);
+
+            case KE.TheForgotten:
+                return (enemy.MoveIndex % 2) == 0
+                    ? new Intent(IntentType.Debuff, 2)
+                    : new Intent(IntentType.Attack, 15);
+
+            case KE.TheObscura:
+                return enemy.MoveIndex == 0
+                    ? new Intent(IntentType.Buff, 0)
+                    : rng.Next(3) switch
+                    {
+                        0 => new Intent(IntentType.Attack, 11),
+                        1 => new Intent(IntentType.Buff, 3),
+                        _ => new Intent(IntentType.Attack, 7),
+                    };
+
+            case KE.Parafright:
+                return new Intent(IntentType.Attack, 17);
+
+            case KE.Wriggler:
+                return (enemy.MoveIndex % 2) == 0
+                    ? new Intent(IntentType.Attack, 7)
+                    : new Intent(IntentType.Buff, 1);
+
+            case KE.FakeMerchant:
+                return enemy.MoveIndex switch
+                {
+                    0 => new Intent(IntentType.Attack, 15),
+                    1 => new Intent(IntentType.Attack, 16),
+                    2 => new Intent(IntentType.Attack, 10),
+                    _ => new Intent(IntentType.Buff, 2),
+                };
+
+            case KE.FlailKnight:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Buff, 3),
+                    1 => new Intent(IntentType.Attack, 20),
+                    _ => new Intent(IntentType.Attack, 23),
+                };
 
             case KE.CubexConstruct:
                 return (enemy.MoveIndex % 4) switch
@@ -347,7 +562,7 @@ public static class EnemyAI
                 return (enemy.MoveIndex % 3) switch
                 {
                     0 => new Intent(IntentType.Defend, 10),
-                    1 => new Intent(IntentType.Debuff, 12),
+                    1 => new Intent(IntentType.Attack, 12),
                     _ => new Intent(IntentType.Attack, 16),
                 };
 
@@ -410,6 +625,10 @@ public static class EnemyAI
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
                 break;
 
+            case KE.BowlbugNectar:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
             case KE.CubexConstruct:
                 if (enemy.CurrentIntent.Magnitude > 0)
                     DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
@@ -431,7 +650,7 @@ public static class EnemyAI
                 {
                     var eye = CreateEnemy(KE.EyeWithTeeth, rng, new Intent(IntentType.Debuff, 3), stunned: true);
                     BuffSystem.Apply(eye.Buffs, BuffId.Illusion, 1);
-                    state.Enemies.Add(eye);
+                    state.Enemies.Insert(state.Enemies.IndexOf(enemy), eye);
                 }
                 break;
 
@@ -455,6 +674,78 @@ public static class EnemyAI
 
             case KE.FatGremlin:
                 enemy.Hp = 0;
+                break;
+
+            case KE.ThievingHopper:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Slippery, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.SpinyToad:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Thorns, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.Ovicopter:
+                if (enemy.CurrentIntent.Magnitude > 0)
+                    BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                else
+                    SummonToughEggs(enemy, state, rng);
+                break;
+
+            case KE.Axebot:
+                enemy.Block += BuffSystem.IncomingBlock(15, enemy.Buffs);
+                break;
+
+            case KE.DevotedSculptor:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Ritual, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.Fabricator:
+                SummonFabricatorBots(enemy, state, rng, includeDefensive: true);
+                break;
+
+            case KE.FrogKnight:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.GlobeHead:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
+                break;
+
+            case KE.TurretOperator:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                enemy.Block += 25;
+                break;
+
+            case KE.ScrollOfBiting:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                ApplyPaperCuts(enemy, state);
+                break;
+
+            case KE.SlimedBerserker:
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 3);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 3);
+                break;
+
+            case KE.TheObscura:
+                if (enemy.MoveIndex == 0)
+                    SummonParafright(enemy, state);
+                else
+                    foreach (var ally in state.Enemies.Where(e => e.Hp > 0))
+                        BuffSystem.Apply(ally.Buffs, BuffId.Strength, 3);
+                break;
+
+            case KE.Wriggler:
+                AddStatus(state, ST.Dazed, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
+                break;
+
+            case KE.FakeMerchant:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.FlailKnight:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 3);
                 break;
 
             case KE.TwoTailedRat:
@@ -520,6 +811,53 @@ public static class EnemyAI
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Smoggy, 1);
                 break;
 
+            case KE.BowlbugSilk:
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 1);
+                break;
+
+            case KE.Myte:
+                AddStatusToHand(state, ST.Toxic, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.Ovicopter:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Vulnerable, 2);
+                break;
+
+            case KE.LouseProgenitor:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 2);
+                break;
+
+            case KE.HunterKiller:
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Vulnerable, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.FakeMerchant:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 1);
+                break;
+
+            case KE.FrogKnight:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 2);
+                break;
+
+            case KE.SlimedBerserker:
+                AddStatus(state, ST.Slimed, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.TheLost:
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, -enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.TheForgotten:
+                enemy.Block += BuffSystem.IncomingBlock(8, enemy.Buffs);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Dexterity, -enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Dexterity, enemy.CurrentIntent.Magnitude);
+                break;
+
             case KE.EyeWithTeeth:
                 AddStatus(state, ST.Dazed, 3);
                 break;
@@ -562,10 +900,82 @@ public static class EnemyAI
         state.PlayerHp = Math.Max(0, state.PlayerHp - (damage - absorbed));
     }
 
+    private static void StealDrawOrDiscardCard(CombatState state)
+    {
+        if (state.DrawPile.Count > 0)
+            state.DrawPile.RemoveAt(0);
+        else if (state.DiscardPile.Count > 0)
+            state.DiscardPile.RemoveAt(0);
+    }
+
+    private static void ApplyPaperCuts(EnemyState enemy, CombatState state)
+    {
+        int amount = BuffSystem.Get(enemy.Buffs, BuffId.PaperCuts);
+        if (amount <= 0)
+            return;
+        state.PlayerMaxHp = Math.Max(1, state.PlayerMaxHp - amount);
+        state.PlayerHp = Math.Min(state.PlayerHp, state.PlayerMaxHp);
+    }
+
     private static void AddStatus(CombatState state, int cardId, int count)
     {
         for (int i = 0; i < count; i++)
             state.DiscardPile.Add(new CardInstance(cardId, false));
+    }
+
+    private static void AddStatusToHand(CombatState state, int cardId, int count)
+    {
+        for (int i = 0; i < count; i++)
+            state.Hand.Add(new CardInstance(cardId, false));
+    }
+
+    private static void SummonToughEggs(EnemyState enemy, CombatState state, Random rng)
+    {
+        int eggsToAdd = Math.Min(3, 6 - state.Enemies.Count);
+        int insertIndex = state.Enemies.IndexOf(enemy);
+        for (int i = 0; i < eggsToAdd; i++)
+        {
+            var egg = CreateEnemy(KE.ToughEgg, rng, new Intent(IntentType.Unknown, 0), stunned: true);
+            BuffSystem.Apply(egg.Buffs, BuffId.Minion, 1);
+            state.Enemies.Insert(insertIndex + i, egg);
+        }
+    }
+
+    private static void SummonFabricatorBots(
+        EnemyState enemy, CombatState state, Random rng, bool includeDefensive)
+    {
+        int insertIndex = state.Enemies.IndexOf(enemy);
+        if (includeDefensive && state.Enemies.Count < 6)
+        {
+            int defensive = rng.Next(2) == 0 ? KE.Guardbot : KE.Noisebot;
+            var bot = CreateEnemy(defensive, rng, BotIntent(defensive), stunned: true);
+            BuffSystem.Apply(bot.Buffs, BuffId.Minion, 1);
+            state.Enemies.Insert(insertIndex++, bot);
+        }
+        if (state.Enemies.Count < 6)
+        {
+            int aggro = rng.Next(2) == 0 ? KE.Zapbot : KE.Stabbot;
+            var bot = CreateEnemy(aggro, rng, BotIntent(aggro), stunned: true);
+            BuffSystem.Apply(bot.Buffs, BuffId.Minion, 1);
+            state.Enemies.Insert(insertIndex, bot);
+        }
+    }
+
+    private static Intent BotIntent(int defId) =>
+        defId switch
+        {
+            KE.Guardbot => new Intent(IntentType.Defend, 15),
+            KE.Noisebot => new Intent(IntentType.Debuff, 2),
+            KE.Zapbot => new Intent(IntentType.Attack, 15),
+            KE.Stabbot => new Intent(IntentType.Debuff, 12),
+            _ => new Intent(IntentType.Unknown, 0),
+        };
+
+    private static void SummonParafright(EnemyState enemy, CombatState state)
+    {
+        var parafright = CreateEnemy(KE.Parafright, new Random(0), new Intent(IntentType.Attack, 17), stunned: true);
+        BuffSystem.Apply(parafright.Buffs, BuffId.Illusion, 1);
+        state.Enemies.Insert(state.Enemies.IndexOf(enemy), parafright);
     }
 
     private static bool CanRatSummon(EnemyState enemy, Random rng)
@@ -628,42 +1038,79 @@ public static class EnemyAI
 internal static class KE
 {
     public const int CalcifiedCultist = 14;
+    public const int Axebot = 4;
+    public const int BattleFriendV1 = 10004;
+    public const int BattleFriendV2 = 10005;
+    public const int BattleFriendV3 = 10006;
     public const int Chomper = 16;
     public const int CorpseSlug = 17;
     public const int AxeRubyRaider = 5;
     public const int AssassinRubyRaider = 3;
+    public const int BowlbugEgg = 6;
+    public const int BowlbugNectar = 7;
+    public const int BowlbugRock = 8;
+    public const int BowlbugSilk = 9;
     public const int BruteRubyRaider = 10;
     public const int CrossbowRubyRaider = 18;
     public const int DampCultist = 21;
+    public const int DevotedSculptor = 23;
     public const int EyeWithTeeth = 26;
     public const int Exoskeleton = 25;
+    public const int Fabricator = 27;
+    public const int FakeMerchant = 10003;
     public const int Flyconid = 30;
+    public const int FlailKnight = 29;
     public const int Fogmog = 31;
     public const int FossilStalker = 32;
+    public const int FrogKnight = 33;
     public const int GasBomb = 35;
+    public const int GlobeHead = 36;
+    public const int Guardbot = 38;
     public const int FuzzyWurmCrawler = 34;
     public const int FatGremlin = 28;
     public const int GremlinMerc = 37;
     public const int HauntedShip = 39;
+    public const int HunterKiller = 40;
     public const int Inklet = 42;
     public const int LivingFog = 49;
+    public const int LivingShield = 50;
+    public const int LouseProgenitor = 51;
     public const int LeafSlimeM = 47;
     public const int LeafSlimeS = 48;
     public const int Mawler = 53;
+    public const int Myte = 55;
     public const int Nibbit = 56;
+    public const int Noisebot = 57;
+    public const int Ovicopter = 59;
+    public const int OwlMagistrate = 60;
+    public const int Parafright = 62;
     public const int PunchConstruct = 65;
+    public const int ScrollOfBiting = 68;
     public const int Seapunk = 69;
     public const int SewerClam = 70;
     public const int ShrinkerBeetle = 71;
     public const int SneakyGremlin = 78;
     public const int SnappingJaxfruit = 77;
+    public const int SpinyToad = 82;
     public const int SlitheringStrangler = 74;
     public const int SludgeSpinner = 75;
+    public const int SlumberingBeetle = 76;
+    public const int SlimedBerserker = 73;
+    public const int Stabbot = 83;
     public const int Toadpole = 93;
+    public const int ThievingHopper = 92;
+    public const int TheForgotten = 88;
+    public const int TheLost = 90;
+    public const int TheObscura = 91;
     public const int TrackerRubyRaider = 96;
+    public const int ToughEgg = 95;
     public const int TwigSlimeM = 99;
     public const int TwigSlimeS = 100;
+    public const int Tunneler = 97;
     public const int TwoTailedRat = 101;
+    public const int TurretOperator = 98;
     public const int CubexConstruct = 20;
     public const int VineShambler = 103;
+    public const int Wriggler = 105;
+    public const int Zapbot = 106;
 }

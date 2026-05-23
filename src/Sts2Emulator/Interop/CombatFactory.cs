@@ -48,6 +48,37 @@ public static class CombatFactory
         RubyRaiders,
         Fogmog,
         LivingFog,
+        BowlbugsWeak,
+        Bowlbugs,
+        Tunneler,
+        TunnelerAndChomper,
+        ThievingHopper,
+        Mytes,
+        SlumberingBeetle,
+        SpinyToad,
+        Ovicopter,
+        LouseProgenitor,
+        HunterKiller,
+        Axebot,
+        DevotedSculptor,
+        Fabricator,
+        FrogKnight,
+        GlobeHead,
+        TurretOperator,
+        OwlMagistrate,
+        ScrollsWeak,
+        Scrolls,
+        SlimedBerserker,
+        LostAndForgotten,
+        Obscura,
+        ConstructMenagerie,
+        DenseVegetation,
+        PunchOff,
+        FakeMerchant,
+        MysteriousKnight,
+        BattlewornDummy1,
+        BattlewornDummy2,
+        BattlewornDummy3,
     }
 
     private static readonly ActOneEncounter[] OvergrowthWeakEncounters =
@@ -167,6 +198,7 @@ public static class CombatFactory
                 CreateExoskeleton(rng, new Intent(IntentType.Attack, 4)),
                 CreateExoskeleton(rng, new Intent(IntentType.Attack, 9)),
                 CreateExoskeleton(rng, new Intent(IntentType.Buff, 0)),
+                CreateExoskeleton(rng, new Intent(IntentType.Attack, 9)),
             ],
 
             ActOneEncounter.Inklets =>
@@ -218,17 +250,12 @@ public static class CombatFactory
 
             ActOneEncounter.Nibbits =>
             [
-                CreateEnemy(KE.Nibbit, rng, new Intent(IntentType.Attack, 13)),
                 CreateEnemy(KE.Nibbit, rng, new Intent(IntentType.Attack, 7), moveIndex: 1),
+                CreateEnemy(KE.Nibbit, rng, new Intent(IntentType.Buff, 0), moveIndex: 2),
             ],
 
             ActOneEncounter.LargeSlimes =>
-            [
-                CreateSlime(KE.LeafSlimeM, rng),
-                CreateSlime(KE.TwigSlimeM, rng),
-                CreateSlime(KE.LeafSlimeS, rng),
-                CreateSlime(KE.TwigSlimeS, rng),
-            ],
+                CreateLargeSlimesEncounter(rng),
 
             ActOneEncounter.SlimeAndFlyconid =>
             [
@@ -238,7 +265,7 @@ public static class CombatFactory
 
             ActOneEncounter.JaxfruitAndFlyconid =>
             [
-                CreateEnemy(KE.SnappingJaxfruit, rng, new Intent(IntentType.Buff, 4)),
+                CreateEnemy(KE.SnappingJaxfruit, rng, new Intent(IntentType.Attack, 4)),
                 CreateEnemy(KE.Flyconid, rng, FlyconidInitialIntent(rng), moveIndex: rng.Next(2)),
             ],
 
@@ -285,15 +312,7 @@ public static class CombatFactory
             ],
 
             ActOneEncounter.SlitheringStrangler =>
-            [
-                CreateEnemy(KE.SlitheringStrangler, rng, new Intent(IntentType.Debuff, 3)),
-                rng.Next(3) switch
-                {
-                    0 => CreateEnemy(KE.SnappingJaxfruit, rng, new Intent(IntentType.Buff, 4)),
-                    1 => CreateSlime(rng.Next(2) == 0 ? KE.LeafSlimeM : KE.TwigSlimeM, rng),
-                    _ => CreateSlime(rng.Next(2) == 0 ? KE.LeafSlimeS : KE.TwigSlimeS, rng),
-                },
-            ],
+                CreateSlitheringStranglerEncounter(rng),
 
             ActOneEncounter.RubyRaiders => CreateRubyRaiders(rng),
 
@@ -305,6 +324,166 @@ public static class CombatFactory
             ActOneEncounter.LivingFog =>
             [
                 CreateEnemy(KE.LivingFog, rng, new Intent(IntentType.Debuff, 9)),
+            ],
+
+            ActOneEncounter.BowlbugsWeak => CreateBowlbugsWeakEncounter(rng),
+
+            ActOneEncounter.Bowlbugs => CreateBowlbugsEncounter(rng),
+
+            ActOneEncounter.Tunneler =>
+            [
+                CreateEnemy(KE.Tunneler, rng, new Intent(IntentType.Attack, 15)),
+            ],
+
+            ActOneEncounter.TunnelerAndChomper =>
+            [
+                CreateChomper(rng, new Intent(IntentType.Debuff, 3)),
+                CreateEnemy(KE.Tunneler, rng, new Intent(IntentType.Attack, 15)),
+            ],
+
+            ActOneEncounter.ThievingHopper =>
+            [
+                CreateEnemy(KE.ThievingHopper, rng, new Intent(IntentType.Attack, 19)),
+            ],
+
+            ActOneEncounter.Mytes =>
+            [
+                CreateEnemy(KE.Myte, rng, new Intent(IntentType.Debuff, 2)),
+                CreateEnemy(KE.Myte, rng, new Intent(IntentType.Attack, 6)),
+            ],
+
+            ActOneEncounter.SlumberingBeetle =>
+            [
+                CreateEnemy(KE.BowlbugRock, rng, new Intent(IntentType.Attack, 16)),
+                CreateBowlbugWorker(KE.BowlbugSilk, rng),
+                CreateSlumberingBeetle(rng),
+            ],
+
+            ActOneEncounter.SpinyToad =>
+            [
+                CreateEnemy(KE.SpinyToad, rng, new Intent(IntentType.Buff, 5)),
+            ],
+
+            ActOneEncounter.Ovicopter =>
+            [
+                CreateEnemy(KE.Ovicopter, rng, new Intent(IntentType.Buff, 0)),
+            ],
+
+            ActOneEncounter.LouseProgenitor =>
+            [
+                CreateEnemy(KE.LouseProgenitor, rng, new Intent(IntentType.Attack, 10)),
+            ],
+
+            ActOneEncounter.HunterKiller =>
+            [
+                CreateEnemy(KE.HunterKiller, rng, new Intent(IntentType.Debuff, 1)),
+            ],
+
+            ActOneEncounter.Axebot =>
+            [
+                CreateEnemy(KE.Axebot, rng, new Intent(IntentType.Attack, 14), moveIndex: 2),
+            ],
+
+            ActOneEncounter.DevotedSculptor =>
+            [
+                CreateEnemy(KE.DevotedSculptor, rng, new Intent(IntentType.Buff, 9)),
+            ],
+
+            ActOneEncounter.Fabricator =>
+            [
+                CreateEnemy(
+                    KE.Fabricator,
+                    rng,
+                    rng.Next(2) == 0
+                        ? new Intent(IntentType.Buff, 0)
+                        : new Intent(IntentType.Attack, 21)),
+            ],
+
+            ActOneEncounter.FrogKnight =>
+            [
+                CreateFrogKnight(rng),
+            ],
+
+            ActOneEncounter.GlobeHead =>
+            [
+                CreateEnemy(KE.GlobeHead, rng, new Intent(IntentType.Attack, 14)),
+            ],
+
+            ActOneEncounter.TurretOperator =>
+            [
+                CreateLivingShield(rng),
+                CreateTurretOperator(rng),
+            ],
+
+            ActOneEncounter.OwlMagistrate =>
+            [
+                CreateEnemy(KE.OwlMagistrate, rng, new Intent(IntentType.Attack, 17)),
+            ],
+
+            ActOneEncounter.ScrollsWeak => CreateScrollsEncounter(rng, 3),
+
+            ActOneEncounter.Scrolls => CreateScrollsEncounter(rng, 4),
+
+            ActOneEncounter.SlimedBerserker =>
+            [
+                CreateEnemy(KE.SlimedBerserker, rng, new Intent(IntentType.Debuff, 10)),
+            ],
+
+            ActOneEncounter.LostAndForgotten =>
+            [
+                CreateEnemy(KE.TheLost, rng, new Intent(IntentType.Debuff, 2)),
+                CreateEnemy(KE.TheForgotten, rng, new Intent(IntentType.Debuff, 2)),
+            ],
+
+            ActOneEncounter.Obscura =>
+            [
+                CreateEnemy(KE.TheObscura, rng, new Intent(IntentType.Buff, 0)),
+            ],
+
+            ActOneEncounter.ConstructMenagerie =>
+            [
+                CreatePunchConstruct(rng, startsWithFastPunch: false),
+                CreateCubexConstruct(rng),
+                CreateCubexConstruct(rng),
+            ],
+
+            ActOneEncounter.DenseVegetation =>
+            [
+                CreateEnemy(KE.Wriggler, rng, new Intent(IntentType.Attack, 7)),
+                CreateEnemy(KE.Wriggler, rng, new Intent(IntentType.Buff, 1), moveIndex: 1),
+                CreateEnemy(KE.Wriggler, rng, new Intent(IntentType.Attack, 7)),
+                CreateEnemy(KE.Wriggler, rng, new Intent(IntentType.Buff, 1), moveIndex: 1),
+            ],
+
+            ActOneEncounter.PunchOff =>
+            [
+                CreatePunchOffConstruct(rng, startsWithFastPunch: true),
+                CreatePunchOffConstruct(rng, startsWithFastPunch: false),
+            ],
+
+            ActOneEncounter.FakeMerchant =>
+            [
+                CreateEnemy(KE.FakeMerchant, rng, new Intent(IntentType.Attack, 15)),
+            ],
+
+            ActOneEncounter.MysteriousKnight =>
+            [
+                CreateMysteriousKnight(rng),
+            ],
+
+            ActOneEncounter.BattlewornDummy1 =>
+            [
+                CreateEnemy(KE.BattleFriendV1, rng, new Intent(IntentType.Unknown, 0)),
+            ],
+
+            ActOneEncounter.BattlewornDummy2 =>
+            [
+                CreateEnemy(KE.BattleFriendV2, rng, new Intent(IntentType.Unknown, 0)),
+            ],
+
+            ActOneEncounter.BattlewornDummy3 =>
+            [
+                CreateEnemy(KE.BattleFriendV3, rng, new Intent(IntentType.Unknown, 0)),
             ],
 
             _ => throw new ArgumentOutOfRangeException(nameof(encounter), encounter, null),
@@ -326,6 +505,112 @@ public static class CombatFactory
         [
             CreateSlime(firstSmall, rng),
             CreateSlime(middle, rng),
+            CreateSlime(secondSmall, rng),
+        ];
+    }
+
+    private static List<EnemyState> CreateBowlbugsWeakEncounter(Random rng) =>
+    [
+        CreateEnemy(KE.BowlbugRock, rng, new Intent(IntentType.Attack, 16)),
+        CreateBowlbugWorker(rng.Next(2) == 0 ? KE.BowlbugEgg : KE.BowlbugNectar, rng),
+    ];
+
+    private static List<EnemyState> CreateBowlbugsEncounter(Random rng)
+    {
+        int[] workers = [KE.BowlbugEgg, KE.BowlbugSilk, KE.BowlbugNectar];
+        return
+        [
+            CreateEnemy(KE.BowlbugRock, rng, new Intent(IntentType.Attack, 16)),
+            .. workers.OrderBy(_ => rng.Next()).Take(2).Select(id => CreateBowlbugWorker(id, rng)),
+        ];
+    }
+
+    private static EnemyState CreateBowlbugWorker(int defId, Random rng) =>
+        defId switch
+        {
+            KE.BowlbugEgg => CreateEnemy(defId, rng, new Intent(IntentType.Attack, 8)),
+            KE.BowlbugNectar => CreateEnemy(defId, rng, new Intent(IntentType.Attack, 3)),
+            KE.BowlbugSilk => CreateEnemy(defId, rng, new Intent(IntentType.Debuff, 1)),
+            _ => throw new ArgumentOutOfRangeException(nameof(defId), defId, null),
+        };
+
+    private static EnemyState CreateSlumberingBeetle(Random rng)
+    {
+        var enemy = CreateEnemy(KE.SlumberingBeetle, rng, new Intent(IntentType.Unknown, 0));
+        enemy.Block = 18;
+        BuffSystem.Apply(enemy.Buffs, BuffId.Plating, 18);
+        return enemy;
+    }
+
+    private static EnemyState CreateFrogKnight(Random rng)
+    {
+        var enemy = CreateEnemy(KE.FrogKnight, rng, new Intent(IntentType.Attack, 14), moveIndex: 2);
+        enemy.Block = 19;
+        BuffSystem.Apply(enemy.Buffs, BuffId.Plating, 19);
+        return enemy;
+    }
+
+    private static EnemyState CreateLivingShield(Random rng)
+        => CreateEnemy(KE.LivingShield, rng, new Intent(IntentType.Attack, 6));
+
+    private static EnemyState CreateTurretOperator(Random rng)
+    {
+        var enemy = CreateEnemy(KE.TurretOperator, rng, new Intent(IntentType.Attack, 20));
+        enemy.Block = 25;
+        return enemy;
+    }
+
+    private static List<EnemyState> CreateScrollsEncounter(Random rng, int count)
+    {
+        int firstMove = rng.Next(3);
+        var enemies = new List<EnemyState>();
+        for (int i = 0; i < count; i++)
+        {
+            int moveIndex = count == 4 && i == 3 ? 2 : (firstMove + i) % 3;
+            var scroll = CreateEnemy(KE.ScrollOfBiting, rng, ScrollIntent(moveIndex), moveIndex);
+            if (i < 3)
+                BuffSystem.Apply(scroll.Buffs, BuffId.PaperCuts, 2);
+            enemies.Add(scroll);
+        }
+        return enemies;
+    }
+
+    private static Intent ScrollIntent(int moveIndex) =>
+        (moveIndex % 3) switch
+        {
+            0 => new Intent(IntentType.Attack, 16),
+            1 => new Intent(IntentType.Attack, 12),
+            _ => new Intent(IntentType.Buff, 2),
+        };
+
+    private static EnemyState CreatePunchOffConstruct(Random rng, bool startsWithFastPunch)
+    {
+        var enemy = CreatePunchConstruct(rng, startsWithFastPunch);
+        int hpReduction = rng.Next(2, 10);
+        enemy.Hp = Math.Max(1, enemy.Hp - hpReduction);
+        return enemy;
+    }
+
+    private static EnemyState CreateMysteriousKnight(Random rng)
+    {
+        var enemy = CreateEnemy(KE.FlailKnight, rng, new Intent(IntentType.Attack, 23), moveIndex: 2);
+        enemy.Block = 6;
+        BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 6);
+        BuffSystem.Apply(enemy.Buffs, BuffId.Plating, 6);
+        return enemy;
+    }
+
+    private static List<EnemyState> CreateLargeSlimesEncounter(Random rng)
+    {
+        bool leafSmallFirst = rng.Next(2) == 0;
+        int firstSmall = leafSmallFirst ? KE.LeafSlimeS : KE.TwigSlimeS;
+        int secondSmall = leafSmallFirst ? KE.TwigSlimeS : KE.LeafSlimeS;
+
+        return
+        [
+            CreateSlime(KE.TwigSlimeM, rng),
+            CreateSlime(KE.LeafSlimeM, rng),
+            CreateSlime(firstSmall, rng),
             CreateSlime(secondSmall, rng),
         ];
     }
@@ -357,6 +642,26 @@ public static class CombatFactory
             CreateTwoTailedRat(rng, (firstMove + 1) % 3),
             CreateTwoTailedRat(rng, (firstMove + 2) % 3),
         ];
+    }
+
+    private static List<EnemyState> CreateSlitheringStranglerEncounter(Random rng)
+    {
+        var enemies = new List<EnemyState>();
+        switch (rng.Next(3))
+        {
+            case 0:
+                enemies.Add(CreateEnemy(KE.SnappingJaxfruit, rng, new Intent(IntentType.Attack, 4)));
+                break;
+            case 1:
+                enemies.Add(CreateSlime(rng.Next(2) == 0 ? KE.LeafSlimeM : KE.TwigSlimeM, rng));
+                break;
+            default:
+                enemies.Add(CreateSlime(rng.Next(2) == 0 ? KE.LeafSlimeS : KE.TwigSlimeS, rng));
+                enemies.Add(CreateSlime(rng.Next(2) == 0 ? KE.LeafSlimeS : KE.TwigSlimeS, rng));
+                break;
+        }
+        enemies.Add(CreateEnemy(KE.SlitheringStrangler, rng, new Intent(IntentType.Debuff, 3)));
+        return enemies;
     }
 
     private static List<EnemyState> CreateRubyRaiders(Random rng)
@@ -403,7 +708,7 @@ public static class CombatFactory
     private static Intent FlyconidInitialIntent(Random rng) =>
         rng.Next(3) switch
         {
-            0 or 1 => new Intent(IntentType.Debuff, 9),
+            0 or 1 => new Intent(IntentType.Attack, 9),
             _ => new Intent(IntentType.Attack, 12),
         };
 
@@ -478,7 +783,6 @@ public static class CombatFactory
     private static EnemyState CreateCubexConstruct(Random rng)
     {
         var enemy = CreateEnemy(KE.CubexConstruct, rng, new Intent(IntentType.Buff, 0));
-        enemy.Block = 13;
         BuffSystem.Apply(enemy.Buffs, BuffId.Artifact, 1);
         return enemy;
     }
@@ -488,7 +792,7 @@ public static class CombatFactory
         var enemy = CreateEnemy(
             KE.PunchConstruct,
             rng,
-            startsWithFastPunch ? new Intent(IntentType.Debuff, 12) : new Intent(IntentType.Defend, 10),
+            startsWithFastPunch ? new Intent(IntentType.Attack, 12) : new Intent(IntentType.Defend, 10),
             startsWithFastPunch ? 1 : 0);
         BuffSystem.Apply(enemy.Buffs, BuffId.Artifact, 1);
         return enemy;
@@ -497,6 +801,7 @@ public static class CombatFactory
     private static EnemyState CreateSewerClam(Random rng)
     {
         var enemy = CreateEnemy(KE.SewerClam, rng, new Intent(IntentType.Attack, 11), moveIndex: 1);
+        enemy.Block = 9;
         BuffSystem.Apply(enemy.Buffs, BuffId.Plating, 9);
         return enemy;
     }

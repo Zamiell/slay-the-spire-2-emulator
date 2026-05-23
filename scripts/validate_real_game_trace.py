@@ -34,6 +34,77 @@ ENCOUNTER_BY_ENEMY = {
     ("Toadpole", "Toadpole"): "toadpoles",
 }
 
+LIVE_ENCOUNTER_BY_EMULATOR = {
+    "cultists": "CultistsNormal",
+    "chompers": "ChompersNormal",
+    "nibbit": "NibbitsWeak",
+    "slimes": "SlimesWeak",
+    "exoskeletons": "ExoskeletonsNormal",
+    "inklets": "InkletsNormal",
+    "two-tailed-rats": "TwoTailedRatsNormal",
+    "gremlin-merc": "GremlinMercNormal",
+    "fuzzy-wurm-crawler": "FuzzyWurmCrawlerWeak",
+    "corpse-slugs": "CorpseSlugsWeak",
+    "sludge-spinner": "SludgeSpinnerWeak",
+    "shrinker-beetle": "ShrinkerBeetleWeak",
+    "seapunk": "SeapunkWeak",
+    "toadpoles": "ToadpolesWeak",
+    "mawler": "MawlerNormal",
+    "nibbits": "NibbitsNormal",
+    "large-slimes": "SlimesNormal",
+    "slime-and-flyconid": "FlyconidNormal",
+    "jaxfruit-and-flyconid": "SnappingJaxfruitNormal",
+    "cubex-construct": "CubexConstructNormal",
+    "vine-shambler": "VineShamblerNormal",
+    "shrinker-and-fuzzy": "OvergrowthCrawlers",
+    "cultist-and-seapunk": "SeapunkNormal",
+    "fossil-stalker": "FossilStalkerNormal",
+    "punch-construct": "PunchConstructNormal",
+    "sewer-clam": "SewerClamNormal",
+    "haunted-ship": "HauntedShipNormal",
+    "slithering-strangler": "SlitheringStranglerNormal",
+    "ruby-raiders": "RubyRaidersNormal",
+    "fogmog": "FogmogNormal",
+    "living-fog": "LivingFogNormal",
+    "bowlbugs-weak": "BowlbugsWeak",
+    "bowlbugs": "BowlbugsNormal",
+    "tunneler": "TunnelerWeak",
+    "tunneler-and-chomper": "TunnelerNormal",
+    "thieving-hopper": "ThievingHopperWeak",
+    "mytes": "MytesNormal",
+    "slumbering-beetle": "SlumberingBeetleNormal",
+    "spiny-toad": "SpinyToadNormal",
+    "ovicopter": "OvicopterNormal",
+    "louse-progenitor": "LouseProgenitorNormal",
+    "hunter-killer": "HunterKillerNormal",
+    "axebot": "AxebotsNormal",
+    "devoted-sculptor": "DevotedSculptorWeak",
+    "fabricator": "FabricatorNormal",
+    "frog-knight": "FrogKnightNormal",
+    "globe-head": "GlobeHeadNormal",
+    "turret-operator": "TurretOperatorWeak",
+    "owl-magistrate": "OwlMagistrateNormal",
+    "scrolls-weak": "ScrollsOfBitingWeak",
+    "scrolls": "ScrollsOfBitingNormal",
+    "slimed-berserker": "SlimedBerserkerNormal",
+    "lost-and-forgotten": "TheLostAndForgottenNormal",
+    "obscura": "TheObscuraNormal",
+    "construct-menagerie": "ConstructMenagerieNormal",
+    "dense-vegetation": "DenseVegetationEventEncounter",
+    "punch-off": "PunchOffEventEncounter",
+    "fake-merchant": "FakeMerchantEventEncounter",
+    "mysterious-knight": "MysteriousKnightEventEncounter",
+    "battleworn-dummy-1": "BattlewornDummyEventEncounter",
+    "battleworn-dummy-2": "BattlewornDummyEventEncounter",
+    "battleworn-dummy-3": "BattlewornDummyEventEncounter",
+}
+
+DEBUG_START_OPTIONS_BY_EMULATOR = {
+    "battleworn-dummy-1": {"setting": "Setting1"},
+    "battleworn-dummy-2": {"setting": "Setting2"},
+    "battleworn-dummy-3": {"setting": "Setting3"},
+}
+
 
 def enemy_names(summary: dict[str, Any]) -> tuple[str, ...]:
     return tuple(enemy.get("name") or "" for enemy in summary.get("enemies") or [])
@@ -145,6 +216,13 @@ def live_enemy_intent(enemy: dict[str, Any]) -> tuple[int, int | None] | None:
     ):
         attack = next(intent for intent in intents if intent.get("type") == "Attack")
         return 3, live_intent_magnitude(attack)
+    if (
+        enemy.get("name") == "Living Fog"
+        and any(intent.get("type") == "Attack" for intent in intents)
+        and any(intent.get("type") == "CardDebuff" for intent in intents)
+    ):
+        attack = next(intent for intent in intents if intent.get("type") == "Attack")
+        return 3, live_intent_magnitude(attack)
 
     intent = intents[0]
     intent_type = intent.get("type")
@@ -154,6 +232,7 @@ def live_enemy_intent(enemy: dict[str, Any]) -> tuple[int, int | None] | None:
         "Defend": 1,
         "Buff": 2,
         "Debuff": 3,
+        "CardDebuff": 3,
         "StatusCard": 3,
     }
     if intent_type not in intent_by_type:
@@ -196,7 +275,11 @@ def find_matching_seed(
     limit: int,
     match_hand: bool,
     ignore_hand_order: bool,
+    live_trace: dict[str, Any] | None = None,
+    actions: list[int] | None = None,
 ) -> int:
+    first_opening_match: int | None = None
+    actions = actions or []
     for seed in range(limit):
         if initial_matches(
             live_summary,
@@ -204,7 +287,23 @@ def find_matching_seed(
             match_hand,
             ignore_hand_order,
         ):
-            return seed
+            if first_opening_match is None:
+                first_opening_match = seed
+            if live_trace is None or not actions:
+                return seed
+            emulator_trace_payload = capture_emulator_trace(seed, encounter, actions)
+            diffs = compare_traces.compare(
+                compare_traces.load_trace_from_payload(emulator_trace_payload),
+                compare_traces.load_trace_from_payload(live_trace),
+                compare_traces.DEFAULT_FIELDS,
+            )
+            if not diffs:
+                return seed
+    if first_opening_match is not None:
+        raise ValueError(
+            f"No emulator seed below {limit} matched live {encounter} full trace; "
+            f"first opening-only match was seed {first_opening_match}"
+        )
     raise ValueError(
         f"No emulator seed below {limit} matched live {encounter} opening state: "
         f"{format_opening_summary(live_summary)}"
@@ -290,6 +389,26 @@ def capture_live_trace(
     return {"source": "sts2mcp", "base_url": base_url, "trace": trace}
 
 
+def start_debug_encounter(
+    base_url: str,
+    seed: str,
+    character: str,
+    live_encounter: str,
+    debug_options: dict[str, str] | None = None,
+) -> None:
+    start_real_game_run.start_seeded_run(
+        base_url,
+        seed,
+        character,
+        abandon_existing=True,
+    )
+    payload = {"action": "debug_start_encounter", "encounter": live_encounter}
+    if debug_options is not None:
+        payload.update(debug_options)
+    start_real_game_run.post_action(base_url, payload)
+    start_real_game_run.wait_for_combat_ready(base_url, timeout=30.0)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default=trace_real_game.DEFAULT_BASE_URL)
@@ -311,26 +430,52 @@ def main() -> None:
     parser.add_argument("--character", default="IRONCLAD")
     parser.add_argument("--map-index", type=int, default=0)
     parser.add_argument("--neow-option", type=int, default=-1)
+    parser.add_argument(
+        "--encounter",
+        default=None,
+        help="Emulator encounter id/name. When set with --start-seed, starts the matching live encounter directly through STS2MCP debug_start_encounter.",
+    )
+    parser.add_argument(
+        "--live-encounter",
+        default=None,
+        help="Override live STS2 encounter model name for --encounter, e.g. ChompersNormal.",
+    )
     parser.add_argument("--max-diffs", type=int, default=40)
     args = parser.parse_args()
 
     if args.start_seed is not None:
-        start_real_game_run.start_seeded_run(
-            args.base_url,
-            args.start_seed,
-            args.character,
-            abandon_existing=True,
-        )
-        start_real_game_run.enter_first_combat(
-            args.base_url,
-            args.neow_option,
-            args.map_index,
-        )
+        if args.encounter is None:
+            start_real_game_run.start_seeded_run(
+                args.base_url,
+                args.start_seed,
+                args.character,
+                abandon_existing=True,
+            )
+            start_real_game_run.enter_first_combat(
+                args.base_url,
+                args.neow_option,
+                args.map_index,
+            )
+        else:
+            live_encounter = args.live_encounter or LIVE_ENCOUNTER_BY_EMULATOR.get(
+                args.encounter
+            )
+            if live_encounter is None:
+                raise ValueError(
+                    f"No live encounter mapping for {args.encounter!r}; pass --live-encounter."
+                )
+            start_debug_encounter(
+                args.base_url,
+                args.start_seed,
+                args.character,
+                live_encounter,
+                DEBUG_START_OPTIONS_BY_EMULATOR.get(args.encounter),
+            )
 
     live = capture_live_trace(args.base_url, args.actions, args.delay)
     live_summary = compare_traces.summary(live["trace"][0])
     validate_starter_player(live_summary)
-    encounter = detect_encounter(live_summary)
+    encounter = args.encounter or detect_encounter(live_summary)
     if args.output_dir is not None:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         prefix = f"{args.start_seed or 'current'}-{encounter}"
@@ -344,6 +489,8 @@ def main() -> None:
         args.seed_search_limit,
         match_hand=not args.ignore_hand,
         ignore_hand_order=args.ignore_hand_order,
+        live_trace=live,
+        actions=args.actions,
     )
     emulator = capture_emulator_trace(emulator_seed, encounter, args.actions)
     diffs = compare_traces.compare(
