@@ -1,0 +1,57 @@
+namespace Sts2Emulator.Core;
+
+public static class BuffSystem
+{
+    public static void Apply(List<BuffState> buffs, BuffId id, int magnitude)
+    {
+        int idx = buffs.FindIndex(b => b.Id == id);
+        if (idx >= 0)
+            buffs[idx] = buffs[idx] with { Magnitude = buffs[idx].Magnitude + magnitude };
+        else
+            buffs.Add(new BuffState(id, magnitude));
+    }
+
+    public static int Get(List<BuffState> buffs, BuffId id)
+    {
+        int idx = buffs.FindIndex(b => b.Id == id);
+        return idx >= 0 ? buffs[idx].Magnitude : 0;
+    }
+
+    public static void TickEndOfTurn(List<BuffState> buffs)
+    {
+        for (int i = buffs.Count - 1; i >= 0; i--)
+        {
+            var b = buffs[i];
+            switch (b.Id)
+            {
+                case BuffId.Poison:
+                    buffs[i] = b with { Magnitude = b.Magnitude - 1 };
+                    if (buffs[i].Magnitude <= 0) buffs.RemoveAt(i);
+                    break;
+                case BuffId.Vulnerable:
+                case BuffId.Weak:
+                case BuffId.Frail:
+                    buffs[i] = b with { Magnitude = b.Magnitude - 1 };
+                    if (buffs[i].Magnitude <= 0) buffs.RemoveAt(i);
+                    break;
+            }
+        }
+    }
+
+    public static int IncomingDamage(int baseDamage, List<BuffState> attackerBuffs, List<BuffState> defenderBuffs)
+    {
+        float dmg = baseDamage;
+        dmg += Get(attackerBuffs, BuffId.Strength);
+        if (Get(attackerBuffs, BuffId.Weak) > 0) dmg *= 0.75f;
+        if (Get(defenderBuffs, BuffId.Vulnerable) > 0) dmg *= 1.5f;
+        return Math.Max(0, (int)dmg);
+    }
+
+    public static int IncomingBlock(int baseBlock, List<BuffState> buffs)
+    {
+        float block = baseBlock;
+        block += Get(buffs, BuffId.Dexterity);
+        if (Get(buffs, BuffId.Frail) > 0) block *= 0.75f;
+        return Math.Max(0, (int)block);
+    }
+}
