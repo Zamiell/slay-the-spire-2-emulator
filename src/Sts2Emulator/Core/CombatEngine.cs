@@ -32,7 +32,7 @@ public static class CombatEngine
 
         // Snapshot HP before effects.
         int playerHpBefore = state.PlayerHp;
-        Span<int> enemyHpsBefore = stackalloc int[3];
+        Span<int> enemyHpsBefore = stackalloc int[state.Enemies.Count];
         for (int i = 0; i < state.Enemies.Count; i++)
             enemyHpsBefore[i] = state.Enemies[i].Hp;
 
@@ -70,7 +70,7 @@ public static class CombatEngine
     {
         // Snapshot HP before enemies act.
         int playerHpBefore = state.PlayerHp;
-        Span<int> enemyHpsBefore = stackalloc int[3];
+        Span<int> enemyHpsBefore = stackalloc int[state.Enemies.Count];
         for (int i = 0; i < state.Enemies.Count; i++)
             enemyHpsBefore[i] = state.Enemies[i].Hp;
 
