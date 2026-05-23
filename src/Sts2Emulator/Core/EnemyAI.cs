@@ -26,8 +26,13 @@ public static class EnemyAI
         {
             case IntentType.Attack:
             {
-                if (enemy.DefId == KE.Toadpole && enemy.MoveIndex % 3 == 2)
+                if (enemy.DefId == KE.Toadpole && enemy.MoveIndex % 3 == 1)
+                {
                     BuffSystem.Apply(enemy.Buffs, BuffId.Thorns, -2);
+                    for (int i = 0; i < 3; i++)
+                        DealAttackDamage(enemy, state, 4);
+                    break;
+                }
 
                 int damage = BuffSystem.IncomingDamage(
                     enemy.CurrentIntent.Magnitude,
@@ -326,8 +331,8 @@ public static class EnemyAI
                 return (enemy.MoveIndex % 3) switch
                 {
                     0 => new Intent(IntentType.Buff, 0),
-                    1 => new Intent(IntentType.Attack, 8),
-                    _ => new Intent(IntentType.Attack, 12),
+                    1 => new Intent(IntentType.Attack, 12),
+                    _ => new Intent(IntentType.Attack, 8),
                 };
 
             case KE.FossilStalker:

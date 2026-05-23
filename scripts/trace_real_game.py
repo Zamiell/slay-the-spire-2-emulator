@@ -161,10 +161,27 @@ def action_payload_from_index(state: dict[str, Any], action: int) -> dict[str, A
     return {"action": "use_potion", "slot": potion_slot}
 
 
-def wait_for_state(base_url: str, delay: float) -> dict[str, Any]:
+def is_playable_state(state: dict[str, Any]) -> bool:
+    if state.get("state_type") not in {"monster", "elite", "boss"}:
+        return True
+    battle = state.get("battle") or {}
+    return battle.get("turn") == "player" and battle.get("is_play_phase") is True
+
+
+def wait_for_state(
+    base_url: str, delay: float, wait_for_play_phase: bool = False
+) -> dict[str, Any]:
     if delay > 0:
         time.sleep(delay)
-    return get_state(base_url)
+    state = get_state(base_url)
+    if not wait_for_play_phase:
+        return state
+
+    deadline = time.monotonic() + 10.0
+    while not is_playable_state(state) and time.monotonic() < deadline:
+        time.sleep(0.25)
+        state = get_state(base_url)
+    return state
 
 
 def main() -> None:
@@ -208,7 +225,11 @@ def main() -> None:
             else action_payload_from_index(state, action)
         )
         post_result = post_action(args.base_url, payload)
-        state = wait_for_state(args.base_url, args.delay)
+        state = wait_for_state(
+            args.base_url,
+            args.delay,
+            wait_for_play_phase=payload.get("action") == "end_turn",
+        )
         trace.append(
             {
                 "step": step,

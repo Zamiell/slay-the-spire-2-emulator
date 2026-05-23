@@ -92,11 +92,15 @@ def main() -> None:
     parser.add_argument(
         "--field", action="append", default=[], help="Additional dotted summary field"
     )
+    parser.add_argument("--left-start", type=int, default=0)
+    parser.add_argument("--right-start", type=int, default=0)
     parser.add_argument("--max-diffs", type=int, default=20)
     args = parser.parse_args()
 
     fields = [*DEFAULT_FIELDS, *args.field]
-    diffs = compare(load_trace(args.left), load_trace(args.right), fields)
+    left = load_trace(args.left)[args.left_start :]
+    right = load_trace(args.right)[args.right_start :]
+    diffs = compare(left, right, fields)
     if diffs:
         print(f"Trace mismatch: {len(diffs)} difference(s)")
         for diff in diffs[: args.max_diffs]:

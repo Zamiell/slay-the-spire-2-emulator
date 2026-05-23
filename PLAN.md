@@ -37,7 +37,7 @@ The repository currently has a working NativeAOT C# combat emulator, Python `cty
 `Sts2CombatEnv` for single-combat RL, and an experimental `Sts2RunEnv` wrapper for deterministic
 card rewards and map encounter choices between combats. The modeled combat scope includes
 highest-difficulty Ironclad starts, random Act 1 selection between Overgrowth and Underdocks,
-act-specific first-three weak encounter pools, Overgrowth and Underdocks normal encounter pools,
+max-ascension enemy HP ranges, act-specific first-three weak encounter pools, Overgrowth and Underdocks normal encounter pools,
 explicit unplayable/ethereal/exhaust card behavior, status-card mechanics, enemy powers,
 deterministic seeded resets, reward shaping, trace/evaluation scripts, STS2MCP trace capture and
 trace comparison scripts, and regression coverage in C#
@@ -45,15 +45,19 @@ and Python. `scripts/evaluate.py` supports forced encounters and per-encounter m
 encounters like Chompers remain available for forced evaluation but are no longer sampled as opening
 fights. Recently completed enemy powers include Shrink, Thorns, Ravenous, Slippery, Gremlin Merc
 Surprise, Two-Tailed Rat backup calls, Plating, Tangled cost increases, Constrict end-turn damage,
-Smoggy skill lockout, Fogmog Illusion summons, and Living Fog Gas Bomb summons.
+Smoggy skill lockout, Fogmog Illusion summons, and Living Fog Gas Bomb summons. STS2MCP live trace
+validation is now working locally; standard singleplayer seeded run starts are available through the
+patched STS2MCP `menu_select` flow and `scripts\start_real_game_run.py`; the first Toadpoles
+real-game trace found and fixed an emulator Toadpole move-cycle/multi-hit divergence.
 
 ## Remaining Next Steps
 
-1. Validate emulator-vs-real-game traces with STS2MCP for fixed seeds and fixed action sequences
-   after the installed STS2MCP build is compatible with the local game build. The live API is
-   reachable at `localhost:15526`, but combat reads currently fail inside STS2MCP with a missing
-   `CombatManager.get_IsPlayPhase()` method.
-2. Tighten remaining known combat simplifications from real traces: Gremlin Merc gold theft/heist
+1. Continue emulator-vs-real-game trace validation with STS2MCP for fixed seeds and action
+   sequences across the remaining Act 1 weak encounters, then normal encounters. Use
+   `scripts\start_real_game_run.py`, `scripts\trace_real_game.py`,
+   `scripts\trace.py --encounter ...`, and `scripts\compare_traces.py`.
+2. Tighten remaining known combat simplifications from real traces: card draw-order parity,
+   Gremlin Merc gold theft/heist
    rewards, exact Two-Tailed Rat summon slot/count constraints, Slithering Strangler's exact
    secondary-small-slime variant, and multi-hit observation fidelity for mixed attack/buff intents.
 3. Add rest-site, shop, relic, elite, boss, and richer map node layers for full-run training.

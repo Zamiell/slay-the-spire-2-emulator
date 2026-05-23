@@ -15,10 +15,11 @@ namespace Sts2Emulator.Interop;
 //   [7]        exhaust_pile_size
 //   [8..17]    hand slots: card_def_id (0 = empty), 5 cards × 2 ints (id, upgraded)
 //   [18..23]   potion slots: potion_def_id (0 = empty), 3 slots × 2 ints (id, has_potion)
-//   [24..43]   player buffs: 10 slots × 2 ints (buff_id, magnitude)
-//   [44..83]   enemy 0: hp, max_hp, block, intent_type, intent_mag, 5 buff slots × 2 ints
-//   [84..123]  enemy 1 (same layout)
-//   [124..163] enemy 2 (same layout)
+//   [34..53]   player buffs: 10 slots × 2 ints (buff_id, magnitude)
+//   [54..68]   enemy 0: hp, max_hp, block, intent_type, intent_mag, 5 buff slots × 2 ints
+//   [69..83]   enemy 1 (same layout)
+//   [84..98]   enemy 2 (same layout)
+//   [99..163]  reserved
 //
 // Total: 164 ints. Enemies beyond index 2 are ignored for now.
 

@@ -208,7 +208,7 @@ public static class CombatFactory
             ActOneEncounter.Toadpoles =>
             [
                 CreateEnemy(KE.Toadpole, rng, new Intent(IntentType.Buff, 0)),
-                CreateEnemy(KE.Toadpole, rng, new Intent(IntentType.Attack, 8), moveIndex: 1),
+                CreateEnemy(KE.Toadpole, rng, new Intent(IntentType.Attack, 8), moveIndex: 2),
             ],
 
             ActOneEncounter.Mawler =>

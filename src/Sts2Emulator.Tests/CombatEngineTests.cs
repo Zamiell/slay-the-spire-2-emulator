@@ -253,7 +253,7 @@ public class CombatEngineTests
             MaxHp = 22,
             CurrentIntent = new Intent(IntentType.Attack, 12),
             Buffs = [new BuffState(BuffId.Thorns, 2)],
-            MoveIndex = 2,
+            MoveIndex = 1,
         };
 
         EnemyAI.ExecuteIntent(enemy, state, new Random(0));

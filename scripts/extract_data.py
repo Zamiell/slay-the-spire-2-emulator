@@ -27,10 +27,10 @@ BLOCK_VAR = re.compile(r"new BlockVar\((\d+(?:\.\d+)?)m?,")
 UPGRADE_DMG = re.compile(r"DynamicVars\.Damage\.UpgradeValueBy\((\d+(?:\.\d+)?)m?\)")
 UPGRADE_BLOCK = re.compile(r"DynamicVars\.Block\.UpgradeValueBy\((\d+(?:\.\d+)?)m?\)")
 
-# HP: plain int or AscensionHelper (take the normal/non-ascension value = 2nd arg)
+# HP: plain int or AscensionHelper (take the max-ascension value = 1st arg)
 HP_PLAIN = re.compile(r"(?:Min|Max)InitialHp\s*=>\s*(\d+)\s*;")
 HP_ASCENSION = re.compile(
-    r"(?:Min|Max)InitialHp\s*=>.+?GetValueIfAscension\([^,]+,\s*\d+,\s*(\d+)\s*\)"
+    r"(?:Min|Max)InitialHp\s*=>.+?GetValueIfAscension\([^,]+,\s*(\d+),\s*\d+\s*\)"
 )
 
 # Monster move intents

@@ -39,6 +39,7 @@ The current combat factory starts an Ironclad-style combat with:
 - 64/80 player HP and 3 energy, matching the highest difficulty starting HP.
 - A starter deck of 5 Strikes, 4 Defends, 1 Bash, and 1 unplayable, ethereal Ascender's Bane.
 - Seeded Act 1 selection between Overgrowth and Underdocks.
+- Enemy HP ranges are generated from max-ascension `ToughEnemies` values.
 - First-combat sampling from the act-specific weak encounter pools: Overgrowth uses Nibbit, Slimes, Shrinker Beetle, or Fuzzy Wurm Crawler; Underdocks uses Corpse Slugs, Seapunk, Sludge Spinner, or Toadpoles.
 - Forced evaluation support for modeled normal encounters, including Chompers plus the Act 1 Overgrowth and Underdocks normal pools.
 - A fixed-size integer observation vector.
@@ -117,13 +118,19 @@ Force a specific encounter and use the starter-deck-aware baseline:
 Emit a deterministic emulator trace for comparison against real-game traces:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\trace.py --seed 0 --actions 0 1 2
+.\.venv\Scripts\python.exe scripts\trace.py --seed 0 --encounter toadpoles --actions 0 1 2
 ```
 
 Emit a trace from a running Slay the Spire 2 instance with the STS2MCP mod enabled:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\trace_real_game.py --actions 0 1 2
+```
+
+Start a new real-game standard run with a specific seed through STS2MCP before tracing:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\start_real_game_run.py VALIDATION1 --character IRONCLAD --abandon-existing
 ```
 
 Compare two trace JSON files on their normalized player/enemy fields:

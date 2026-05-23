@@ -25,7 +25,7 @@ def summarize_observation(obs: np.ndarray) -> dict:
     ]
     enemies = []
     for enemy_index in range(3):
-        base = 44 + enemy_index * 15
+        base = 54 + enemy_index * 15
         hp = int(obs[base])
         max_hp = int(obs[base + 1])
         if hp == 0 and max_hp == 0:
@@ -70,11 +70,14 @@ def valid_actions(env: Sts2CombatEnv) -> list[int]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--encounter", type=str, default=None)
     parser.add_argument("--actions", type=int, nargs="*", default=[])
     parser.add_argument("--max-steps", type=int, default=50)
     args = parser.parse_args()
 
-    env = Sts2CombatEnv(seed=args.seed, max_episode_steps=args.max_steps)
+    env = Sts2CombatEnv(
+        seed=args.seed, max_episode_steps=args.max_steps, encounter=args.encounter
+    )
     try:
         obs, info = env.reset()
         trace = [
@@ -111,7 +114,12 @@ def main() -> None:
             if terminated or truncated:
                 break
 
-        print(json.dumps({"seed": args.seed, "trace": trace}, indent=2))
+        print(
+            json.dumps(
+                {"seed": args.seed, "encounter": args.encounter, "trace": trace},
+                indent=2,
+            )
+        )
     finally:
         env.close()
 
