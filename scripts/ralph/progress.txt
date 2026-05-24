@@ -4,8 +4,10 @@
 
 - Ralph task metadata lives under `scripts\ralph`; use `scripts\ralph\prd.json` and `scripts\ralph\progress.txt` when the files are not present at the repository root.
 - Use `scripts\replay_full_run_trace.py` to replay retained STS2MCP full-run traces against `Sts2RunEnv` and identify the first floor/combat-boundary parity mismatch.
+- Native C# card powers are commonly modeled as `BuffId` entries, with timing handled in `CombatEngine` and damage/effect hooks in `EnemyAI` or `CardEffects`.
 
-Started: Sun, May 24, 2026  1:18:25 PM
+Started: Sun, May 24, 2026 1:18:25 PM
+
 ---
 
 ## 2026-05-24 13:21 - US-001
@@ -29,5 +31,18 @@ Started: Sun, May 24, 2026  1:18:25 PM
   - `Sts2RunEnv` exposes run-level state through `_info()`, while combat boundary HP/enemy details are still read from the native observation vector.
   - Full-run live traces store enemies under `summary.battle.enemies`; boundary parity checks need to compare that shape rather than the single-combat `summary.enemies` shape.
   - The retained full-run trace seed is a game seed string, so the replay tool accepts an explicit integer `--emulator-seed` for the current Python emulator RNG.
+
+---
+
+## 2026-05-24 13:30 - US-003
+
+- Implemented native Colossus combat behavior: the card now grants block, applies its temporary player power, halves powered attack damage from Vulnerable enemies, and expires after the enemy side turn.
+- Added C# regression coverage for Colossus block, damage reduction, and expiration.
+- Updated `plan.md` to record the completed native card gap and marked US-003 as passing in the Ralph PRD.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\EnemyAI.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `scripts\ralph\prd.json`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - ColossusPower is a counter buff from decompiled logic; it modifies incoming powered attack damage only when the attacking enemy has Vulnerable.
+  - Player-side temporary defensive powers that expire after enemies act should be decremented after `EnemyAI.ExecuteIntent` processing and before the next player turn starts.
+  - After C# source edits, rebuild `out\Sts2Emulator.dll` before Python tests if the stale-native guard runs before the publish step.
 
 ---

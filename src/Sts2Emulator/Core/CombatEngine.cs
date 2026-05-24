@@ -135,6 +135,10 @@ public static class CombatEngine
             EnemyAI.ExecuteIntent(enemy, state, rng);
         HandleEnemyDeaths(state, enemyHpsBefore, rng);
 
+        int colossus = BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus);
+        if (colossus > 0)
+            BuffSystem.Apply(state.PlayerBuffs, BuffId.Colossus, -1);
+
         // FlameBarrier expires after enemies have acted.
         BuffSystem.Remove(state.PlayerBuffs, BuffId.FlameBarrier);
 

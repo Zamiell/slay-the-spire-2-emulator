@@ -14,6 +14,7 @@ public enum BuffId
     Rage,         // player: gain N block when playing an Attack; removed at end of player turn
     FeelNoPain,   // player: gain N block when any card is exhausted
     Barricade,    // player: block does not clear at start of turn
+    Colossus,     // player: Vulnerable enemies deal half attack damage
     Corruption,   // player: Skills cost 0 and exhaust
     Metallicize,  // player: gain N block at end of player turn
     FlameBarrier, // player: deal N damage to melee attackers; removed at end of enemy turn

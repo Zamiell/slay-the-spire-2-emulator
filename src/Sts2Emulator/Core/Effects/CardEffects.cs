@@ -156,6 +156,11 @@ public static class CardEffects
                 DrawCards(state, upgraded ? 3 : 2, rng);
                 break;
 
+            case IC.Colossus: // 1-cost, gain 5/8 block; Vulnerable enemies deal half attack damage this turn
+                GainBlock(state, Blk(def, upgraded));
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Colossus, 1);
+                break;
+
             case IC.Dominate: // 1-cost, Vulnerable 1 to enemy, gain Strength = total Vulnerable
             {
                 ApplyEnemyDebuff(state, BuffId.Vulnerable, 1, rng);

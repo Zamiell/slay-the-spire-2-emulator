@@ -56,15 +56,7 @@ public static class EnemyAI
                 if (enemy.DefId == KE.FlailKnight)
                     baseDamage = Math.Max(0, baseDamage - BuffSystem.Get(enemy.Buffs, BuffId.Strength));
 
-                int damage = BuffSystem.IncomingDamage(
-                    baseDamage,
-                    enemy.Buffs,
-                    state.PlayerBuffs
-                );
-                int absorbed = Math.Min(state.PlayerBlock, damage);
-                state.PlayerBlock -= absorbed;
-                state.PlayerHp = Math.Max(0, state.PlayerHp - (damage - absorbed));
-                ApplyPlayerThorns(enemy, state);
+                DealAttackDamage(enemy, state, baseDamage);
 
                 // FlameBarrier: retaliate with flat unpowered damage.
                 int fb = BuffSystem.Get(state.PlayerBuffs, BuffId.FlameBarrier);
@@ -1315,6 +1307,11 @@ public static class EnemyAI
     private static void DealAttackDamage(EnemyState enemy, CombatState state, int baseDamage)
     {
         int damage = BuffSystem.IncomingDamage(baseDamage, enemy.Buffs, state.PlayerBuffs);
+        if (BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus) > 0
+            && BuffSystem.Get(enemy.Buffs, BuffId.Vulnerable) > 0)
+        {
+            damage /= 2;
+        }
         int absorbed = Math.Min(state.PlayerBlock, damage);
         state.PlayerBlock -= absorbed;
         state.PlayerHp = Math.Max(0, state.PlayerHp - (damage - absorbed));

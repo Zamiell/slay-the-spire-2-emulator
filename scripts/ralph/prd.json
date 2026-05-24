@@ -46,7 +46,7 @@
         "Update plan.md"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
