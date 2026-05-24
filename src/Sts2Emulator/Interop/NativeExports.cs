@@ -35,6 +35,7 @@ public static class NativeExports
     public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
+    public const int NATIVE_API_VERSION = 2;
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         472, 472, 472, 472, 472,
@@ -138,6 +139,9 @@ public static class NativeExports
 
     [UnmanagedCallersOnly]
     public static int Sts2_MaxEnemies() => MAX_ENEMIES;
+
+    [UnmanagedCallersOnly]
+    public static int Sts2_NativeApiVersion() => NATIVE_API_VERSION;
 
     [UnmanagedCallersOnly]
     public static int Sts2_Create(int seed)

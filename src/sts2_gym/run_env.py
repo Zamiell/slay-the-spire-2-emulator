@@ -303,10 +303,10 @@ OVERGROWTH_NORMAL_ENCOUNTERS = np.array(
 UNDERDOCKS_NORMAL_ENCOUNTERS = np.array(
     [9, 0, 7, 6, 22, 23, 24, 25, 26, 30], dtype=np.int32
 )
-OVERGROWTH_ELITE_ENCOUNTERS = np.array([88, 85], dtype=np.int32)
-UNDERDOCKS_ELITE_ENCOUNTERS = np.array([92, 87], dtype=np.int32)
-OVERGROWTH_BOSS_ENCOUNTERS = np.array([103, 94, 102], dtype=np.int32)
-UNDERDOCKS_BOSS_ENCOUNTERS = np.array([104, 99, 97], dtype=np.int32)
+OVERGROWTH_ELITE_ENCOUNTERS = np.array([68, 65], dtype=np.int32)
+UNDERDOCKS_ELITE_ENCOUNTERS = np.array([72, 67], dtype=np.int32)
+OVERGROWTH_BOSS_ENCOUNTERS = np.array([83, 74, 82], dtype=np.int32)
+UNDERDOCKS_BOSS_ENCOUNTERS = np.array([84, 79, 77], dtype=np.int32)
 GREMLIN_MERC_ENCOUNTER = 7
 EVENT_UNREST_SITE = 1
 EVENT_AROMA_OF_CHAOS = 2

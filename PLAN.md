@@ -14,8 +14,9 @@ Use the decompiled game logic as the implementation source of truth, then valida
 - **Run-level relic effects**: Modeled Amethyst Aubergine, Pantograph, Stone Humidifier, Fishing Rod, Winged Boots, Black Blood, War Hammer, Meat on the Bone, Old Coin, Strawberry, Pear, Mango, Lee's Waffle, and Venerable Tea Set activation.
 - **Native combat relic effects**: Modeled Anchor, Bag of Marbles, Bag of Preparation, Blood Vial, Booming Conch, Bronze Scales, Captain's Wheel, Happy Flower, Horn Cleat, Lantern, Oddly Smooth Stone, Orichalcum, Red Skull, Vajra, and Venerable Tea Set next-combat energy.
 - **Gremlin Merc**: Steals gold after attacks, transfers stolen gold to the spawned Fat Gremlin heist, and returns it when that Fat Gremlin dies.
-- **Native build freshness**: Python bindings now prefer `STS2_LIB_PATH` when set and reject stale native libraries that are older than the C# source tree, preventing run-env validation from silently using old `out` DLLs.
+- **Native build freshness**: Python bindings now prefer `STS2_LIB_PATH` when set and reject stale native libraries that are older than the C# source tree or missing the required native API version export, preventing run-env validation from silently using old `out` DLLs.
 - **Bounded evaluation**: `scripts\evaluate.py` accepts `--max-episode-steps`, so run-env smoke checks can be made explicitly short instead of appearing to hang behind the default 1000-step cap.
+- **Native encounter IDs**: Run-env elite/boss pools now use native `ActOneEncounter` IDs instead of generated enemy/model IDs, preventing run resets from passing out-of-range encounter values to the NativeAOT DLL.
 
 ## Remaining fidelity gaps
 

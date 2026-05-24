@@ -18,6 +18,7 @@
     -->
     <LinkerArg Include="/EXPORT:Sts2_ObsSize=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ObsSize" />
     <LinkerArg Include="/EXPORT:Sts2_MaxEnemies=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_MaxEnemies" />
+    <LinkerArg Include="/EXPORT:Sts2_NativeApiVersion=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_NativeApiVersion" />
     <LinkerArg Include="/EXPORT:Sts2_Create=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Create" />
     <LinkerArg Include="/EXPORT:Sts2_Reset=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Reset" />
     <LinkerArg Include="/EXPORT:Sts2_ResetEncounter=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetEncounter" />

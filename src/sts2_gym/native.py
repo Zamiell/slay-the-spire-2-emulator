@@ -11,6 +11,7 @@ _LIB_NAMES = {
     "darwin": "Sts2Emulator.dylib",
 }
 _ALLOW_STALE_ENV = "STS2_ALLOW_STALE_NATIVE"
+_REQUIRED_NATIVE_API_VERSION = 2
 
 
 def _repo_root() -> Path:
@@ -49,6 +50,31 @@ def _assert_native_library_is_fresh(path: Path) -> None:
     )
 
 
+def _assert_native_api_version(lib: ctypes.CDLL, path: Path) -> None:
+    try:
+        version_func = lib.Sts2_NativeApiVersion
+    except AttributeError as exc:
+        raise RuntimeError(
+            f"{path} does not export Sts2_NativeApiVersion and is too old for "
+            "these Python bindings. Rebuild the native library with "
+            "`bash scripts/build.sh win-x64` or `dotnet publish "
+            '"src\\Sts2Emulator\\Sts2Emulator.csproj" -c Release -r win-x64 '
+            '--self-contained -o "out"`.'
+        ) from exc
+
+    version_func.restype = ctypes.c_int
+    version_func.argtypes = []
+    actual_version = int(version_func())
+    if actual_version != _REQUIRED_NATIVE_API_VERSION:
+        raise RuntimeError(
+            f"{path} exports native API version {actual_version}, but "
+            f"sts2_gym requires {_REQUIRED_NATIVE_API_VERSION}. Rebuild the "
+            "native library with `bash scripts/build.sh win-x64` or "
+            '`dotnet publish "src\\Sts2Emulator\\Sts2Emulator.csproj" '
+            '-c Release -r win-x64 --self-contained -o "out"`.'
+        )
+
+
 def _load_lib() -> ctypes.CDLL:
     name = _LIB_NAMES.get(sys.platform)
     if name is None:
@@ -61,7 +87,9 @@ def _load_lib() -> ctypes.CDLL:
     for path in search:
         if path.exists():
             _assert_native_library_is_fresh(path)
-            return ctypes.CDLL(str(path))
+            lib = ctypes.CDLL(str(path))
+            _assert_native_api_version(lib, path)
+            return lib
     raise FileNotFoundError(
         f"Could not find {name}. Run scripts/build.sh first, or set STS2_LIB_PATH."
     )

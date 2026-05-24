@@ -85,7 +85,7 @@ Or with the helper script from a shell that can run Bash:
 bash scripts/build.sh win-x64
 ```
 
-The Python bindings look for the native library in `out\Sts2Emulator.dll` on Windows. You can also set `STS2_LIB_PATH` to point at a directory containing the native library; when set, that path takes precedence over `out`. To prevent stale native-code rollouts, Python fails fast if the loaded library is older than the C# source files. Rebuild with the publish command above after C# changes.
+The Python bindings look for the native library in `out\Sts2Emulator.dll` on Windows. You can also set `STS2_LIB_PATH` to point at a directory containing the native library; when set, that path takes precedence over `out`. To prevent stale native-code rollouts, Python fails fast if the loaded library is older than the C# source files or does not export the required native API version. Rebuild with the publish command above after C# changes.
 
 ## Run tests and checks
 
