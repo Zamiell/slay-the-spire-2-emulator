@@ -294,6 +294,11 @@ public static class CardEffects
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, upgraded ? 3 : 2);
                 break;
 
+            case IC.Inferno: // 1-cost, self-damage each turn; taking unblocked self-damage burns all enemies
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Inferno, upgraded ? 9 : 6);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.InfernoSelfDamage, 1);
+                break;
+
             case IC.Juggernaut: // 2-cost, deal 5/7 dmg when gaining block
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Juggernaut, upgraded ? 7 : 5);
                 break;
@@ -441,11 +446,14 @@ public static class CardEffects
     // Deals unblockable, unpowered HP loss to the player and triggers Rupture.
     public static void LoseHp(CombatState state, int amount)
     {
+        int hpBefore = state.PlayerHp;
         state.PlayerHp = Math.Max(0, state.PlayerHp - amount);
 
         int rupt = BuffSystem.Get(state.PlayerBuffs, BuffId.RupturePower);
-        if (rupt > 0)
+        if (rupt > 0 && hpBefore > state.PlayerHp)
             BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, rupt);
+
+        TriggerInfernoAfterPlayerSelfDamage(state, hpBefore - state.PlayerHp);
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
@@ -458,6 +466,34 @@ public static class CardEffects
 
     private static EnemyState? FirstEnemy(CombatState state) =>
         state.Enemies.FirstOrDefault(e => e.Hp > 0);
+
+    private static void TriggerInfernoAfterPlayerSelfDamage(CombatState state, int unblockedDamage)
+    {
+        int inferno = BuffSystem.Get(state.PlayerBuffs, BuffId.Inferno);
+        if (!state.PlayerTurn || unblockedDamage <= 0 || inferno <= 0)
+            return;
+
+        foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToList())
+            DealUnpoweredDamageToEnemy(enemy, inferno);
+    }
+
+    private static void DealUnpoweredDamageToEnemy(EnemyState target, int amount)
+    {
+        int damage = Math.Max(0, amount);
+        int cap = BuffSystem.Get(target.Buffs, BuffId.HardToKill);
+        if (cap > 0)
+            damage = Math.Min(damage, cap);
+        int absorbed = Math.Min(target.Block, damage);
+        target.Block -= absorbed;
+        int hpLoss = damage - absorbed;
+        int slippery = BuffSystem.Get(target.Buffs, BuffId.Slippery);
+        if (slippery > 0 && hpLoss >= 1)
+        {
+            hpLoss = 1;
+            BuffSystem.Apply(target.Buffs, BuffId.Slippery, -1);
+        }
+        target.Hp = Math.Max(0, target.Hp - hpLoss);
+    }
 
     private static void ApplyEnemyDebuff(CombatState state, BuffId id, int magnitude, Random rng)
     {
@@ -590,6 +626,7 @@ public static class IC
     public const int DemonForm   = 141;
     public const int FeelNoPain  = 185;
     public const int Inflame     = 265;
+    public const int Inferno     = 263;
     public const int Juggling    = 273;
     public const int Juggernaut  = 272;
     public const int Rupture     = 404;

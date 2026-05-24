@@ -131,6 +131,7 @@ public static class CombatEngine
             BuffSystem.TickEndOfTurn(enemy.Buffs);
 
         // ── Enemy turns ───────────────────────────────────────────────────────
+        state.PlayerTurn = false;
         foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToArray())
             EnemyAI.ExecuteIntent(enemy, state, rng);
         HandleEnemyDeaths(state, enemyHpsBefore, rng);
@@ -144,6 +145,7 @@ public static class CombatEngine
 
         // ── Start of next player turn ─────────────────────────────────────────
         state.Turn++;
+        state.PlayerTurn = true;
         state.Energy = state.MaxEnergy;
 
         // Barricade: block does not reset.
@@ -156,6 +158,16 @@ public static class CombatEngine
         int demonForm = BuffSystem.Get(state.PlayerBuffs, BuffId.DemonForm);
         if (demonForm > 0)
             BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, demonForm);
+
+        int infernoSelfDamage = BuffSystem.Get(state.PlayerBuffs, BuffId.InfernoSelfDamage);
+        if (infernoSelfDamage > 0)
+        {
+            Span<int> enemyHpsBeforeInferno = stackalloc int[state.Enemies.Count];
+            for (int i = 0; i < state.Enemies.Count; i++)
+                enemyHpsBeforeInferno[i] = state.Enemies[i].Hp;
+            Effects.CardEffects.LoseHp(state, infernoSelfDamage);
+            HandleEnemyDeaths(state, enemyHpsBeforeInferno, rng);
+        }
 
         // Tick player debuffs at start of player turn (Vulnerable etc. tick down).
         BuffSystem.TickEndOfTurn(state.PlayerBuffs);

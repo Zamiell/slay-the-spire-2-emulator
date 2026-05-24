@@ -5,6 +5,7 @@
 - Whenever you edit a Python file, format it afterward with: `black --target-version py314 foo.py`
 - To validate code changes, run the combined lint/test script: `bash lint-and-test.sh`
 - For `Sts2RunEnv` run-level reward logic, prefer decompiled source under `decompiled\` (for example `PotionRewardOdds`, `PotionFactory`, and merchant entry classes) over inferred deterministic shortcuts.
+- Native card powers with extra dynamic variables can be represented with companion `BuffId` entries when `BuffState` needs to track both the visible counter and hidden per-power state.
 - Full-run replay diagnostics should report available boundary diffs before stopping on unsupported trace actions, and unsupported action errors should include the reference step, state type, and floor.
 
 ## STS2MCP

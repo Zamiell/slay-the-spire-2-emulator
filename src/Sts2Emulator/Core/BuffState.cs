@@ -16,6 +16,8 @@ public enum BuffId
     Barricade,    // player: block does not clear at start of turn
     Colossus,     // player: Vulnerable enemies deal half attack damage
     Corruption,   // player: Skills cost 0 and exhaust
+    Inferno,      // player: after unblocked self-damage on player turn, deal N damage to all enemies
+    InfernoSelfDamage, // player: unblockable HP loss at start of each player turn from Inferno
     Metallicize,  // player: gain N block at end of player turn
     FlameBarrier, // player: deal N damage to melee attackers; removed at end of enemy turn
     Juggernaut,   // player: deal N unpowered damage to random enemy when gaining block

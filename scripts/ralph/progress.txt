@@ -5,6 +5,7 @@
 - Ralph task metadata lives under `scripts\ralph`; use `scripts\ralph\prd.json` and `scripts\ralph\progress.txt` when the files are not present at the repository root.
 - Use `scripts\replay_full_run_trace.py` to replay retained STS2MCP full-run traces against `Sts2RunEnv` and identify the first floor/combat-boundary parity mismatch.
 - Native C# card powers are commonly modeled as `BuffId` entries, with timing handled in `CombatEngine` and damage/effect hooks in `EnemyAI` or `CardEffects`.
+- Native card powers with extra dynamic variables can use companion `BuffId` entries to track hidden per-power state alongside the visible counter.
 - Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
 - Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
 
@@ -71,5 +72,18 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Retained full-run traces can enter live `rewards` or `card_select` states that `Sts2RunEnv` does not model directly; replay diagnostics should preserve the first boundary mismatch before reporting the unsupported action.
   - `ReplayResult.unsupported_action` is the right place to attach reference trace context because the replay payload only contains emulator steps completed before the stop.
+
+---
+
+## 2026-05-24 13:44 - PLAN-M2-INFERNO
+
+- Implemented native Inferno combat behavior: the power now applies its burn counter, tracks stacking start-of-turn self-damage, triggers all-enemy burn damage after unblocked player self-damage during the player turn, and supports upgraded values.
+- Added C# regression coverage for Inferno triggering from player-turn HP loss and at the next player-turn start.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Inferno applies a visible counter power and separately increments a `SelfDamage` dynamic var each time the power is played.
+  - `CombatState.PlayerTurn` can gate player-turn-only self-damage hooks; set it false while enemies execute and true before start-of-player-turn power effects.
+  - Rebuild `out\Sts2Emulator.dll` before Python checks after native C# edits, or the stale-native guard will fail.
 
 ---
