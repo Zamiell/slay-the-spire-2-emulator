@@ -26,6 +26,7 @@
 - Native card effects that move cards from discard to hand should operate after the played card has left hand, clear `FreeThisTurn`, and respect the 10-card hand cap.
 - Native card effects that splash based on the first hit should use the effective first-hit HP-loss plus overkill amount, then apply splash as unpowered damage unless decompiled value props say otherwise.
 - Native cards that care whether any card exhausted this turn should use `CombatState.CardsExhaustedThisTurn`, increment it only through `CardEffects.ExhaustCard`, and reset it at the start of each player turn.
+- Native card effects that repeat block gain should call `CardEffects.GainBlock` once per decompiled gain so block hooks trigger per gain.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -246,7 +247,7 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - Implemented native Dramatic Entrance combat behavior: the colorless trace-observed card now deals upgraded-aware damage to all living enemies and exhausts through the generated card definition.
 - Added C# regression coverage for base/upgraded all-enemy damage and exhaust handling.
 - Updated `plan.md` and the consolidated codebase patterns with the reusable colorless-card constant convention.
-- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `scripts\ralph\progress.txt`
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
 - **Learnings for future iterations:**
   - Generated non-Ironclad combat cards may still appear in retained traces; keep their IDs separate from `IC` constants so trace-driven card support remains readable.
   - The generic fallback only targets the first living enemy for positive damage, so all-enemy cards need explicit `CardEffects` cases even when their generated damage values are correct.
@@ -323,5 +324,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Forgotten Ritual only grants energy when a player card has already exhausted during the current turn; it does not always gain energy.
   - Exhaust-this-turn card checks should be based on a turn-local counter updated by the central `CardEffects.ExhaustCard` helper so self-exhaust, ethereal exhaust, and secondary exhaust effects stay consistent.
+
+---
+
+## 2026-05-24 14:47 - PLAN-M2-EVIL-EYE
+
+- Implemented native Evil Eye combat behavior: the card now gains upgraded-aware block once normally and twice if a card already exhausted during the current player turn, then exhausts through the generated card definition.
+- Added C# regression coverage for normal block, upgraded doubled block after a prior exhaust, and self-exhaust tracking.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Evil Eye uses the same current-turn card-exhaust history as Forgotten Ritual, but applies the conditional by repeating its block gain rather than by changing a single block value.
+  - Repeated block-gain card effects should call `GainBlock` once per decompiled action so block hooks such as Juggernaut remain observable per gain.
 
 ---

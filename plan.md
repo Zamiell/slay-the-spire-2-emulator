@@ -61,6 +61,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Added native Neow's Fury support from the retained run traces: the ancient card now deals upgraded-aware attack damage, moves up to two or three cards from discard to hand while respecting the hand cap, and exhausts through the generated card definition.
 - Added native Omnislice support from the retained rarity trace: the colorless card now deals upgraded-aware attack damage, then splashes the effective first-hit damage as unpowered damage to the target's other living enemies.
 - Added native Forgotten Ritual support from the retained run traces: the card now grants upgraded-aware energy only after a card has already exhausted during the current player turn, then exhausts through the generated card definition.
+- Added native Evil Eye support: the card now gains upgraded-aware block once normally, gains it twice if a card already exhausted during the current player turn, and exhausts through the generated card definition.
 - Select the highest-impact missing trace-observed card from the current curated traces.
 - Implement the card in `src\Sts2Emulator\Core` using decompiled game logic for effect order, targeting, exhaust/ethereal behavior, and upgraded values.
 - Add C# regression tests in `src\Sts2Emulator.Tests` and update Python expectations only if interop-visible behavior changes.

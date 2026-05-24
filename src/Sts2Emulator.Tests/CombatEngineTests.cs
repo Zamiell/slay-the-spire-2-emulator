@@ -1290,6 +1290,34 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void EvilEye_GainsBlockOnceWithoutPriorExhaust()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.EvilEye, false)];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(8, state.PlayerBlock);
+        Assert.Equal(1, state.CardsExhaustedThisTurn);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.EvilEye);
+    }
+
+    [Fact]
+    public void EvilEye_GainsBlockTwiceAfterCardExhaustedThisTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.EvilEye, true)];
+        state.Energy = 1;
+        CardEffects.ExhaustCard(state, new CardInstance(IC.StrikeIronclad, false));
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(22, state.PlayerBlock);
+        Assert.Equal(2, state.CardsExhaustedThisTurn);
+    }
+
+    [Fact]
     public void OneTwoPunch_DuplicatesNextAttack()
     {
         var state = CombatFactory.NewCombat(seed: 0);

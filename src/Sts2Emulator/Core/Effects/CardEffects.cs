@@ -267,6 +267,12 @@ public static class CardEffects
                 state.Energy += upgraded ? 3 : 2;
                 break;
 
+            case IC.EvilEye: // 1-cost, gain block twice if a card exhausted this turn
+                GainBlock(state, Blk(def, upgraded));
+                if (state.CardsExhaustedThisTurn > 0)
+                    GainBlock(state, Blk(def, upgraded));
+                break;
+
             case IC.ExpectAFight: // 2/1-cost, gain 1 energy per Attack in hand
             {
                 int attackCount = state.Hand.Count(card =>
