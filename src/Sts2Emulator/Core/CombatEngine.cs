@@ -94,6 +94,13 @@ public static class CombatEngine
         if (metallicize > 0) Effects.CardEffects.GainBlock(state, metallicize);
         Effects.RelicEffects.ApplyEndOfPlayerTurn(state);
 
+        int temporaryStrength = BuffSystem.Get(state.PlayerBuffs, BuffId.TemporaryStrength);
+        if (temporaryStrength != 0)
+        {
+            BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, -temporaryStrength);
+            BuffSystem.Remove(state.PlayerBuffs, BuffId.TemporaryStrength);
+        }
+
         // Rage expires at end of player turn.
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Rage);
 

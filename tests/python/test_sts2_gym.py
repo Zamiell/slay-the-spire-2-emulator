@@ -1,3 +1,4 @@
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -56,8 +57,11 @@ from sts2_gym.run_env import (
     EVENT_JUNGLE_MAZE_ADVENTURE,
     EVENT_MORPHIC_GROVE,
     EVENT_THE_LEGENDS_WERE_TRUE,
+    IRONCLAD_REWARD_POOL,
     OVERGROWTH_BOSS_ENCOUNTERS,
     OVERGROWTH_ELITE_ENCOUNTERS,
+    SHOP_ATTACK_CARDS,
+    SHOP_SKILL_CARDS,
     SPOILS_MAP_CARD,
     UNDERDOCKS_BOSS_ENCOUNTERS,
     UNDERDOCKS_ELITE_ENCOUNTERS,
@@ -66,6 +70,38 @@ from sts2_gym.run_env import (
 HAND_ID_INDICES = range(8, 28, 2)
 ENEMY_INTENT_INDICES = (47, 87, 127)
 ASCENDERS_BANE_OBS_ID = 10001
+TRACE_CARD_IDS = {
+    "Anger": 13,
+    "Armaments": 18,
+    "Battle Trance": 31,
+    "Blood Wall": 46,
+    "Bloodletting": 45,
+    "Breakthrough": 60,
+    "Burning Pact": 69,
+    "Cinder": 87,
+    "Dominate": 150,
+    "Havoc": 238,
+    "Hemokinesis": 247,
+    "Iron Wave": 268,
+    "Perfected Strike": 349,
+    "Pommel Strike": 358,
+    "Restlessness": 396,
+    "Second Wind": 414,
+    "Setup Strike": 421,
+    "Shrug It Off": 433,
+    "Splash": 455,
+    "Spite": 454,
+    "Sword Boomerang": 486,
+    "True Grit": 517,
+    "Ultimate Defend": 521,
+    "Whirlwind": 538,
+}
+TRACE_EVENT_IDS = {
+    "BRAIN_LEECH": EVENT_BRAIN_LEECH,
+    "JUNGLE_MAZE_ADVENTURE": EVENT_JUNGLE_MAZE_ADVENTURE,
+    "MORPHIC_GROVE": EVENT_MORPHIC_GROVE,
+    "THE_LEGENDS_WERE_TRUE": EVENT_THE_LEGENDS_WERE_TRUE,
+}
 
 
 def first_valid_action(env: Sts2CombatEnv) -> int:
@@ -293,19 +329,53 @@ class Sts2GymTests(unittest.TestCase):
 
             self.assertIn(
                 int(env._shop_cards[0]),
-                {13, 50, 60, 87, 147, 247, 268, 358, 454, 486, 508, 519, 538},
+                {
+                    13,
+                    50,
+                    60,
+                    69,
+                    87,
+                    147,
+                    247,
+                    268,
+                    349,
+                    358,
+                    421,
+                    454,
+                    486,
+                    508,
+                    519,
+                    538,
+                },
             )
             self.assertIn(
                 int(env._shop_cards[1]),
-                {13, 50, 60, 87, 147, 247, 268, 358, 454, 486, 508, 519, 538},
+                {
+                    13,
+                    50,
+                    60,
+                    69,
+                    87,
+                    147,
+                    247,
+                    268,
+                    349,
+                    358,
+                    421,
+                    454,
+                    486,
+                    508,
+                    519,
+                    538,
+                },
             )
             self.assertIn(
                 int(env._shop_cards[2]),
-                {18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 521},
+                {18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 517, 521},
             )
             self.assertIn(
                 int(env._shop_cards[3]),
-                {18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 521},
+                {18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 517, 521},
             )
             self.assertIn(int(env._shop_cards[4]), {265, 273, 462})
 
@@ -315,6 +385,7 @@ class Sts2GymTests(unittest.TestCase):
                     if int(card_id)
                     in {
                         31,
+                        69,
                         147,
                         150,
                         174,
@@ -900,6 +971,43 @@ class Sts2GymTests(unittest.TestCase):
             self.assertTrue(any(potion != 0 for potion in info["potions"]))
         finally:
             env.close()
+
+    def test_retained_trace_reward_cards_and_events_are_in_run_pools(self):
+        trace_dir = Path(__file__).resolve().parents[2] / "traces" / "full-run"
+        observed_card_names = set()
+        observed_event_ids = set()
+        for trace_path in trace_dir.glob("FULLRUN_INSTANT_*.json"):
+            trace = json.loads(trace_path.read_text(encoding="utf-8"))
+            observed_card_names.update(
+                card["name"]
+                for step in trace["trace"]
+                for card in (
+                    ((step.get("summary") or {}).get("card_reward") or {}).get(
+                        "cards", []
+                    )
+                )
+            )
+            observed_event_ids.update(
+                event["event_id"]
+                for step in trace["trace"]
+                if (event := ((step.get("summary") or {}).get("event") or {}))
+                and event.get("event_id") != "NEOW"
+            )
+
+        observed_card_ids = {TRACE_CARD_IDS[name] for name in observed_card_names}
+
+        self.assertEqual(set(TRACE_CARD_IDS), observed_card_names)
+        self.assertEqual(set(TRACE_EVENT_IDS), observed_event_ids)
+        self.assertTrue(
+            observed_card_ids <= set(int(card) for card in IRONCLAD_REWARD_POOL)
+        )
+        self.assertTrue(
+            observed_card_ids
+            <= {
+                *[int(card) for card in SHOP_ATTACK_CARDS],
+                *[int(card) for card in SHOP_SKILL_CARDS],
+            }
+        )
 
 
 if __name__ == "__main__":

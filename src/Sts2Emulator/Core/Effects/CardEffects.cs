@@ -94,6 +94,15 @@ public static class CardEffects
                 DrawCards(state, upgraded ? 2 : 1, rng);
                 break;
 
+            case IC.SetupStrike: // 1-cost, 7/9 dmg + 2/3 temporary Strength
+            {
+                DealDamage(state, Dmg(def, upgraded));
+                int strength = upgraded ? 3 : 2;
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, strength);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.TemporaryStrength, strength);
+                break;
+            }
+
             case IC.SwordBoomerang: // 1-cost, 3 dmg × 3/4 hits to random enemies
                 DealDamageMultiHit(state, 3, upgraded ? 4 : 3, rng);
                 break;
