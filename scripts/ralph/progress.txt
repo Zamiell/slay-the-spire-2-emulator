@@ -5,6 +5,7 @@
 - Ralph task metadata lives under `scripts\ralph`; use `scripts\ralph\prd.json` and `scripts\ralph\progress.txt` when the files are not present at the repository root.
 - Use `scripts\replay_full_run_trace.py` to replay retained STS2MCP full-run traces against `Sts2RunEnv` and identify the first floor/combat-boundary parity mismatch.
 - Native C# card powers are commonly modeled as `BuffId` entries, with timing handled in `CombatEngine` and damage/effect hooks in `EnemyAI` or `CardEffects`.
+- Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -44,5 +45,18 @@ Started: Sun, May 24, 2026 1:18:25 PM
   - ColossusPower is a counter buff from decompiled logic; it modifies incoming powered attack damage only when the attacking enemy has Vulnerable.
   - Player-side temporary defensive powers that expire after enemies act should be decremented after `EnemyAI.ExecuteIntent` processing and before the next player turn starts.
   - After C# source edits, rebuild `out\Sts2Emulator.dll` before Python tests if the stale-native guard runs before the publish step.
+
+---
+
+## 2026-05-24 13:34 - US-004
+
+- Implemented decompilation-derived run-level potion reward behavior: mutable potion reward odds, elite bonus thresholds, rarity-based potion generation, and rarity-based shop potion prices for the supported potion pool.
+- Added Python regression coverage for shop potion rarity/pricing, potion reward odds updates, elite bonus handling, and combat potion reward state updates.
+- Updated `plan.md` to record progress on Milestone 3 and marked US-004 as passing in the Ralph PRD.
+- Files changed: `src\sts2_gym\run_env.py`, `tests\python\test_sts2_gym.py`, `plan.md`, `scripts\ralph\prd.json`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled `PotionRewardOdds.Roll` starts at 0.4, subtracts 0.1 after a potion reward, adds 0.1 after a miss, and applies elite bonus as `0.25 * 0.5`.
+  - `PotionFactory.CreateRandomPotion` rolls rarity with rare at `<= 0.1`, uncommon at `<= 0.35`, then picks an available potion of that rarity.
+  - Shop potion base costs come from potion rarity: common 50, uncommon 75, rare 100, then the shop RNG applies a 0.95-1.05 multiplier.
 
 ---

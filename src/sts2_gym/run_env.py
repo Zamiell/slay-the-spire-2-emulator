@@ -351,12 +351,67 @@ SHOP_CARD_BASE_COSTS_BY_RARITY = {
     CARD_RARITY_RARE: 150,
 }
 SHOP_POTION_BASE_COSTS = {
-    1: 75,
-    2: 50,
-    3: 100,
-    4: 75,
-    5: 50,
+    CARD_RARITY_COMMON: 50,
+    CARD_RARITY_UNCOMMON: 75,
+    CARD_RARITY_RARE: 100,
 }
+POTION_RARITY_COMMON = CARD_RARITY_COMMON
+POTION_RARITY_UNCOMMON = CARD_RARITY_UNCOMMON
+POTION_RARITY_RARE = CARD_RARITY_RARE
+POTION_REWARD_BASE_ODDS = 0.4
+POTION_REWARD_STEP = 0.1
+POTION_REWARD_ELITE_BONUS = 0.25
+POTION_RARITY_BY_ID = {
+    2: POTION_RARITY_COMMON,
+    3: POTION_RARITY_RARE,
+    4: POTION_RARITY_UNCOMMON,
+    5: POTION_RARITY_COMMON,
+    6: POTION_RARITY_COMMON,
+    8: POTION_RARITY_RARE,
+    9: POTION_RARITY_UNCOMMON,
+    10: POTION_RARITY_COMMON,
+    13: POTION_RARITY_UNCOMMON,
+    14: POTION_RARITY_COMMON,
+    15: POTION_RARITY_RARE,
+    16: POTION_RARITY_RARE,
+    17: POTION_RARITY_UNCOMMON,
+    18: POTION_RARITY_COMMON,
+    19: POTION_RARITY_RARE,
+    21: POTION_RARITY_COMMON,
+    22: POTION_RARITY_RARE,
+    23: POTION_RARITY_COMMON,
+    24: POTION_RARITY_COMMON,
+    26: POTION_RARITY_UNCOMMON,
+    28: POTION_RARITY_RARE,
+    29: POTION_RARITY_UNCOMMON,
+    30: POTION_RARITY_UNCOMMON,
+    32: POTION_RARITY_RARE,
+    34: POTION_RARITY_UNCOMMON,
+    36: POTION_RARITY_UNCOMMON,
+    37: POTION_RARITY_RARE,
+    38: POTION_RARITY_RARE,
+    39: POTION_RARITY_RARE,
+    40: POTION_RARITY_RARE,
+    42: POTION_RARITY_UNCOMMON,
+    47: POTION_RARITY_UNCOMMON,
+    48: POTION_RARITY_COMMON,
+    49: POTION_RARITY_UNCOMMON,
+    50: POTION_RARITY_UNCOMMON,
+    51: POTION_RARITY_RARE,
+    52: POTION_RARITY_RARE,
+    53: POTION_RARITY_COMMON,
+    54: POTION_RARITY_RARE,
+    56: POTION_RARITY_COMMON,
+    57: POTION_RARITY_UNCOMMON,
+    59: POTION_RARITY_COMMON,
+    60: POTION_RARITY_COMMON,
+    61: POTION_RARITY_UNCOMMON,
+    62: POTION_RARITY_COMMON,
+    63: POTION_RARITY_COMMON,
+    1: POTION_RARITY_UNCOMMON,
+    58: POTION_RARITY_RARE,
+}
+POTION_REWARD_POOL = np.array(sorted(POTION_RARITY_BY_ID), dtype=np.int32)
 SHOP_RELIC_BASE_COSTS = {
     RELIC_AMETHYST_AUBERGINE: 175,
     RELIC_ANCHOR: 175,
@@ -466,6 +521,7 @@ class Sts2RunEnv(gym.Env):
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
+        self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
         self._act = "overgrowth"
         self._weak_encounters = np.zeros(3, dtype=np.int32)
@@ -517,6 +573,7 @@ class Sts2RunEnv(gym.Env):
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
+        self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
@@ -954,7 +1011,7 @@ class Sts2RunEnv(gym.Env):
             NODE_ELITE,
         ):
             self._gold += 15
-        if self._floor % 3 == 0:
+        if self._roll_potion_reward():
             self._add_potion(self._next_potion())
         if RELIC_BURNING_BLOOD in self._relics:
             self._player_hp = min(self._player_max_hp, self._player_hp + 6)
@@ -1029,7 +1086,7 @@ class Sts2RunEnv(gym.Env):
         sale_index = int(self._rng.integers(0, 5))
         self._shop_cards[:] = self._generate_shop_cards()
         self._shop_relics[:] = [self._next_relic() for _ in range(3)]
-        self._shop_potions[:] = [self._next_potion() for _ in range(3)]
+        self._shop_potions[:] = self._next_potions(3)
         self._shop_costs[:] = 0
         for action, card_id in enumerate(self._shop_cards):
             cost = self._shop_card_cost(int(card_id), colorless=action >= 5)
@@ -1356,6 +1413,7 @@ class Sts2RunEnv(gym.Env):
             "venerable_tea_set_active": self._venerable_tea_set_active,
             "winged_boots_times_used": self._winged_boots_times_used,
             "shop_removals_used": self._shop_removals_used,
+            "potion_reward_odds": self._potion_reward_odds,
             "event_id": int(self._event_id),
             "map_choices": (
                 tuple(
@@ -1494,7 +1552,8 @@ class Sts2RunEnv(gym.Env):
         return self._round_positive(base_cost * self._rng.uniform(0.85, 1.15))
 
     def _shop_potion_cost(self, potion_id: int) -> int:
-        base_cost = SHOP_POTION_BASE_COSTS.get(potion_id, 50)
+        rarity = POTION_RARITY_BY_ID.get(potion_id, POTION_RARITY_COMMON)
+        base_cost = SHOP_POTION_BASE_COSTS[rarity]
         return self._round_positive(base_cost * self._rng.uniform(0.95, 1.05))
 
     def _shop_removal_cost(self) -> int:
@@ -1519,7 +1578,45 @@ class Sts2RunEnv(gym.Env):
         self._player_hp = min(self._player_max_hp, self._player_hp + amount)
 
     def _next_potion(self) -> int:
-        return 1 + ((self._seed + self._floor + sum(self._potions)) % 5)
+        return self._next_potions(1)[0]
+
+    def _next_potions(self, count: int) -> list[int]:
+        potions: list[int] = []
+        for _ in range(count):
+            rarity = self._roll_potion_rarity()
+            potions.append(self._choose_potion_with_rarity(rarity, potions))
+        return potions
+
+    def _roll_potion_reward(self) -> bool:
+        elite_bonus = (
+            POTION_REWARD_ELITE_BONUS * 0.5
+            if self._current_node_type == NODE_ELITE
+            else 0.0
+        )
+        if float(self._rng.random()) < self._potion_reward_odds + elite_bonus:
+            self._potion_reward_odds -= POTION_REWARD_STEP
+            return True
+        self._potion_reward_odds += POTION_REWARD_STEP
+        return False
+
+    def _roll_potion_rarity(self) -> int:
+        roll = float(self._rng.random())
+        if roll <= 0.1:
+            return POTION_RARITY_RARE
+        if roll <= 0.35:
+            return POTION_RARITY_UNCOMMON
+        return POTION_RARITY_COMMON
+
+    def _choose_potion_with_rarity(self, rarity: int, blacklist: list[int]) -> int:
+        available = [
+            int(potion_id)
+            for potion_id in POTION_REWARD_POOL
+            if int(potion_id) not in blacklist
+            and POTION_RARITY_BY_ID[int(potion_id)] == rarity
+        ]
+        if available:
+            return int(self._rng.choice(available))
+        return int(self._rng.choice(POTION_REWARD_POOL))
 
     def _combat_deck(self) -> list[int]:
         return [card for card in self._deck if abs(card) != SPOILS_MAP_CARD]

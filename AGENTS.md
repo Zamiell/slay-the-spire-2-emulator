@@ -4,6 +4,7 @@
 - Whenever you edit a Markdown file, format it afterward with: `bunx --bun prettier --write foo.md`
 - Whenever you edit a Python file, format it afterward with: `black --target-version py314 foo.py`
 - To validate code changes, run the combined lint/test script: `bash lint-and-test.sh`
+- For `Sts2RunEnv` run-level reward logic, prefer decompiled source under `decompiled\` (for example `PotionRewardOdds`, `PotionFactory`, and merchant entry classes) over inferred deterministic shortcuts.
 
 ## STS2MCP
 

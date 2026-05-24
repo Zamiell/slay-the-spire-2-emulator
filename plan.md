@@ -16,7 +16,7 @@ The repository is split into three main implementation areas:
 - `src\Sts2Emulator.Tests` and `tests\python`: regression coverage for native combat and Python environment behavior.
 - `scripts`: build, trace capture, real-game validation, data extraction, evaluation, and training helpers.
 
-Implemented scope already includes starter-deck Ironclad combat, deterministic seeded resets, action masks, single-combat observations, first-combat Act 1 weak encounter sampling for Overgrowth and Underdocks, forced supported encounters for evaluation, a simplified full-run wrapper, card rewards, gold, shops, shop card removal, rest sites, modeled trace-observed events, relic rewards, potion slots, deterministic potion drops and purchases, run deck tracking, upgraded-card encoding, stale native-DLL protection, and validation through `bash lint-and-test.sh`.
+Implemented scope already includes starter-deck Ironclad combat, deterministic seeded resets, action masks, single-combat observations, first-combat Act 1 weak encounter sampling for Overgrowth and Underdocks, forced supported encounters for evaluation, a simplified full-run wrapper, card rewards, gold, shops, shop card removal, rest sites, modeled trace-observed events, relic rewards, potion slots, decompilation-derived potion reward odds and potion rarity generation, run deck tracking, upgraded-card encoding, stale native-DLL protection, and validation through `bash lint-and-test.sh`.
 
 Native combat currently supports the starter deck plus a growing subset of trace-observed Ironclad cards, enemy powers, potion behavior, and initial relic combat effects. Recent parity work also covers decompilation-derived card reward rarity odds, rarity offset behavior, merchant sale RNG ordering, and rarity-based prices for supported cards.
 
@@ -48,6 +48,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 
 ### Milestone 3: make potion and relic rewards decompilation-accurate
 
+- Added run-level potion reward odds matching decompiled `PotionRewardOdds`: 40% base odds, +/-10% updates, and the elite bonus threshold, plus rarity-based potion generation and shop potion prices for the supported potion pool.
 - Replace approximate potion drop and relic reward ordering with decompiled RNG calls.
 - Verify deterministic results against a seeded STS2MCP trace.
 - Add tests for drop/no-drop boundaries, rarity selection, and run-state updates.

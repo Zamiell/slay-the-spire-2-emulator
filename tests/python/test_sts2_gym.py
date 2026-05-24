@@ -75,6 +75,11 @@ from sts2_gym.run_env import (
     IRONCLAD_REWARD_POOL,
     OVERGROWTH_BOSS_ENCOUNTERS,
     OVERGROWTH_ELITE_ENCOUNTERS,
+    POTION_RARITY_BY_ID,
+    POTION_RARITY_COMMON,
+    POTION_RARITY_RARE,
+    POTION_REWARD_BASE_ODDS,
+    POTION_REWARD_STEP,
     SHOP_ATTACK_CARDS,
     SHOP_SKILL_CARDS,
     SPOILS_MAP_CARD,
@@ -333,6 +338,25 @@ class Sts2GymTests(unittest.TestCase):
             self.assertFalse(terminated)
             self.assertLess(info["gold"], 200)
             self.assertGreater(info["potions"][0], 0)
+        finally:
+            env.close()
+
+    def test_run_env_shop_potions_use_rarity_pool_and_prices(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._enter_shop_phase()
+
+            self.assertEqual(len(set(int(potion) for potion in env._shop_potions)), 3)
+            for action, potion_id in zip(range(10, 13), env._shop_potions):
+                rarity = POTION_RARITY_BY_ID[int(potion_id)]
+                base = 100 if rarity == POTION_RARITY_RARE else 50
+                if rarity != POTION_RARITY_COMMON:
+                    base = 75 if rarity != POTION_RARITY_RARE else base
+                self.assertIn(
+                    int(env._shop_costs[action]),
+                    range(int(base * 0.95 + 0.5), int(base * 1.05 + 0.5) + 1),
+                )
         finally:
             env.close()
 
@@ -1024,15 +1048,42 @@ class Sts2GymTests(unittest.TestCase):
         finally:
             env.close()
 
-    def test_run_env_periodically_awards_combat_potions(self):
+    def test_run_env_potion_reward_roll_awards_combat_potions(self):
         env = Sts2RunEnv(seed=0)
         try:
             env.reset()
-            env._floor = 3
             env._potions = [0, 0, 0]
+            env._potion_reward_odds = 1.0
             env._after_combat_win()
 
             self.assertGreater(env._potions[0], 0)
+            self.assertAlmostEqual(env._potion_reward_odds, 1.0 - POTION_REWARD_STEP)
+        finally:
+            env.close()
+
+    def test_run_env_potion_reward_odds_use_decompiled_step_and_elite_bonus(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._current_node_type = NODE_NORMAL
+            env._potion_reward_odds = 0.0
+
+            self.assertFalse(env._roll_potion_reward())
+            self.assertAlmostEqual(
+                env._potion_reward_odds, POTION_REWARD_BASE_ODDS - 0.3
+            )
+
+            env._current_node_type = NODE_ELITE
+            env._potion_reward_odds = 0.0
+            env._rng = np.random.default_rng(0)
+
+            self.assertFalse(env._roll_potion_reward())
+            self.assertAlmostEqual(env._potion_reward_odds, POTION_REWARD_STEP)
+
+            env._rng = np.random.default_rng(3)
+
+            self.assertTrue(env._roll_potion_reward())
+            self.assertAlmostEqual(env._potion_reward_odds, 0.0)
         finally:
             env.close()
 
