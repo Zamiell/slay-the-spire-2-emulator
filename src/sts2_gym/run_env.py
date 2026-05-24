@@ -192,10 +192,17 @@ IRONCLAD_REWARD_POOL = np.array(
         13,
         18,
         31,
+        45,
+        46,
+        50,
         60,
         87,
+        147,
+        150,
+        174,
         175,
         238,
+        247,
         265,
         268,
         273,
@@ -205,25 +212,40 @@ IRONCLAD_REWARD_POOL = np.array(
         433,
         454,
         455,
+        462,
         486,
         508,
         519,
         521,
+        538,
     ],
     dtype=np.int32,
 )
-SHOP_ATTACK_CARDS = np.array([13, 60, 87, 268, 358, 454, 486, 508, 519], dtype=np.int32)
-SHOP_SKILL_CARDS = np.array([18, 31, 175, 238, 396, 414, 433, 455, 521], dtype=np.int32)
-SHOP_POWER_CARDS = np.array([265, 273], dtype=np.int32)
+SHOP_ATTACK_CARDS = np.array(
+    [13, 50, 60, 87, 147, 247, 268, 358, 454, 486, 508, 519, 538],
+    dtype=np.int32,
+)
+SHOP_SKILL_CARDS = np.array(
+    [18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 521],
+    dtype=np.int32,
+)
+SHOP_POWER_CARDS = np.array([265, 273, 462], dtype=np.int32)
 SHOP_COLORLESS_CARDS = IRONCLAD_REWARD_POOL
 SHOP_CARD_BASE_COSTS = {
     13: 50,
     18: 50,
     31: 75,
+    45: 50,
+    46: 50,
+    50: 50,
     60: 50,
     87: 50,
+    147: 75,
+    150: 75,
+    174: 75,
     175: 75,
     238: 50,
+    247: 75,
     265: 75,
     268: 50,
     273: 75,
@@ -233,10 +255,12 @@ SHOP_CARD_BASE_COSTS = {
     433: 50,
     454: 75,
     455: 75,
+    462: 75,
     486: 50,
     508: 50,
     519: 50,
     521: 75,
+    538: 75,
 }
 SHOP_POTION_BASE_COSTS = {
     1: 75,
@@ -287,6 +311,9 @@ GREMLIN_MERC_ENCOUNTER = 7
 EVENT_UNREST_SITE = 1
 EVENT_AROMA_OF_CHAOS = 2
 EVENT_SIMPLE_REWARD = 3
+EVENT_JUNGLE_MAZE_ADVENTURE = 4
+EVENT_MORPHIC_GROVE = 5
+EVENT_BRAIN_LEECH = 6
 POOR_SLEEP_CARD = 10001
 
 
@@ -498,6 +525,15 @@ class Sts2RunEnv(gym.Env):
             elif self._event_id == EVENT_AROMA_OF_CHAOS:
                 mask[0] = len(self._deck) > 0
                 mask[1] = any(self._is_upgradable(card) for card in self._deck)
+            elif self._event_id == EVENT_JUNGLE_MAZE_ADVENTURE:
+                mask[0] = self._player_hp > 18
+                mask[1] = True
+            elif self._event_id == EVENT_MORPHIC_GROVE:
+                mask[0] = self._gold > 0 and len(self._deck) >= 2
+                mask[1] = True
+            elif self._event_id == EVENT_BRAIN_LEECH:
+                mask[0] = True
+                mask[1] = self._player_hp > 5
             else:
                 mask[: EVENT_SKIP_ACTION + 1] = True
             return mask
@@ -664,6 +700,33 @@ class Sts2RunEnv(gym.Env):
                 upgraded = self._upgrade_first_card()
                 if not upgraded:
                     return self._invalid_action()
+            elif action != EVENT_SKIP_ACTION:
+                return self._invalid_action()
+        elif self._event_id == EVENT_JUNGLE_MAZE_ADVENTURE:
+            if action == 0:
+                self._player_hp = max(0, self._player_hp - 18)
+                self._gold += self._event_gold_amount(150)
+            elif action == 1:
+                self._gold += self._event_gold_amount(50)
+            elif action != EVENT_SKIP_ACTION:
+                return self._invalid_action()
+        elif self._event_id == EVENT_MORPHIC_GROVE:
+            if action == 0:
+                self._gold = 0
+                self._transform_first_card()
+                self._transform_first_card()
+            elif action == 1:
+                self._gain_max_hp(5)
+            elif action != EVENT_SKIP_ACTION:
+                return self._invalid_action()
+        elif self._event_id == EVENT_BRAIN_LEECH:
+            if action == 0:
+                self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
+            elif action == 1:
+                self._player_hp = max(0, self._player_hp - 5)
+                self._event_id = 0
+                self._enter_reward_phase()
+                return self._obs(), 0.0, False, False, self._info()
             elif action != EVENT_SKIP_ACTION:
                 return self._invalid_action()
         elif action == 0:
@@ -884,10 +947,15 @@ class Sts2RunEnv(gym.Env):
 
     def _enter_event_phase(self):
         self._phase = PHASE_EVENT
+        event_pool = [EVENT_JUNGLE_MAZE_ADVENTURE, EVENT_BRAIN_LEECH]
+        if self._gold >= 100 and len(self._deck) >= 2:
+            event_pool.append(EVENT_MORPHIC_GROVE)
         if self._player_hp <= int(self._player_max_hp * 0.7):
-            event_pool = [EVENT_UNREST_SITE, EVENT_AROMA_OF_CHAOS, EVENT_SIMPLE_REWARD]
+            event_pool.extend(
+                [EVENT_UNREST_SITE, EVENT_AROMA_OF_CHAOS, EVENT_SIMPLE_REWARD]
+            )
         else:
-            event_pool = [EVENT_AROMA_OF_CHAOS, EVENT_SIMPLE_REWARD]
+            event_pool.extend([EVENT_AROMA_OF_CHAOS, EVENT_SIMPLE_REWARD])
         self._event_id = int(self._rng.choice(event_pool))
 
     def _select_act_and_weak_encounters(self):
@@ -1254,6 +1322,9 @@ class Sts2RunEnv(gym.Env):
 
     def _shop_removal_cost(self) -> int:
         return 100 + 50 * self._shop_removals_used
+
+    def _event_gold_amount(self, base: int) -> int:
+        return max(0, base + int(self._rng.integers(-15, 16)))
 
     @staticmethod
     def _round_positive(value: float) -> int:

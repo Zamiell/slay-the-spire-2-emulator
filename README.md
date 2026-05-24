@@ -48,10 +48,10 @@ The current combat factory starts an Ironclad-style combat with:
 - Dense reward shaping based on enemy HP damage, player HP loss, and terminal win/loss bonus.
 - A default 50-step Gymnasium truncation cap.
 - Encounter identity in Python `info`, allowing evaluation by encounter type.
-- An experimental `Sts2RunEnv` wrapper for simplified full-run training: Neow rewards, act-specific first-three weak combats, deterministic map choices, normal/elite/boss combat nodes, card rewards, gold, shops, shop card removal, rest sites, events, relic rewards, potion slots, deterministic potion drops/purchases, run deck tracking, upgraded-card encoding, and decompilation-derived run-level relic pickup/heal effects.
+- An experimental `Sts2RunEnv` wrapper for simplified full-run training: Neow rewards, act-specific first-three weak combats, deterministic map choices, normal/elite/boss combat nodes, card rewards, gold, shops, shop card removal, rest sites, modeled trace-observed events, relic rewards, potion slots, deterministic potion drops/purchases, run deck tracking, upgraded-card encoding, and decompilation-derived run-level relic pickup/heal effects.
 - `Sts2RunEnv` uses a run-scale default truncation cap of 1000 steps; single-combat `Sts2CombatEnv` keeps its 50-step cap.
 - Modeled enemy powers for supported fights include Artifact, Hard to Kill, Shrink, Thorns, Ravenous, Slippery, Surprise, Two-Tailed Rat backup calls, Plating, Tangled, Constrict, Smoggy, Illusion, and Gas Bomb minions.
-- Trace-observed Ironclad card effects now include Expect a Fight, Havoc, Restlessness, Splash, Sword Boomerang, and Juggling in addition to the starter/common pool used by run rewards.
+- Trace-observed Ironclad card effects now include Expect a Fight, Havoc, Restlessness, Splash, Stampede tracking, Sword Boomerang, and Juggling in addition to the starter/common pool used by run rewards.
 - Initial native relic combat effects for Anchor, Bag of Marbles, Bag of Preparation, Blood Vial, Bronze Scales, Captain's Wheel, Happy Flower, Horn Cleat, Lantern, Oddly Smooth Stone, Orichalcum, Red Skull, Venerable Tea Set, and Vajra, with run-level HP, potions, and relics passed into native combat.
 - Secondary intent metadata for known mixed attack+buff/debuff enemy moves is exposed in the reserved observation area.
 
@@ -148,6 +148,8 @@ Capture a full-run trace from a running Slay the Spire 2 instance with STS2MCP e
 ```powershell
 uv run python scripts\trace_real_game_run.py FULLRUN_SEED --abandon-existing --output traces\full-run\FULLRUN_SEED.json
 ```
+
+Generated full-run captures are ignored by default because they are large and usually superseded quickly. Keep only curated trace fixtures in `traces\full-run` when a trace documents a durable parity milestone or regression case.
 
 Start a new real-game standard run with a specific seed through STS2MCP before tracing:
 

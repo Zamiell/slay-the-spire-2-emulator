@@ -341,6 +341,18 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void Stampede_AppliesTrackedPower()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Stampede, false)];
+        state.Energy = 2;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Stampede));
+    }
+
+    [Fact]
     public void TurnBlockRelics_ApplyHornCleatAndCaptainsWheel()
     {
         var state = new CombatState

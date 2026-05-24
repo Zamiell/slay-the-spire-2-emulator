@@ -20,6 +20,7 @@ public enum BuffId
     Juggernaut,   // player: deal N unpowered damage to random enemy when gaining block
     RupturePower, // player: gain 1 Strength when losing HP from card effects
     Juggling,     // player: copy the third Attack played each turn into hand
+    Stampede,     // player: auto-play a random Attack when play phase starts (tracked only)
     Artifact,     // prevent the next N debuffs
     HardToKill,   // damage taken per hit is capped at N
     Thorns,       // enemy: retaliatory damage, currently observed but not triggered

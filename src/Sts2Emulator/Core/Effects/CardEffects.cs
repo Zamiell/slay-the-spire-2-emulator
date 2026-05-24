@@ -223,6 +223,10 @@ public static class CardEffects
                 state.Hand.Add(new CardInstance(IC.StrikeIronclad, upgraded));
                 break;
 
+            case IC.Stampede: // 2/1-cost, auto-play random Attacks at play-phase start (tracked)
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Stampede, 1);
+                break;
+
             case IC.Taunt: // 1-cost, 7/8 block + Vulnerable 1 to enemy
                 GainBlock(state, Blk(def, upgraded));
                 ApplyEnemyDebuff(state, BuffId.Vulnerable, 1);
@@ -543,6 +547,7 @@ public static class IC
     public const int Juggling    = 273;
     public const int Juggernaut  = 272;
     public const int Rupture     = 404;
+    public const int Stampede    = 462;
 }
 
 public static class ST

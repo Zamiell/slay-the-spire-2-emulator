@@ -1,25 +1,31 @@
 # Slay the Spire 2 Emulator Plan
 
-## Immediate next steps
+## Current focus
 
-1. Continue replacing simplified `Sts2RunEnv` behavior with decompilation-derived rules, preserving deterministic seeds and Gym-compatible observations/actions.
-2. Expand native relic coverage and exact timing from decompiled mechanics beyond the currently modeled subset.
-3. Capture more seeded full-run traces with varied map routes and stronger autopilot policies to validate decompilation-derived behavior end-to-end.
-4. Use trace mismatches to find integration, RNG-order, timing, and state-transition bugs, then re-run combat and full-run validation after each behavior change.
+Use the decompiled game logic as the implementation source of truth, then validate integration and timing with seeded STS2MCP full-run traces.
 
-## Completed decompilation-first systems
+## Completed parity work
 
-- Map generation/traversal now uses generated act-map nodes, edges, floor restrictions, and child choices.
-- Rewards and shops now use decompilation-inspired combat gold ranges, merchant slot layout, sale slot, item price ranges, potion rewards, relic rewards, and ascension-level card-removal price scaling.
-- Trace-observed reward cards Battle Trance, Breakthrough, Cinder, Havoc, Iron Wave, Restlessness, Second Wind, Shrug It Off, Spite, Splash, Sword Boomerang, Ultimate Defend, Expect a Fight, and Juggling are included in run rewards/shops, with native combat effects for Expect a Fight, Havoc, Restlessness, Splash, and Juggling.
-- Rest/event handling now includes rest/smith behavior plus modeled Unrest Site and Aroma of Chaos outcomes.
-- Neow now offers three decompilation-derived relic options instead of the old gold/max-HP/skip choices, with solo-disallowed relics filtered out and modeled pickup effects for Golden Pearl, Neow's Torment, Neow's Bones, Nutritious Oyster, Small/Large Capsule, Pomander, Neow's Talisman, Cursed Pearl, Hefty Tablet, Leafy Poultice, Precarious Shears, Silken Tress, Silver Crucible, Arcane Scroll, Lead Paperweight, Lost Coffer, New Leaf, Phial Holster, Precise Scissors, Kaleidoscope, and Scroll Boxes.
-- Run-level relic effects now include Amethyst Aubergine, Pantograph, Stone Humidifier, Fishing Rod, Winged Boots, Black Blood, War Hammer, Meat on the Bone, Old Coin, Strawberry, Pear, Mango, Lee's Waffle, and Venerable Tea Set's rest-site activation on top of native combat relic effects. Native combat relic timing now includes Happy Flower's every-third-player-turn energy plus Bag of Marbles, Lantern, Horn Cleat, Captain's Wheel, Red Skull, and Venerable Tea Set's next-combat energy.
-- Act-specific elite and boss encounter pools now use the decompiled Overgrowth and Underdocks encounter sets.
-- Gremlin Merc now steals gold after each attack, transfers stolen gold to the spawned Fat Gremlin heist, and returns it when that Fat Gremlin dies.
-- The full-run STS2MCP trace collector can proceed past full potion rewards and rest sites, confirm deck card-selection screens, avoid unready shop states, use route/combat/shop heuristics for longer runs, and has captured multiple seeded runs through defeat, including a floor-9 live run, for validation.
+- **Full-run trace collector**: Handles potion rewards, rest sites, bundle-selection overlays, card-selection confirmation, unready shops, map-option clamping, transient shop/rest timing races, and survival-aware combat/route heuristics. Curated live captures are kept only when they document durable parity milestones; the latest retained trace is `traces/full-run/FULLRUN_INSTANT_10.json`, which reached floor 7 and ended in a normal game-over state.
+- **Run environment systems**: `Sts2RunEnv` now models act-map nodes/edges/restrictions, combat/map traversal, combat gold, card rewards, relic rewards, potion drops, shops, sale slots, card removal scaling, rest/smith actions, and modeled Unrest Site, Aroma of Chaos, Jungle Maze Adventure, Morphic Grove, and Brain Leech outcomes.
+- **Encounter pools**: Act-specific Overgrowth and Underdocks weak/normal/elite/boss encounter pools are wired into run generation.
+- **Neow**: Offers three decompilation-derived relic options with solo-disallowed filtering and modeled pickup effects for the currently supported Neow relic subset.
+- **Trace-observed cards**: Run rewards/shops include live-observed cards including Anger, Armaments, Battle Trance, Bloodletting, Blood Wall, Body Slam, Breakthrough, Cinder, Dismantle, Dominate, Evil Eye, Havoc, Hemokinesis, Iron Wave, Pommel Strike, Restlessness, Second Wind, Shrug It Off, Spite, Splash, Stampede, Sword Boomerang, Ultimate Defend, Whirlwind, Expect a Fight, and Juggling. Native combat effects cover the currently modeled subset, with default damage/block behavior for simpler cards.
+- **Run-level relic effects**: Modeled Amethyst Aubergine, Pantograph, Stone Humidifier, Fishing Rod, Winged Boots, Black Blood, War Hammer, Meat on the Bone, Old Coin, Strawberry, Pear, Mango, Lee's Waffle, and Venerable Tea Set activation.
+- **Native combat relic effects**: Modeled Anchor, Bag of Marbles, Bag of Preparation, Blood Vial, Booming Conch, Bronze Scales, Captain's Wheel, Happy Flower, Horn Cleat, Lantern, Oddly Smooth Stone, Orichalcum, Red Skull, Vajra, and Venerable Tea Set next-combat energy.
+- **Gremlin Merc**: Steals gold after attacks, transfers stolen gold to the spawned Fat Gremlin heist, and returns it when that Fat Gremlin dies.
 
-## Known fidelity gaps
+## Remaining fidelity gaps
 
-- Exact map generation, reward odds, shop inventory/prices, rest options, event routing/outcomes, and potion/relic reward odds are not yet fully implemented from decompiled logic.
-- Native relic coverage is incomplete beyond the currently modeled subset.
+- Exact RNG ordering for map generation, rewards, shops, event routing/outcomes, potion drops, relic drops, and card reward generation is still approximate.
+- Event coverage is still partial beyond the modeled initial and trace-observed event subset.
+- Native card coverage is still partial outside the current starter/common/trace-observed subset.
+- Native relic coverage is still partial outside the modeled run/combat relic subset.
+- Shop inventory and price generation are decompilation-inspired but not yet exact across all item categories and relic/card rarities.
+
+## Next concrete work items
+
+1. Compare latest live traces against emulator runs at each floor boundary and turn the first deterministic mismatch into a focused test.
+2. Expand the next trace-observed missing card or relic using decompiled behavior, then add native/run-env regression tests.
+3. Replace one approximate RNG subsystem at a time, starting with reward generation or shop inventory because those are directly visible in full-run traces.
+4. Capture another live trace after each parity batch; keep it only if it documents a durable milestone or regression case, and update this plan with durable progress plus the next actionable gap.

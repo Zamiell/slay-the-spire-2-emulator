@@ -15,6 +15,7 @@ from sts2_gym.run_env import (
     NODE_RELIC,
     NODE_REST,
     NODE_SHOP,
+    PHASE_CARD_REWARD,
     PHASE_COMBAT,
     PHASE_COMPLETE,
     PHASE_EVENT,
@@ -55,6 +56,9 @@ from sts2_gym.run_env import (
     RELIC_WAR_HAMMER,
     RELIC_WINGED_BOOTS,
     EVENT_SIMPLE_REWARD,
+    EVENT_BRAIN_LEECH,
+    EVENT_JUNGLE_MAZE_ADVENTURE,
+    EVENT_MORPHIC_GROVE,
     OVERGROWTH_BOSS_ENCOUNTERS,
     OVERGROWTH_ELITE_ENCOUNTERS,
     UNDERDOCKS_BOSS_ENCOUNTERS,
@@ -290,23 +294,44 @@ class Sts2GymTests(unittest.TestCase):
             env._enter_shop_phase()
 
             self.assertIn(
-                int(env._shop_cards[0]), {13, 60, 87, 268, 358, 454, 486, 508, 519}
+                int(env._shop_cards[0]),
+                {13, 50, 60, 87, 147, 247, 268, 358, 454, 486, 508, 519, 538},
             )
             self.assertIn(
-                int(env._shop_cards[1]), {13, 60, 87, 268, 358, 454, 486, 508, 519}
+                int(env._shop_cards[1]),
+                {13, 50, 60, 87, 147, 247, 268, 358, 454, 486, 508, 519, 538},
             )
             self.assertIn(
-                int(env._shop_cards[2]), {18, 31, 175, 238, 396, 414, 433, 455, 521}
+                int(env._shop_cards[2]),
+                {18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 521},
             )
             self.assertIn(
-                int(env._shop_cards[3]), {18, 31, 175, 238, 396, 414, 433, 455, 521}
+                int(env._shop_cards[3]),
+                {18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 521},
             )
-            self.assertIn(int(env._shop_cards[4]), {265, 273})
+            self.assertIn(int(env._shop_cards[4]), {265, 273, 462})
 
             for action, card_id in enumerate(env._shop_cards):
                 base = (
                     75
-                    if int(card_id) in {31, 175, 265, 273, 396, 414, 454, 455, 521}
+                    if int(card_id)
+                    in {
+                        31,
+                        147,
+                        150,
+                        174,
+                        175,
+                        247,
+                        265,
+                        273,
+                        396,
+                        414,
+                        454,
+                        455,
+                        462,
+                        521,
+                        538,
+                    }
                     else 50
                 )
                 if action >= 5:
@@ -410,6 +435,63 @@ class Sts2GymTests(unittest.TestCase):
             self.assertFalse(terminated)
             self.assertGreater(info["gold"], gold_before)
             self.assertEqual(info["event_id"], 0)
+        finally:
+            env.close()
+
+    def test_run_env_trace_observed_events_apply_decompiled_outcomes(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._phase = PHASE_EVENT
+            env._event_id = EVENT_JUNGLE_MAZE_ADVENTURE
+            env._player_hp = 64
+            env._gold = 99
+
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertFalse(terminated)
+            self.assertEqual(info["player_hp"], 46)
+            self.assertGreaterEqual(info["gold"], 234)
+            self.assertLessEqual(info["gold"], 264)
+
+            env._phase = PHASE_EVENT
+            env._event_id = EVENT_JUNGLE_MAZE_ADVENTURE
+            env._gold = 99
+            _, _, _, _, info = env.step(1)
+            self.assertGreaterEqual(info["gold"], 134)
+            self.assertLessEqual(info["gold"], 164)
+
+            env._phase = PHASE_EVENT
+            env._event_id = EVENT_MORPHIC_GROVE
+            env._gold = 263
+            env._player_hp = 20
+            env._player_max_hp = 80
+            _, _, _, _, info = env.step(1)
+            self.assertEqual(info["player_hp"], 25)
+            self.assertEqual(info["player_max_hp"], 85)
+
+            env._phase = PHASE_EVENT
+            env._event_id = EVENT_MORPHIC_GROVE
+            env._gold = 263
+            deck_before = tuple(env._deck)
+            _, _, _, _, info = env.step(0)
+            self.assertEqual(info["gold"], 0)
+            self.assertNotEqual(tuple(env._deck[:2]), deck_before[:2])
+
+            env._phase = PHASE_EVENT
+            env._event_id = EVENT_BRAIN_LEECH
+            env._player_hp = 20
+            deck_size = len(env._deck)
+            _, _, _, _, info = env.step(0)
+            self.assertEqual(info["deck_size"], deck_size + 1)
+
+            env._phase = PHASE_EVENT
+            env._event_id = EVENT_BRAIN_LEECH
+            env._player_hp = 20
+            _, _, terminated, _, info = env.step(1)
+            self.assertFalse(terminated)
+            self.assertEqual(info["phase"], PHASE_CARD_REWARD)
+            self.assertEqual(info["player_hp"], 15)
         finally:
             env.close()
 

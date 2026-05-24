@@ -20,6 +20,7 @@ ACTIONABLE_STATES = {
     "card_select",
     "card_reward",
     "event",
+    "bundle_select",
     "map",
     "rest",
     "rest_site",
@@ -47,6 +48,7 @@ def compact_state(state: dict[str, Any]) -> dict[str, Any]:
     rest = state.get("rest") or {}
     rest_site = state.get("rest_site") or {}
     treasure = state.get("treasure") or {}
+    bundle_select = state.get("bundle_select") or {}
 
     return {
         "state_type": state.get("state_type"),
@@ -92,6 +94,7 @@ def compact_state(state: dict[str, Any]) -> dict[str, Any]:
         "rest": rest,
         "rest_site": rest_site,
         "treasure": treasure,
+        "bundle_select": bundle_select,
         "menu_screen": state.get("menu_screen"),
         "options": state.get("options"),
     }
@@ -202,6 +205,9 @@ def is_actionable_state(state: dict[str, Any], *, min_combat_hand: int = 1) -> b
         return bool(state.get("treasure"))
     if state_type == "card_reward":
         return bool((state.get("card_reward") or {}).get("cards"))
+    if state_type == "bundle_select":
+        bundle_select = state.get("bundle_select") or {}
+        return bool(bundle_select.get("can_confirm") or bundle_select.get("bundles"))
     if state_type == "shop":
         shop = state.get("shop") or {}
         return bool(
@@ -235,6 +241,8 @@ def choose_action(state: dict[str, Any], map_index: int) -> dict[str, Any] | Non
         return choose_rest_action(state)
     if state_type == "card_select":
         return choose_card_select_action(state)
+    if state_type == "bundle_select":
+        return choose_bundle_select_action(state)
     if state_type == "card_reward":
         return choose_card_reward_action(state)
     return None
@@ -567,47 +575,27 @@ def choose_card_select_action(state: dict[str, Any]) -> dict[str, Any]:
     return {"action": "confirm_selection"}
 
 
+def choose_bundle_select_action(state: dict[str, Any]) -> dict[str, Any] | None:
+    bundle_select = state.get("bundle_select") or {}
+    if bundle_select.get("can_confirm"):
+        return {"action": "confirm_bundle_selection"}
+    bundles = bundle_select.get("bundles") or []
+    if not bundles:
+        return None
+    first = bundles[0]
+    index = first.get("index", 0) if isinstance(first, dict) else 0
+    return {"action": "select_bundle", "index": index}
+
+
 def choose_shop_action(state: dict[str, Any]) -> dict[str, Any] | None:
     shop = state.get("shop") or {}
     if "items" in shop:
-        purchase = best_shop_purchase(shop.get("items") or [])
-        if purchase is not None:
-            return {"action": "shop_purchase", "index": purchase}
-        if shop.get("can_proceed") is False:
-            return None
         return {"action": "proceed"}
     options = state.get("options") or []
     leave = first_named_option(options, ("leave", "proceed", "skip"))
     if leave is None:
         return None
     return {"action": "shop_option", "index": leave}
-
-
-def best_shop_purchase(items: list[Any]) -> int | None:
-    candidates = [
-        item
-        for item in items
-        if isinstance(item, dict)
-        and item.get("is_stocked") is True
-        and item.get("can_afford") is True
-        and item.get("category") != "card_removal"
-    ]
-    if not candidates:
-        return None
-    priority = {
-        "relic": 0,
-        "potion": 1,
-        "card": 2,
-    }
-    best = min(
-        candidates,
-        key=lambda item: (
-            priority.get(str(item.get("category") or ""), 99),
-            int(item.get("price") or 0),
-        ),
-    )
-    index = best.get("index")
-    return int(index) if isinstance(index, int) else None
 
 
 def choose_rest_action(state: dict[str, Any]) -> dict[str, Any] | None:
@@ -700,6 +688,7 @@ def capture_run(
             append_snapshot(trace, step, None, None, state, note="no_auto_action")
             break
 
+        previous_state_type = state.get("state_type")
         result = trace_real_game.post_action(base_url, payload)
         if payload["action"] == "choose_map_node":
             state = wait_after_map_choice(base_url, delay)
@@ -709,6 +698,18 @@ def capture_run(
                 base_url, delay, min_combat_hand=min_hand
             )
         append_snapshot(trace, step, payload, result, state)
+
+        tolerated_retry_error = (
+            previous_state_type == "shop" and payload.get("action") == "proceed"
+        ) or (
+            previous_state_type == "rest_site"
+            and payload.get("action") == "choose_rest_option"
+            and "not open" in str(result.get("error") or "").lower()
+        )
+        if result.get("status") == "error" and tolerated_retry_error:
+            time.sleep(max(delay, 1.0))
+            state = start_real_game_run.get_state(base_url)
+            continue
 
         if result.get("status") == "error":
             append_snapshot(trace, step + 1, None, None, state, note="post_error")
@@ -750,7 +751,7 @@ def append_snapshot(
 
 def is_terminal_state(state: dict[str, Any]) -> bool:
     state_type = state.get("state_type")
-    if state_type == "menu":
+    if state_type in {"menu", "game_over"}:
         return True
     run = state.get("run") or {}
     return bool(run.get("is_victory") or run.get("is_defeat") or run.get("is_complete"))
