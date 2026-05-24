@@ -57,14 +57,14 @@ This is not yet a full game emulator. Shops, rests, relics, elites, bosses, and 
 
 - .NET 9 SDK
 - Python 3.11+ recommended
+- uv
 - Native build tools required by .NET NativeAOT for the target platform
-- Python packages from `requirements.txt`
+- Python packages managed by uv from `pyproject.toml`
 
 Install Python dependencies:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+uv sync
 ```
 
 ## Build the native library
@@ -94,55 +94,55 @@ dotnet test "src\Sts2Emulator.Tests\Sts2Emulator.Tests.csproj"
 Check the Gymnasium environment:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\train.py --check
+uv run python scripts\train.py --check
 ```
 
 Run a short training job:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\train.py --timesteps 5000 --n-envs 2
+uv run python scripts\train.py --timesteps 5000 --n-envs 2
 ```
 
 Evaluate a simple baseline policy over fixed seeds, including per-encounter win rates:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\evaluate.py --episodes 100 --policy first-valid
+uv run python scripts\evaluate.py --episodes 100 --policy first-valid
 ```
 
 Force a specific encounter and use the starter-deck-aware baseline:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\evaluate.py --episodes 100 --policy starter-aggressive --encounter chompers
+uv run python scripts\evaluate.py --episodes 100 --policy starter-aggressive --encounter chompers
 ```
 
 Emit a deterministic emulator trace for comparison against real-game traces:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\trace.py --seed 0 --encounter toadpoles --actions 0 1 2
+uv run python scripts\trace.py --seed 0 --encounter toadpoles --actions 0 1 2
 ```
 
 Emit a trace from a running Slay the Spire 2 instance with the STS2MCP mod enabled:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\trace_real_game.py --actions 0 1 2
+uv run python scripts\trace_real_game.py --actions 0 1 2
 ```
 
 Start a new real-game standard run with a specific seed through STS2MCP before tracing:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\start_real_game_run.py VALIDATION1 --character IRONCLAD --abandon-existing
+uv run python scripts\start_real_game_run.py VALIDATION1 --character IRONCLAD --abandon-existing
 ```
 
 Compare two trace JSON files on their normalized player/enemy fields:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\compare_traces.py emulator-trace.json real-game-trace.json
+uv run python scripts\compare_traces.py emulator-trace.json real-game-trace.json
 ```
 
 Run the repeatable STS2MCP validation sweep against a running game:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\validate_real_game_sweep.py --suite all --continue-on-failure
+uv run python scripts\validate_real_game_sweep.py --suite all --continue-on-failure
 ```
 
 Use `--suite direct` for one-passive-turn direct encounter checks, `--suite passive-boss` for the current three-turn boss checks, or `--encounter aeonglass` to narrow the run.
@@ -152,7 +152,7 @@ Use `--suite direct` for one-passive-turn direct encounter checks, `--suite pass
 `scripts\train.py` trains `MaskablePPO` from `sb3-contrib` using action masks from the environment:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\train.py --timesteps 1000000 --n-envs 4 --save-path checkpoints\maskable_ppo
+uv run python scripts\train.py --timesteps 1000000 --n-envs 4 --save-path checkpoints\maskable_ppo
 ```
 
 The resulting model is saved as a Stable Baselines3 checkpoint.

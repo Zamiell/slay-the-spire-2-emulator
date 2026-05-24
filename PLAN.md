@@ -20,14 +20,14 @@ Build a high-performance STS2 combat emulator for reinforcement learning: C# gam
 ```powershell
 dotnet publish "src\Sts2Emulator\Sts2Emulator.csproj" -c Release -r win-x64 --self-contained -o "out"
 dotnet test "src\Sts2Emulator.Tests\Sts2Emulator.Tests.csproj"
-.\.venv\Scripts\python.exe scripts\train.py --check
-.\.venv\Scripts\python.exe scripts\evaluate.py --episodes 100 --policy starter-aggressive
+uv run python scripts\train.py --check
+uv run python scripts\evaluate.py --episodes 100 --policy starter-aggressive
 ```
 
 Regenerate data from decompiled sources after a patch:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\extract_data.py
+uv run python scripts\extract_data.py
 ```
 
 ## Trace validation workflow
@@ -37,31 +37,31 @@ Regenerate data from decompiled sources after a patch:
 3. Start a seeded real-game run and enter first combat:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\start_real_game_run.py VALIDATION_SEED --character IRONCLAD --abandon-existing --enter-first-combat
+uv run python scripts\start_real_game_run.py VALIDATION_SEED --character IRONCLAD --abandon-existing --enter-first-combat
 ```
 
 4. Capture the live trace:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\trace_real_game.py --actions 0 1 2 > real.json
+uv run python scripts\trace_real_game.py --actions 0 1 2 > real.json
 ```
 
 5. Capture the emulator trace with a matching forced encounter and action sequence:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\trace.py --seed 0 --encounter toadpoles --actions 0 1 2 > emulator.json
+uv run python scripts\trace.py --seed 0 --encounter toadpoles --actions 0 1 2 > emulator.json
 ```
 
 6. Compare normalized fields:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\compare_traces.py emulator.json real.json
+uv run python scripts\compare_traces.py emulator.json real.json
 ```
 
 For faster encounter validation, use STS2MCP `debug_start_encounter` through:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\validate_real_game_trace.py --start-seed FORCE_1 --encounter chompers --actions 5 --ignore-hand-order --output-dir "$env:TEMP\sts2-validation"
+uv run python scripts\validate_real_game_trace.py --start-seed FORCE_1 --encounter chompers --actions 5 --ignore-hand-order --output-dir "$env:TEMP\sts2-validation"
 ```
 
 ## Fight validation checklist
@@ -176,7 +176,7 @@ None currently identified.
 ## Immediate next steps
 
 1. Improve card draw-order parity so hand comparisons can be enabled in trace comparison.
-2. Run `scripts\validate_real_game_sweep.py --suite all` after behavior changes to catch regressions.
+2. Run `uv run python scripts\validate_real_game_sweep.py --suite all` after behavior changes to catch regressions.
 3. Add emulator support for newly discovered live fights as game patches introduce them.
 4. Continue adding map, reward, rest-site, shop, relic, elite, and boss behavior for full-run training.
 
