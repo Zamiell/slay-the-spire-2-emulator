@@ -183,13 +183,22 @@ def replay_trace(
             try:
                 action = translate_action(payload, obs, info)
             except UnsupportedTraceActionError as exc:
+                reference_summary = compare_traces.summary(reference_step)
+                reference_floor = compare_traces.get_path(
+                    reference_summary, "run.floor"
+                )
                 return ReplayResult(
                     {
                         "source": "emulator",
                         "seed": emulator_seed,
                         "trace": emulator_trace,
                     },
-                    str(exc),
+                    (
+                        f"step {reference_step.get('step', len(emulator_trace))}: "
+                        f"{exc}; reference state_type="
+                        f"{reference_summary.get('state_type')!r} "
+                        f"floor={reference_floor!r}"
+                    ),
                 )
 
             obs, reward, terminated, truncated, info = env.step(action)
@@ -439,10 +448,6 @@ def main() -> None:
             json.dumps(result.payload, indent=2) + "\n", encoding="utf-8"
         )
 
-    if result.unsupported_action is not None:
-        print(f"Replay stopped: {result.unsupported_action}")
-        raise SystemExit(1)
-
     diffs = compare_boundary_snapshots(
         compare_traces.load_trace_from_payload(reference_payload),
         compare_traces.load_trace_from_payload(result.payload),
@@ -452,6 +457,10 @@ def main() -> None:
         print(f"Full-run boundary mismatch: {len(diffs)} difference(s)")
         for diff in diffs[: args.max_diffs]:
             print(diff)
+    if result.unsupported_action is not None:
+        print(f"Replay stopped: {result.unsupported_action}")
+        raise SystemExit(1)
+    if diffs:
         raise SystemExit(1)
 
     print("Full-run boundary snapshots match on configured fields.")

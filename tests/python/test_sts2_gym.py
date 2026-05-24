@@ -1223,6 +1223,38 @@ class Sts2GymTests(unittest.TestCase):
             ],
         )
 
+    def test_full_run_replay_unsupported_action_reports_reference_context(self):
+        payload = {
+            "trace": [
+                {
+                    "step": 0,
+                    "summary": {
+                        "state_type": "event",
+                        "run": {"floor": 1},
+                        "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                    },
+                },
+                {
+                    "step": 1,
+                    "action": {"action": "select_card", "index": 9},
+                    "summary": {
+                        "state_type": "card_select",
+                        "run": {"floor": 1},
+                        "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                    },
+                },
+            ]
+        }
+
+        result = replay_full_run_trace.replay_trace(payload, emulator_seed=0)
+
+        self.assertIsNotNone(result.unsupported_action)
+        self.assertIn(
+            "step 1: unsupported action 'select_card'", result.unsupported_action
+        )
+        self.assertIn("reference state_type='card_select'", result.unsupported_action)
+        self.assertIn("floor=1", result.unsupported_action)
+
 
 if __name__ == "__main__":
     unittest.main()

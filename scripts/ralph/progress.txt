@@ -6,6 +6,7 @@
 - Use `scripts\replay_full_run_trace.py` to replay retained STS2MCP full-run traces against `Sts2RunEnv` and identify the first floor/combat-boundary parity mismatch.
 - Native C# card powers are commonly modeled as `BuffId` entries, with timing handled in `CombatEngine` and damage/effect hooks in `EnemyAI` or `CardEffects`.
 - Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
+- Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -58,5 +59,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
   - Decompiled `PotionRewardOdds.Roll` starts at 0.4, subtracts 0.1 after a potion reward, adds 0.1 after a miss, and applies elite bonus as `0.25 * 0.5`.
   - `PotionFactory.CreateRandomPotion` rolls rarity with rare at `<= 0.1`, uncommon at `<= 0.35`, then picks an available potion of that rarity.
   - Shop potion base costs come from potion rarity: common 50, uncommon 75, rare 100, then the shop RNG applies a 0.95-1.05 multiplier.
+
+---
+
+## 2026-05-24 13:41 - PLAN-M1-REPLAY-DIAGNOSTICS
+
+- Improved full-run trace replay diagnostics so boundary mismatches are printed before unsupported live trace actions stop replay, and unsupported action errors include the reference step, state type, and floor.
+- Added Python regression coverage for unsupported replay action context.
+- Recorded current Milestone 1 progress in `plan.md`; `FULLRUN_DRUM_1.json` now surfaces floor/enemy/player boundary diffs before stopping on the reward-claim divergence.
+- Files changed: `scripts\replay_full_run_trace.py`, `tests\python\test_sts2_gym.py`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Retained full-run traces can enter live `rewards` or `card_select` states that `Sts2RunEnv` does not model directly; replay diagnostics should preserve the first boundary mismatch before reporting the unsupported action.
+  - `ReplayResult.unsupported_action` is the right place to attach reference trace context because the replay payload only contains emulator steps completed before the stop.
 
 ---
