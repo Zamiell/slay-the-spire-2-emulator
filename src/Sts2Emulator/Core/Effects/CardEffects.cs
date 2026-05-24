@@ -19,7 +19,7 @@ public static class CardEffects
 
             case IC.Bash: // 2-cost, 8/10 dmg + Vulnerable 2/3
                 DealDamage(state, Dmg(def, upgraded));
-                ApplyEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 3 : 2);
+                ApplyEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 3 : 2, rng);
                 break;
 
             case IC.BodySlam: // 1/0-cost, dmg = player's current block
@@ -61,6 +61,12 @@ public static class CardEffects
                 DealDamageMultiHit(state, Dmg(def, upgraded), count, rng);
                 break;
             }
+
+            case IC.FightMe: // 2-cost, 5/6 dmg twice, gain 3/4 Strength, enemy gains 1 Strength
+                DealDamageMultiHit(state, Dmg(def, upgraded), 2, rng);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, upgraded ? 4 : 3);
+                ApplyEnemyDebuff(state, BuffId.Strength, 1, rng);
+                break;
 
             case IC.Headbutt: // 1-cost, 9/12 dmg + put top of discard on top of draw
                 DealDamage(state, Dmg(def, upgraded));
@@ -109,7 +115,7 @@ public static class CardEffects
 
             case IC.Thunderclap: // 1-cost, 4/7 dmg to ALL + Vulnerable 1 to ALL
                 DealDamageToAll(state, Dmg(def, upgraded));
-                ApplyAllEnemyDebuff(state, BuffId.Vulnerable, 1);
+                ApplyAllEnemyDebuff(state, BuffId.Vulnerable, 1, rng);
                 break;
 
             case IC.TwinStrike: // 1-cost, 5/7 dmg × 2 hits
@@ -118,8 +124,8 @@ public static class CardEffects
 
             case IC.Uppercut: // 2-cost, 13/13 dmg + Weak 1/2 + Vulnerable 1/2
                 DealDamage(state, Dmg(def, upgraded));
-                ApplyEnemyDebuff(state, BuffId.Weak, upgraded ? 2 : 1);
-                ApplyEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 2 : 1);
+                ApplyEnemyDebuff(state, BuffId.Weak, upgraded ? 2 : 1, rng);
+                ApplyEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 2 : 1, rng);
                 break;
 
             case IC.Whirlwind: // X-cost, 5/8 dmg × (energy spent) to ALL enemies
@@ -152,13 +158,18 @@ public static class CardEffects
 
             case IC.Dominate: // 1-cost, Vulnerable 1 to enemy, gain Strength = total Vulnerable
             {
-                ApplyEnemyDebuff(state, BuffId.Vulnerable, 1);
+                ApplyEnemyDebuff(state, BuffId.Vulnerable, 1, rng);
                 var t = FirstEnemy(state);
                 if (t != null)
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength,
                         BuffSystem.Get(t.Buffs, BuffId.Vulnerable));
                 break;
             }
+
+            case IC.DrumOfBattle: // 1-cost, draw 2; on self-exhaust gain 2/3 energy
+                DrawCards(state, 2, rng);
+                state.Energy += upgraded ? 3 : 2;
+                break;
 
             case IC.ExpectAFight: // 2/1-cost, gain 1 energy per Attack in hand
             {
@@ -238,11 +249,11 @@ public static class CardEffects
 
             case IC.Taunt: // 1-cost, 7/8 block + Vulnerable 1 to enemy
                 GainBlock(state, Blk(def, upgraded));
-                ApplyEnemyDebuff(state, BuffId.Vulnerable, 1);
+                ApplyEnemyDebuff(state, BuffId.Vulnerable, 1, rng);
                 break;
 
             case IC.Tremble: // 1-cost, Vulnerable 3/4 to enemy
-                ApplyEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 4 : 3);
+                ApplyEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 4 : 3, rng);
                 break;
 
             case IC.TrueGrit: // 1-cost, 7/9 block + exhaust random card from hand
@@ -292,6 +303,10 @@ public static class CardEffects
 
             case IC.Rupture: // 1-cost, gain 1/2 Strength when losing HP via card effects
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.RupturePower, upgraded ? 2 : 1);
+                break;
+
+            case IC.Vicious: // 1-cost, draw 1/2 whenever you apply Vulnerable
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Vicious, upgraded ? 2 : 1);
                 break;
 
             // ── Fallback ─────────────────────────────────────────────────────────
@@ -439,16 +454,31 @@ public static class CardEffects
     private static EnemyState? FirstEnemy(CombatState state) =>
         state.Enemies.FirstOrDefault(e => e.Hp > 0);
 
-    private static void ApplyEnemyDebuff(CombatState state, BuffId id, int magnitude)
+    private static void ApplyEnemyDebuff(CombatState state, BuffId id, int magnitude, Random rng)
     {
         var target = FirstEnemy(state);
-        if (target != null) BuffSystem.Apply(target.Buffs, id, magnitude);
+        if (target == null) return;
+
+        int before = BuffSystem.Get(target.Buffs, id);
+        BuffSystem.Apply(target.Buffs, id, magnitude);
+        DrawForVicious(state, id, before, BuffSystem.Get(target.Buffs, id), rng);
     }
 
-    private static void ApplyAllEnemyDebuff(CombatState state, BuffId id, int magnitude)
+    private static void ApplyAllEnemyDebuff(CombatState state, BuffId id, int magnitude, Random rng)
     {
         foreach (var enemy in state.Enemies.Where(e => e.Hp > 0))
+        {
+            int before = BuffSystem.Get(enemy.Buffs, id);
             BuffSystem.Apply(enemy.Buffs, id, magnitude);
+            DrawForVicious(state, id, before, BuffSystem.Get(enemy.Buffs, id), rng);
+        }
+    }
+
+    private static void DrawForVicious(CombatState state, BuffId id, int before, int after, Random rng)
+    {
+        int vicious = BuffSystem.Get(state.PlayerBuffs, BuffId.Vicious);
+        if (id == BuffId.Vulnerable && vicious > 0 && after > before)
+            DrawCards(state, vicious, rng);
     }
 
     private static readonly HashSet<string> _strikeNames = new(StringComparer.Ordinal)
@@ -506,6 +536,7 @@ public static class IC
     public const int Bully      = 66;
     public const int Cinder     = 87;
     public const int Dismantle  = 147;
+    public const int FightMe    = 189;
     public const int Hemokinesis = 247;
     public const int Pillage    = 353;
     public const int Rampage    = 381;
@@ -518,6 +549,7 @@ public static class IC
     public const int BurningPact   = 69;
     public const int Colossus      = 95;
     public const int Dominate      = 150;
+    public const int DrumOfBattle  = 155;
     public const int EvilEye       = 174;
     public const int ExpectAFight  = 175;
     public const int FlameBarrier  = 195;
@@ -557,6 +589,7 @@ public static class IC
     public const int Juggernaut  = 272;
     public const int Rupture     = 404;
     public const int Stampede    = 462;
+    public const int Vicious     = 533;
 }
 
 public static class ST

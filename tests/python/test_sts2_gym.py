@@ -57,6 +57,9 @@ from sts2_gym.run_env import (
     EVENT_JUNGLE_MAZE_ADVENTURE,
     EVENT_MORPHIC_GROVE,
     EVENT_THE_LEGENDS_WERE_TRUE,
+    CARD_RARITY_BY_ID,
+    CARD_RARITY_COMMON,
+    CARD_RARITY_UNCOMMON,
     IRONCLAD_REWARD_POOL,
     OVERGROWTH_BOSS_ENCOUNTERS,
     OVERGROWTH_ELITE_ENCOUNTERS,
@@ -331,17 +334,22 @@ class Sts2GymTests(unittest.TestCase):
                 int(env._shop_cards[0]),
                 {
                     13,
+                    20,
                     50,
                     60,
                     69,
                     87,
                     147,
+                    189,
+                    240,
                     247,
+                    254,
                     268,
                     349,
                     358,
                     421,
                     454,
+                    465,
                     486,
                     508,
                     519,
@@ -352,17 +360,22 @@ class Sts2GymTests(unittest.TestCase):
                 int(env._shop_cards[1]),
                 {
                     13,
+                    20,
                     50,
                     60,
                     69,
                     87,
                     147,
+                    189,
+                    240,
                     247,
+                    254,
                     268,
                     349,
                     358,
                     421,
                     454,
+                    465,
                     486,
                     508,
                     519,
@@ -371,13 +384,51 @@ class Sts2GymTests(unittest.TestCase):
             )
             self.assertIn(
                 int(env._shop_cards[2]),
-                {18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 517, 521},
+                {
+                    18,
+                    31,
+                    45,
+                    46,
+                    150,
+                    155,
+                    174,
+                    175,
+                    205,
+                    238,
+                    396,
+                    414,
+                    433,
+                    455,
+                    493,
+                    516,
+                    517,
+                    521,
+                },
             )
             self.assertIn(
                 int(env._shop_cards[3]),
-                {18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 517, 521},
+                {
+                    18,
+                    31,
+                    45,
+                    46,
+                    150,
+                    155,
+                    174,
+                    175,
+                    205,
+                    238,
+                    396,
+                    414,
+                    433,
+                    455,
+                    493,
+                    516,
+                    517,
+                    521,
+                },
             )
-            self.assertIn(int(env._shop_cards[4]), {265, 273, 462})
+            self.assertIn(int(env._shop_cards[4]), {185, 265, 273, 462, 533})
 
             for action, card_id in enumerate(env._shop_cards):
                 base = (
@@ -388,9 +439,14 @@ class Sts2GymTests(unittest.TestCase):
                         69,
                         147,
                         150,
+                        155,
                         174,
                         175,
+                        185,
+                        189,
+                        205,
                         247,
+                        254,
                         265,
                         273,
                         396,
@@ -398,7 +454,10 @@ class Sts2GymTests(unittest.TestCase):
                         454,
                         455,
                         462,
+                        465,
+                        493,
                         521,
+                        533,
                         538,
                     }
                     else 50
@@ -407,11 +466,42 @@ class Sts2GymTests(unittest.TestCase):
                     base = int(base * 1.15 + 0.5)
                 cost = int(env._shop_costs[action])
                 if action < 5 and cost < base * 0.75:
-                    self.assertEqual(cost, int((base * 1.05 + 0.5) // 2))
+                    min_sale = int(base * 0.95 + 0.5) // 2
+                    max_sale = int(base * 1.05 + 0.5) // 2
+                    self.assertIn(cost, range(min_sale, max_sale + 1))
                 else:
                     self.assertIn(
                         cost, range(int(base * 0.95 + 0.5), int(base * 1.05 + 0.5) + 1)
                     )
+        finally:
+            env.close()
+
+    def test_run_env_shop_and_rewards_roll_supported_card_rarities(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._enter_shop_phase()
+
+            self.assertIn(
+                CARD_RARITY_BY_ID[int(env._shop_cards[0])],
+                (CARD_RARITY_COMMON, CARD_RARITY_UNCOMMON),
+            )
+            self.assertEqual(
+                CARD_RARITY_BY_ID[int(env._shop_cards[5])], CARD_RARITY_UNCOMMON
+            )
+            self.assertEqual(len(set(int(card) for card in env._shop_cards)), 7)
+
+            env._current_node_type = NODE_BOSS
+            env._card_rarity_offset = 0.2
+            env._enter_reward_phase()
+
+            self.assertTrue(
+                all(
+                    CARD_RARITY_BY_ID[int(card)] == CARD_RARITY_COMMON
+                    for card in env._reward_cards
+                )
+            )
+            self.assertEqual(env._card_rarity_offset, -0.05)
         finally:
             env.close()
 

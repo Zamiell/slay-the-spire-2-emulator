@@ -187,10 +187,68 @@ NEOW_CURSE_RELICS = np.array(
 )
 
 STARTER_DECK = [472] * 5 + [131] * 4 + [30, 10001]
+CARD_RARITY_COMMON = 1
+CARD_RARITY_UNCOMMON = 2
+CARD_RARITY_RARE = 3
+CARD_RARITY_ORDER = (CARD_RARITY_COMMON, CARD_RARITY_UNCOMMON, CARD_RARITY_RARE)
+CARD_RARITY_BASE_OFFSET = -0.05
+CARD_RARITY_MAX_OFFSET = 0.4
+CARD_RARITY_GROWTH = 0.01
+CARD_RARITY_ODDS_REGULAR = (0.03, 0.37)
+CARD_RARITY_ODDS_ELITE = (0.1, 0.4)
+CARD_RARITY_ODDS_BOSS = (1.0, 0.0)
+CARD_RARITY_ODDS_SHOP = (0.09, 0.37)
+CARD_RARITY_BY_ID = {
+    13: CARD_RARITY_COMMON,
+    18: CARD_RARITY_COMMON,
+    20: CARD_RARITY_COMMON,
+    31: CARD_RARITY_UNCOMMON,
+    45: CARD_RARITY_COMMON,
+    46: CARD_RARITY_COMMON,
+    50: CARD_RARITY_COMMON,
+    60: CARD_RARITY_COMMON,
+    69: CARD_RARITY_UNCOMMON,
+    87: CARD_RARITY_COMMON,
+    147: CARD_RARITY_UNCOMMON,
+    150: CARD_RARITY_UNCOMMON,
+    155: CARD_RARITY_UNCOMMON,
+    174: CARD_RARITY_UNCOMMON,
+    175: CARD_RARITY_UNCOMMON,
+    185: CARD_RARITY_UNCOMMON,
+    189: CARD_RARITY_UNCOMMON,
+    205: CARD_RARITY_UNCOMMON,
+    238: CARD_RARITY_COMMON,
+    240: CARD_RARITY_COMMON,
+    247: CARD_RARITY_UNCOMMON,
+    254: CARD_RARITY_UNCOMMON,
+    265: CARD_RARITY_UNCOMMON,
+    268: CARD_RARITY_COMMON,
+    273: CARD_RARITY_UNCOMMON,
+    349: CARD_RARITY_COMMON,
+    358: CARD_RARITY_COMMON,
+    396: CARD_RARITY_UNCOMMON,
+    414: CARD_RARITY_UNCOMMON,
+    421: CARD_RARITY_COMMON,
+    433: CARD_RARITY_COMMON,
+    454: CARD_RARITY_UNCOMMON,
+    455: CARD_RARITY_UNCOMMON,
+    462: CARD_RARITY_UNCOMMON,
+    465: CARD_RARITY_UNCOMMON,
+    486: CARD_RARITY_COMMON,
+    493: CARD_RARITY_UNCOMMON,
+    508: CARD_RARITY_COMMON,
+    516: CARD_RARITY_COMMON,
+    517: CARD_RARITY_COMMON,
+    519: CARD_RARITY_COMMON,
+    521: CARD_RARITY_UNCOMMON,
+    533: CARD_RARITY_UNCOMMON,
+    538: CARD_RARITY_UNCOMMON,
+}
 IRONCLAD_REWARD_POOL = np.array(
     [
         13,
         18,
+        20,
         31,
         45,
         46,
@@ -200,10 +258,16 @@ IRONCLAD_REWARD_POOL = np.array(
         87,
         147,
         150,
+        155,
         174,
         175,
+        185,
+        189,
+        205,
         238,
+        240,
         247,
+        254,
         265,
         268,
         273,
@@ -216,59 +280,75 @@ IRONCLAD_REWARD_POOL = np.array(
         454,
         455,
         462,
+        465,
         486,
+        493,
         508,
+        516,
         517,
         519,
         521,
+        533,
         538,
     ],
     dtype=np.int32,
 )
 SHOP_ATTACK_CARDS = np.array(
-    [13, 50, 60, 69, 87, 147, 247, 268, 349, 358, 421, 454, 486, 508, 519, 538],
+    [
+        13,
+        20,
+        50,
+        60,
+        69,
+        87,
+        147,
+        189,
+        240,
+        247,
+        254,
+        268,
+        349,
+        358,
+        421,
+        454,
+        465,
+        486,
+        508,
+        519,
+        538,
+    ],
     dtype=np.int32,
 )
 SHOP_SKILL_CARDS = np.array(
-    [18, 31, 45, 46, 150, 174, 175, 238, 396, 414, 433, 455, 517, 521],
+    [
+        18,
+        31,
+        45,
+        46,
+        150,
+        155,
+        174,
+        175,
+        205,
+        238,
+        396,
+        414,
+        433,
+        455,
+        493,
+        516,
+        517,
+        521,
+    ],
     dtype=np.int32,
 )
-SHOP_POWER_CARDS = np.array([265, 273, 462], dtype=np.int32)
+SHOP_POWER_CARDS = np.array([185, 265, 273, 462, 533], dtype=np.int32)
 SHOP_COLORLESS_CARDS = IRONCLAD_REWARD_POOL
-SHOP_CARD_BASE_COSTS = {
-    13: 50,
-    18: 50,
-    31: 75,
-    45: 50,
-    46: 50,
-    50: 50,
-    60: 50,
-    69: 75,
-    87: 50,
-    147: 75,
-    150: 75,
-    174: 75,
-    175: 75,
-    238: 50,
-    247: 75,
-    265: 75,
-    268: 50,
-    273: 75,
-    349: 50,
-    358: 50,
-    396: 75,
-    414: 75,
-    421: 50,
-    433: 50,
-    454: 75,
-    455: 75,
-    462: 75,
-    486: 50,
-    508: 50,
-    517: 50,
-    519: 50,
-    521: 75,
-    538: 75,
+SHOP_COLORLESS_CARD_RARITIES = (CARD_RARITY_UNCOMMON, CARD_RARITY_RARE)
+SHOP_CARD_BASE_COSTS_BY_RARITY = {
+    CARD_RARITY_COMMON: 50,
+    CARD_RARITY_UNCOMMON: 75,
+    CARD_RARITY_RARE: 150,
 }
 SHOP_POTION_BASE_COSTS = {
     1: 75,
@@ -385,6 +465,7 @@ class Sts2RunEnv(gym.Env):
         self._venerable_tea_set_active = False
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
+        self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
         self._event_id = 0
         self._act = "overgrowth"
         self._weak_encounters = np.zeros(3, dtype=np.int32)
@@ -435,6 +516,7 @@ class Sts2RunEnv(gym.Env):
         self._venerable_tea_set_active = False
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
+        self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
         self._event_id = 0
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
@@ -905,9 +987,7 @@ class Sts2RunEnv(gym.Env):
 
     def _enter_reward_phase(self):
         self._phase = PHASE_CARD_REWARD
-        self._reward_cards[:] = self._rng.choice(
-            IRONCLAD_REWARD_POOL, size=3, replace=False
-        )
+        self._reward_cards[:] = self._generate_card_rewards()
         self._reward_upgraded[:] = False
         if (
             RELIC_SILVER_CRUCIBLE in self._relics
@@ -946,11 +1026,11 @@ class Sts2RunEnv(gym.Env):
 
     def _enter_shop_phase(self):
         self._phase = PHASE_SHOP
+        sale_index = int(self._rng.integers(0, 5))
         self._shop_cards[:] = self._generate_shop_cards()
         self._shop_relics[:] = [self._next_relic() for _ in range(3)]
         self._shop_potions[:] = [self._next_potion() for _ in range(3)]
         self._shop_costs[:] = 0
-        sale_index = int(self._rng.integers(0, 5))
         for action, card_id in enumerate(self._shop_cards):
             cost = self._shop_card_cost(int(card_id), colorless=action >= 5)
             if action == sale_index:
@@ -1316,32 +1396,98 @@ class Sts2RunEnv(gym.Env):
             return 75
         return int(self._rng.integers(7, 16))
 
+    def _generate_card_rewards(self) -> np.ndarray:
+        cards: list[int] = []
+        for _ in range(3):
+            rarity = self._roll_reward_card_rarity()
+            cards.append(
+                self._choose_card_with_rarity(IRONCLAD_REWARD_POOL, rarity, cards)
+            )
+            self._rng.random()
+        return np.array(cards, dtype=np.int32)
+
     def _generate_shop_cards(self) -> np.ndarray:
         cards: list[int] = []
-        for pool in (
+        for pool in [
             SHOP_ATTACK_CARDS,
             SHOP_ATTACK_CARDS,
             SHOP_SKILL_CARDS,
             SHOP_SKILL_CARDS,
             SHOP_POWER_CARDS,
-            SHOP_COLORLESS_CARDS,
-            SHOP_COLORLESS_CARDS,
-        ):
-            available = [int(card_id) for card_id in pool if int(card_id) not in cards]
-            if not available:
-                available = [
-                    int(card_id)
-                    for card_id in IRONCLAD_REWARD_POOL
-                    if int(card_id) not in cards
-                ]
-            cards.append(int(self._rng.choice(available)))
+        ]:
+            rarity = self._roll_card_rarity(CARD_RARITY_ODDS_SHOP)
+            cards.append(self._choose_card_with_rarity(pool, rarity, cards))
+        for rarity in SHOP_COLORLESS_CARD_RARITIES:
+            cards.append(
+                self._choose_card_with_rarity(SHOP_COLORLESS_CARDS, rarity, cards)
+            )
         return np.array(cards, dtype=np.int32)
 
     def _shop_card_cost(self, card_id: int, *, colorless: bool = False) -> int:
-        base_cost = SHOP_CARD_BASE_COSTS.get(card_id, 50)
+        rarity = CARD_RARITY_BY_ID.get(card_id, CARD_RARITY_COMMON)
+        base_cost = SHOP_CARD_BASE_COSTS_BY_RARITY[rarity]
         if colorless:
             base_cost = self._round_positive(base_cost * 1.15)
         return self._round_positive(base_cost * self._rng.uniform(0.95, 1.05))
+
+    def _roll_reward_card_rarity(self) -> int:
+        if self._current_node_type == NODE_ELITE:
+            odds = CARD_RARITY_ODDS_ELITE
+        elif self._current_node_type == NODE_BOSS:
+            odds = CARD_RARITY_ODDS_BOSS
+        else:
+            odds = CARD_RARITY_ODDS_REGULAR
+        return self._roll_card_rarity(odds, change_future_odds=True)
+
+    def _roll_card_rarity(
+        self, odds: tuple[float, float], *, change_future_odds: bool = False
+    ) -> int:
+        rare_odds, uncommon_odds = odds
+        offset = 0.0 if odds == CARD_RARITY_ODDS_BOSS else self._card_rarity_offset
+        roll = float(self._rng.random())
+        rare_threshold = rare_odds + offset
+        if roll < rare_threshold:
+            rarity = CARD_RARITY_RARE
+        elif roll < rare_threshold + uncommon_odds:
+            rarity = CARD_RARITY_UNCOMMON
+        else:
+            rarity = CARD_RARITY_COMMON
+
+        if change_future_odds:
+            if rarity == CARD_RARITY_RARE:
+                self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
+            else:
+                self._card_rarity_offset = min(
+                    self._card_rarity_offset + CARD_RARITY_GROWTH,
+                    CARD_RARITY_MAX_OFFSET,
+                )
+        return rarity
+
+    def _choose_card_with_rarity(
+        self, pool: np.ndarray, rarity: int, blacklist: list[int]
+    ) -> int:
+        for allowed_rarity in self._rarity_fallbacks(rarity):
+            available = [
+                int(card_id)
+                for card_id in pool
+                if int(card_id) not in blacklist
+                and CARD_RARITY_BY_ID.get(int(card_id), CARD_RARITY_COMMON)
+                == allowed_rarity
+            ]
+            if available:
+                return int(self._rng.choice(available))
+        available = [int(card_id) for card_id in pool if int(card_id) not in blacklist]
+        if available:
+            return int(self._rng.choice(available))
+        return int(self._rng.choice(pool))
+
+    @staticmethod
+    def _rarity_fallbacks(rarity: int) -> tuple[int, int, int]:
+        if rarity == CARD_RARITY_COMMON:
+            return (CARD_RARITY_COMMON, CARD_RARITY_UNCOMMON, CARD_RARITY_RARE)
+        if rarity == CARD_RARITY_UNCOMMON:
+            return (CARD_RARITY_UNCOMMON, CARD_RARITY_RARE, CARD_RARITY_COMMON)
+        return (CARD_RARITY_RARE, CARD_RARITY_COMMON, CARD_RARITY_UNCOMMON)
 
     def _shop_relic_cost(self, relic_id: int) -> int:
         base_cost = SHOP_RELIC_BASE_COSTS.get(relic_id, 200)

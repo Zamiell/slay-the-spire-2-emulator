@@ -313,6 +313,43 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void DrumOfBattle_DrawsAndGainsEnergyWhenExhausted()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.DrumOfBattle, false)];
+        state.DrawPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(2, state.Energy);
+        Assert.Equal([IC.StrikeIronclad, IC.DefendIronclad], state.Hand.Select(card => card.DefId));
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.DrumOfBattle);
+    }
+
+    [Fact]
+    public void FightMe_HitsTwiceAndAppliesStrengthToBothSides()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.FightMe, false)];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(90, state.Enemies[0].Hp);
+        Assert.Equal(3, BuffSystem.Get(state.PlayerBuffs, BuffId.Strength));
+        Assert.Equal(1, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Strength));
+    }
+
+    [Fact]
     public void Havoc_PlaysAndExhaustsTopDrawPileCard()
     {
         var state = CombatFactory.NewCombat(seed: 0);
@@ -350,6 +387,34 @@ public class CombatEngineTests
         CombatEngine.Step(state, 0, new Random(0));
 
         Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Stampede));
+    }
+
+    [Fact]
+    public void Vicious_DrawsWhenPlayerAppliesVulnerable()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.Vicious, false),
+            new CardInstance(IC.Taunt, false),
+        ];
+        state.DrawPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Vicious));
+        Assert.Equal(1, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Vulnerable));
+        Assert.Contains(state.Hand, card => card.DefId == IC.StrikeIronclad);
     }
 
     [Fact]
