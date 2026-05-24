@@ -116,6 +116,7 @@ internal static class Enemies
         new EnemyDef(Id: 10004, Name: "BattleFriendV1", MinHp: 75, MaxHp: 75, Moves: Array.Empty<int>()),
         new EnemyDef(Id: 10005, Name: "BattleFriendV2", MinHp: 150, MaxHp: 150, Moves: Array.Empty<int>()),
         new EnemyDef(Id: 10006, Name: "BattleFriendV3", MinHp: 300, MaxHp: 300, Moves: Array.Empty<int>()),
+        new EnemyDef(Id: 10007, Name: "TestSubject", MinHp: 111, MaxHp: 111, Moves: Array.Empty<int>()),
     ];
 
     public static EnemyDef Get(int id) =>

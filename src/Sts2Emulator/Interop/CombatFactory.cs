@@ -79,6 +79,30 @@ public static class CombatFactory
         BattlewornDummy1,
         BattlewornDummy2,
         BattlewornDummy3,
+        BygoneEffigy,
+        Entomancer,
+        InfestedPrisms,
+        PhrogParasite,
+        SoulNexus,
+        TerrorEel,
+        Byrdonis,
+        Decimillipede,
+        Knights,
+        MechaKnight,
+        PhantasmalGardeners,
+        Aeonglass,
+        CeremonialBeast,
+        KaiserCrab,
+        KnowledgeDemon,
+        LagavulinMatriarch,
+        Queen,
+        SoulFysh,
+        TestSubject,
+        TheInsatiable,
+        TheKin,
+        Vantom,
+        WaterfallGiant,
+        Architect,
     }
 
     private static readonly ActOneEncounter[] OvergrowthWeakEncounters =
@@ -486,6 +510,126 @@ public static class CombatFactory
                 CreateEnemy(KE.BattleFriendV3, rng, new Intent(IntentType.Unknown, 0)),
             ],
 
+            ActOneEncounter.BygoneEffigy =>
+            [
+                CreateEnemy(KE.BygoneEffigy, rng, new Intent(IntentType.Unknown, 0)),
+            ],
+
+            ActOneEncounter.Entomancer =>
+            [
+                CreateEnemy(KE.Entomancer, rng, new Intent(IntentType.Attack, 24), moveIndex: 1),
+            ],
+
+            ActOneEncounter.InfestedPrisms =>
+            [
+                CreateEnemy(KE.InfestedPrism, rng, new Intent(IntentType.Attack, 17)),
+            ],
+
+            ActOneEncounter.PhrogParasite =>
+            [
+                CreateEnemy(KE.PhrogParasite, rng, new Intent(IntentType.Debuff, 3)),
+            ],
+
+            ActOneEncounter.SoulNexus =>
+            [
+                CreateEnemy(KE.SoulNexus, rng, new Intent(IntentType.Attack, 31)),
+            ],
+
+            ActOneEncounter.TerrorEel =>
+            [
+                CreateEnemy(KE.TerrorEel, rng, new Intent(IntentType.Attack, 18)),
+            ],
+
+            ActOneEncounter.Byrdonis =>
+            [
+                CreateEnemy(KE.Byrdonis, rng, new Intent(IntentType.Attack, 19)),
+            ],
+
+            ActOneEncounter.Decimillipede => CreateDecimillipede(rng),
+
+            ActOneEncounter.Knights =>
+            [
+                CreateEnemy(KE.FlailKnight, rng, new Intent(IntentType.Attack, 17), moveIndex: 2),
+                CreateEnemy(KE.SpectralKnight, rng, new Intent(IntentType.Debuff, 2)),
+                CreateEnemy(KE.MagiKnight, rng, new Intent(IntentType.Attack, 7)),
+            ],
+
+            ActOneEncounter.MechaKnight =>
+            [
+                CreateMechaKnight(rng),
+            ],
+
+            ActOneEncounter.PhantasmalGardeners => CreatePhantasmalGardeners(rng),
+
+            ActOneEncounter.Aeonglass =>
+            [
+                CreateAeonglass(rng),
+            ],
+
+            ActOneEncounter.CeremonialBeast =>
+            [
+                CreateEnemy(KE.CeremonialBeast, rng, new Intent(IntentType.Buff, 160)),
+            ],
+
+            ActOneEncounter.KaiserCrab =>
+            [
+                CreateEnemy(KE.Crusher, rng, new Intent(IntentType.Attack, 21)),
+                CreateEnemy(KE.Rocket, rng, new Intent(IntentType.Attack, 4)),
+            ],
+
+            ActOneEncounter.KnowledgeDemon =>
+            [
+                CreateEnemy(KE.KnowledgeDemon, rng, new Intent(IntentType.Debuff, 0)),
+            ],
+
+            ActOneEncounter.LagavulinMatriarch =>
+            [
+                CreateLagavulinMatriarch(rng),
+            ],
+
+            ActOneEncounter.Queen =>
+            [
+                CreateEnemy(KE.TorchHeadAmalgam, rng, new Intent(IntentType.Attack, 19)),
+                CreateEnemy(KE.Queen, rng, new Intent(IntentType.Debuff, 3)),
+            ],
+
+            ActOneEncounter.SoulFysh =>
+            [
+                CreateEnemy(KE.SoulFysh, rng, new Intent(IntentType.Debuff, 2)),
+            ],
+
+            ActOneEncounter.TestSubject =>
+            [
+                CreateTestSubject(rng),
+            ],
+
+            ActOneEncounter.TheInsatiable =>
+            [
+                CreateEnemy(KE.TheInsatiable, rng, new Intent(IntentType.Buff, 0)),
+            ],
+
+            ActOneEncounter.TheKin =>
+            [
+                CreateKinFollower(rng, startsWithDance: true),
+                CreateKinFollower(rng, startsWithDance: false),
+                CreateEnemy(KE.KinPriest, rng, new Intent(IntentType.Attack, 9)),
+            ],
+
+            ActOneEncounter.Vantom =>
+            [
+                CreateVantom(rng),
+            ],
+
+            ActOneEncounter.WaterfallGiant =>
+            [
+                CreateEnemy(KE.WaterfallGiant, rng, new Intent(IntentType.Buff, 20)),
+            ],
+
+            ActOneEncounter.Architect =>
+            [
+                CreateEnemy(KE.Architect, rng, new Intent(IntentType.Unknown, 0)),
+            ],
+
             _ => throw new ArgumentOutOfRangeException(nameof(encounter), encounter, null),
         };
 
@@ -597,6 +741,96 @@ public static class CombatFactory
         enemy.Block = 6;
         BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 6);
         BuffSystem.Apply(enemy.Buffs, BuffId.Plating, 6);
+        return enemy;
+    }
+
+    private static List<EnemyState> CreateDecimillipede(Random rng)
+    {
+        int starter = rng.Next(3);
+        var enemies = new List<EnemyState>(3);
+        for (int i = 0; i < 3; i++)
+        {
+            int moveIndex = (starter + i) % 3;
+            var enemy = CreateEnemy(KE.DecimillipedeSegment, rng, DecimillipedeIntent(moveIndex), moveIndex);
+            MakeDecimillipedeHpEvenAndUnique(enemy, enemies);
+            enemies.Add(enemy);
+        }
+        return enemies;
+    }
+
+    private static Intent DecimillipedeIntent(int moveIndex) =>
+        (moveIndex % 3) switch
+        {
+            0 => new Intent(IntentType.Attack, 12),
+            1 => new Intent(IntentType.Attack, 7),
+            _ => new Intent(IntentType.Attack, 9),
+        };
+
+    private static void MakeDecimillipedeHpEvenAndUnique(EnemyState enemy, List<EnemyState> existing)
+    {
+        int hp = enemy.MaxHp;
+        if (hp % 2 == 1)
+            hp++;
+        while (existing.Any(e => e.MaxHp == hp))
+        {
+            hp += 2;
+            if (hp > 52)
+                hp = 46;
+        }
+        enemy.MaxHp = hp;
+        enemy.Hp = hp;
+    }
+
+    private static EnemyState CreateMechaKnight(Random rng)
+    {
+        var enemy = CreateEnemy(KE.MechaKnight, rng, new Intent(IntentType.Attack, 30));
+        BuffSystem.Apply(enemy.Buffs, BuffId.Artifact, 3);
+        return enemy;
+    }
+
+    private static List<EnemyState> CreatePhantasmalGardeners(Random rng) =>
+    [
+        CreateEnemy(KE.PhantasmalGardener, rng, new Intent(IntentType.Attack, 3), moveIndex: 2),
+        CreateEnemy(KE.PhantasmalGardener, rng, new Intent(IntentType.Attack, 5)),
+        CreateEnemy(KE.PhantasmalGardener, rng, new Intent(IntentType.Attack, 7), moveIndex: 1),
+        CreateEnemy(KE.PhantasmalGardener, rng, new Intent(IntentType.Buff, 3), moveIndex: 3),
+    ];
+
+    private static EnemyState CreateAeonglass(Random rng)
+    {
+        var enemy = CreateEnemy(KE.Aeonglass, rng, new Intent(IntentType.Attack, 32));
+        BuffSystem.Apply(enemy.Buffs, BuffId.Artifact, 3);
+        return enemy;
+    }
+
+    private static EnemyState CreateLagavulinMatriarch(Random rng)
+    {
+        var enemy = CreateEnemy(KE.LagavulinMatriarch, rng, new Intent(IntentType.Unknown, 0));
+        enemy.Block = 12;
+        BuffSystem.Apply(enemy.Buffs, BuffId.Plating, 12);
+        BuffSystem.Apply(enemy.Buffs, BuffId.Asleep, 3);
+        return enemy;
+    }
+
+    private static EnemyState CreateTestSubject(Random rng)
+    {
+        var enemy = CreateEnemy(KE.TestSubject, rng, new Intent(IntentType.Attack, 22));
+        BuffSystem.Apply(enemy.Buffs, BuffId.Adaptable, 1);
+        BuffSystem.Apply(enemy.Buffs, BuffId.Enrage, 3);
+        return enemy;
+    }
+
+    private static EnemyState CreateKinFollower(Random rng, bool startsWithDance) =>
+        CreateEnemy(
+            KE.KinFollower,
+            rng,
+            startsWithDance ? new Intent(IntentType.Buff, 3) : new Intent(IntentType.Attack, 5),
+            startsWithDance ? 2 : 0);
+
+    private static EnemyState CreateVantom(Random rng)
+    {
+        var enemy = CreateEnemy(KE.Vantom, rng, new Intent(IntentType.Attack, 8));
+        BuffSystem.Apply(enemy.Buffs, BuffId.Slippery, 9);
         return enemy;
     }
 

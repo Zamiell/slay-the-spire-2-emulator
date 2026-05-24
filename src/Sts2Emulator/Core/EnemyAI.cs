@@ -69,6 +69,35 @@ public static class EnemyAI
                     enemy.Block += 25;
                 if (enemy.DefId == KE.PunchConstruct && enemy.MoveIndex % 3 == 1)
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 1);
+                if (enemy.DefId == KE.DecimillipedeSegment && enemy.MoveIndex % 3 == 1)
+                    BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
+                if (enemy.DefId == KE.DecimillipedeSegment && enemy.MoveIndex % 3 == 2)
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 1);
+                if (enemy.DefId == KE.MagiKnight && enemy.MoveIndex % 5 == 0)
+                    enemy.Block += BuffSystem.IncomingBlock(9, enemy.Buffs);
+                if (enemy.DefId == KE.CeremonialBeast && enemy.MoveIndex > 0)
+                    BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
+                if (enemy.DefId == KE.Crusher && enemy.MoveIndex % 5 == 2)
+                {
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 2);
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 2);
+                }
+                if (enemy.DefId == KE.Crusher && enemy.MoveIndex % 5 == 4)
+                    enemy.Block += BuffSystem.IncomingBlock(18, enemy.Buffs);
+                if (enemy.DefId == KE.KinPriest && enemy.MoveIndex % 4 == 0)
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 1);
+                if (enemy.DefId == KE.KinPriest && enemy.MoveIndex % 4 == 1)
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 1);
+                if (enemy.DefId == KE.LagavulinMatriarch && enemy.MoveIndex % 4 == 3)
+                    enemy.Block += BuffSystem.IncomingBlock(14, enemy.Buffs);
+                if (enemy.DefId == KE.SoulFysh && enemy.MoveIndex % 5 == 2)
+                    AddStatus(state, ST.Beckon, 1);
+                if (enemy.DefId == KE.SoulFysh && enemy.MoveIndex % 5 == 4)
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Vulnerable, 3);
+                if (enemy.DefId == KE.Vantom && enemy.MoveIndex % 4 == 2)
+                    AddStatus(state, ST.Wound, 3);
+                if (enemy.DefId == KE.WaterfallGiant && enemy.MoveIndex > 0)
+                    BuffSystem.Apply(enemy.Buffs, BuffId.SteamEruption, 3);
                 break;
             }
 
@@ -82,7 +111,7 @@ public static class EnemyAI
                 break;
 
             case IntentType.Debuff:
-                ApplyDebuffIntent(enemy, state);
+                ApplyDebuffIntent(enemy, state, rng);
                 break;
         }
 
@@ -103,8 +132,12 @@ public static class EnemyAI
         if (plating > 0)
         {
             enemy.Block += BuffSystem.IncomingBlock(plating, enemy.Buffs);
-            BuffSystem.Apply(enemy.Buffs, BuffId.Plating, -1);
+            if (enemy.DefId != KE.LagavulinMatriarch)
+                BuffSystem.Apply(enemy.Buffs, BuffId.Plating, -1);
         }
+
+        if (enemy.DefId == KE.LagavulinMatriarch && BuffSystem.Get(enemy.Buffs, BuffId.Asleep) > 0)
+            BuffSystem.Apply(enemy.Buffs, BuffId.Asleep, -1);
 
         enemy.MoveIndex++;
 
@@ -311,7 +344,7 @@ public static class EnemyAI
             case KE.GlobeHead:
                 return (enemy.MoveIndex % 3) switch
                 {
-                    0 => new Intent(IntentType.Attack, 14),
+                    0 => new Intent(IntentType.Attack, 21),
                     1 => new Intent(IntentType.Attack, 21),
                     _ => new Intent(IntentType.Attack, 17),
                 };
@@ -393,6 +426,229 @@ public static class EnemyAI
                     0 => new Intent(IntentType.Buff, 3),
                     1 => new Intent(IntentType.Attack, 20),
                     _ => new Intent(IntentType.Attack, 23),
+                };
+
+            case KE.BygoneEffigy:
+                return enemy.MoveIndex switch
+                {
+                    0 => new Intent(IntentType.Unknown, 0),
+                    1 => new Intent(IntentType.Buff, 10),
+                    _ => new Intent(IntentType.Attack, 15),
+                };
+
+            case KE.Entomancer:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Buff, 1),
+                    1 => new Intent(IntentType.Attack, 24),
+                    _ => new Intent(IntentType.Attack, 20),
+                };
+
+            case KE.InfestedPrism:
+                return (enemy.MoveIndex % 4) switch
+                {
+                    0 => new Intent(IntentType.Attack, 17),
+                    1 => new Intent(IntentType.Attack, 13),
+                    2 => new Intent(IntentType.Attack, 18),
+                    _ => new Intent(IntentType.Attack, 10),
+                };
+
+            case KE.PhrogParasite:
+                return (enemy.MoveIndex % 2) == 0
+                    ? new Intent(IntentType.Debuff, 3)
+                    : new Intent(IntentType.Attack, 20);
+
+            case KE.SoulNexus:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 31),
+                    1 => new Intent(IntentType.Attack, 28),
+                    _ => new Intent(IntentType.Debuff, 19),
+                };
+
+            case KE.TerrorEel:
+                return (enemy.MoveIndex % 2) == 0
+                    ? new Intent(IntentType.Attack, 18)
+                    : new Intent(IntentType.Buff, 12);
+
+            case KE.Byrdonis:
+                return (enemy.MoveIndex % 2) == 0
+                    ? new Intent(IntentType.Attack, 19)
+                    : new Intent(IntentType.Attack, 12);
+
+            case KE.DecimillipedeSegment:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 12),
+                    1 => new Intent(IntentType.Attack, 7),
+                    _ => new Intent(IntentType.Attack, 9),
+                };
+
+            case KE.SpectralKnight:
+                return enemy.MoveIndex switch
+                {
+                    0 => new Intent(IntentType.Debuff, 2),
+                    1 => new Intent(IntentType.Attack, 17),
+                    _ => new Intent(IntentType.Attack, 12),
+                };
+
+            case KE.MagiKnight:
+                return (enemy.MoveIndex % 5) switch
+                {
+                    0 => new Intent(IntentType.Attack, 7),
+                    1 => new Intent(IntentType.Debuff, 1),
+                    2 => new Intent(IntentType.Attack, 11),
+                    3 => new Intent(IntentType.Defend, 9),
+                    _ => new Intent(IntentType.Attack, 40),
+                };
+
+            case KE.MechaKnight:
+                return (enemy.MoveIndex % 4) switch
+                {
+                    0 => new Intent(IntentType.Attack, 30),
+                    1 => new Intent(IntentType.Debuff, 4),
+                    2 => new Intent(IntentType.Buff, 15),
+                    _ => new Intent(IntentType.Attack, 40),
+                };
+
+            case KE.PhantasmalGardener:
+                return (enemy.MoveIndex % 4) switch
+                {
+                    0 => new Intent(IntentType.Attack, 5),
+                    1 => new Intent(IntentType.Attack, 7),
+                    2 => new Intent(IntentType.Attack, 3),
+                    _ => new Intent(IntentType.Buff, 3),
+                };
+
+            case KE.Aeonglass:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 32),
+                    1 => new Intent(IntentType.Attack, 24),
+                    _ => new Intent(IntentType.Buff, 2),
+                };
+
+            case KE.CeremonialBeast:
+                return enemy.MoveIndex == 0
+                    ? new Intent(IntentType.Buff, 160)
+                    : new Intent(IntentType.Attack, 20);
+
+            case KE.Crusher:
+                return (enemy.MoveIndex % 5) switch
+                {
+                    0 => new Intent(IntentType.Attack, 21),
+                    1 => new Intent(IntentType.Attack, 6),
+                    2 => new Intent(IntentType.Attack, 20),
+                    3 => new Intent(IntentType.Buff, 3),
+                    _ => new Intent(IntentType.Attack, 21),
+                };
+
+            case KE.Rocket:
+                return (enemy.MoveIndex % 5) switch
+                {
+                    0 => new Intent(IntentType.Attack, 4),
+                    1 => new Intent(IntentType.Attack, 20),
+                    2 => new Intent(IntentType.Buff, 3),
+                    3 => new Intent(IntentType.Attack, 35),
+                    _ => new Intent(IntentType.Unknown, 0),
+                };
+
+            case KE.KnowledgeDemon:
+                return enemy.MoveIndex switch
+                {
+                    0 => new Intent(IntentType.Debuff, 0),
+                    1 => new Intent(IntentType.Attack, 18),
+                    2 => new Intent(IntentType.Attack, 27),
+                    _ => new Intent(IntentType.Buff, 13),
+                };
+
+            case KE.LagavulinMatriarch:
+                return BuffSystem.Get(enemy.Buffs, BuffId.Asleep) > 0
+                    ? new Intent(IntentType.Unknown, 0)
+                    : (enemy.MoveIndex % 4) switch
+                    {
+                        1 => new Intent(IntentType.Attack, 21),
+                        2 => new Intent(IntentType.Attack, 20),
+                        3 => new Intent(IntentType.Attack, 14),
+                        _ => new Intent(IntentType.Debuff, 0),
+                    };
+
+            case KE.Queen:
+                return enemy.MoveIndex switch
+                {
+                    0 => new Intent(IntentType.Debuff, 3),
+                    1 => new Intent(IntentType.Debuff, 99),
+                    _ => new Intent(IntentType.Buff, 20),
+                };
+
+            case KE.TorchHeadAmalgam:
+                return (enemy.MoveIndex % 5) switch
+                {
+                    0 or 1 => new Intent(IntentType.Attack, 19),
+                    2 => new Intent(IntentType.Attack, 24),
+                    _ => new Intent(IntentType.Attack, 15),
+                };
+
+            case KE.SoulFysh:
+                return (enemy.MoveIndex % 5) switch
+                {
+                    0 => new Intent(IntentType.Debuff, 2),
+                    1 => new Intent(IntentType.Attack, 17),
+                    2 => new Intent(IntentType.Attack, 8),
+                    3 => new Intent(IntentType.Buff, 2),
+                    _ => new Intent(IntentType.Attack, 15),
+                };
+
+            case KE.TestSubject:
+                return (enemy.MoveIndex % 2) == 0
+                    ? new Intent(IntentType.Attack, 22)
+                    : new Intent(IntentType.Attack, 16);
+
+            case KE.TheInsatiable:
+                return enemy.MoveIndex switch
+                {
+                    0 => new Intent(IntentType.Buff, 0),
+                    1 => new Intent(IntentType.Attack, 18),
+                    2 => new Intent(IntentType.Attack, 31),
+                    3 => new Intent(IntentType.Buff, 3),
+                    _ => new Intent(IntentType.Attack, 18),
+                };
+
+            case KE.KinFollower:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 5),
+                    1 => new Intent(IntentType.Attack, 4),
+                    _ => new Intent(IntentType.Buff, 3),
+                };
+
+            case KE.KinPriest:
+                return (enemy.MoveIndex % 4) switch
+                {
+                    0 => new Intent(IntentType.Attack, 9),
+                    1 => new Intent(IntentType.Attack, 9),
+                    2 => new Intent(IntentType.Attack, 9),
+                    _ => new Intent(IntentType.Buff, 3),
+                };
+
+            case KE.Vantom:
+                return (enemy.MoveIndex % 4) switch
+                {
+                    0 => new Intent(IntentType.Attack, 8),
+                    1 => new Intent(IntentType.Attack, 14),
+                    2 => new Intent(IntentType.Attack, 30),
+                    _ => new Intent(IntentType.Buff, 2),
+                };
+
+            case KE.WaterfallGiant:
+                return enemy.MoveIndex switch
+                {
+                    0 => new Intent(IntentType.Buff, 20),
+                    1 => new Intent(IntentType.Attack, 16),
+                    2 => new Intent(IntentType.Buff, 11),
+                    3 => new Intent(IntentType.Buff, 15),
+                    4 => new Intent(IntentType.Buff, 23),
+                    _ => new Intent(IntentType.Buff, 14),
                 };
 
             case KE.CubexConstruct:
@@ -748,13 +1004,93 @@ public static class EnemyAI
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 3);
                 break;
 
+            case KE.BygoneEffigy:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.Entomancer:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.InfestedPrism:
+                if (enemy.CurrentIntent.Magnitude > 0)
+                    DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                enemy.Block += BuffSystem.IncomingBlock(22, enemy.Buffs);
+                break;
+
+            case KE.TerrorEel:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 6);
+                break;
+
+            case KE.PhantasmalGardener:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.CeremonialBeast:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Plow, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.Crusher:
+            case KE.Rocket:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.KnowledgeDemon:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                enemy.Hp = Math.Min(enemy.MaxHp, enemy.Hp + 30);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 3);
+                break;
+
+            case KE.Aeonglass:
+                AddStatus(state, ST.Wither, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 4);
+                enemy.Block += BuffSystem.IncomingBlock(33, enemy.Buffs);
+                break;
+
+            case KE.Queen:
+                foreach (var ally in state.Enemies.Where(e => e.Hp > 0 && e.DefId != KE.Queen))
+                    BuffSystem.Apply(ally.Buffs, BuffId.Strength, 1);
+                enemy.Block += BuffSystem.IncomingBlock(enemy.CurrentIntent.Magnitude, enemy.Buffs);
+                break;
+
+            case KE.SoulFysh:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Intangible, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.TheInsatiable:
+                if (enemy.MoveIndex == 0)
+                {
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Sandpit, 4);
+                    AddStatusToDrawPileRandomly(state, ST.FranticEscape, 3, rng);
+                    AddStatus(state, ST.FranticEscape, 3);
+                }
+                else
+                {
+                    BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                }
+                break;
+
+            case KE.KinFollower:
+            case KE.KinPriest:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.Vantom:
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.WaterfallGiant:
+                BuffSystem.Apply(enemy.Buffs, BuffId.SteamEruption, enemy.CurrentIntent.Magnitude);
+                break;
+
             case KE.TwoTailedRat:
                 SummonRatBackup(enemy, state, rng);
                 break;
         }
     }
 
-    private static void ApplyDebuffIntent(EnemyState enemy, CombatState state)
+    private static void ApplyDebuffIntent(EnemyState enemy, CombatState state, Random rng)
     {
         switch (enemy.DefId)
         {
@@ -836,6 +1172,50 @@ public static class EnemyAI
             case KE.FakeMerchant:
                 DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 1);
+                break;
+
+            case KE.PhrogParasite:
+                AddStatus(state, ST.Infection, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.SoulNexus:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Vulnerable, 2);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 2);
+                break;
+
+            case KE.SpectralKnight:
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Hex, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.MechaKnight:
+                AddStatusToHand(state, ST.Burn, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.MagiKnight:
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Dampen, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.Aeonglass:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Ebb, 3);
+                break;
+
+            case KE.KnowledgeDemon:
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Disintegration, 6);
+                break;
+
+            case KE.Queen:
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.ChainsOfBinding, enemy.CurrentIntent.Magnitude);
+                break;
+
+            case KE.SoulFysh:
+                AddStatusToDrawPileRandomly(state, ST.Beckon, 1, rng);
+                AddStatus(state, ST.Beckon, enemy.CurrentIntent.Magnitude - 1);
+                break;
+
+            case KE.TestSubject:
+                AddStatusToHand(state, ST.Burn, enemy.CurrentIntent.Magnitude);
                 break;
 
             case KE.FrogKnight:
@@ -921,6 +1301,12 @@ public static class EnemyAI
     {
         for (int i = 0; i < count; i++)
             state.DiscardPile.Add(new CardInstance(cardId, false));
+    }
+
+    private static void AddStatusToDrawPileRandomly(CombatState state, int cardId, int count, Random rng)
+    {
+        for (int i = 0; i < count; i++)
+            state.DrawPile.Insert(rng.Next(state.DrawPile.Count + 1), new CardInstance(cardId, false));
     }
 
     private static void AddStatusToHand(CombatState state, int cardId, int count)
@@ -1038,12 +1424,16 @@ public static class EnemyAI
 internal static class KE
 {
     public const int CalcifiedCultist = 14;
+    public const int Aeonglass = 1;
+    public const int Architect = 2;
     public const int Axebot = 4;
     public const int BattleFriendV1 = 10004;
     public const int BattleFriendV2 = 10005;
     public const int BattleFriendV3 = 10006;
     public const int Chomper = 16;
     public const int CorpseSlug = 17;
+    public const int CeremonialBeast = 15;
+    public const int Crusher = 19;
     public const int AxeRubyRaider = 5;
     public const int AssassinRubyRaider = 3;
     public const int BowlbugEgg = 6;
@@ -1051,6 +1441,10 @@ internal static class KE
     public const int BowlbugRock = 8;
     public const int BowlbugSilk = 9;
     public const int BruteRubyRaider = 10;
+    public const int BygoneEffigy = 11;
+    public const int Byrdonis = 12;
+    public const int DecimillipedeSegment = 22;
+    public const int Entomancer = 24;
     public const int CrossbowRubyRaider = 18;
     public const int DampCultist = 21;
     public const int DevotedSculptor = 23;
@@ -1072,18 +1466,29 @@ internal static class KE
     public const int HauntedShip = 39;
     public const int HunterKiller = 40;
     public const int Inklet = 42;
+    public const int InfestedPrism = 41;
+    public const int KinFollower = 43;
+    public const int KinPriest = 44;
+    public const int KnowledgeDemon = 45;
+    public const int LagavulinMatriarch = 46;
     public const int LivingFog = 49;
     public const int LivingShield = 50;
     public const int LouseProgenitor = 51;
     public const int LeafSlimeM = 47;
     public const int LeafSlimeS = 48;
     public const int Mawler = 53;
+    public const int MagiKnight = 52;
+    public const int MechaKnight = 54;
     public const int Myte = 55;
     public const int Nibbit = 56;
     public const int Noisebot = 57;
     public const int Ovicopter = 59;
     public const int OwlMagistrate = 60;
     public const int Parafright = 62;
+    public const int PhantasmalGardener = 63;
+    public const int PhrogParasite = 64;
+    public const int Queen = 66;
+    public const int Rocket = 67;
     public const int PunchConstruct = 65;
     public const int ScrollOfBiting = 68;
     public const int Seapunk = 69;
@@ -1096,10 +1501,16 @@ internal static class KE
     public const int SludgeSpinner = 75;
     public const int SlumberingBeetle = 76;
     public const int SlimedBerserker = 73;
+    public const int SoulNexus = 80;
+    public const int SoulFysh = 79;
+    public const int SpectralKnight = 81;
     public const int Stabbot = 83;
+    public const int TerrorEel = 84;
     public const int Toadpole = 93;
+    public const int TorchHeadAmalgam = 94;
     public const int ThievingHopper = 92;
     public const int TheForgotten = 88;
+    public const int TheInsatiable = 89;
     public const int TheLost = 90;
     public const int TheObscura = 91;
     public const int TrackerRubyRaider = 96;
@@ -1109,8 +1520,11 @@ internal static class KE
     public const int Tunneler = 97;
     public const int TwoTailedRat = 101;
     public const int TurretOperator = 98;
+    public const int TestSubject = 10007;
     public const int CubexConstruct = 20;
     public const int VineShambler = 103;
+    public const int Vantom = 102;
+    public const int WaterfallGiant = 104;
     public const int Wriggler = 105;
     public const int Zapbot = 106;
 }

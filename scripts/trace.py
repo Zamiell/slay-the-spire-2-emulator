@@ -10,6 +10,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from sts2_gym import Sts2CombatEnv
+from sts2_gym import native
 
 
 def summarize_observation(obs: np.ndarray) -> dict:
@@ -24,7 +25,7 @@ def summarize_observation(obs: np.ndarray) -> dict:
         if int(obs[34 + i * 2]) != 0
     ]
     enemies = []
-    for enemy_index in range(6):
+    for enemy_index in range(native.MAX_ENEMIES):
         base = 54 + enemy_index * 15
         hp = int(obs[base])
         max_hp = int(obs[base + 1])

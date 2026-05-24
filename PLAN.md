@@ -70,77 +70,114 @@ Status legend: `done` = live trace matched normalized emulator fields; `pending`
 
 ### Modeled emulator fights
 
-| Status | Emulator encounter      | Live encounter model             | Notes                                   |
-| ------ | ----------------------- | -------------------------------- | --------------------------------------- |
-| done   | `nibbit`                | `NibbitsWeak`                    | First-combat seeded validation matched. |
-| done   | `slimes`                | `SlimesWeak`                     | First-combat seeded validation matched. |
-| done   | `shrinker-beetle`       | `ShrinkerBeetleWeak`             | First-combat seeded validation matched. |
-| done   | `fuzzy-wurm-crawler`    | `FuzzyWurmCrawlerWeak`           | First-combat seeded validation matched. |
-| done   | `corpse-slugs`          | `CorpseSlugsWeak`                | First-combat seeded validation matched. |
-| done   | `seapunk`               | `SeapunkWeak`                    | First-combat seeded validation matched. |
-| done   | `sludge-spinner`        | `SludgeSpinnerWeak`              | First-combat seeded validation matched. |
-| done   | `toadpoles`             | `ToadpolesWeak`                  | First-combat seeded validation matched. |
-| done   | `chompers`              | `ChompersNormal`                 | Direct debug encounter matched.         |
-| done   | `cultists`              | `CultistsNormal`                 | Direct debug encounter matched.         |
-| done   | `exoskeletons`          | `ExoskeletonsNormal`             | Direct debug encounter matched.         |
-| done   | `inklets`               | `InkletsNormal`                  | Direct debug encounter matched.         |
-| done   | `two-tailed-rats`       | `TwoTailedRatsNormal`            | Direct debug encounter matched.         |
-| done   | `gremlin-merc`          | `GremlinMercNormal`              | Direct debug encounter matched.         |
-| done   | `mawler`                | `MawlerNormal`                   | Direct debug encounter matched.         |
-| done   | `nibbits`               | `NibbitsNormal`                  | Direct debug encounter matched.         |
-| done   | `large-slimes`          | `SlimesNormal`                   | Direct debug encounter matched.         |
-| done   | `slime-and-flyconid`    | `FlyconidNormal`                 | Direct debug encounter matched.         |
-| done   | `jaxfruit-and-flyconid` | `SnappingJaxfruitNormal`         | Direct debug encounter matched.         |
-| done   | `cubex-construct`       | `CubexConstructNormal`           | Direct debug encounter matched.         |
-| done   | `vine-shambler`         | `VineShamblerNormal`             | Direct debug encounter matched.         |
-| done   | `shrinker-and-fuzzy`    | `OvergrowthCrawlers`             | Direct debug encounter matched.         |
-| done   | `cultist-and-seapunk`   | `SeapunkNormal`                  | Direct debug encounter matched.         |
-| done   | `fossil-stalker`        | `FossilStalkerNormal`            | Direct debug encounter matched.         |
-| done   | `punch-construct`       | `PunchConstructNormal`           | Direct debug encounter matched.         |
-| done   | `sewer-clam`            | `SewerClamNormal`                | Direct debug encounter matched.         |
-| done   | `haunted-ship`          | `HauntedShipNormal`              | Direct debug encounter matched.         |
-| done   | `slithering-strangler`  | `SlitheringStranglerNormal`      | Direct debug encounter matched.         |
-| done   | `ruby-raiders`          | `RubyRaidersNormal`              | Direct debug encounter matched.         |
-| done   | `fogmog`                | `FogmogNormal`                   | Direct debug encounter matched.         |
-| done   | `living-fog`            | `LivingFogNormal`                | Direct debug encounter matched.         |
-| done   | `bowlbugs-weak`         | `BowlbugsWeak`                   | Direct debug encounter matched.         |
-| done   | `bowlbugs`              | `BowlbugsNormal`                 | Direct debug encounter matched.         |
-| done   | `tunneler`              | `TunnelerWeak`                   | Direct debug encounter matched.         |
-| done   | `tunneler-and-chomper`  | `TunnelerNormal`                 | Direct debug encounter matched.         |
-| done   | `thieving-hopper`       | `ThievingHopperWeak`             | Direct debug encounter matched.         |
-| done   | `mytes`                 | `MytesNormal`                    | Direct debug encounter matched.         |
-| done   | `slumbering-beetle`     | `SlumberingBeetleNormal`         | Direct debug encounter matched.         |
-| done   | `spiny-toad`            | `SpinyToadNormal`                | Direct debug encounter matched.         |
-| done   | `ovicopter`             | `OvicopterNormal`                | Direct debug encounter matched.         |
-| done   | `louse-progenitor`      | `LouseProgenitorNormal`          | Direct debug encounter matched.         |
-| done   | `hunter-killer`         | `HunterKillerNormal`             | Direct debug encounter matched.         |
-| done   | `axebot`                | `AxebotsNormal`                  | Direct debug encounter matched.         |
-| done   | `devoted-sculptor`      | `DevotedSculptorWeak`            | Direct debug encounter matched.         |
-| done   | `fabricator`            | `FabricatorNormal`               | Direct debug encounter matched.         |
-| done   | `frog-knight`           | `FrogKnightNormal`               | Direct debug encounter matched.         |
-| done   | `globe-head`            | `GlobeHeadNormal`                | Direct debug encounter matched.         |
-| done   | `turret-operator`       | `TurretOperatorWeak`             | Direct debug encounter matched.         |
-| done   | `owl-magistrate`        | `OwlMagistrateNormal`            | Direct debug encounter matched.         |
-| done   | `scrolls-weak`          | `ScrollsOfBitingWeak`            | Direct debug encounter matched.         |
-| done   | `scrolls`               | `ScrollsOfBitingNormal`          | Direct debug encounter matched.         |
-| done   | `slimed-berserker`      | `SlimedBerserkerNormal`          | Direct debug encounter matched.         |
-| done   | `lost-and-forgotten`    | `TheLostAndForgottenNormal`      | Direct debug encounter matched.         |
-| done   | `obscura`               | `TheObscuraNormal`               | Direct debug encounter matched.         |
-| done   | `construct-menagerie`   | `ConstructMenagerieNormal`       | Direct debug encounter matched.         |
-| done   | `dense-vegetation`      | `DenseVegetationEventEncounter`  | Direct debug encounter matched.         |
-| done   | `punch-off`             | `PunchOffEventEncounter`         | Direct debug encounter matched.         |
-| done   | `fake-merchant`         | `FakeMerchantEventEncounter`     | Direct debug encounter matched.         |
-| done   | `mysterious-knight`     | `MysteriousKnightEventEncounter` | Direct debug encounter matched.         |
+| Status | Emulator encounter      | Live encounter model             | Notes                                                        |
+| ------ | ----------------------- | -------------------------------- | ------------------------------------------------------------ |
+| done   | `nibbit`                | `NibbitsWeak`                    | First-combat seeded validation matched.                      |
+| done   | `slimes`                | `SlimesWeak`                     | First-combat seeded validation matched.                      |
+| done   | `shrinker-beetle`       | `ShrinkerBeetleWeak`             | First-combat seeded validation matched.                      |
+| done   | `fuzzy-wurm-crawler`    | `FuzzyWurmCrawlerWeak`           | First-combat seeded validation matched.                      |
+| done   | `corpse-slugs`          | `CorpseSlugsWeak`                | First-combat seeded validation matched.                      |
+| done   | `seapunk`               | `SeapunkWeak`                    | First-combat seeded validation matched.                      |
+| done   | `sludge-spinner`        | `SludgeSpinnerWeak`              | First-combat seeded validation matched.                      |
+| done   | `toadpoles`             | `ToadpolesWeak`                  | First-combat seeded validation matched.                      |
+| done   | `chompers`              | `ChompersNormal`                 | Direct debug encounter matched.                              |
+| done   | `cultists`              | `CultistsNormal`                 | Direct debug encounter matched.                              |
+| done   | `exoskeletons`          | `ExoskeletonsNormal`             | Direct debug encounter matched.                              |
+| done   | `inklets`               | `InkletsNormal`                  | Direct debug encounter matched.                              |
+| done   | `two-tailed-rats`       | `TwoTailedRatsNormal`            | Direct debug encounter matched.                              |
+| done   | `gremlin-merc`          | `GremlinMercNormal`              | Direct debug encounter matched.                              |
+| done   | `mawler`                | `MawlerNormal`                   | Direct debug encounter matched.                              |
+| done   | `nibbits`               | `NibbitsNormal`                  | Direct debug encounter matched.                              |
+| done   | `large-slimes`          | `SlimesNormal`                   | Direct debug encounter matched.                              |
+| done   | `slime-and-flyconid`    | `FlyconidNormal`                 | Direct debug encounter matched.                              |
+| done   | `jaxfruit-and-flyconid` | `SnappingJaxfruitNormal`         | Direct debug encounter matched.                              |
+| done   | `cubex-construct`       | `CubexConstructNormal`           | Direct debug encounter matched.                              |
+| done   | `vine-shambler`         | `VineShamblerNormal`             | Direct debug encounter matched.                              |
+| done   | `shrinker-and-fuzzy`    | `OvergrowthCrawlers`             | Direct debug encounter matched.                              |
+| done   | `cultist-and-seapunk`   | `SeapunkNormal`                  | Direct debug encounter matched.                              |
+| done   | `fossil-stalker`        | `FossilStalkerNormal`            | Direct debug encounter matched.                              |
+| done   | `punch-construct`       | `PunchConstructNormal`           | Direct debug encounter matched.                              |
+| done   | `sewer-clam`            | `SewerClamNormal`                | Direct debug encounter matched.                              |
+| done   | `haunted-ship`          | `HauntedShipNormal`              | Direct debug encounter matched.                              |
+| done   | `slithering-strangler`  | `SlitheringStranglerNormal`      | Direct debug encounter matched.                              |
+| done   | `ruby-raiders`          | `RubyRaidersNormal`              | Direct debug encounter matched.                              |
+| done   | `fogmog`                | `FogmogNormal`                   | Direct debug encounter matched.                              |
+| done   | `living-fog`            | `LivingFogNormal`                | Direct debug encounter matched.                              |
+| done   | `bowlbugs-weak`         | `BowlbugsWeak`                   | Direct debug encounter matched.                              |
+| done   | `bowlbugs`              | `BowlbugsNormal`                 | Direct debug encounter matched.                              |
+| done   | `tunneler`              | `TunnelerWeak`                   | Direct debug encounter matched.                              |
+| done   | `tunneler-and-chomper`  | `TunnelerNormal`                 | Direct debug encounter matched.                              |
+| done   | `thieving-hopper`       | `ThievingHopperWeak`             | Direct debug encounter matched.                              |
+| done   | `mytes`                 | `MytesNormal`                    | Direct debug encounter matched.                              |
+| done   | `slumbering-beetle`     | `SlumberingBeetleNormal`         | Direct debug encounter matched.                              |
+| done   | `spiny-toad`            | `SpinyToadNormal`                | Direct debug encounter matched.                              |
+| done   | `ovicopter`             | `OvicopterNormal`                | Direct debug encounter matched.                              |
+| done   | `louse-progenitor`      | `LouseProgenitorNormal`          | Direct debug encounter matched.                              |
+| done   | `hunter-killer`         | `HunterKillerNormal`             | Direct debug encounter matched.                              |
+| done   | `axebot`                | `AxebotsNormal`                  | Direct debug encounter matched.                              |
+| done   | `devoted-sculptor`      | `DevotedSculptorWeak`            | Direct debug encounter matched.                              |
+| done   | `fabricator`            | `FabricatorNormal`               | Direct debug encounter matched.                              |
+| done   | `frog-knight`           | `FrogKnightNormal`               | Direct debug encounter matched.                              |
+| done   | `globe-head`            | `GlobeHeadNormal`                | Direct debug encounter matched.                              |
+| done   | `turret-operator`       | `TurretOperatorWeak`             | Direct debug encounter matched.                              |
+| done   | `owl-magistrate`        | `OwlMagistrateNormal`            | Direct debug encounter matched.                              |
+| done   | `scrolls-weak`          | `ScrollsOfBitingWeak`            | Direct debug encounter matched.                              |
+| done   | `scrolls`               | `ScrollsOfBitingNormal`          | Direct debug encounter matched.                              |
+| done   | `slimed-berserker`      | `SlimedBerserkerNormal`          | Direct debug encounter matched.                              |
+| done   | `lost-and-forgotten`    | `TheLostAndForgottenNormal`      | Direct debug encounter matched.                              |
+| done   | `obscura`               | `TheObscuraNormal`               | Direct debug encounter matched.                              |
+| done   | `construct-menagerie`   | `ConstructMenagerieNormal`       | Direct debug encounter matched.                              |
+| done   | `dense-vegetation`      | `DenseVegetationEventEncounter`  | Direct debug encounter matched.                              |
+| done   | `punch-off`             | `PunchOffEventEncounter`         | Direct debug encounter matched.                              |
+| done   | `fake-merchant`         | `FakeMerchantEventEncounter`     | Direct debug encounter matched.                              |
+| done   | `mysterious-knight`     | `MysteriousKnightEventEncounter` | Direct debug encounter matched.                              |
+| done   | `battleworn-dummy-1`    | `BattlewornDummyEventEncounter`  | Direct debug encounter matched Setting1.                     |
+| done   | `battleworn-dummy-2`    | `BattlewornDummyEventEncounter`  | Direct debug encounter matched Setting2.                     |
+| done   | `battleworn-dummy-3`    | `BattlewornDummyEventEncounter`  | Direct debug encounter matched Setting3.                     |
+| done   | `bygone-effigy`         | `BygoneEffigyElite`              | Direct debug encounter matched.                              |
+| done   | `entomancer`            | `EntomancerElite`                | Direct debug encounter matched.                              |
+| done   | `infested-prisms`       | `InfestedPrismsElite`            | Direct debug encounter matched.                              |
+| done   | `phrog-parasite`        | `PhrogParasiteElite`             | Direct debug encounter matched.                              |
+| done   | `soul-nexus`            | `SoulNexusElite`                 | Direct debug encounter matched.                              |
+| done   | `terror-eel`            | `TerrorEelElite`                 | Direct debug encounter matched.                              |
+| done   | `byrdonis`              | `ByrdonisElite`                  | Direct debug encounter matched.                              |
+| done   | `decimillipede`         | `DecimillipedeElite`             | Direct debug encounter matched.                              |
+| done   | `knights`               | `KnightsElite`                   | Direct debug encounter matched.                              |
+| done   | `mecha-knight`          | `MechaKnightElite`               | Direct debug encounter matched.                              |
+| done   | `phantasmal-gardeners`  | `PhantasmalGardenersElite`       | Direct debug encounter matched.                              |
+| done   | `waterfall-giant`       | `WaterfallGiantBoss`             | Direct debug encounter matched.                              |
+| done   | `vantom`                | `VantomBoss`                     | Direct debug encounter matched.                              |
+| done   | `soul-fysh`             | `SoulFyshBoss`                   | Direct debug encounter matched.                              |
+| done   | `ceremonial-beast`      | `CeremonialBeastBoss`            | Direct debug encounter matched.                              |
+| done   | `lagavulin-matriarch`   | `LagavulinMatriarchBoss`         | Direct debug encounter matched.                              |
+| done   | `knowledge-demon`       | `KnowledgeDemonBoss`             | Direct debug encounter matched with card-select auto-choice. |
+| done   | `kaiser-crab`           | `KaiserCrabBoss`                 | Direct debug encounter matched.                              |
+| done   | `aeonglass`             | `AeonglassBoss`                  | Direct debug encounter matched.                              |
+| done   | `queen`                 | `QueenBoss`                      | Direct debug encounter matched.                              |
+| done   | `test-subject`          | `TestSubjectBoss`                | Direct debug encounter matched.                              |
+| done   | `insatiable`            | `TheInsatiableBoss`              | Direct debug encounter matched.                              |
+| done   | `kin`                   | `TheKinBoss`                     | Direct debug encounter matched.                              |
+| done   | `architect`             | `TheArchitectEventEncounter`     | Direct debug encounter matched.                              |
+
+### Passive multi-turn validation
+
+| Status | Encounter         | Actions | Notes                                        |
+| ------ | ----------------- | ------- | -------------------------------------------- |
+| done   | `knowledge-demon` | `5 5 5` | Matched with Disintegration end-turn damage. |
+| done   | `soul-fysh`       | `5 5 5` | Matched with Beckon end-turn damage.         |
+| done   | `insatiable`      | `5 5 5` | Matched passive three-turn trace.            |
+| done   | `aeonglass`       | `5 5 5` | Matched Increasing Intensity turn.           |
+| done   | `kaiser-crab`     | `5 5 5` | Matched through lethal passive turn.         |
 
 ### Live fights not modeled yet
 
-`AeonglassBoss`, `BattlewornDummyEventEncounter` (blocked: direct debug start has no dummy setting and immediately ends combat), `BygoneEffigyElite`, `ByrdonisElite`, `CeremonialBeastBoss`, `DecimillipedeElite`, `EntomancerElite`, `InfestedPrismsElite`, `KaiserCrabBoss`, `KnightsElite`, `KnowledgeDemonBoss`, `LagavulinMatriarchBoss`, `MechaKnightElite`, `PhantasmalGardenersElite`, `PhrogParasiteElite`, `QueenBoss`, `SoulFyshBoss`, `SoulNexusElite`, `TerrorEelElite`, `TestSubjectBoss`, `TheArchitectEventEncounter`, `TheInsatiableBoss`, `TheKinBoss`, `VantomBoss`, `WaterfallGiantBoss`.
+None currently identified.
 
 ## Immediate next steps
 
 1. Improve card draw-order parity so hand comparisons can be enabled in trace comparison.
-2. Expand validation scripts into repeatable sweeps over known seeds and encounters.
-3. Add emulator support for remaining live fights, starting with unmodeled normal fights before elites and bosses.
+2. Run `scripts\validate_real_game_sweep.py --suite all` after behavior changes to catch regressions.
+3. Add emulator support for newly discovered live fights as game patches introduce them.
 4. Continue adding map, reward, rest-site, shop, relic, elite, and boss behavior for full-run training.
 
 ## Known fidelity gaps

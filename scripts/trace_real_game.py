@@ -139,6 +139,8 @@ def first_living_enemy_id(state: dict[str, Any]) -> str | None:
 
 def action_payload_from_index(state: dict[str, Any], action: int) -> dict[str, Any]:
     state_type = state.get("state_type")
+    if state_type == "card_select":
+        return {"action": "select_card", "index": action}
     if state_type not in {"monster", "elite", "boss"}:
         raise ValueError(
             f"Integer action mapping is only supported in combat, got {state_type!r}"

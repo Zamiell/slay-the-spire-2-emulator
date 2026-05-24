@@ -139,6 +139,14 @@ Compare two trace JSON files on their normalized player/enemy fields:
 .\.venv\Scripts\python.exe scripts\compare_traces.py emulator-trace.json real-game-trace.json
 ```
 
+Run the repeatable STS2MCP validation sweep against a running game:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\validate_real_game_sweep.py --suite all --continue-on-failure
+```
+
+Use `--suite direct` for one-passive-turn direct encounter checks, `--suite passive-boss` for the current three-turn boss checks, or `--encounter aeonglass` to narrow the run.
+
 ## Training
 
 `scripts\train.py` trains `MaskablePPO` from `sb3-contrib` using action masks from the environment:

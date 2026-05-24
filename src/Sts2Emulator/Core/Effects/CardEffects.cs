@@ -499,4 +499,11 @@ public static class ST
     public const int Dazed = 10002;
     public const int Slimed = 440;
     public const int Toxic = 512;
+    public const int Infection = 10008;
+    public const int Burn = 10009;
+    public const int Beckon = 36;
+    public const int Disintegration = 10010;
+    public const int FranticEscape = 206;
+    public const int Wound = 10011;
+    public const int Wither = 10012;
 }

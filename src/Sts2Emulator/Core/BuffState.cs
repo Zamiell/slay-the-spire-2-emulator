@@ -36,6 +36,18 @@ public enum BuffId
     Illusion,     // Fogmog summon marker
     Minion,       // Living Fog Gas Bomb marker
     PaperCuts,    // Scroll of Biting max-HP chip at end of enemy action
+    Hex,
+    Dampen,
+    Adaptable,
+    Asleep,
+    ChainsOfBinding,
+    Ebb,
+    Enrage,
+    Intangible,
+    Plow,
+    Sandpit,
+    SteamEruption,
+    Disintegration,
 }
 
 public record struct BuffState(BuffId Id, int Magnitude);

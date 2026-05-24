@@ -83,6 +83,9 @@ public static class NativeExports
     public static int Sts2_ObsSize() => OBS_SIZE;
 
     [UnmanagedCallersOnly]
+    public static int Sts2_MaxEnemies() => MAX_ENEMIES;
+
+    [UnmanagedCallersOnly]
     public static int Sts2_Create(int seed)
     {
         var combat = new NativeCombat(seed);

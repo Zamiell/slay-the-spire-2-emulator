@@ -90,6 +90,14 @@ public static class CombatEngine
         if (constrict > 0)
             state.PlayerHp = Math.Max(0, state.PlayerHp - constrict);
 
+        int disintegration = BuffSystem.Get(state.PlayerBuffs, BuffId.Disintegration);
+        if (disintegration > 0)
+            state.PlayerHp = Math.Max(0, state.PlayerHp - disintegration);
+
+        int beckons = state.Hand.Count(card => card.DefId == Effects.ST.Beckon);
+        if (beckons > 0)
+            state.PlayerHp = Math.Max(0, state.PlayerHp - beckons * 6);
+
         // Move hand to discard, exhausting ethereal cards.
         foreach (var card in state.Hand)
         {

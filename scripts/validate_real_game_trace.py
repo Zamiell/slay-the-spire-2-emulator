@@ -97,6 +97,30 @@ LIVE_ENCOUNTER_BY_EMULATOR = {
     "battleworn-dummy-1": "BattlewornDummyEventEncounter",
     "battleworn-dummy-2": "BattlewornDummyEventEncounter",
     "battleworn-dummy-3": "BattlewornDummyEventEncounter",
+    "bygone-effigy": "BygoneEffigyElite",
+    "entomancer": "EntomancerElite",
+    "infested-prisms": "InfestedPrismsElite",
+    "phrog-parasite": "PhrogParasiteElite",
+    "soul-nexus": "SoulNexusElite",
+    "terror-eel": "TerrorEelElite",
+    "byrdonis": "ByrdonisElite",
+    "decimillipede": "DecimillipedeElite",
+    "knights": "KnightsElite",
+    "mecha-knight": "MechaKnightElite",
+    "phantasmal-gardeners": "PhantasmalGardenersElite",
+    "aeonglass": "AeonglassBoss",
+    "ceremonial-beast": "CeremonialBeastBoss",
+    "kaiser-crab": "KaiserCrabBoss",
+    "knowledge-demon": "KnowledgeDemonBoss",
+    "lagavulin-matriarch": "LagavulinMatriarchBoss",
+    "queen": "QueenBoss",
+    "soul-fysh": "SoulFyshBoss",
+    "test-subject": "TestSubjectBoss",
+    "insatiable": "TheInsatiableBoss",
+    "kin": "TheKinBoss",
+    "vantom": "VantomBoss",
+    "waterfall-giant": "WaterfallGiantBoss",
+    "architect": "TheArchitectEventEncounter",
 }
 
 DEBUG_START_OPTIONS_BY_EMULATOR = {
@@ -356,7 +380,7 @@ def capture_emulator_trace(
 
 
 def capture_live_trace(
-    base_url: str, actions: list[int], delay: float
+    base_url: str, actions: list[int], delay: float, card_select_index: int | None
 ) -> dict[str, Any]:
     state = trace_real_game.get_state(base_url)
     trace = [
@@ -371,10 +395,11 @@ def capture_live_trace(
     for step, action in enumerate(actions, start=1):
         payload = trace_real_game.action_payload_from_index(state, action)
         post_result = trace_real_game.post_action(base_url, payload)
-        state = trace_real_game.wait_for_state(
+        state = wait_for_live_action_result(
             base_url,
             delay,
             wait_for_play_phase=payload.get("action") == "end_turn",
+            card_select_index=card_select_index,
         )
         trace.append(
             {
@@ -387,6 +412,29 @@ def capture_live_trace(
             }
         )
     return {"source": "sts2mcp", "base_url": base_url, "trace": trace}
+
+
+def wait_for_live_action_result(
+    base_url: str,
+    delay: float,
+    wait_for_play_phase: bool,
+    card_select_index: int | None,
+) -> dict[str, Any]:
+    state = trace_real_game.wait_for_state(
+        base_url,
+        delay,
+        wait_for_play_phase=wait_for_play_phase,
+    )
+    while card_select_index is not None and state.get("state_type") == "card_select":
+        trace_real_game.post_action(
+            base_url, {"action": "select_card", "index": card_select_index}
+        )
+        state = trace_real_game.wait_for_state(
+            base_url,
+            delay,
+            wait_for_play_phase=wait_for_play_phase,
+        )
+    return state
 
 
 def start_debug_encounter(
@@ -406,7 +454,15 @@ def start_debug_encounter(
     if debug_options is not None:
         payload.update(debug_options)
     start_real_game_run.post_action(base_url, payload)
-    start_real_game_run.wait_for_combat_ready(base_url, timeout=30.0)
+    state = start_real_game_run.wait_for_combat_ready(base_url, timeout=30.0)
+    battle = state.get("battle") or {}
+    if battle.get("turn") == "player" and battle.get("is_play_phase") is not True:
+        force_result = trace_real_game.post_action(
+            base_url, {"action": "debug_force_play_phase"}
+        )
+        if force_result.get("status") != "ok":
+            raise RuntimeError(f"debug_force_play_phase failed: {force_result}")
+        trace_real_game.wait_for_state(base_url, 0.25, wait_for_play_phase=True)
 
 
 def main() -> None:
@@ -414,6 +470,12 @@ def main() -> None:
     parser.add_argument("--base-url", default=trace_real_game.DEFAULT_BASE_URL)
     parser.add_argument("--actions", type=int, nargs="*", default=[])
     parser.add_argument("--delay", type=float, default=0.25)
+    parser.add_argument(
+        "--card-select-index",
+        type=int,
+        default=0,
+        help="Automatically choose this card index when an enemy move opens a choose-card screen; use -1 to disable.",
+    )
     parser.add_argument("--seed-search-limit", type=int, default=500000)
     parser.add_argument(
         "--ignore-hand",
@@ -472,7 +534,10 @@ def main() -> None:
                 DEBUG_START_OPTIONS_BY_EMULATOR.get(args.encounter),
             )
 
-    live = capture_live_trace(args.base_url, args.actions, args.delay)
+    card_select_index = None if args.card_select_index < 0 else args.card_select_index
+    live = capture_live_trace(
+        args.base_url, args.actions, args.delay, card_select_index
+    )
     live_summary = compare_traces.summary(live["trace"][0])
     validate_starter_player(live_summary)
     encounter = args.encounter or detect_encounter(live_summary)

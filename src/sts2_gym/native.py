@@ -36,6 +36,9 @@ _lib = _load_lib()
 _lib.Sts2_ObsSize.restype = ctypes.c_int
 _lib.Sts2_ObsSize.argtypes = []
 
+_lib.Sts2_MaxEnemies.restype = ctypes.c_int
+_lib.Sts2_MaxEnemies.argtypes = []
+
 _lib.Sts2_Create.restype = ctypes.c_int
 _lib.Sts2_Create.argtypes = [ctypes.c_int]
 
@@ -96,6 +99,7 @@ _lib.Sts2_Destroy.argtypes = [ctypes.c_int]
 # ── public wrappers ───────────────────────────────────────────────────────────
 
 OBS_SIZE: int = _lib.Sts2_ObsSize()
+MAX_ENEMIES: int = _lib.Sts2_MaxEnemies()
 
 
 def create(seed: int) -> int:

@@ -61,6 +61,18 @@ def compare(
     for index, (left_step, right_step) in enumerate(zip(left, right)):
         left_summary = summary(left_step)
         right_summary = summary(right_step)
+        left_dead = (get_path(left_summary, "player.hp") or 0) <= 0
+        right_dead = (get_path(right_summary, "player.hp") or 0) <= 0
+        if left_dead and right_dead:
+            for field in ("player.hp", "player.max_hp", "player.block"):
+                left_value = get_path(left_summary, field)
+                right_value = get_path(right_summary, field)
+                if left_value != right_value:
+                    diffs.append(
+                        f"step {index} field {field}: left={left_value!r} right={right_value!r}"
+                    )
+            continue
+
         for field in fields:
             left_value = get_path(left_summary, field)
             right_value = get_path(right_summary, field)
