@@ -1,3 +1,19 @@
 # Ralph Progress Log
+
+## Codebase Patterns
+
+- Ralph task metadata lives under `scripts\ralph`; use `scripts\ralph\prd.json` and `scripts\ralph\progress.txt` when the files are not present at the repository root.
+
 Started: Sun, May 24, 2026  1:18:25 PM
+---
+
+## 2026-05-24 13:21 - US-001
+
+- Created the root emulator completion plan as `plan.md`, summarizing current scope, prioritized parity gaps, and actionable implementation milestones.
+- Updated the README plan reference and marked US-001 as passing in the Ralph PRD.
+- Files changed: `plan.md`, `README.md`, `scripts\ralph\prd.json`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - The active Ralph work queue files are stored in `scripts\ralph`, not at the repository root.
+  - The root plan should be the source of truth for selecting future emulator parity work.
+
 ---
