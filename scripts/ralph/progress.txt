@@ -24,6 +24,7 @@
 - Native cards that depend on player HP lost this turn should read `CombatState.PlayerHpLostThisTurn`; reset it at the start of each player turn and increment it from unblocked player HP-loss paths.
 - Trace-observed colorless card constants can live in `CL` beside `IC` and `ST` in `CardEffects.cs`; add explicit cases when fallback damage/block ordering or targeting is wrong.
 - Native card effects that move cards from discard to hand should operate after the played card has left hand, clear `FreeThisTurn`, and respect the 10-card hand cap.
+- Native card effects that splash based on the first hit should use the effective first-hit HP-loss plus overkill amount, then apply splash as unpowered damage unless decompiled value props say otherwise.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -297,5 +298,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Neow's Fury deals attack damage before selecting cards from discard to move to hand.
   - Discard-to-hand card effects should cap movement by current hand size after the played card has left hand.
+
+---
+
+## 2026-05-24 14:40 - PLAN-M2-OMNISLICE
+
+- Implemented native Omnislice combat behavior: the colorless trace-observed card now deals upgraded-aware attack damage, then splashes the effective first-hit damage as unpowered damage to the other living enemies.
+- Added C# regression coverage for first-target overkill splash, block interaction on splash targets, upgraded damage, and unpowered splash behavior.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable first-hit splash pattern.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Omnislice uses the first hit's `TotalDamage + OverkillDamage` for its splash amount, then applies that amount to the target's teammates with `Unpowered | Move` value props.
+  - Splash targets should still respect block and enemy defensive caps, while avoiding player Strength and target Vulnerable scaling when the splash is unpowered.
 
 ---

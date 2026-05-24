@@ -73,6 +73,10 @@ public static class CardEffects
                 break;
             }
 
+            case CL.Omnislice: // 0-cost, 8/11 damage + splash effective first-hit damage to other enemies
+                DealOmnislice(state, Dmg(def, upgraded));
+                break;
+
             case CL.Salvo: // 1-cost, 12/16 damage + retain remaining hand this turn
                 DealDamage(state, Dmg(def, upgraded));
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, 1);
@@ -508,15 +512,9 @@ public static class CardEffects
         }
     }
 
-    private static void DealDamageToEnemy(CombatState state, EnemyState target, int amount)
+    private static int DealDamageToEnemy(CombatState state, EnemyState target, int amount)
     {
-        int thorns = BuffSystem.Get(target.Buffs, BuffId.Thorns);
-        if (thorns > 0)
-        {
-            int hpBeforeThorns = state.PlayerHp;
-            state.PlayerHp = Math.Max(0, state.PlayerHp - thorns);
-            state.PlayerHpLostThisTurn += Math.Max(0, hpBeforeThorns - state.PlayerHp);
-        }
+        TriggerEnemyThorns(state, target);
 
         int damage = BuffSystem.IncomingDamage(amount, state.PlayerBuffs, target.Buffs);
         int cap = BuffSystem.Get(target.Buffs, BuffId.HardToKill);
@@ -532,6 +530,7 @@ public static class CardEffects
             BuffSystem.Apply(target.Buffs, BuffId.Slippery, -1);
         }
         target.Hp = Math.Max(0, target.Hp - hpLoss);
+        return hpLoss;
     }
 
     public static void GainBlock(CombatState state, int amount)
@@ -658,6 +657,20 @@ public static class CardEffects
             DealUnpoweredDamageToEnemy(enemy, inferno);
     }
 
+    private static void DealOmnislice(CombatState state, int amount)
+    {
+        var target = FirstEnemy(state);
+        if (target is null)
+            return;
+
+        int splashDamage = DealDamageToEnemy(state, target, amount);
+        if (splashDamage <= 0)
+            return;
+
+        foreach (var enemy in state.Enemies.Where(e => e.Hp > 0 && !ReferenceEquals(e, target)).ToList())
+            DealUnpoweredDamageToEnemy(state, enemy, splashDamage, triggerThorns: true);
+    }
+
     private static void AddRandomInfernalBladeAttack(CombatState state, Random rng)
     {
         if (state.Hand.Count >= MaxCardsInHand)
@@ -674,7 +687,17 @@ public static class CardEffects
     }
 
     private static void DealUnpoweredDamageToEnemy(EnemyState target, int amount)
+        => DealUnpoweredDamageToEnemy(null, target, amount, triggerThorns: false);
+
+    private static void DealUnpoweredDamageToEnemy(
+        CombatState? state,
+        EnemyState target,
+        int amount,
+        bool triggerThorns)
     {
+        if (triggerThorns && state != null)
+            TriggerEnemyThorns(state, target);
+
         int damage = Math.Max(0, amount);
         int cap = BuffSystem.Get(target.Buffs, BuffId.HardToKill);
         if (cap > 0)
@@ -689,6 +712,17 @@ public static class CardEffects
             BuffSystem.Apply(target.Buffs, BuffId.Slippery, -1);
         }
         target.Hp = Math.Max(0, target.Hp - hpLoss);
+    }
+
+    private static void TriggerEnemyThorns(CombatState state, EnemyState target)
+    {
+        int thorns = BuffSystem.Get(target.Buffs, BuffId.Thorns);
+        if (thorns <= 0)
+            return;
+
+        int hpBeforeThorns = state.PlayerHp;
+        state.PlayerHp = Math.Max(0, state.PlayerHp - thorns);
+        state.PlayerHpLostThisTurn += Math.Max(0, hpBeforeThorns - state.PlayerHp);
     }
 
     private static void ApplyEnemyDebuff(CombatState state, BuffId id, int magnitude, Random rng)
@@ -876,6 +910,7 @@ public static class CL
 {
     public const int Bolas = 51;
     public const int DramaticEntrance = 153;
+    public const int Omnislice = 333;
     public const int Salvo = 406;
     public const int Volley = 535;
 }

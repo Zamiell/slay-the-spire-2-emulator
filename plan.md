@@ -59,6 +59,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Added native Volley support from the retained run traces: the colorless X-cost card now spends all current energy and deals upgraded-aware random-enemy attack hits once per energy.
 - Added native Salvo support from the retained run traces: the colorless card now deals upgraded-aware attack damage and retains the remaining hand through the next end-turn discard.
 - Added native Neow's Fury support from the retained run traces: the ancient card now deals upgraded-aware attack damage, moves up to two or three cards from discard to hand while respecting the hand cap, and exhausts through the generated card definition.
+- Added native Omnislice support from the retained rarity trace: the colorless card now deals upgraded-aware attack damage, then splashes the effective first-hit damage as unpowered damage to the target's other living enemies.
 - Select the highest-impact missing trace-observed card from the current curated traces.
 - Implement the card in `src\Sts2Emulator\Core` using decompiled game logic for effect order, targeting, exhaust/ethereal behavior, and upgraded values.
 - Add C# regression tests in `src\Sts2Emulator.Tests` and update Python expectations only if interop-visible behavior changes.
