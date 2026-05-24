@@ -420,6 +420,10 @@ public static class CardEffects
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Juggling, 1);
                 break;
 
+            case IC.Nostalgia: // 1/0-cost, first Attack/Skill each turn goes on top of draw pile
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Nostalgia, 1);
+                break;
+
             case IC.Rage: // 0-cost, gain 3/5 block when playing an Attack this turn
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Rage, upgraded ? 5 : 3);
                 break;
@@ -903,6 +907,7 @@ public static class IC
     public const int ForgottenRitual = 205;
     public const int Havoc         = 238;
     public const int InfernalBlade = 262;
+    public const int Nostalgia     = 327;
     public const int Rage          = 378;
     public const int Restlessness  = 396;
     public const int SecondWind    = 414;

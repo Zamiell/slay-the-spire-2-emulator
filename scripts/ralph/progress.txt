@@ -30,6 +30,7 @@
 - Native card effects that repeat block gain should call `CardEffects.GainBlock` once per decompiled gain so block hooks trigger per gain.
 - Native cards that grant next-turn block should store a `BuffId.BlockNextTurn` amount, resolve it after the next player-turn block clear in `CombatEngine`, and grant it as unpowered block.
 - Native cards that apply temporary enemy Strength loss should consume Artifact before applying paired `Strength` and `TemporaryStrength` buffs, then restore the enemy Strength in `EnemyAI.ExecuteIntent` at that enemy's turn end.
+- Native card powers that modify a played card's destination pile should make that decision in `CombatEngine` after effects resolve but before adding the card to discard.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -376,5 +377,18 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Dark Shackles applies a negative `TemporaryStrengthPower`, so Artifact prevents the temporary power before any Strength change is applied.
   - Enemy temporary Strength loss should restore at that enemy's side-turn end, including stunned turns, rather than using player end-turn cleanup.
+
+---
+
+## 2026-05-24 15:00 - PLAN-M2-NOSTALGIA
+
+- Implemented native Nostalgia combat behavior: the power now stacks a counter, routes the first Attack or Skill played each turn to the top of the draw pile instead of discard, and upgraded Nostalgia costs 0.
+- Added C# regression coverage for top-of-draw placement, limiting the effect to the first Attack/Skill each turn, per-turn reset behavior, and upgraded cost handling.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable destination-pile modification pattern.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\CombatState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Nostalgia applies a counter power and changes the result pile for player Attack/Skill cards that would otherwise go to discard.
+  - Destination-pile powers should be handled in `CombatEngine` after card effects resolve and after exhaust/corruption checks, but before adding the played card to discard.
+  - Track Nostalgia with a per-turn Attack-or-Skill play counter separate from `AttackCardsPlayedThisTurn` so Skill cards count and Attack-specific mechanics stay unchanged.
 
 ---

@@ -28,6 +28,7 @@ public enum BuffId
     OneTwoPunch,  // player: duplicate the next N Attack cards this turn
     RetainHand,   // player: keep remaining hand at end of player turn
     BlockNextTurn, // player: gain N unpowered block after next turn's block clear
+    Nostalgia,    // player: first N Attack/Skill cards each turn go on top of draw pile
     TemporaryStrength, // player/enemy: remove this much Strength at side turn end
     Artifact,     // prevent the next N debuffs
     HardToKill,   // damage taken per hit is capped at N

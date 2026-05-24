@@ -65,6 +65,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Added native Prolong support from the retained run traces: the colorless card now stores the player's current block, grants that amount as unpowered block after the next player-turn block clear, and no longer exhausts when upgraded.
 - Refined native Drum of Battle support from the retained run traces: the card now draws on play and grants upgraded-aware energy from its self-exhaust hook, including when another card exhausts it from hand.
 - Added native Dark Shackles support from the retained card trace: the colorless card now applies upgraded-aware temporary Strength loss to the target, consumes Artifact as a debuff, exhausts, and restores the enemy's Strength after that enemy turn.
+- Added native Nostalgia support from the retained run traces: the power now stacks a counter, makes the first Attack or Skill card played each turn go on top of the draw pile instead of discard, and costs 0 when upgraded.
 - Select the highest-impact missing trace-observed card from the current curated traces.
 - Implement the card in `src\Sts2Emulator\Core` using decompiled game logic for effect order, targeting, exhaust/ethereal behavior, and upgraded values.
 - Add C# regression tests in `src\Sts2Emulator.Tests` and update Python expectations only if interop-visible behavior changes.

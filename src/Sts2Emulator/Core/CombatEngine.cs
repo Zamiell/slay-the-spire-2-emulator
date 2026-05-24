@@ -78,9 +78,12 @@ public static class CombatEngine
             && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0;
         if (ShouldExhaustAfterPlay(def, card) || corruptedSkill)
             Effects.CardEffects.ExhaustCard(state, card);
+        else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
+            state.DrawPile.Insert(0, card with { FreeThisTurn = false });
         else
             state.DiscardPile.Add(card with { FreeThisTurn = false });
 
+        IncrementPlayedCardTypeCounters(state, def);
         Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
 
         bool playerDead = state.PlayerHp <= 0;
@@ -203,6 +206,7 @@ public static class CombatEngine
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Smoggy);
         state.SkillPlayedWhileSmoggy = false;
         state.AttackCardsPlayedThisTurn = 0;
+        state.AttackOrSkillCardsPlayedThisTurn = 0;
         state.CardsExhaustedThisTurn = 0;
 
         ReturnQueuedCardsToHandBeforeDraw(state);
@@ -271,6 +275,8 @@ public static class CombatEngine
             return 0;
         int cost = def.Cost;
         if (def.Id == Effects.IC.InfernalBlade && card.Upgraded)
+            cost -= 1;
+        if (def.Id == Effects.IC.Nostalgia && card.Upgraded)
             cost -= 1;
         if (def.Id == Effects.IC.Stomp)
             cost -= state.AttackCardsPlayedThisTurn;
@@ -431,9 +437,12 @@ public static class CombatEngine
 
         if (ShouldExhaustAfterPlay(def, card))
             Effects.CardEffects.ExhaustCard(state, card);
+        else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
+            state.DrawPile.Insert(0, card with { FreeThisTurn = false });
         else
             state.DiscardPile.Add(card with { FreeThisTurn = false });
 
+        IncrementPlayedCardTypeCounters(state, def);
         Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
     }
 
@@ -448,6 +457,19 @@ public static class CombatEngine
         if (def.Id == Effects.CL.Prolong && card.Upgraded)
             return false;
         return def.Exhaust;
+    }
+
+    private static bool ShouldPlaceOnDrawPileAfterPlay(CombatState state, CardDef def)
+    {
+        int nostalgia = BuffSystem.Get(state.PlayerBuffs, BuffId.Nostalgia);
+        return nostalgia > state.AttackOrSkillCardsPlayedThisTurn
+            && (def.Type == CardType.Attack || def.Type == CardType.Skill);
+    }
+
+    private static void IncrementPlayedCardTypeCounters(CombatState state, CardDef def)
+    {
+        if (def.Type == CardType.Attack || def.Type == CardType.Skill)
+            state.AttackOrSkillCardsPlayedThisTurn++;
     }
 
     private static void ApplyBlockNextTurn(CombatState state)
