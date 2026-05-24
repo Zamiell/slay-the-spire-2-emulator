@@ -148,6 +148,14 @@ public static class CardEffects
 
             // ── Ironclad Skills ──────────────────────────────────────────────────
 
+            case IC.Armaments: // 1-cost, gain 5 block + upgrade 1 card/all cards if upgraded
+                GainBlock(state, Blk(def, upgraded));
+                if (upgraded)
+                    UpgradeAllCardsInHand(state);
+                else
+                    UpgradeFirstCardInHand(state);
+                break;
+
             case IC.BattleTrance: // 0-cost, draw 3/4 (NoDraw omitted)
                 DrawCards(state, upgraded ? 4 : 3, rng);
                 break;
@@ -486,6 +494,36 @@ public static class CardEffects
         var card = state.Hand[index];
         state.Hand.RemoveAt(index);
         ExhaustCard(state, card);
+    }
+
+    private static void UpgradeFirstCardInHand(CombatState state)
+    {
+        for (int i = 0; i < state.Hand.Count; i++)
+        {
+            if (!IsUpgradable(state.Hand[i]))
+                continue;
+
+            state.Hand[i] = state.Hand[i] with { Upgraded = true };
+            return;
+        }
+    }
+
+    private static void UpgradeAllCardsInHand(CombatState state)
+    {
+        for (int i = 0; i < state.Hand.Count; i++)
+        {
+            if (IsUpgradable(state.Hand[i]))
+                state.Hand[i] = state.Hand[i] with { Upgraded = true };
+        }
+    }
+
+    private static bool IsUpgradable(CardInstance card)
+    {
+        if (card.Upgraded)
+            return false;
+
+        var def = GeneratedData.Cards.Get(card.DefId);
+        return def.Type is not (CardType.Status or CardType.Curse);
     }
 
     private static void TriggerInfernoAfterPlayerSelfDamage(CombatState state, int unblockedDamage)
