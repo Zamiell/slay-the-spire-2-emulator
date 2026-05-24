@@ -43,6 +43,11 @@ public static class CardEffects
                 break;
             }
 
+            case IC.Cinder: // 2-cost, 18/24 dmg + exhaust a random card from hand
+                DealDamage(state, Dmg(def, upgraded));
+                ExhaustRandomCardFromHand(state, rng);
+                break;
+
             case IC.Conflagration: // 1-cost, 2 dmg × 4/5 hits to ALL enemies
                 DealDamageToAllMultiHit(state, 2, upgraded ? 5 : 4);
                 break;
@@ -471,6 +476,17 @@ public static class CardEffects
 
     private static EnemyState? FirstEnemy(CombatState state) =>
         state.Enemies.FirstOrDefault(e => e.Hp > 0);
+
+    private static void ExhaustRandomCardFromHand(CombatState state, Random rng)
+    {
+        if (state.Hand.Count == 0)
+            return;
+
+        int index = rng.Next(state.Hand.Count);
+        var card = state.Hand[index];
+        state.Hand.RemoveAt(index);
+        ExhaustCard(state, card);
+    }
 
     private static void TriggerInfernoAfterPlayerSelfDamage(CombatState state, int unblockedDamage)
     {

@@ -388,6 +388,46 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void Cinder_DamagesTargetAndExhaustsRandomCardFromHand()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.Cinder, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(32, state.Enemies[0].Hp);
+        Assert.Empty(state.Hand);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.Cinder);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.DefendIronclad);
+    }
+
+    [Fact]
+    public void Cinder_UpgradedUsesUpgradedDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Cinder, true)];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(26, state.Enemies[0].Hp);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.Cinder);
+    }
+
+    [Fact]
     public void Havoc_PlaysAndExhaustsTopDrawPileCard()
     {
         var state = CombatFactory.NewCombat(seed: 0);

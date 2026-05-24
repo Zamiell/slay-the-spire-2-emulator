@@ -7,6 +7,7 @@
 - Native C# card powers are commonly modeled as `BuffId` entries, with timing handled in `CombatEngine` and damage/effect hooks in `EnemyAI` or `CardEffects`.
 - Native card powers with extra dynamic variables can use companion `BuffId` entries to track hidden per-power state alongside the visible counter.
 - Native card effects that cause player HP loss should use `CardEffects.LoseHp` so Rupture and Inferno hooks stay consistent with other card-effect self-damage.
+- Native card effects that exhaust another card from hand should select from `state.Hand` after the played card has already been removed, then call `CardEffects.ExhaustCard` so exhaust hooks stay consistent.
 - Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
 - Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
 
@@ -99,5 +100,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
   - Decompiled Breakthrough applies unblocked, unpowered player self-damage before its all-enemy attack.
   - Use `CardEffects.LoseHp` for card-effect self-damage so existing Rupture and Inferno hooks are preserved.
   - Rebuild `out\Sts2Emulator.dll` before Python checks after native C# edits, or the stale-native guard will fail.
+
+---
+
+## 2026-05-24 13:50 - PLAN-M2-CINDER
+
+- Implemented native Cinder combat behavior: the card now deals upgraded-aware attack damage and exhausts one random remaining card from hand after damage.
+- Added C# regression coverage for Cinder base damage, upgraded damage, self-exhaust, and the random hand-card exhaust effect.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Cinder chooses from the current hand after the played Cinder card has left hand, so a one-card remaining hand is a deterministic way to test the exhaust side effect.
+  - Use `CardEffects.ExhaustCard` for secondary card exhaust effects so Feel No Pain and future exhaust hooks stay centralized.
 
 ---

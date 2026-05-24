@@ -44,6 +44,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Added native Colossus support: the card now gains block, applies a one-enemy-side counter power, and halves powered attack damage from Vulnerable enemies while active.
 - Added native Inferno support: the card now applies its counter power, tracks stacking start-of-turn self-damage, and burns all enemies after unblocked player self-damage during the player turn.
 - Added native Breakthrough support: the card now loses 1 player HP before dealing upgraded-aware attack damage to all enemies.
+- Added native Cinder support: the card now deals upgraded-aware attack damage, exhausts one random remaining hand card after damage, and exhausts itself through the normal card exhaust path.
 - Select the highest-impact missing trace-observed card from the current curated traces.
 - Implement the card in `src\Sts2Emulator\Core` using decompiled game logic for effect order, targeting, exhaust/ethereal behavior, and upgraded values.
 - Add C# regression tests in `src\Sts2Emulator.Tests` and update Python expectations only if interop-visible behavior changes.
