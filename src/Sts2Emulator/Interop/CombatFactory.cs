@@ -179,7 +179,7 @@ public static class CombatFactory
         state.Enemies = CreateEncounter(encounter, rng);
 
         // Shuffle draw pile and deal opening hand of 5.
-        state.DrawPile = state.DrawPile.OrderBy(_ => rng.Next()).ToList();
+        CardEffects.ShufflePile(state.DrawPile, rng);
         for (int i = 0; i < 5 && state.DrawPile.Count > 0; i++)
         {
             state.Hand.Add(state.DrawPile[0]);

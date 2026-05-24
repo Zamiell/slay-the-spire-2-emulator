@@ -263,14 +263,23 @@ public static class CardEffects
         {
             if (state.DrawPile.Count == 0)
             {
-                state.DrawPile = state.DiscardPile.OrderBy(_ => rng.Next()).ToList();
+                state.DrawPile = state.DiscardPile.ToList();
+                ShufflePile(state.DrawPile, rng);
                 state.DiscardPile.Clear();
             }
             if (state.DrawPile.Count == 0) break;
 
-            int idx = rng.Next(state.DrawPile.Count);
-            state.Hand.Add(state.DrawPile[idx]);
-            state.DrawPile.RemoveAt(idx);
+            state.Hand.Add(state.DrawPile[0]);
+            state.DrawPile.RemoveAt(0);
+        }
+    }
+
+    public static void ShufflePile<T>(IList<T> pile, Random rng)
+    {
+        for (int i = pile.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(i + 1);
+            (pile[i], pile[j]) = (pile[j], pile[i]);
         }
     }
 

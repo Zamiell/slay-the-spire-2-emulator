@@ -89,10 +89,11 @@ def run_case(
             start_seed,
             "--encounter",
             case.encounter,
-            "--ignore-hand-order",
             "--output-dir",
             str(output_dir),
         ]
+        if args.ignore_hand_order:
+            command.append("--ignore-hand-order")
         if case.actions:
             command.append("--actions")
             command.extend(str(action) for action in case.actions)
@@ -149,6 +150,11 @@ def main() -> None:
     parser.add_argument("--start-seed-prefix", default="FORCE_sweep")
     parser.add_argument("--seed-search-limit", type=int, default=500000)
     parser.add_argument("--delay", type=float, default=0.25)
+    parser.add_argument(
+        "--ignore-hand-order",
+        action="store_true",
+        help="Match opening hand as an unordered multiset.",
+    )
     parser.add_argument(
         "--retries",
         type=int,

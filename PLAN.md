@@ -175,14 +175,12 @@ None currently identified.
 
 ## Immediate next steps
 
-1. Improve card draw-order parity so hand comparisons can be enabled in trace comparison.
-2. Run `uv run python scripts\validate_real_game_sweep.py --suite all` after behavior changes to catch regressions.
-3. Add emulator support for newly discovered live fights as game patches introduce them.
-4. Continue adding map, reward, rest-site, shop, relic, elite, and boss behavior for full-run training.
+1. Run `uv run python scripts\validate_real_game_sweep.py --suite all` after behavior changes to catch regressions.
+2. Add emulator support for newly discovered live fights as game patches introduce them.
+3. Continue adding map, reward, rest-site, shop, relic, elite, and boss behavior for full-run training.
 
 ## Known fidelity gaps
 
-- Card draw order is not yet fully aligned with the real game RNG.
 - Some enemy details remain simplified: Gremlin Merc theft/heist rewards, exact Two-Tailed Rat summon constraints, Slithering Strangler's small-slime variant, and mixed attack/buff intent fidelity.
 - Neow relics and rewards are only handled enough for validation setup, not fully emulated.
 - Full-run systems are incomplete: shops, rests, relic interactions, elites, bosses, events, and richer map routing.

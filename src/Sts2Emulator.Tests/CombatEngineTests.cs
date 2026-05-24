@@ -78,6 +78,28 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void DrawCards_DrawsFromTopOfDrawPile()
+    {
+        var state = new CombatState
+        {
+            DrawPile =
+            [
+                new CardInstance(IC.StrikeIronclad, false),
+                new CardInstance(IC.Bash, false),
+                new CardInstance(IC.DefendIronclad, false),
+            ],
+        };
+
+        CardEffects.DrawCards(state, 2, new Random(0));
+
+        Assert.Equal(
+            [IC.StrikeIronclad, IC.Bash],
+            state.Hand.Select(card => card.DefId)
+        );
+        Assert.Equal([IC.DefendIronclad], state.DrawPile.Select(card => card.DefId));
+    }
+
+    [Fact]
     public void NewCombat_SamplesActOneWeakEncounterPools()
     {
         var states = Enumerable.Range(0, 64)
