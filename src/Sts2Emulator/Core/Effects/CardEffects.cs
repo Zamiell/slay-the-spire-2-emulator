@@ -61,6 +61,10 @@ public static class CardEffects
                 DealDamageToAll(state, Dmg(def, upgraded));
                 break;
 
+            case CL.Bolas: // 0-cost, 3/4 damage; returns to hand before next turn's draw
+                DealDamage(state, Dmg(def, upgraded));
+                break;
+
             case IC.Dismantle: // 1-cost, 8/10 dmg, hits twice if target is Vulnerable
             {
                 var t = FirstEnemy(state);
@@ -829,6 +833,7 @@ public static class IC
 
 public static class CL
 {
+    public const int Bolas = 51;
     public const int DramaticEntrance = 153;
 }
 

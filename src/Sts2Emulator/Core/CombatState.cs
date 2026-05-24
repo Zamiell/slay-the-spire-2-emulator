@@ -15,6 +15,7 @@ public sealed class CombatState
     public List<CardInstance> DrawPile = [];
     public List<CardInstance> DiscardPile = [];
     public List<CardInstance> ExhaustPile = [];
+    public List<CardInstance> ReturnToHandBeforeDraw = [];
 
     // Potions: slot index → potion def ID, 0 = empty
     public int[] PotionSlots = new int[3];

@@ -54,6 +54,7 @@ public static class CombatEngine
                 else
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.OneTwoPunch, -1);
             }
+            QueueAttackPlayLifecycleEffects(state, card);
         }
         HandleEnemyDeaths(state, enemyHpsBefore, rng);
 
@@ -189,6 +190,8 @@ public static class CombatEngine
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Smoggy);
         state.SkillPlayedWhileSmoggy = false;
         state.AttackCardsPlayedThisTurn = 0;
+
+        ReturnQueuedCardsToHandBeforeDraw(state);
 
         // Draw five cards.
         Effects.CardEffects.DrawCards(state, 5, rng);
@@ -352,6 +355,26 @@ public static class CombatEngine
         }
     }
 
+    private static void ReturnQueuedCardsToHandBeforeDraw(CombatState state)
+    {
+        foreach (var card in state.ReturnToHandBeforeDraw)
+        {
+            RemoveFirstMatchingCard(state.DiscardPile, card);
+            RemoveFirstMatchingCard(state.DrawPile, card);
+            RemoveFirstMatchingCard(state.ExhaustPile, card);
+            state.Hand.Add(card with { FreeThisTurn = false });
+        }
+        state.ReturnToHandBeforeDraw.Clear();
+    }
+
+    private static void RemoveFirstMatchingCard(List<CardInstance> pile, CardInstance card)
+    {
+        int index = pile.FindIndex(pileCard =>
+            pileCard.DefId == card.DefId && pileCard.Upgraded == card.Upgraded);
+        if (index >= 0)
+            pile.RemoveAt(index);
+    }
+
     private static void AutoPlayCardFromHand(CombatState state, int handIndex, Random rng)
     {
         var card = state.Hand[handIndex];
@@ -374,6 +397,7 @@ public static class CombatEngine
                 else
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.OneTwoPunch, -1);
             }
+            QueueAttackPlayLifecycleEffects(state, card);
         }
         HandleEnemyDeaths(state, enemyHpsBefore, rng);
 
@@ -397,6 +421,12 @@ public static class CombatEngine
             state.DiscardPile.Add(card with { FreeThisTurn = false });
 
         Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
+    }
+
+    private static void QueueAttackPlayLifecycleEffects(CombatState state, CardInstance card)
+    {
+        if (card.DefId == Effects.CL.Bolas)
+            state.ReturnToHandBeforeDraw.Add(card with { FreeThisTurn = false });
     }
 
     private static EnemyState CreateEnemy(int defId, Random rng, Intent intent, bool stunned = false)

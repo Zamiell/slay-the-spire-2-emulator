@@ -215,6 +215,7 @@ public static class CombatFactory
         state.Hand         = [];
         state.DiscardPile  = [];
         state.ExhaustPile  = [];
+        state.ReturnToHandBeforeDraw = [];
         state.PotionSlots  = new int[3];
         for (int i = 0; i < Math.Min(state.PotionSlots.Length, potionIds.Length); i++)
             state.PotionSlots[i] = potionIds[i];
