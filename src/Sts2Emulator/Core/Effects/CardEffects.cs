@@ -65,6 +65,14 @@ public static class CardEffects
                 DealDamage(state, Dmg(def, upgraded));
                 break;
 
+            case CL.Volley: // X-cost, 10/14 damage X times to random enemies
+            {
+                int x = state.Energy;
+                state.Energy = 0;
+                DealDamageToRandomEnemiesMultiHit(state, Dmg(def, upgraded), x, rng);
+                break;
+            }
+
             case IC.Dismantle: // 1-cost, 8/10 dmg, hits twice if target is Vulnerable
             {
                 var t = FirstEnemy(state);
@@ -478,6 +486,18 @@ public static class CardEffects
                 DealDamageToEnemy(state, enemy, amount);
     }
 
+    private static void DealDamageToRandomEnemiesMultiHit(CombatState state, int amount, int hits, Random rng)
+    {
+        for (int i = 0; i < hits; i++)
+        {
+            var livingEnemies = state.Enemies.Where(e => e.Hp > 0).ToList();
+            if (livingEnemies.Count == 0)
+                return;
+
+            DealDamageToEnemy(state, livingEnemies[rng.Next(livingEnemies.Count)], amount);
+        }
+    }
+
     private static void DealDamageToEnemy(CombatState state, EnemyState target, int amount)
     {
         int thorns = BuffSystem.Get(target.Buffs, BuffId.Thorns);
@@ -835,6 +855,7 @@ public static class CL
 {
     public const int Bolas = 51;
     public const int DramaticEntrance = 153;
+    public const int Volley = 535;
 }
 
 public static class ST
