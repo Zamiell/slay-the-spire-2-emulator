@@ -10,11 +10,15 @@ You are an autonomous coding agent working on a software project.
 4. Check you're on the correct branch from PRD `branchName`. If not, check it out or create from main.
 5. If any PRD user story has `passes: false`, pick the **highest priority** failing story.
 6. If every PRD story has `passes: true`, continue emulator-completion work from `plan.md` instead:
-   - Pick the highest-priority incomplete milestone item or priority gap.
+   - Start by running `uv run python scripts\ralph\card_coverage.py` when the next task is trace/card related, and run `uv run python scripts\replay_full_run_trace.py traces\full-run\<trace>.json --emulator-seed <seed>` when a retained trace should drive the batch.
+   - Pick the highest-priority incomplete milestone item, priority gap, or replay mismatch cluster.
    - Prefer trace-driven, testable parity work over broad rewrites.
-   - Treat the selected plan item as this iteration's story and use an ID like `PLAN-M2-CARD` or `PLAN-M3-REWARD`.
-7. Implement exactly one focused user story or plan item.
-8. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
+   - Treat the selected plan item or coherent batch as this iteration's story and use an ID like `PLAN-M2-CARD-BATCH` or `PLAN-M3-REWARD-RNG`.
+7. Implement one coherent parity batch per iteration:
+   - For native cards, batch up to 10 related cards that share mechanics, trace relevance, or reward/shop-pool priority.
+   - For run-level work, batch one subsystem or one deterministic replay mismatch cluster.
+   - Keep each batch reviewable and avoid unrelated rewrites.
+8. Run focused checks while developing, then run full quality checks once before committing (e.g., typecheck, lint, test - use whatever your project requires)
 9. Update AGENTS.md files if you discover reusable patterns (see below)
 10. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
 11. If you completed a PRD story, update the PRD to set `passes: true` for that story. If you completed a plan item, update `plan.md` to record the progress and any remaining work.
@@ -81,6 +85,7 @@ Only update AGENTS.md if you have **genuinely reusable knowledge** that would he
 ## Quality Requirements
 
 - ALL commits must pass your project's quality checks (typecheck, lint, test)
+- Use targeted tests during development when a batch touches one area, but run the full required project check once before committing.
 - Do NOT commit broken code
 - Keep changes focused and minimal
 - Follow existing code patterns
@@ -106,7 +111,7 @@ If there are still PRD stories with `passes: false` OR any remaining emulator co
 
 ## Important
 
-- Work on ONE story per iteration
+- Work on one coherent batch per iteration; do not limit emulator parity work to one card when several related cards can be implemented and validated together.
 - Do not treat an all-passing PRD as completion while `plan.md` still describes incomplete emulator work.
 - Commit frequently
 - Keep CI green
