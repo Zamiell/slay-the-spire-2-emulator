@@ -93,6 +93,31 @@ public static class CardEffects
                 DealDamage(state, Dmg(def, upgraded));
                 break;
 
+            case IC.MoltenFist: // 1-cost, 10/14 dmg + reapply target's Vulnerable if it survives
+            {
+                var target = FirstEnemy(state);
+                if (target != null)
+                {
+                    DealDamageToEnemy(state, target, Dmg(def, upgraded));
+                    int vulnerable = target.Hp > 0
+                        ? BuffSystem.Get(target.Buffs, BuffId.Vulnerable)
+                        : 0;
+                    if (vulnerable > 0)
+                    {
+                        int before = vulnerable;
+                        BuffSystem.Apply(target.Buffs, BuffId.Vulnerable, vulnerable);
+                        DrawForVicious(
+                            state,
+                            BuffId.Vulnerable,
+                            before,
+                            BuffSystem.Get(target.Buffs, BuffId.Vulnerable),
+                            rng
+                        );
+                    }
+                }
+                break;
+            }
+
             case IC.HowlFromBeyond: // 3-cost, 16/21 dmg to ALL enemies
                 DealDamageToAll(state, Dmg(def, upgraded));
                 break;

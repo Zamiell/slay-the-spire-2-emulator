@@ -391,6 +391,56 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void MoltenFist_DamagesAndDuplicatesTargetVulnerable()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.MoltenFist, false)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [new BuffState(BuffId.Vulnerable, 2)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(85, state.Enemies[0].Hp);
+        Assert.Equal(4, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Vulnerable));
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.MoltenFist);
+    }
+
+    [Fact]
+    public void MoltenFist_UpgradedUsesUpgradedDamageAndTriggersVicious()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.MoltenFist, true)];
+        state.DrawPile = [new CardInstance(IC.StrikeIronclad, false)];
+        state.Energy = 1;
+        state.PlayerBuffs = [new BuffState(BuffId.Vicious, 1)];
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [new BuffState(BuffId.Vulnerable, 1)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(79, state.Enemies[0].Hp);
+        Assert.Equal(2, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Vulnerable));
+        Assert.Equal([IC.StrikeIronclad], state.Hand.Select(card => card.DefId));
+    }
+
+    [Fact]
     public void Pillage_DamagesAndDrawsUntilNonAttack()
     {
         var state = CombatFactory.NewCombat(seed: 0);
