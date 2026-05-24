@@ -5,6 +5,7 @@ public static class RelicEffects
     public const int Anchor = 4;
     public const int BagOfPreparation = 10;
     public const int BloodVial = 23;
+    public const int BoomingConch = 29;
     public const int BronzeScales = 35;
     public const int OddlySmoothStone = 169;
     public const int Orichalcum = 172;
@@ -29,6 +30,12 @@ public static class RelicEffects
 
         if (HasRelic(state, BagOfPreparation))
             CardEffects.DrawCards(state, 2, rng);
+
+        if (HasRelic(state, BoomingConch) && state.IsEliteCombat)
+        {
+            CardEffects.DrawCards(state, 2, rng);
+            state.Energy += 1;
+        }
     }
 
     public static void ApplyEndOfPlayerTurn(CombatState state)

@@ -191,8 +191,23 @@ public static class CombatFactory
         int playerMaxHp,
         ReadOnlySpan<int> potionIds)
     {
+        Reset(state, rng, deckIds, encounterId, relicIds, playerHp, playerMaxHp, potionIds, playerGold: 0);
+    }
+
+    public static void Reset(
+        CombatState state,
+        Random rng,
+        ReadOnlySpan<int> deckIds,
+        int? encounterId,
+        ReadOnlySpan<int> relicIds,
+        int playerHp,
+        int playerMaxHp,
+        ReadOnlySpan<int> potionIds,
+        int playerGold)
+    {
         state.PlayerMaxHp  = Math.Max(1, playerMaxHp);
         state.PlayerHp     = Math.Clamp(playerHp, 0, state.PlayerMaxHp);
+        state.PlayerGold   = Math.Max(0, playerGold);
         state.Energy       = StartingEnergy;
         state.MaxEnergy    = StartingEnergy;
         state.PlayerBlock  = 0;
@@ -217,6 +232,7 @@ public static class CombatFactory
             ? (ActOneEncounter)encounterId.Value
             : SelectFirstCombatEncounter(rng);
         state.EncounterId = (int)encounter;
+        state.IsEliteCombat = IsEliteEncounter(encounter);
         state.Enemies = CreateEncounter(encounter, rng);
         EnemyAI.UpdateSecondaryIntents(state.Enemies);
 
@@ -682,6 +698,9 @@ public static class CombatFactory
         var pool = rng.Next(2) == 0 ? OvergrowthWeakEncounters : UnderdocksWeakEncounters;
         return pool[rng.Next(pool.Length)];
     }
+
+    private static bool IsEliteEncounter(ActOneEncounter encounter) =>
+        encounter is >= ActOneEncounter.BygoneEffigy and <= ActOneEncounter.WaterfallGiant;
 
     private static List<EnemyState> CreateSlimeEncounter(Random rng)
     {

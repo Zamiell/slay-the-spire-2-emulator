@@ -43,6 +43,15 @@ public static class EnemyAI
                     break;
                 }
 
+                if (enemy.DefId == KE.GremlinMerc)
+                {
+                    int hitDamage = enemy.CurrentIntent.Magnitude / 2;
+                    DealAttackDamage(enemy, state, hitDamage);
+                    DealAttackDamage(enemy, state, hitDamage);
+                    StealGremlinMercGold(enemy, state);
+                    break;
+                }
+
                 int baseDamage = enemy.CurrentIntent.Magnitude;
                 if (enemy.DefId == KE.FlailKnight)
                     baseDamage = Math.Max(0, baseDamage - BuffSystem.Get(enemy.Buffs, BuffId.Strength));
@@ -890,6 +899,7 @@ public static class EnemyAI
 
             case KE.GremlinMerc:
                 DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                StealGremlinMercGold(enemy, state);
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
                 break;
 
@@ -1140,7 +1150,10 @@ public static class EnemyAI
                 break;
 
             case KE.GremlinMerc:
-                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                int hitDamage = enemy.CurrentIntent.Magnitude / 2;
+                DealAttackDamage(enemy, state, hitDamage);
+                DealAttackDamage(enemy, state, hitDamage);
+                StealGremlinMercGold(enemy, state);
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 2);
                 break;
 
@@ -1317,6 +1330,16 @@ public static class EnemyAI
         int absorbed = Math.Min(enemy.Block, thorns);
         enemy.Block -= absorbed;
         enemy.Hp = Math.Max(0, enemy.Hp - (thorns - absorbed));
+    }
+
+    private static void StealGremlinMercGold(EnemyState enemy, CombatState state)
+    {
+        int amount = Math.Min(20, state.PlayerGold);
+        if (amount <= 0)
+            return;
+
+        state.PlayerGold -= amount;
+        enemy.StolenGold += amount;
     }
 
     private static void StealDrawOrDiscardCard(CombatState state)

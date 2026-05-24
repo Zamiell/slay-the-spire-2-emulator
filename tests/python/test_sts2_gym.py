@@ -11,6 +11,7 @@ from sts2_gym.run_env import (
     NODE_BOSS,
     NODE_ELITE,
     NODE_EVENT,
+    NODE_NORMAL,
     NODE_RELIC,
     NODE_REST,
     NODE_SHOP,
@@ -22,9 +23,35 @@ from sts2_gym.run_env import (
     PHASE_RELIC_REWARD,
     PHASE_REST,
     PHASE_SHOP,
+    NEOW_CURSE_RELICS,
+    NEOW_POSITIVE_RELICS,
     RELIC_ANCHOR,
+    RELIC_ARCANE_SCROLL,
+    RELIC_BLACK_BLOOD,
     RELIC_BLOOD_VIAL,
+    RELIC_CURSED_PEARL,
+    RELIC_FISHING_ROD,
+    RELIC_KALEIDOSCOPE,
+    RELIC_LEAD_PAPERWEIGHT,
+    RELIC_LARGE_CAPSULE,
+    RELIC_LOST_COFFER,
+    RELIC_MASSIVE_SCROLL,
+    RELIC_NEOWS_TALISMAN,
+    RELIC_NEW_LEAF,
+    RELIC_NUTRITIOUS_OYSTER,
+    RELIC_PHIAL_HOLSTER,
+    RELIC_PRECISE_SCISSORS,
     RELIC_ORICHALCUM,
+    RELIC_SCROLL_BOXES,
+    RELIC_SILVER_CRUCIBLE,
+    RELIC_SILKEN_TRESS,
+    RELIC_WAR_HAMMER,
+    RELIC_WINGED_BOOTS,
+    EVENT_SIMPLE_REWARD,
+    OVERGROWTH_BOSS_ENCOUNTERS,
+    OVERGROWTH_ELITE_ENCOUNTERS,
+    UNDERDOCKS_BOSS_ENCOUNTERS,
+    UNDERDOCKS_ELITE_ENCOUNTERS,
 )
 
 HAND_ID_INDICES = range(8, 28, 2)
@@ -137,11 +164,17 @@ class Sts2GymTests(unittest.TestCase):
             self.assertEqual(info["phase"], PHASE_NEOW)
             self.assertEqual(info["deck_size"], 11)
 
-            _, _, terminated, truncated, info = env.step(3)
+            _, _, terminated, truncated, info = env.step(0)
+            self.assertFalse(terminated)
+            self.assertFalse(truncated)
+            self.assertEqual(info["phase"], PHASE_MAP)
+
+            _, _, terminated, truncated, info = env.step(0)
             self.assertFalse(terminated)
             self.assertFalse(truncated)
             self.assertEqual(info["phase"], PHASE_COMBAT)
 
+            deck_size_before_reward = len(env._deck)
             env._enter_reward_phase()
             mask = env.action_masks()
             self.assertTrue(
@@ -154,12 +187,11 @@ class Sts2GymTests(unittest.TestCase):
 
             self.assertFalse(terminated)
             self.assertFalse(truncated)
-            self.assertEqual(info["phase"], PHASE_COMBAT)
+            self.assertEqual(info["phase"], PHASE_MAP)
             self.assertEqual(info["floor"], 2)
-            self.assertEqual(info["deck_size"], 12)
-            self.assertIn(int(reward_card), env._deck)
-            hand_count = sum(1 for i in HAND_ID_INDICES if int(obs[i]) != 0)
-            self.assertEqual(int(obs[5]) + hand_count, 12)
+            self.assertEqual(info["deck_size"], deck_size_before_reward + 1)
+            self.assertIn(int(reward_card), [abs(card) for card in env._deck])
+            self.assertTrue(info["map_choices"])
         finally:
             env.close()
 
@@ -167,14 +199,11 @@ class Sts2GymTests(unittest.TestCase):
         env = Sts2RunEnv(seed=0)
         try:
             env.reset()
-            env._floor = 6
-            env._enter_map_phase()
+            env._phase = PHASE_MAP
+            env._map_node_types[:] = [NODE_REST, 0, 0, 0]
+            env._map_choices[:] = [0, 0, 0, 0]
 
             self.assertEqual(env._phase, PHASE_MAP)
-            self.assertEqual(
-                [int(node_type) for node_type in env._map_node_types],
-                [NODE_REST, NODE_SHOP, 1, 1],
-            )
 
             _, _, terminated, _, info = env.step(0)
 
@@ -224,7 +253,7 @@ class Sts2GymTests(unittest.TestCase):
             env._gold = 200
             env._enter_shop_phase()
             relic_count = len(env._relics)
-            env.step(3)
+            env.step(7)
 
             self.assertEqual(len(env._relics), relic_count + 1)
         finally:
@@ -238,7 +267,7 @@ class Sts2GymTests(unittest.TestCase):
             env._potions = [0, 0, 0]
             env._enter_shop_phase()
 
-            _, _, terminated, _, info = env.step(5)
+            _, _, terminated, _, info = env.step(10)
 
             self.assertFalse(terminated)
             self.assertLess(info["gold"], 200)
@@ -254,7 +283,7 @@ class Sts2GymTests(unittest.TestCase):
             env._enter_shop_phase()
             deck_size = len(env._deck)
 
-            _, _, terminated, _, info = env.step(6)
+            _, _, terminated, _, info = env.step(13)
 
             self.assertFalse(terminated)
             self.assertEqual(info["deck_size"], deck_size - 1)
@@ -313,6 +342,7 @@ class Sts2GymTests(unittest.TestCase):
             self.assertFalse(terminated)
             self.assertEqual(info["phase"], PHASE_EVENT)
             self.assertGreater(info["event_id"], 0)
+            env._event_id = EVENT_SIMPLE_REWARD
 
             gold_before = info["gold"]
             _, _, terminated, _, info = env.step(0)
@@ -323,31 +353,259 @@ class Sts2GymTests(unittest.TestCase):
         finally:
             env.close()
 
-    def test_run_env_neow_reward_starts_first_combat(self):
+    def test_run_env_neow_relic_option_starts_map(self):
         env = Sts2RunEnv(seed=0)
         try:
             _, info = env.reset()
             self.assertEqual(info["phase"], PHASE_NEOW)
 
-            gold_before = info["gold"]
+            neow_options = info["neow_options"]
+            self.assertEqual(len(neow_options), 3)
+            self.assertIn(neow_options[0], NEOW_POSITIVE_RELICS)
+            self.assertIn(neow_options[1], NEOW_POSITIVE_RELICS)
+            self.assertIn(neow_options[2], NEOW_CURSE_RELICS)
+            self.assertNotIn(RELIC_MASSIVE_SCROLL, NEOW_POSITIVE_RELICS)
             obs, _, terminated, _, info = env.step(0)
 
             self.assertFalse(terminated)
-            self.assertEqual(info["phase"], PHASE_COMBAT)
+            self.assertEqual(info["phase"], PHASE_MAP)
             self.assertEqual(info["floor"], 1)
-            self.assertEqual(info["gold"], gold_before + 150)
-            self.assertGreater(sum(1 for i in HAND_ID_INDICES if int(obs[i]) != 0), 0)
+            self.assertIn(neow_options[0], info["relics"])
+            self.assertTrue(info["map_choices"])
+            self.assertEqual(sum(1 for i in HAND_ID_INDICES if int(obs[i]) != 0), 0)
         finally:
             env.close()
 
-    def test_run_env_gremlin_merc_has_special_gold_reward(self):
+    def test_run_env_neow_pickup_relic_effects(self):
         env = Sts2RunEnv(seed=0)
         try:
             env.reset()
-            env._step_neow(3)
+            env._player_hp = 64
+            env._player_max_hp = 80
+            env._gold = 99
+
+            env._obtain_relic(RELIC_NUTRITIOUS_OYSTER)
+            self.assertEqual(env._player_max_hp, 91)
+            self.assertEqual(env._player_hp, 75)
+
+            deck_size = len(env._deck)
+            env._obtain_relic(RELIC_CURSED_PEARL)
+            self.assertEqual(env._gold, 432)
+            self.assertEqual(len(env._deck), deck_size + 1)
+
+            env._obtain_relic(RELIC_SILKEN_TRESS)
+            self.assertEqual(env._gold, 0)
+        finally:
+            env.close()
+
+    def test_run_env_neow_talisman_upgrades_last_basic_cards(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+
+            env._obtain_relic(RELIC_NEOWS_TALISMAN)
+
+            self.assertEqual(env._deck.count(-472), 1)
+            self.assertEqual(env._deck.count(-131), 1)
+        finally:
+            env.close()
+
+    def test_run_env_large_capsule_adds_relics_and_basic_cards(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            relic_count = len(env._relics)
+            deck_size = len(env._deck)
+
+            env._obtain_relic(RELIC_LARGE_CAPSULE)
+
+            self.assertGreaterEqual(len(env._relics), relic_count + 3)
+            self.assertEqual(len(env._deck), deck_size + 2)
+            self.assertEqual(env._deck[-2:], [472, 131])
+        finally:
+            env.close()
+
+    def test_run_env_more_neow_pickup_relic_effects(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            deck_size = len(env._deck)
+
+            env._obtain_relic(RELIC_ARCANE_SCROLL)
+            env._obtain_relic(RELIC_LEAD_PAPERWEIGHT)
+            self.assertEqual(len(env._deck), deck_size + 2)
+
+            env._obtain_relic(RELIC_PRECISE_SCISSORS)
+            self.assertEqual(len(env._deck), deck_size + 1)
+
+            first_card = env._deck[0]
+            env._obtain_relic(RELIC_NEW_LEAF)
+            self.assertNotEqual(env._deck[0], first_card)
+
+            env._potions = [0, 0, 0]
+            env._obtain_relic(RELIC_PHIAL_HOLSTER)
+            self.assertEqual(sum(1 for potion in env._potions if potion != 0), 2)
+
+            deck_size = len(env._deck)
+            env._potions = [0, 0, 0]
+            env._obtain_relic(RELIC_LOST_COFFER)
+            self.assertEqual(len(env._deck), deck_size + 1)
+            self.assertTrue(any(potion != 0 for potion in env._potions))
+
+            deck_size = len(env._deck)
+            env._obtain_relic(RELIC_KALEIDOSCOPE)
+            self.assertEqual(len(env._deck), deck_size + 2)
+
+            deck_size = len(env._deck)
+            env._obtain_relic(RELIC_SCROLL_BOXES)
+            self.assertEqual(len(env._deck), deck_size + 3)
+        finally:
+            env.close()
+
+    def test_run_env_winged_boots_allows_three_free_travel_nodes(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._relics.append(RELIC_WINGED_BOOTS)
+            env._phase = PHASE_MAP
+            start = env._map_nodes[env._current_map_coord]
+            start.children = {(1, 1)}
+            child = env._get_or_create_map_node(1, 1)
+            child.node_type = "Monster"
+            winged_only = env._get_or_create_map_node(2, 1)
+            winged_only.node_type = "Monster"
+
+            env._enter_map_phase()
+
+            self.assertIn((2, 1), env._map_option_coords)
+            winged_index = env._map_option_coords.index((2, 1))
+            _, _, terminated, _, info = env.step(winged_index)
+
+            self.assertFalse(terminated)
+            self.assertEqual(info["winged_boots_times_used"], 1)
+        finally:
+            env.close()
+
+    def test_run_env_silver_crucible_upgrades_first_three_card_rewards(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._relics.append(RELIC_SILVER_CRUCIBLE)
+
+            for seen in range(1, 4):
+                env._enter_reward_phase()
+                self.assertEqual(env._silver_crucible_card_rewards_seen, seen)
+                self.assertTrue(env._reward_upgraded.all())
+                card_id = int(env._reward_cards[0])
+                env.step(0)
+                self.assertIn(-card_id, env._deck)
+
+            env._enter_reward_phase()
+            self.assertFalse(env._reward_upgraded.any())
+        finally:
+            env.close()
+
+    def test_run_env_silver_crucible_first_treasure_is_empty(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._relics.append(RELIC_SILVER_CRUCIBLE)
+            env._phase = PHASE_MAP
+            env._map_node_types[:] = [NODE_RELIC, 0, 0, 0]
+            env._map_choices[:] = [0, 0, 0, 0]
+            relic_count = len(env._relics)
+
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertFalse(terminated)
+            self.assertEqual(info["phase"], PHASE_MAP)
+            self.assertEqual(info["silver_crucible_treasure_seen"], 1)
+            self.assertEqual(len(env._relics), relic_count)
+        finally:
+            env.close()
+
+    def test_run_env_act_specific_elite_and_boss_encounter_pools(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._act = "overgrowth"
+            self.assertIn(
+                env._encounter_for_node(NODE_ELITE), OVERGROWTH_ELITE_ENCOUNTERS
+            )
+            self.assertIn(
+                env._encounter_for_node(NODE_BOSS), OVERGROWTH_BOSS_ENCOUNTERS
+            )
+
+            env._act = "underdocks"
+            self.assertIn(
+                env._encounter_for_node(NODE_ELITE), UNDERDOCKS_ELITE_ENCOUNTERS
+            )
+            self.assertIn(
+                env._encounter_for_node(NODE_BOSS), UNDERDOCKS_BOSS_ENCOUNTERS
+            )
+        finally:
+            env.close()
+
+    def test_run_env_fishing_rod_upgrades_every_third_normal_combat(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._relics.append(RELIC_FISHING_ROD)
+            env._current_node_type = NODE_NORMAL
+
+            for expected_seen in range(1, 3):
+                env._after_combat_win()
+                self.assertEqual(env._fishing_rod_combats_seen, expected_seen)
+                self.assertFalse(any(card < 0 for card in env._deck))
+
+            env._after_combat_win()
+
+            self.assertEqual(env._fishing_rod_combats_seen, 3)
+            self.assertTrue(any(card < 0 for card in env._deck))
+        finally:
+            env.close()
+
+    def test_run_env_after_combat_relics_heal_and_upgrade(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._relics.append(RELIC_BLACK_BLOOD)
+            env._relics.append(RELIC_WAR_HAMMER)
+            env._player_hp = 40
+            env._player_max_hp = 80
+            env._current_node_type = NODE_ELITE
+
+            env._after_combat_win()
+
+            self.assertEqual(env._player_hp, 58)
+            self.assertEqual(sum(1 for card in env._deck if card < 0), 4)
+        finally:
+            env.close()
+
+    def test_run_env_normal_gold_uses_max_ascension_range(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._step_neow(0)
             env._reset_combat(seed=0, encounter_id=7)
 
-            self.assertEqual(env._gold_reward_for_node(), 40)
+            self.assertIn(env._gold_reward_for_node(), range(7, 16))
+        finally:
+            env.close()
+
+    def test_run_env_gremlin_merc_steals_gold_during_combat(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            obs, _ = env.reset()
+            env._gold = 99
+            env._phase = PHASE_COMBAT
+            env._reset_combat(seed=0, encounter_id=7)
+            obs = env._obs()
+            end_turn = sum(1 for i in HAND_ID_INDICES if int(obs[i]) != 0)
+
+            _, _, _, _, info = env.step(end_turn)
+
+            self.assertEqual(info["gold"], 79)
         finally:
             env.close()
 
@@ -382,7 +640,7 @@ class Sts2GymTests(unittest.TestCase):
         env = Sts2RunEnv(seed=0)
         try:
             env.reset()
-            env._step_neow(3)
+            env._step_neow(0)
             env._potions = [1, 0, 2]
             env._reset_combat(seed=0, encounter_id=1)
             obs = env._obs()

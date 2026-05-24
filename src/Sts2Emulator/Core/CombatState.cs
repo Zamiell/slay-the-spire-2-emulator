@@ -8,6 +8,7 @@ public sealed class CombatState
     public int PlayerBlock;
     public int Energy;
     public int MaxEnergy;
+    public int PlayerGold;
 
     // Cards
     public List<CardInstance> Hand = [];
@@ -27,6 +28,7 @@ public sealed class CombatState
     // Enemies
     public List<EnemyState> Enemies = [];
     public int EncounterId;
+    public bool IsEliteCombat;
 
     // Turn tracking
     public int Turn;

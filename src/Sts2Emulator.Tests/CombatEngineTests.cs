@@ -144,6 +144,41 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void BoomingConch_DrawsAndGivesEnergyInEliteCombatOnly()
+    {
+        var elite = new CombatState();
+        CombatFactory.Reset(
+            elite,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 82,
+            relicIds: [RelicEffects.BoomingConch],
+            playerHp: 64,
+            playerMaxHp: 80
+        );
+
+        Assert.True(elite.IsEliteCombat);
+        Assert.Equal(7, elite.Hand.Count);
+        Assert.Equal(4, elite.Energy);
+        Assert.Equal(3, elite.MaxEnergy);
+
+        var normal = new CombatState();
+        CombatFactory.Reset(
+            normal,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 1,
+            relicIds: [RelicEffects.BoomingConch],
+            playerHp: 64,
+            playerMaxHp: 80
+        );
+
+        Assert.False(normal.IsEliteCombat);
+        Assert.Equal(5, normal.Hand.Count);
+        Assert.Equal(3, normal.Energy);
+    }
+
+    [Fact]
     public void Orichalcum_GainsBlockWhenEndingTurnWithoutBlock()
     {
         var state = new CombatState();
@@ -518,6 +553,85 @@ public class CombatEngineTests
         Assert.Contains(state.Enemies, e => e.DefId == 28 && e.Hp > 0);
         Assert.Contains(state.Enemies, e => e.DefId == 78 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
         Assert.Contains(state.Enemies, e => e.DefId == 28 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
+    }
+
+    [Fact]
+    public void GremlinMerc_AttacksStealGold()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerGold = 99;
+        state.PlayerBlock = 99;
+        var merc = new EnemyState
+        {
+            DefId = 37,
+            Hp = 53,
+            MaxHp = 53,
+            CurrentIntent = new Intent(IntentType.Attack, 16),
+            Buffs = [],
+        };
+
+        EnemyAI.ExecuteIntent(merc, state, new Random(0));
+
+        Assert.Equal(79, state.PlayerGold);
+        Assert.Equal(20, merc.StolenGold);
+    }
+
+    [Fact]
+    public void GremlinMerc_TransfersStolenGoldToFatGremlinHeist()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.ExhaustPile.Clear();
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 37,
+                Hp = 1,
+                MaxHp = 47,
+                CurrentIntent = new Intent(IntentType.Attack, 16),
+                Buffs = [new BuffState(BuffId.Surprise, 1)],
+                StolenGold = 40,
+            },
+        ];
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Contains(state.Enemies, e => e.DefId == 28 && e.HeistGold == 40);
+    }
+
+    [Fact]
+    public void HeistGold_ReturnsWhenFatGremlinDies()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerGold = 59;
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.ExhaustPile.Clear();
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 28,
+                Hp = 1,
+                MaxHp = 13,
+                CurrentIntent = new Intent(IntentType.Unknown, 0),
+                Buffs = [],
+                HeistGold = 40,
+            },
+        ];
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(99, state.PlayerGold);
+        Assert.Equal(0, state.Enemies[0].HeistGold);
     }
 
     [Fact]

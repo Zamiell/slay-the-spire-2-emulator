@@ -23,7 +23,8 @@ namespace Sts2Emulator.Interop;
 //   [114..128] enemy 4 (same layout)
 //   [129..143] enemy 5 (same layout)
 //   [144..155] secondary enemy intents: 6 enemies × 2 ints (intent_type + 1, intent_mag; 0 = none)
-//   [156..163] reserved
+//   [156]      player gold
+//   [157..163] reserved
 //
 // Total: 164 ints. Enemies beyond index 5 are ignored for now.
 
@@ -102,6 +103,18 @@ public static class NativeExports
             int playerMaxHp,
             ReadOnlySpan<int> potionIds)
         {
+            Reset(deckIds, encounterId, relicIds, playerHp, playerMaxHp, potionIds, playerGold: 0);
+        }
+
+        public void Reset(
+            ReadOnlySpan<int> deckIds,
+            int encounterId,
+            ReadOnlySpan<int> relicIds,
+            int playerHp,
+            int playerMaxHp,
+            ReadOnlySpan<int> potionIds,
+            int playerGold)
+        {
             Rng = new Random(Seed);
             LastPlayerWon = false;
             CombatFactory.Reset(
@@ -112,7 +125,8 @@ public static class NativeExports
                 relicIds,
                 playerHp,
                 playerMaxHp,
-                potionIds
+                potionIds,
+                playerGold
             );
         }
     }
@@ -204,6 +218,7 @@ public static class NativeExports
         int playerMaxHp,
         int* potionIds,
         int potionLen,
+        int playerGold,
         int* obsBuf)
     {
         var combat = _pool[handle]!;
@@ -213,7 +228,8 @@ public static class NativeExports
             new ReadOnlySpan<int>(relicIds, relicLen),
             playerHp,
             playerMaxHp,
-            new ReadOnlySpan<int>(potionIds, potionLen)
+            new ReadOnlySpan<int>(potionIds, potionLen),
+            playerGold
         );
         WriteObs(combat.State, obsBuf);
     }
@@ -365,5 +381,7 @@ public static class NativeExports
                 o[base_ + e * 2 + 1] = 0;
             }
         }
+
+        o[156] = s.PlayerGold;
     }
 }

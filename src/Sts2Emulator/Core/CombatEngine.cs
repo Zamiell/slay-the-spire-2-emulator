@@ -116,6 +116,7 @@ public static class CombatEngine
         // ── Enemy turns ───────────────────────────────────────────────────────
         foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToArray())
             EnemyAI.ExecuteIntent(enemy, state, rng);
+        HandleEnemyDeaths(state, enemyHpsBefore, rng);
 
         // FlameBarrier expires after enemies have acted.
         BuffSystem.Remove(state.PlayerBuffs, BuffId.FlameBarrier);
@@ -239,7 +240,13 @@ public static class CombatEngine
                 continue;
 
             if (BuffSystem.Get(state.Enemies[i].Buffs, BuffId.Surprise) > 0)
-                SpawnGremlinMercReinforcements(state, rng);
+                SpawnGremlinMercReinforcements(state, rng, state.Enemies[i].StolenGold);
+
+            if (state.Enemies[i].HeistGold > 0)
+            {
+                state.PlayerGold += state.Enemies[i].HeistGold;
+                state.Enemies[i].HeistGold = 0;
+            }
 
             if (state.Enemies[i].DefId == KE.SlitheringStrangler)
                 BuffSystem.Remove(state.PlayerBuffs, BuffId.Constrict);
@@ -256,10 +263,12 @@ public static class CombatEngine
         }
     }
 
-    private static void SpawnGremlinMercReinforcements(CombatState state, Random rng)
+    private static void SpawnGremlinMercReinforcements(CombatState state, Random rng, int stolenGold)
     {
         state.Enemies.Add(CreateEnemy(78, rng, new Intent(IntentType.Unknown, 0), stunned: true));
-        state.Enemies.Add(CreateEnemy(28, rng, new Intent(IntentType.Unknown, 0), stunned: true));
+        var fatGremlin = CreateEnemy(28, rng, new Intent(IntentType.Unknown, 0), stunned: true);
+        fatGremlin.HeistGold = stolenGold;
+        state.Enemies.Add(fatGremlin);
     }
 
     private static EnemyState CreateEnemy(int defId, Random rng, Intent intent, bool stunned = false)

@@ -77,6 +77,7 @@ _lib.Sts2_ResetWithDeckEncounterAndRelics.argtypes = [
     ctypes.c_int,
     ctypes.POINTER(ctypes.c_int),
     ctypes.c_int,
+    ctypes.c_int,
     ctypes.POINTER(ctypes.c_int),
 ]
 
@@ -91,6 +92,7 @@ _lib.Sts2_ResetRunCombat.argtypes = [
     ctypes.c_int,
     ctypes.c_int,
     ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
     ctypes.c_int,
     ctypes.POINTER(ctypes.c_int),
 ]
@@ -185,6 +187,7 @@ def reset_run_combat(
     player_hp: int,
     player_max_hp: int,
     potion_ids: list[int],
+    player_gold: int,
     obs_buf: ctypes.Array,
 ) -> None:
     deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
@@ -201,6 +204,7 @@ def reset_run_combat(
         player_max_hp,
         potion_buf,
         len(potion_ids),
+        player_gold,
         obs_buf,
     )
 

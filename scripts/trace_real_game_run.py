@@ -219,7 +219,16 @@ def choose_action(state: dict[str, Any], map_index: int) -> dict[str, Any] | Non
     if state_type == "rewards":
         return choose_reward_action(state)
     if state_type == "map":
-        return {"action": "choose_map_node", "index": map_index}
+        options = (state.get("map") or {}).get("next_options") or []
+        if options:
+            index = min(map_index, len(options) - 1)
+            option_index = (
+                options[index].get("index")
+                if isinstance(options[index], dict)
+                else index
+            )
+            return {"action": "choose_map_node", "index": option_index}
+        return {"action": "choose_map_node", "index": 0}
     if state_type == "shop":
         return choose_shop_action(state)
     if state_type == "treasure":
@@ -227,7 +236,7 @@ def choose_action(state: dict[str, Any], map_index: int) -> dict[str, Any] | Non
     if state_type in {"rest", "rest_site"}:
         return choose_rest_action(state)
     if state_type == "card_select":
-        return {"action": "select_card", "index": 0}
+        return choose_card_select_action(state)
     if state_type == "card_reward":
         return choose_card_reward_action(state)
     return None
@@ -341,13 +350,13 @@ def choose_reward_action(state: dict[str, Any]) -> dict[str, Any]:
         index = item.get("index")
         if isinstance(index, int):
             return {"action": "claim_reward", "index": index}
+    if rewards.get("can_proceed"):
+        return {"action": "proceed"}
     for item in rewards.get("items") or []:
         if isinstance(item, dict) and item.get("type") == "potion":
             index = item.get("index")
             if isinstance(index, int):
                 return {"action": "claim_reward", "index": index}
-    if rewards.get("can_proceed"):
-        return {"action": "proceed"}
     return {"action": "skip_card_reward"}
 
 
@@ -374,6 +383,29 @@ def choose_card_reward_action(state: dict[str, Any]) -> dict[str, Any]:
                 if isinstance(index, int):
                     return {"action": "select_card_reward", "card_index": index}
     return {"action": "skip_card_reward"}
+
+
+def choose_card_select_action(state: dict[str, Any]) -> dict[str, Any]:
+    card_select = state.get("card_select") or {}
+    if card_select.get("can_confirm"):
+        return {"action": "confirm_selection"}
+    cards = card_select.get("cards") or []
+    prompt = str(card_select.get("prompt") or "").lower()
+    priority = (
+        ("strike", "defend", "bash", "")
+        if "remove" in prompt
+        else ("bash", "strike", "defend", "")
+    )
+    for wanted in priority:
+        for card in cards:
+            if not isinstance(card, dict):
+                continue
+            card_text = f"{card.get('id') or ''} {card.get('name') or ''}".lower()
+            if wanted in card_text:
+                index = card.get("index")
+                if isinstance(index, int):
+                    return {"action": "select_card", "index": index}
+    return {"action": "confirm_selection"}
 
 
 def choose_shop_action(state: dict[str, Any]) -> dict[str, Any] | None:
