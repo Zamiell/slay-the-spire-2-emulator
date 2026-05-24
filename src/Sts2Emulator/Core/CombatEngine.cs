@@ -249,6 +249,8 @@ public static class CombatEngine
         if (def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0)
             return 0;
         int cost = def.Cost;
+        if (def.Id == Effects.IC.Stomp)
+            cost -= state.AttackCardsPlayedThisTurn;
         if (def.Type == CardType.Attack)
             cost += BuffSystem.Get(state.PlayerBuffs, BuffId.Tangled);
         return cost;

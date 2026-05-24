@@ -124,6 +124,10 @@ public static class CardEffects
                 break;
             }
 
+            case IC.Stomp: // 3-cost, reduced by Attacks played this turn, 12/15 dmg to ALL enemies
+                DealDamageToAll(state, Dmg(def, upgraded));
+                break;
+
             case IC.SwordBoomerang: // 1-cost, 3 dmg × 3/4 hits to random enemies
                 DealDamageMultiHit(state, 3, upgraded ? 4 : 3, rng);
                 break;
@@ -666,6 +670,7 @@ public static class IC
     public const int Hemokinesis = 247;
     public const int Pillage    = 353;
     public const int Rampage    = 381;
+    public const int Stomp      = 465;
     public const int SwordBoomerang = 486;
     public const int Unrelenting = 526;
     public const int Uppercut   = 529;
