@@ -3,6 +3,7 @@
 ## Codebase Patterns
 
 - Ralph task metadata lives under `scripts\ralph`; use `scripts\ralph\prd.json` and `scripts\ralph\progress.txt` when the files are not present at the repository root.
+- Use `scripts\replay_full_run_trace.py` to replay retained STS2MCP full-run traces against `Sts2RunEnv` and identify the first floor/combat-boundary parity mismatch.
 
 Started: Sun, May 24, 2026  1:18:25 PM
 ---
@@ -15,5 +16,18 @@ Started: Sun, May 24, 2026  1:18:25 PM
 - **Learnings for future iterations:**
   - The active Ralph work queue files are stored in `scripts\ralph`, not at the repository root.
   - The root plan should be the source of truth for selecting future emulator parity work.
+
+---
+
+## 2026-05-24 13:27 - US-002
+
+- Implemented deterministic full-run trace replay tooling for comparing retained STS2MCP traces against `Sts2RunEnv` at floor and combat boundaries.
+- Added regression coverage for boundary selection and mismatch reporting.
+- Updated `plan.md` to record the new replay tool as progress on Milestone 1 and marked US-002 as passing in the Ralph PRD.
+- Files changed: `scripts\replay_full_run_trace.py`, `tests\python\test_sts2_gym.py`, `plan.md`, `scripts\ralph\prd.json`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - `Sts2RunEnv` exposes run-level state through `_info()`, while combat boundary HP/enemy details are still read from the native observation vector.
+  - Full-run live traces store enemies under `summary.battle.enemies`; boundary parity checks need to compare that shape rather than the single-combat `summary.enemies` shape.
+  - The retained full-run trace seed is a game seed string, so the replay tool accepts an explicit integer `--emulator-seed` for the current Python emulator RNG.
 
 ---

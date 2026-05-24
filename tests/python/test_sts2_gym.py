@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import sys
 import unittest
@@ -6,6 +7,17 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+
+REPLAY_TRACE_SPEC = importlib.util.spec_from_file_location(
+    "replay_full_run_trace",
+    Path(__file__).resolve().parents[2] / "scripts" / "replay_full_run_trace.py",
+)
+if REPLAY_TRACE_SPEC is None or REPLAY_TRACE_SPEC.loader is None:
+    raise RuntimeError("Could not load replay_full_run_trace.py")
+replay_full_run_trace = importlib.util.module_from_spec(REPLAY_TRACE_SPEC)
+sys.modules["replay_full_run_trace"] = replay_full_run_trace
+REPLAY_TRACE_SPEC.loader.exec_module(replay_full_run_trace)
 
 from sts2_gym import Sts2CombatEnv, Sts2RunEnv
 from sts2_gym.run_env import (
@@ -1097,6 +1109,67 @@ class Sts2GymTests(unittest.TestCase):
                 *[int(card) for card in SHOP_ATTACK_CARDS],
                 *[int(card) for card in SHOP_SKILL_CARDS],
             }
+        )
+
+    def test_full_run_trace_boundaries_include_floor_and_combat_edges(self):
+        trace = [
+            {"summary": {"state_type": "event", "run": {"floor": 1}}},
+            {"summary": {"state_type": "map", "run": {"floor": 1}}},
+            {"summary": {"state_type": "monster", "run": {"floor": 1}}},
+            {"summary": {"state_type": "monster", "run": {"floor": 1}}},
+            {"summary": {"state_type": "card_reward", "run": {"floor": 2}}},
+        ]
+
+        self.assertEqual(replay_full_run_trace.boundary_indices(trace), [0, 2, 4])
+
+    def test_full_run_trace_boundary_compare_reports_first_mismatch(self):
+        reference = [
+            {
+                "summary": {
+                    "state_type": "event",
+                    "run": {"floor": 1},
+                    "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                }
+            },
+            {
+                "summary": {
+                    "state_type": "monster",
+                    "run": {"floor": 1},
+                    "player": {"hp": 60, "max_hp": 80, "gold": 99},
+                    "battle": {"enemies": [{"hp": 20, "max_hp": 20, "block": 0}]},
+                }
+            },
+        ]
+        emulator = [
+            {
+                "summary": {
+                    "state_type": "event",
+                    "run": {"floor": 1},
+                    "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                }
+            },
+            {
+                "summary": {
+                    "state_type": "monster",
+                    "run": {"floor": 1},
+                    "player": {"hp": 61, "max_hp": 80, "gold": 99},
+                    "battle": {"enemies": [{"hp": 18, "max_hp": 20, "block": 0}]},
+                }
+            },
+        ]
+
+        diffs = replay_full_run_trace.compare_boundary_snapshots(
+            reference,
+            emulator,
+            replay_full_run_trace.DEFAULT_BOUNDARY_FIELDS,
+        )
+
+        self.assertEqual(
+            diffs,
+            [
+                "step 1 field player.hp: reference=60 emulator=61",
+                "step 1 enemy 0 hp: reference=20 emulator=18",
+            ],
         )
 
 

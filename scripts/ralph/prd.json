@@ -30,7 +30,7 @@
         "Update plan.md to mark the item complete or record remaining work"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

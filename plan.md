@@ -34,7 +34,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 
 ### Milestone 1: establish deterministic trace comparison
 
-- Add or extend tooling that can replay emulator full-run state against `traces\full-run\FULLRUN_TRACE_CARDS_1.json` at floor and combat boundaries.
+- Added `scripts\replay_full_run_trace.py` to replay retained STS2MCP full-run traces against `Sts2RunEnv` and report the first floor/combat-boundary mismatch on configured summary fields.
 - Record the first deterministic mismatch with enough context to reproduce it in a unit or integration test.
 - Keep curated traces small and purposeful; do not retain large temporary captures unless they document a durable parity target.
 
