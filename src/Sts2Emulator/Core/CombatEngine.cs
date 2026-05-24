@@ -130,15 +130,27 @@ public static class CombatEngine
         if (beckons > 0)
             state.PlayerHp = Math.Max(0, state.PlayerHp - beckons * 6);
 
-        // Move hand to discard, exhausting ethereal cards.
+        // Move hand to discard, exhausting ethereal cards unless a retain-hand effect is active.
+        int retainHand = BuffSystem.Get(state.PlayerBuffs, BuffId.RetainHand);
+        var retainedCards = retainHand > 0 ? new List<CardInstance>() : null;
         foreach (var card in state.Hand)
         {
             if (GeneratedData.Cards.Get(card.DefId).Ethereal)
                 Effects.CardEffects.ExhaustCard(state, card);
+            else if (retainedCards != null)
+                retainedCards.Add(card with { FreeThisTurn = false });
             else
                 state.DiscardPile.Add(card with { FreeThisTurn = false });
         }
         state.Hand.Clear();
+        if (retainedCards != null)
+        {
+            state.Hand.AddRange(retainedCards);
+            if (retainHand == 1)
+                BuffSystem.Remove(state.PlayerBuffs, BuffId.RetainHand);
+            else
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, -1);
+        }
 
         // Tick enemy debuffs before enemies act (Vulnerable/Weak on enemies tick down).
         foreach (var enemy in state.Enemies.ToArray())

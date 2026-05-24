@@ -73,6 +73,11 @@ public static class CardEffects
                 break;
             }
 
+            case CL.Salvo: // 1-cost, 12/16 damage + retain remaining hand this turn
+                DealDamage(state, Dmg(def, upgraded));
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, 1);
+                break;
+
             case IC.Dismantle: // 1-cost, 8/10 dmg, hits twice if target is Vulnerable
             {
                 var t = FirstEnemy(state);
@@ -855,6 +860,7 @@ public static class CL
 {
     public const int Bolas = 51;
     public const int DramaticEntrance = 153;
+    public const int Salvo = 406;
     public const int Volley = 535;
 }
 

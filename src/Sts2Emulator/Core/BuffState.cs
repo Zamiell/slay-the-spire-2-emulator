@@ -26,6 +26,7 @@ public enum BuffId
     Stampede,     // player: auto-play random Attacks when play phase starts
     Vicious,      // player: draw N cards when applying Vulnerable
     OneTwoPunch,  // player: duplicate the next N Attack cards this turn
+    RetainHand,   // player: keep remaining hand at end of player turn
     TemporaryStrength, // player/enemy: remove this much Strength at side turn end
     Artifact,     // prevent the next N debuffs
     HardToKill,   // damage taken per hit is capped at N

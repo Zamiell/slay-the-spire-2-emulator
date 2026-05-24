@@ -57,6 +57,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Added native Dramatic Entrance support from the retained card trace: the colorless card now exhausts and deals upgraded-aware damage to all enemies instead of falling back to first-enemy damage.
 - Added native Bolas support from the retained card trace: the colorless card now deals upgraded-aware damage, queues itself after play, and returns to hand before the next player-turn draw.
 - Added native Volley support from the retained run traces: the colorless X-cost card now spends all current energy and deals upgraded-aware random-enemy attack hits once per energy.
+- Added native Salvo support from the retained run traces: the colorless card now deals upgraded-aware attack damage and retains the remaining hand through the next end-turn discard.
 - Select the highest-impact missing trace-observed card from the current curated traces.
 - Implement the card in `src\Sts2Emulator\Core` using decompiled game logic for effect order, targeting, exhaust/ethereal behavior, and upgraded values.
 - Add C# regression tests in `src\Sts2Emulator.Tests` and update Python expectations only if interop-visible behavior changes.
