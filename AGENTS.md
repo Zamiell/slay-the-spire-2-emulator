@@ -12,6 +12,7 @@
 - Native card powers that modify attack play count should live in `CombatEngine.PlayCard`, apply one extra `CardEffects.Apply` for affected Attack cards, decrement their counter per Attack, and expire at end of player turn.
 - Native cards with dynamic per-turn costs should compute those costs in `CombatEngine.EffectiveCost` so play validation and energy spending stay aligned.
 - Native card effects that reapply or scale an enemy debuff after dealing damage should keep the pre-damage target reference, verify the target survived, and reuse the relevant debuff hooks.
+- Native card effects with multiple actions should use explicit card cases when decompiled effect order matters; do not rely on fallback damage/block ordering.
 - Native cards that care whether the player lost HP this turn should use `CombatState.PlayerHpLostThisTurn`, reset it at the start of each player turn, and increment it from relevant unblocked player HP-loss paths.
 - Native card powers with extra dynamic variables can be represented with companion `BuffId` entries when `BuffState` needs to track both the visible counter and hidden per-power state.
 - Full-run replay diagnostics should report available boundary diffs before stopping on unsupported trace actions, and unsupported action errors should include the reference step, state type, and floor.

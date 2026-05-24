@@ -13,6 +13,7 @@
 - Native card powers that modify attack play count belong in `CombatEngine.PlayCard`: apply one extra `CardEffects.Apply` for affected Attack cards, decrement the counter per Attack, and remove the power at end of player turn.
 - Native cards with dynamic per-turn costs should compute those costs in `CombatEngine.EffectiveCost` so play validation and energy spending stay aligned.
 - Native card effects that reapply or scale an enemy debuff after dealing damage should keep the pre-damage target reference, verify the target survived, and reuse the relevant debuff hooks.
+- Native card effects with multiple actions should use explicit card cases when decompiled effect order matters; do not rely on fallback damage/block ordering.
 - Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
 - Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
 - Native cards that depend on player HP lost this turn should read `CombatState.PlayerHpLostThisTurn`; reset it at the start of each player turn and increment it from unblocked player HP-loss paths.
@@ -190,5 +191,18 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Spite checks combat history for unblocked player HP loss during the current turn before choosing one versus repeated hits.
   - Turn-local HP-loss tracking should reset before start-of-player-turn effects so effects like Inferno self-damage can still enable same-turn conditional cards.
+
+---
+
+## 2026-05-24 14:13 - PLAN-M2-IRON-WAVE
+
+- Implemented native Iron Wave combat behavior: the card now gains upgraded-aware block before dealing upgraded-aware attack damage, matching decompiled effect order.
+- Added C# regression coverage for base effect ordering with Juggernaut/block/Vulnerable interactions and upgraded block/damage values.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable multi-action card ordering pattern.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`, `out\Sts2Emulator.dll`, `out\Sts2Emulator.pdb`
+- **Learnings for future iterations:**
+  - Decompiled Iron Wave gains block before attacking; fallback damage-then-block handling can be wrong when block triggers powers such as Juggernaut.
+  - Tests for effect order should include a hook or modifier that makes ordering observable, such as enemy block plus Vulnerable and Juggernaut.
+  - Rebuilding `out\Sts2Emulator.dll` is required after native C# edits before Python checks will pass the stale-native guard.
 
 ---

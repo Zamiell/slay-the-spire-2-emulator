@@ -26,6 +26,11 @@ public static class CardEffects
                 DealDamage(state, state.PlayerBlock);
                 break;
 
+            case IC.IronWave: // 1-cost, gain 5/7 block, then deal 5/7 damage
+                GainBlock(state, Blk(def, upgraded));
+                DealDamage(state, Dmg(def, upgraded));
+                break;
+
             case IC.Breakthrough: // 1-cost, lose 1 HP + 9/13 dmg to ALL enemies
                 LoseHp(state, 1);
                 DealDamageToAll(state, Dmg(def, upgraded));

@@ -51,6 +51,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Added native Stomp support: the card now deals upgraded-aware attack damage to all enemies and costs 1 less this turn for each Attack played.
 - Added native Molten Fist support: the card now deals upgraded-aware attack damage, then reapplies the surviving target's current Vulnerable stacks.
 - Added native Spite support: the card now tracks player HP lost during the current player turn and hits one, two, or three times based on that condition and upgrade state.
+- Added native Iron Wave support: the card now gains upgraded-aware block before dealing upgraded-aware attack damage, preserving block-trigger timing.
 - Select the highest-impact missing trace-observed card from the current curated traces.
 - Implement the card in `src\Sts2Emulator\Core` using decompiled game logic for effect order, targeting, exhaust/ethereal behavior, and upgraded values.
 - Add C# regression tests in `src\Sts2Emulator.Tests` and update Python expectations only if interop-visible behavior changes.
