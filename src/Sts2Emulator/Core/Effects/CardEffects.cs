@@ -101,6 +101,11 @@ public static class CardEffects
                 DealDamageToAll(state, Dmg(def, upgraded));
                 break;
 
+            case IC.Pillage: // 1-cost, 6/9 dmg + draw until drawing a non-Attack
+                DealDamage(state, Dmg(def, upgraded));
+                DrawUntilNonAttack(state, rng);
+                break;
+
             case IC.PerfectedStrike: // 2-cost, 6 + 2/3 per Strike card in all piles
                 DealDamage(state, 6 + CountStrikeCards(state) * (upgraded ? 3 : 2));
                 break;
@@ -524,6 +529,23 @@ public static class CardEffects
 
         var def = GeneratedData.Cards.Get(card.DefId);
         return def.Type is not (CardType.Status or CardType.Curse);
+    }
+
+    private const int MaxCardsInHand = 10;
+
+    private static void DrawUntilNonAttack(CombatState state, Random rng)
+    {
+        while (state.Hand.Count < MaxCardsInHand)
+        {
+            int handCountBefore = state.Hand.Count;
+            DrawCards(state, 1, rng);
+            if (state.Hand.Count == handCountBefore)
+                return;
+
+            var drawnCard = state.Hand[^1];
+            if (GeneratedData.Cards.Get(drawnCard.DefId).Type != CardType.Attack)
+                return;
+        }
     }
 
     private static void TriggerInfernoAfterPlayerSelfDamage(CombatState state, int unblockedDamage)
