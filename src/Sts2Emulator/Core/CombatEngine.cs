@@ -26,7 +26,7 @@ public static class CombatEngine
         var card = state.Hand[handIndex];
         var def = GeneratedData.Cards.Get(card.DefId);
 
-        int effectiveCost = EffectiveCost(def, state);
+        int effectiveCost = EffectiveCost(card, def, state);
         int energyToSpend = Math.Max(0, effectiveCost);
         if (def.Unplayable || energyToSpend > state.Energy || IsBlockedBySmoggy(def, state))
             return StepResult.Invalid;
@@ -78,7 +78,7 @@ public static class CombatEngine
         if (def.Exhaust || corruptedSkill)
             Effects.CardEffects.ExhaustCard(state, card);
         else
-            state.DiscardPile.Add(card);
+            state.DiscardPile.Add(card with { FreeThisTurn = false });
 
         Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
 
@@ -135,7 +135,7 @@ public static class CombatEngine
             if (GeneratedData.Cards.Get(card.DefId).Ethereal)
                 Effects.CardEffects.ExhaustCard(state, card);
             else
-                state.DiscardPile.Add(card);
+                state.DiscardPile.Add(card with { FreeThisTurn = false });
         }
         state.Hand.Clear();
 
@@ -245,11 +245,15 @@ public static class CombatEngine
     }
 
     // Returns the energy cost of a card after applying active powers (e.g. Corruption).
-    private static int EffectiveCost(CardDef def, CombatState state)
+    private static int EffectiveCost(CardInstance card, CardDef def, CombatState state)
     {
+        if (card.FreeThisTurn)
+            return 0;
         if (def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0)
             return 0;
         int cost = def.Cost;
+        if (def.Id == Effects.IC.InfernalBlade && card.Upgraded)
+            cost -= 1;
         if (def.Id == Effects.IC.Stomp)
             cost -= state.AttackCardsPlayedThisTurn;
         if (def.Type == CardType.Attack)
@@ -271,7 +275,7 @@ public static class CombatEngine
         for (int i = 0; i < state.Hand.Count; i++)
         {
             var def = GeneratedData.Cards.Get(state.Hand[i].DefId);
-            int effectiveCost = EffectiveCost(def, state);
+            int effectiveCost = EffectiveCost(state.Hand[i], def, state);
             int energyToSpend = Math.Max(0, effectiveCost);
             if (!def.Unplayable && energyToSpend <= state.Energy && !IsBlockedBySmoggy(def, state))
                 actions.Add(i);

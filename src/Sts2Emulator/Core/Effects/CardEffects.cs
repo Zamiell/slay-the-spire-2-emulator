@@ -267,6 +267,10 @@ public static class CardEffects
                 break;
             }
 
+            case IC.InfernalBlade: // 1/0-cost, add a random Ironclad Attack to hand free this turn
+                AddRandomInfernalBladeAttack(state, rng);
+                break;
+
             case IC.NotYet: // 2-cost, heal 10/13 HP
                 state.PlayerHp = Math.Min(state.PlayerHp + (upgraded ? 13 : 10), state.PlayerMaxHp);
                 break;
@@ -426,7 +430,7 @@ public static class CardEffects
     // Adds card to exhaust pile and triggers FeelNoPain.
     public static void ExhaustCard(CombatState state, CardInstance card)
     {
-        state.ExhaustPile.Add(card);
+        state.ExhaustPile.Add(card with { FreeThisTurn = false });
         int fnp = BuffSystem.Get(state.PlayerBuffs, BuffId.FeelNoPain);
         if (fnp > 0)
             state.PlayerBlock += BuffSystem.IncomingBlock(fnp, state.PlayerBuffs);
@@ -605,6 +609,21 @@ public static class CardEffects
             DealUnpoweredDamageToEnemy(enemy, inferno);
     }
 
+    private static void AddRandomInfernalBladeAttack(CombatState state, Random rng)
+    {
+        if (state.Hand.Count >= MaxCardsInHand)
+            return;
+
+        int[] options = [.. _infernalBladeAttackPool];
+        for (int i = options.Length - 1; i > 0; i--)
+        {
+            int j = rng.Next(i + 1);
+            (options[i], options[j]) = (options[j], options[i]);
+        }
+
+        state.Hand.Add(new CardInstance(options[0], false, FreeThisTurn: true));
+    }
+
     private static void DealUnpoweredDamageToEnemy(EnemyState target, int amount)
     {
         int damage = Math.Max(0, amount);
@@ -660,6 +679,43 @@ public static class CardEffects
         "SolarStrike", "UltimateStrike",
     };
 
+    private static readonly int[] _infernalBladeAttackPool =
+    [
+        IC.Anger,
+        IC.AshenStrike,
+        IC.BodySlam,
+        IC.Break,
+        IC.Breakthrough,
+        IC.Bludgeon,
+        IC.Bully,
+        IC.Cinder,
+        IC.Conflagration,
+        IC.Dismantle,
+        IC.FiendFire,
+        IC.FightMe,
+        IC.Headbutt,
+        IC.Hemokinesis,
+        IC.HowlFromBeyond,
+        IC.Mangle,
+        IC.MoltenFist,
+        IC.PactsEnd,
+        IC.PerfectedStrike,
+        IC.Pillage,
+        IC.PommelStrike,
+        IC.Rampage,
+        IC.SetupStrike,
+        IC.Spite,
+        IC.Stomp,
+        IC.SwordBoomerang,
+        IC.TearAsunder,
+        IC.Thrash,
+        IC.Thunderclap,
+        IC.TwinStrike,
+        IC.Unrelenting,
+        IC.Uppercut,
+        IC.Whirlwind,
+    ];
+
     private static int CountStrikeCards(CombatState state)
     {
         int count = 0;
@@ -683,6 +739,7 @@ public static class IC
     public const int AshenStrike  = 20;
     public const int Bash         = 30;
     public const int BodySlam     = 50;
+    public const int Break        = 59;
     public const int Breakthrough = 60;
     public const int Headbutt     = 240;
     public const int IronWave     = 268;
@@ -726,6 +783,7 @@ public static class IC
     public const int FlameBarrier  = 195;
     public const int ForgottenRitual = 205;
     public const int Havoc         = 238;
+    public const int InfernalBlade = 262;
     public const int Rage          = 378;
     public const int Restlessness  = 396;
     public const int SecondWind    = 414;

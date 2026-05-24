@@ -16,4 +16,4 @@ public readonly record struct CardDef(
     bool Unplayable = false
 );
 
-public readonly record struct CardInstance(int DefId, bool Upgraded);
+public readonly record struct CardInstance(int DefId, bool Upgraded, bool FreeThisTurn = false);
