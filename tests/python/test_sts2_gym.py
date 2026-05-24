@@ -59,8 +59,10 @@ from sts2_gym.run_env import (
     EVENT_BRAIN_LEECH,
     EVENT_JUNGLE_MAZE_ADVENTURE,
     EVENT_MORPHIC_GROVE,
+    EVENT_THE_LEGENDS_WERE_TRUE,
     OVERGROWTH_BOSS_ENCOUNTERS,
     OVERGROWTH_ELITE_ENCOUNTERS,
+    SPOILS_MAP_CARD,
     UNDERDOCKS_BOSS_ENCOUNTERS,
     UNDERDOCKS_ELITE_ENCOUNTERS,
 )
@@ -862,6 +864,44 @@ class Sts2GymTests(unittest.TestCase):
             env._after_combat_win()
 
             self.assertGreater(env._potions[0], 0)
+        finally:
+            env.close()
+
+    def test_run_env_legends_were_true_nab_map_adds_quest_card(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._phase = PHASE_EVENT
+            env._event_id = EVENT_THE_LEGENDS_WERE_TRUE
+            deck_size = len(env._deck)
+
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertFalse(terminated)
+            self.assertEqual(info["phase"], PHASE_MAP)
+            self.assertEqual(info["deck_size"], deck_size + 1)
+            self.assertIn(SPOILS_MAP_CARD, env._deck)
+
+            env._phase = PHASE_COMBAT
+            env._reset_combat(seed=0, encounter_id=1)
+            self.assertNotIn(SPOILS_MAP_CARD, env._combat_deck())
+        finally:
+            env.close()
+
+    def test_run_env_legends_were_true_slow_exit_loses_hp_for_potion(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._phase = PHASE_EVENT
+            env._event_id = EVENT_THE_LEGENDS_WERE_TRUE
+            env._player_hp = 20
+            env._potions = [0, 0, 0]
+
+            _, _, terminated, _, info = env.step(1)
+
+            self.assertFalse(terminated)
+            self.assertEqual(info["player_hp"], 12)
+            self.assertTrue(any(potion != 0 for potion in info["potions"]))
         finally:
             env.close()
 

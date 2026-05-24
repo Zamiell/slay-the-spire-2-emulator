@@ -48,7 +48,7 @@ The current combat factory starts an Ironclad-style combat with:
 - Dense reward shaping based on enemy HP damage, player HP loss, and terminal win/loss bonus.
 - A default 50-step Gymnasium truncation cap.
 - Encounter identity in Python `info`, allowing evaluation by encounter type.
-- An experimental `Sts2RunEnv` wrapper for simplified full-run training: Neow rewards, act-specific first-three weak combats, deterministic map choices, normal/elite/boss combat nodes, card rewards, gold, shops, shop card removal, rest sites, modeled trace-observed events, relic rewards, potion slots, deterministic potion drops/purchases, run deck tracking, upgraded-card encoding, and decompilation-derived run-level relic pickup/heal effects.
+- An experimental `Sts2RunEnv` wrapper for simplified full-run training: Neow rewards, act-specific first-three weak combats, deterministic map choices, normal/elite/boss combat nodes, card rewards, gold, shops, shop card removal, rest sites, modeled trace-observed events including The Legends Were True, relic rewards, potion slots, deterministic potion drops/purchases, run deck tracking, upgraded-card encoding, and decompilation-derived run-level relic pickup/heal effects.
 - `Sts2RunEnv` uses a run-scale default truncation cap of 1000 steps; single-combat `Sts2CombatEnv` keeps its 50-step cap.
 - Modeled enemy powers for supported fights include Artifact, Hard to Kill, Shrink, Thorns, Ravenous, Slippery, Surprise, Two-Tailed Rat backup calls, Plating, Tangled, Constrict, Smoggy, Illusion, and Gas Bomb minions.
 - Trace-observed Ironclad card effects now include Expect a Fight, Havoc, Restlessness, Splash, Stampede tracking, Sword Boomerang, and Juggling in addition to the starter/common pool used by run rewards.
@@ -85,7 +85,7 @@ Or with the helper script from a shell that can run Bash:
 bash scripts/build.sh win-x64
 ```
 
-The Python bindings look for the native library in `out\Sts2Emulator.dll` on Windows. You can also set `STS2_LIB_PATH` to point at a directory containing the native library.
+The Python bindings look for the native library in `out\Sts2Emulator.dll` on Windows. You can also set `STS2_LIB_PATH` to point at a directory containing the native library; when set, that path takes precedence over `out`. To prevent stale native-code rollouts, Python fails fast if the loaded library is older than the C# source files. Rebuild with the publish command above after C# changes.
 
 ## Run tests and checks
 
@@ -122,7 +122,7 @@ uv run python scripts\evaluate.py --episodes 100 --policy first-valid
 Evaluate simplified full-run episodes:
 
 ```powershell
-uv run python scripts\evaluate.py --run-env --episodes 10 --policy first-valid
+uv run python scripts\evaluate.py --run-env --episodes 10 --policy first-valid --max-episode-steps 200
 ```
 
 Force a specific encounter and use the starter-deck-aware baseline:

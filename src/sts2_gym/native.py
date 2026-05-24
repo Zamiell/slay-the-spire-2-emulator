@@ -10,6 +10,43 @@ _LIB_NAMES = {
     "linux": "Sts2Emulator.so",
     "darwin": "Sts2Emulator.dylib",
 }
+_ALLOW_STALE_ENV = "STS2_ALLOW_STALE_NATIVE"
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _native_source_paths(repo_root: Path) -> list[Path]:
+    source_root = repo_root / "src" / "Sts2Emulator"
+    paths = [
+        path
+        for path in source_root.rglob("*.cs")
+        if "bin" not in path.parts and "obj" not in path.parts
+    ]
+    paths.extend(source_root.rglob("*.csproj"))
+    return paths
+
+
+def _assert_native_library_is_fresh(path: Path) -> None:
+    if os.environ.get(_ALLOW_STALE_ENV) == "1":
+        return
+
+    source_paths = _native_source_paths(_repo_root())
+    if not source_paths:
+        return
+
+    newest_source = max(source_paths, key=lambda source: source.stat().st_mtime)
+    if path.stat().st_mtime >= newest_source.stat().st_mtime:
+        return
+
+    raise RuntimeError(
+        f"{path} is older than {newest_source}. Rebuild the native library with "
+        f"`bash scripts/build.sh win-x64` or `dotnet publish "
+        f'"src\\Sts2Emulator\\Sts2Emulator.csproj" -c Release -r win-x64 '
+        f'--self-contained -o "out"`. Set {_ALLOW_STALE_ENV}=1 only when '
+        "intentionally testing an older native build."
+    )
 
 
 def _load_lib() -> ctypes.CDLL:
@@ -17,12 +54,13 @@ def _load_lib() -> ctypes.CDLL:
     if name is None:
         raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
-    search = [
-        Path(__file__).parent.parent.parent / "out" / name,
-        Path(os.environ.get("STS2_LIB_PATH", "")) / name,
-    ]
+    search = []
+    if "STS2_LIB_PATH" in os.environ:
+        search.append(Path(os.environ["STS2_LIB_PATH"]) / name)
+    search.append(_repo_root() / "out" / name)
     for path in search:
         if path.exists():
+            _assert_native_library_is_fresh(path)
             return ctypes.CDLL(str(path))
     raise FileNotFoundError(
         f"Could not find {name}. Run scripts/build.sh first, or set STS2_LIB_PATH."

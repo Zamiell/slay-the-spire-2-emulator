@@ -314,7 +314,9 @@ EVENT_SIMPLE_REWARD = 3
 EVENT_JUNGLE_MAZE_ADVENTURE = 4
 EVENT_MORPHIC_GROVE = 5
 EVENT_BRAIN_LEECH = 6
+EVENT_THE_LEGENDS_WERE_TRUE = 7
 POOR_SLEEP_CARD = 10001
+SPOILS_MAP_CARD = 10002
 
 
 @dataclass
@@ -534,6 +536,11 @@ class Sts2RunEnv(gym.Env):
             elif self._event_id == EVENT_BRAIN_LEECH:
                 mask[0] = True
                 mask[1] = self._player_hp > 5
+            elif self._event_id == EVENT_THE_LEGENDS_WERE_TRUE:
+                mask[0] = True
+                mask[1] = self._player_hp > 8 and any(
+                    potion == 0 for potion in self._potions
+                )
             else:
                 mask[: EVENT_SKIP_ACTION + 1] = True
             return mask
@@ -727,6 +734,18 @@ class Sts2RunEnv(gym.Env):
                 self._event_id = 0
                 self._enter_reward_phase()
                 return self._obs(), 0.0, False, False, self._info()
+            elif action != EVENT_SKIP_ACTION:
+                return self._invalid_action()
+        elif self._event_id == EVENT_THE_LEGENDS_WERE_TRUE:
+            if action == 0:
+                self._deck.append(SPOILS_MAP_CARD)
+            elif action == 1:
+                if self._player_hp <= 8 or not any(
+                    potion == 0 for potion in self._potions
+                ):
+                    return self._invalid_action()
+                self._player_hp = max(0, self._player_hp - 8)
+                self._add_potion(self._next_potion())
             elif action != EVENT_SKIP_ACTION:
                 return self._invalid_action()
         elif action == 0:
@@ -948,6 +967,8 @@ class Sts2RunEnv(gym.Env):
     def _enter_event_phase(self):
         self._phase = PHASE_EVENT
         event_pool = [EVENT_JUNGLE_MAZE_ADVENTURE, EVENT_BRAIN_LEECH]
+        if self._player_hp >= 10 and len(self._combat_deck()) > 0:
+            event_pool.append(EVENT_THE_LEGENDS_WERE_TRUE)
         if self._gold >= 100 and len(self._deck) >= 2:
             event_pool.append(EVENT_MORPHIC_GROVE)
         if self._player_hp <= int(self._player_max_hp * 0.7):
@@ -1148,7 +1169,9 @@ class Sts2RunEnv(gym.Env):
             if RELIC_PANTOGRAPH in self._relics:
                 self._player_hp = min(self._player_max_hp, self._player_hp + 25)
         if encounter_id is None:
-            native.reset_with_deck(self._handle, self._deck, self._combat_obs_buf)
+            native.reset_with_deck(
+                self._handle, self._combat_deck(), self._combat_obs_buf
+            )
         else:
             relics = self._relics
             if self._venerable_tea_set_active:
@@ -1156,7 +1179,7 @@ class Sts2RunEnv(gym.Env):
                 self._venerable_tea_set_active = False
             native.reset_run_combat(
                 self._handle,
-                self._deck,
+                self._combat_deck(),
                 encounter_id,
                 relics,
                 self._player_hp,
@@ -1343,6 +1366,9 @@ class Sts2RunEnv(gym.Env):
 
     def _next_potion(self) -> int:
         return 1 + ((self._seed + self._floor + sum(self._potions)) % 5)
+
+    def _combat_deck(self) -> list[int]:
+        return [card for card in self._deck if abs(card) != SPOILS_MAP_CARD]
 
     def _remove_lowest_priority_card(self) -> None:
         for card_id in (10001, 472, 131, 30):

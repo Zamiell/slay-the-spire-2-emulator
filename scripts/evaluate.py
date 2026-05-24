@@ -57,6 +57,11 @@ def main() -> None:
         action="store_true",
         help="Evaluate simplified full-run episodes instead of single combats.",
     )
+    parser.add_argument(
+        "--max-episode-steps",
+        type=int,
+        help="Override the environment step cap for each evaluated episode.",
+    )
     args = parser.parse_args()
 
     if args.run_env and args.encounter is not None:
@@ -71,9 +76,20 @@ def main() -> None:
 
     for episode in range(args.episodes):
         env: EvaluatedEnv = (
-            Sts2RunEnv(seed=args.seed + episode)
+            Sts2RunEnv(
+                seed=args.seed + episode,
+                max_episode_steps=(
+                    args.max_episode_steps
+                    if args.max_episode_steps is not None
+                    else 1000
+                ),
+            )
             if args.run_env
-            else Sts2CombatEnv(seed=args.seed + episode, encounter=args.encounter)
+            else Sts2CombatEnv(
+                seed=args.seed + episode,
+                encounter=args.encounter,
+                max_episode_steps=args.max_episode_steps or 50,
+            )
         )
         try:
             _, reset_info = env.reset()
