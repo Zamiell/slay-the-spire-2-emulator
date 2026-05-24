@@ -25,6 +25,7 @@ public enum BuffId
     Juggling,     // player: copy the third Attack played each turn into hand
     Stampede,     // player: auto-play a random Attack when play phase starts (tracked only)
     Vicious,      // player: draw N cards when applying Vulnerable
+    OneTwoPunch,  // player: duplicate the next N Attack cards this turn
     TemporaryStrength, // player/enemy: remove this much Strength at side turn end
     Artifact,     // prevent the next N debuffs
     HardToKill,   // damage taken per hit is capped at N

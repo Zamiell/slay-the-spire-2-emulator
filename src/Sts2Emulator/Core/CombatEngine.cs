@@ -43,6 +43,18 @@ public static class CombatEngine
             state.SkillPlayedWhileSmoggy = true;
 
         Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+        if (def.Type == CardType.Attack)
+        {
+            int oneTwoPunch = BuffSystem.Get(state.PlayerBuffs, BuffId.OneTwoPunch);
+            if (oneTwoPunch > 0)
+            {
+                Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+                if (oneTwoPunch == 1)
+                    BuffSystem.Remove(state.PlayerBuffs, BuffId.OneTwoPunch);
+                else
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.OneTwoPunch, -1);
+            }
+        }
         HandleEnemyDeaths(state, enemyHpsBefore, rng);
 
         // Rage: gain block when playing an Attack.
@@ -103,6 +115,7 @@ public static class CombatEngine
 
         // Rage expires at end of player turn.
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Rage);
+        BuffSystem.Remove(state.PlayerBuffs, BuffId.OneTwoPunch);
 
         int constrict = BuffSystem.Get(state.PlayerBuffs, BuffId.Constrict);
         if (constrict > 0)

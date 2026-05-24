@@ -233,6 +233,10 @@ public static class CardEffects
                 state.PlayerHp = Math.Min(state.PlayerHp + (upgraded ? 13 : 10), state.PlayerMaxHp);
                 break;
 
+            case IC.OneTwoPunch: // 1-cost, the next 1/2 Attack cards are played twice this turn
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.OneTwoPunch, upgraded ? 2 : 1);
+                break;
+
             case IC.Offering: // 0-cost, lose 6 HP + gain 2 energy + draw 3/5
                 LoseHp(state, 6);
                 state.Energy += 2;
@@ -699,6 +703,7 @@ public static class IC
     public const int Conflagration = 99;
     public const int Impervious    = 261;
     public const int NotYet        = 328;
+    public const int OneTwoPunch   = 334;
     public const int Offering      = 332;
 
     // Powers

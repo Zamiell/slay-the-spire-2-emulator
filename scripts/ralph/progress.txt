@@ -10,6 +10,7 @@
 - Native card effects that exhaust another card from hand should select from `state.Hand` after the played card has already been removed, then call `CardEffects.ExhaustCard` so exhaust hooks stay consistent.
 - Native card effects that upgrade hand cards should replace `CardInstance` values in `state.Hand` with upgraded copies after the played card has already been removed.
 - Native card effects that conditionally draw multiple cards should draw one card at a time and respect the 10-card hand cap so the newly drawn card controls whether drawing continues.
+- Native card powers that modify attack play count belong in `CombatEngine.PlayCard`: apply one extra `CardEffects.Apply` for affected Attack cards, decrement the counter per Attack, and remove the power at end of player turn.
 - Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
 - Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
 
@@ -139,5 +140,18 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Pillage uses the type of each newly drawn card to decide whether to continue drawing.
   - Conditional multi-card draw effects need to enforce the 10-card hand cap locally because the emulator's generic draw helper does not currently cap hand size.
+
+---
+
+## 2026-05-24 14:01 - PLAN-M2-ONE-TWO-PUNCH
+
+- Implemented native One-Two Punch combat behavior: the card now applies a counter power that duplicates the next one or two Attack card effects, decrements after each affected Attack, and expires at end of player turn.
+- Added C# regression coverage for base duplication, upgraded two-Attack duplication, and end-of-turn expiration.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled One-Two Punch uses a counter power: base affects one Attack, upgraded affects two, and each affected Attack gets one extra play count rather than extra damage only.
+  - Attack play-count powers are best modeled in `CombatEngine.PlayCard` so they can duplicate full card effects while still spending energy and moving the played card only once.
+  - End-of-player-turn cleanup should remove unused temporary play-count powers before the enemy side acts.
 
 ---

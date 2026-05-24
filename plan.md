@@ -47,6 +47,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Added native Cinder support: the card now deals upgraded-aware attack damage, exhausts one random remaining hand card after damage, and exhausts itself through the normal card exhaust path.
 - Added native Armaments support: the card now gains block, upgrades the first remaining upgradable hand card for base Armaments, and upgrades all remaining upgradable hand cards when upgraded.
 - Added native Pillage support: the card now deals upgraded-aware attack damage, then draws one card at a time until it draws a non-Attack card or reaches the 10-card hand cap.
+- Added native One-Two Punch support: the card now applies a counter power that duplicates the next one or two Attack card effects, decrements after each affected Attack, and expires at end of player turn.
 - Select the highest-impact missing trace-observed card from the current curated traces.
 - Implement the card in `src\Sts2Emulator\Core` using decompiled game logic for effect order, targeting, exhaust/ethereal behavior, and upgraded values.
 - Add C# regression tests in `src\Sts2Emulator.Tests` and update Python expectations only if interop-visible behavior changes.
