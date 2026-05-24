@@ -54,6 +54,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Added native Iron Wave support: the card now gains upgraded-aware block before dealing upgraded-aware attack damage, preserving block-trigger timing.
 - Added native Infernal Blade support: the card now generates a random Ironclad Attack into hand, marks it free for the current turn, and upgraded Infernal Blade costs 0.
 - Added native Stampede support: the power now auto-plays random playable Attack cards from hand after the next player-turn draw, repeats by stack count, bypasses energy spending, and preserves normal Attack play hooks.
+- Added native Dramatic Entrance support from the retained card trace: the colorless card now exhausts and deals upgraded-aware damage to all enemies instead of falling back to first-enemy damage.
 - Select the highest-impact missing trace-observed card from the current curated traces.
 - Implement the card in `src\Sts2Emulator\Core` using decompiled game logic for effect order, targeting, exhaust/ethereal behavior, and upgraded values.
 - Add C# regression tests in `src\Sts2Emulator.Tests` and update Python expectations only if interop-visible behavior changes.

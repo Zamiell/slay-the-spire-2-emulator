@@ -19,6 +19,7 @@
 - Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
 - Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
 - Native cards that depend on player HP lost this turn should read `CombatState.PlayerHpLostThisTurn`; reset it at the start of each player turn and increment it from unblocked player HP-loss paths.
+- Trace-observed colorless card constants can live in `CL` beside `IC` and `ST` in `CardEffects.cs`; add explicit cases when fallback damage/block ordering or targeting is wrong.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -231,5 +232,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled `StampedePower.AfterAutoPostPlayPhaseEntered` runs after the turn-start draw and chooses from current hand Attacks that are not unplayable.
   - Auto-played cards should bypass energy costs but still move through normal card effect, Attack play hook, and discard/exhaust cleanup paths.
+
+---
+
+## 2026-05-24 14:23 - PLAN-M2-DRAMATIC-ENTRANCE
+
+- Implemented native Dramatic Entrance combat behavior: the colorless trace-observed card now deals upgraded-aware damage to all living enemies and exhausts through the generated card definition.
+- Added C# regression coverage for base/upgraded all-enemy damage and exhaust handling.
+- Updated `plan.md` and the consolidated codebase patterns with the reusable colorless-card constant convention.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Generated non-Ironclad combat cards may still appear in retained traces; keep their IDs separate from `IC` constants so trace-driven card support remains readable.
+  - The generic fallback only targets the first living enemy for positive damage, so all-enemy cards need explicit `CardEffects` cases even when their generated damage values are correct.
 
 ---

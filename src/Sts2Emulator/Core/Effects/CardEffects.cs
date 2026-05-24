@@ -57,6 +57,10 @@ public static class CardEffects
                 DealDamageToAllMultiHit(state, 2, upgraded ? 5 : 4);
                 break;
 
+            case CL.DramaticEntrance: // 0-cost, 11/15 damage to ALL enemies, exhaust
+                DealDamageToAll(state, Dmg(def, upgraded));
+                break;
+
             case IC.Dismantle: // 1-cost, 8/10 dmg, hits twice if target is Vulnerable
             {
                 var t = FirstEnemy(state);
@@ -821,6 +825,11 @@ public static class IC
     public const int Rupture     = 404;
     public const int Stampede    = 462;
     public const int Vicious     = 533;
+}
+
+public static class CL
+{
+    public const int DramaticEntrance = 153;
 }
 
 public static class ST
