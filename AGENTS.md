@@ -2,7 +2,8 @@
 
 - Read the README.md to get an overview for what this project is.
 - Whenever you edit a Markdown file, format it afterward with: `bunx --bun prettier --write foo.md`
-- Whenever you edit a Python file, format it afterward with: `black foo.py`
+- Whenever you edit a Python file, format it afterward with: `black --target-version py314 foo.py`
+- To validate code changes, run the combined lint/test script: `bash lint-and-test.sh`
 
 ## STS2MCP
 

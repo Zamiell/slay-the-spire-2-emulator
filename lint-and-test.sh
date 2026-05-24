@@ -2,6 +2,8 @@
 
 set -euo pipefail # Exit on errors and undefined variables.
 
+START_SECONDS=$SECONDS
+
 # Check Python formatting
 uv run black . --check --target-version py314
 
@@ -19,3 +21,6 @@ uv run python scripts/evaluate.py --episodes 2 --run-env --policy first-valid
 # Test the emulator
 dotnet test "src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj" --nologo
 dotnet publish "src/Sts2Emulator/Sts2Emulator.csproj" -c Release -r win-x64 --self-contained -o "out" --nologo
+
+ELAPSED_SECONDS=$((SECONDS - START_SECONDS))
+echo -e "\n$0 successfully completed in $ELAPSED_SECONDS seconds."
