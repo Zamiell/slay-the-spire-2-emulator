@@ -1,4 +1,4 @@
-"""Train MaskablePPO on the Sts2CombatEnv."""
+"""Train MaskablePPO on Sts2CombatEnv or Sts2RunEnv."""
 
 import sys
 import os
@@ -14,15 +14,19 @@ from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 from sb3_contrib import MaskablePPO
 from sb3_contrib.common.wrappers import ActionMasker
 
-from sts2_gym import Sts2CombatEnv
+from sts2_gym import Sts2CombatEnv, Sts2RunEnv
+
+MaskableEnv = Sts2CombatEnv | Sts2RunEnv
 
 # ── helper ────────────────────────────────────────────────────────────────────
 
 
-def make_env(rank: int):
+def make_env(rank: int, use_run_env: bool):
     def _init():
-        env = Sts2CombatEnv(seed=rank)
-        env = ActionMasker(env, lambda e: cast(Sts2CombatEnv, e).action_masks())
+        base_env: MaskableEnv = (
+            Sts2RunEnv(seed=rank) if use_run_env else Sts2CombatEnv(seed=rank)
+        )
+        env = ActionMasker(base_env, lambda e: cast(MaskableEnv, e).action_masks())
         return env
 
     return _init
@@ -41,10 +45,15 @@ def main():
     parser.add_argument(
         "--check", action="store_true", help="Run env sanity check then exit"
     )
+    parser.add_argument(
+        "--run-env",
+        action="store_true",
+        help="Train/check the simplified full-run Sts2RunEnv instead of single combats.",
+    )
     args = parser.parse_args()
 
     if args.check:
-        env = Sts2CombatEnv(seed=0)
+        env: MaskableEnv = Sts2RunEnv(seed=0) if args.run_env else Sts2CombatEnv(seed=0)
         check_env(env, warn=True, skip_render_check=True)
         print("Env check passed.")
         env.close()
@@ -52,7 +61,7 @@ def main():
 
     os.makedirs(os.path.dirname(args.save_path) or ".", exist_ok=True)
 
-    vec_env = DummyVecEnv([make_env(i) for i in range(args.n_envs)])
+    vec_env = DummyVecEnv([make_env(i, args.run_env) for i in range(args.n_envs)])
 
     model = MaskablePPO(
         "MlpPolicy",

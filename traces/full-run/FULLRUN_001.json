@@ -1,0 +1,144 @@
+{
+  "source": "sts2mcp",
+  "kind": "full_run",
+  "base_url": "http://localhost:15526",
+  "seed": "FULLRUN_001",
+  "character": "IRONCLAD",
+  "captured_at": "2026-05-24T12:48:18.332440+00:00",
+  "trace": [
+    {
+      "step": 0,
+      "action": null,
+      "post_result": null,
+      "summary": {
+        "state_type": "unknown",
+        "run": {
+          "act": 1,
+          "floor": 0,
+          "ascension": 10
+        },
+        "player": {
+          "character": "The Ironclad",
+          "hp": 80,
+          "max_hp": 80,
+          "gold": 99,
+          "deck_size": 0,
+          "relics": [
+            {
+              "id": "BURNING_BLOOD",
+              "name": "Burning Blood",
+              "slot": null,
+              "counter": null
+            }
+          ],
+          "potions": [],
+          "hand": []
+        },
+        "battle": null,
+        "event": {},
+        "rewards": {},
+        "map": {},
+        "shop": {},
+        "rest": {},
+        "menu_screen": null,
+        "options": null
+      },
+      "raw_state": {
+        "state_type": "unknown",
+        "room_type": null,
+        "run": {
+          "act": 1,
+          "floor": 0,
+          "ascension": 10
+        },
+        "player": {
+          "character": "The Ironclad",
+          "hp": 80,
+          "max_hp": 80,
+          "block": 0,
+          "gold": 99,
+          "status": [],
+          "relics": [
+            {
+              "id": "BURNING_BLOOD",
+              "name": "Burning Blood",
+              "description": "At the end of combat, heal 6 HP.",
+              "counter": null,
+              "keywords": []
+            }
+          ],
+          "potions": [],
+          "max_potion_slots": 2
+        }
+      },
+      "note": null
+    },
+    {
+      "step": 1,
+      "action": null,
+      "post_result": null,
+      "summary": {
+        "state_type": "unknown",
+        "run": {
+          "act": 1,
+          "floor": 0,
+          "ascension": 10
+        },
+        "player": {
+          "character": "The Ironclad",
+          "hp": 80,
+          "max_hp": 80,
+          "gold": 99,
+          "deck_size": 0,
+          "relics": [
+            {
+              "id": "BURNING_BLOOD",
+              "name": "Burning Blood",
+              "slot": null,
+              "counter": null
+            }
+          ],
+          "potions": [],
+          "hand": []
+        },
+        "battle": null,
+        "event": {},
+        "rewards": {},
+        "map": {},
+        "shop": {},
+        "rest": {},
+        "menu_screen": null,
+        "options": null
+      },
+      "raw_state": {
+        "state_type": "unknown",
+        "room_type": null,
+        "run": {
+          "act": 1,
+          "floor": 0,
+          "ascension": 10
+        },
+        "player": {
+          "character": "The Ironclad",
+          "hp": 80,
+          "max_hp": 80,
+          "block": 0,
+          "gold": 99,
+          "status": [],
+          "relics": [
+            {
+              "id": "BURNING_BLOOD",
+              "name": "Burning Blood",
+              "description": "At the end of combat, heal 6 HP.",
+              "counter": null,
+              "keywords": []
+            }
+          ],
+          "potions": [],
+          "max_potion_slots": 2
+        }
+      },
+      "note": "no_auto_action"
+    }
+  ]
+}

@@ -23,6 +23,8 @@
     <LinkerArg Include="/EXPORT:Sts2_ResetEncounter=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetEncounter" />
     <LinkerArg Include="/EXPORT:Sts2_ResetWithDeck=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetWithDeck" />
     <LinkerArg Include="/EXPORT:Sts2_ResetWithDeckAndEncounter=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetWithDeckAndEncounter" />
+    <LinkerArg Include="/EXPORT:Sts2_ResetWithDeckEncounterAndRelics=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetWithDeckEncounterAndRelics" />
+    <LinkerArg Include="/EXPORT:Sts2_ResetRunCombat=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetRunCombat" />
     <LinkerArg Include="/EXPORT:Sts2_Step=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Step" />
     <LinkerArg Include="/EXPORT:Sts2_PlayerWon=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_PlayerWon" />
     <LinkerArg Include="/EXPORT:Sts2_EncounterId=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_EncounterId" />

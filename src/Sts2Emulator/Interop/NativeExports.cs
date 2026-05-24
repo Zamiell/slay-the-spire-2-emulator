@@ -22,7 +22,8 @@ namespace Sts2Emulator.Interop;
 //   [99..113]  enemy 3 (same layout)
 //   [114..128] enemy 4 (same layout)
 //   [129..143] enemy 5 (same layout)
-//   [144..163] reserved
+//   [144..155] secondary enemy intents: 6 enemies × 2 ints (intent_type + 1, intent_mag; 0 = none)
+//   [156..163] reserved
 //
 // Total: 164 ints. Enemies beyond index 5 are ignored for now.
 
@@ -74,6 +75,45 @@ public static class NativeExports
             Rng = new Random(Seed);
             LastPlayerWon = false;
             CombatFactory.Reset(State, Rng, deckIds, encounterId);
+        }
+
+        public void Reset(ReadOnlySpan<int> deckIds, int encounterId, ReadOnlySpan<int> relicIds)
+        {
+            Rng = new Random(Seed);
+            LastPlayerWon = false;
+            CombatFactory.Reset(State, Rng, deckIds, encounterId, relicIds);
+        }
+
+        public void Reset(
+            ReadOnlySpan<int> deckIds,
+            int encounterId,
+            ReadOnlySpan<int> relicIds,
+            int playerHp,
+            int playerMaxHp)
+        {
+            Reset(deckIds, encounterId, relicIds, playerHp, playerMaxHp, []);
+        }
+
+        public void Reset(
+            ReadOnlySpan<int> deckIds,
+            int encounterId,
+            ReadOnlySpan<int> relicIds,
+            int playerHp,
+            int playerMaxHp,
+            ReadOnlySpan<int> potionIds)
+        {
+            Rng = new Random(Seed);
+            LastPlayerWon = false;
+            CombatFactory.Reset(
+                State,
+                Rng,
+                deckIds,
+                encounterId,
+                relicIds,
+                playerHp,
+                playerMaxHp,
+                potionIds
+            );
         }
     }
 
@@ -130,6 +170,51 @@ public static class NativeExports
     {
         var combat = _pool[handle]!;
         combat.Reset(new ReadOnlySpan<int>(deckIds, deckLen), encounterId);
+        WriteObs(combat.State, obsBuf);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe void Sts2_ResetWithDeckEncounterAndRelics(
+        int handle,
+        int* deckIds,
+        int deckLen,
+        int encounterId,
+        int* relicIds,
+        int relicLen,
+        int* obsBuf)
+    {
+        var combat = _pool[handle]!;
+        combat.Reset(
+            new ReadOnlySpan<int>(deckIds, deckLen),
+            encounterId,
+            new ReadOnlySpan<int>(relicIds, relicLen)
+        );
+        WriteObs(combat.State, obsBuf);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe void Sts2_ResetRunCombat(
+        int handle,
+        int* deckIds,
+        int deckLen,
+        int encounterId,
+        int* relicIds,
+        int relicLen,
+        int playerHp,
+        int playerMaxHp,
+        int* potionIds,
+        int potionLen,
+        int* obsBuf)
+    {
+        var combat = _pool[handle]!;
+        combat.Reset(
+            new ReadOnlySpan<int>(deckIds, deckLen),
+            encounterId,
+            new ReadOnlySpan<int>(relicIds, relicLen),
+            playerHp,
+            playerMaxHp,
+            new ReadOnlySpan<int>(potionIds, potionLen)
+        );
         WriteObs(combat.State, obsBuf);
     }
 
@@ -262,6 +347,22 @@ public static class NativeExports
             else
             {
                 for (int j = 0; j < slotSize; j++) o[b + j] = 0;
+            }
+        }
+
+        // Secondary/mixed intent metadata.
+        base_ = 8 + MAX_HAND * 2 + 6 + MAX_PLAYER_BUFFS * 2 + MAX_ENEMIES * slotSize;
+        for (int e = 0; e < MAX_ENEMIES; e++)
+        {
+            if (e < s.Enemies.Count && s.Enemies[e].SecondaryIntent is { } secondary)
+            {
+                o[base_ + e * 2] = (int)secondary.Type + 1;
+                o[base_ + e * 2 + 1] = secondary.Magnitude;
+            }
+            else
+            {
+                o[base_ + e * 2] = 0;
+                o[base_ + e * 2 + 1] = 0;
             }
         }
     }

@@ -5,11 +5,11 @@ This repository contains a high-performance emulator for a subset of Slay the Sp
 ## What is included
 
 - `src\Sts2Emulator`: C# combat simulator targeting .NET 9 NativeAOT.
-- `src\Sts2Emulator\Core`: combat state, turn flow, card effects, buffs, enemy AI, potions, relic data types, and reward calculation.
+- `src\Sts2Emulator\Core`: combat state, turn flow, card effects, buffs, enemy AI, potions, an initial set of relic effects, and reward calculation.
 - `src\Sts2Emulator\Generated`: generated card, enemy, potion, power, and relic definitions.
 - `src\Sts2Emulator\Interop`: native exports used by Python.
 - `src\sts2_gym`: Python `ctypes` bindings, the single-combat Gymnasium environment, and an experimental run wrapper.
-- `scripts`: build, data extraction, patch update, and MaskablePPO training scripts.
+- `scripts`: build, data extraction, patch update, trace validation, full-run trace capture, and MaskablePPO training scripts.
 - `src\Sts2Emulator.Tests`: xUnit tests for combat behavior.
 
 ## Architecture
@@ -48,10 +48,13 @@ The current combat factory starts an Ironclad-style combat with:
 - Dense reward shaping based on enemy HP damage, player HP loss, and terminal win/loss bonus.
 - A default 50-step Gymnasium truncation cap.
 - Encounter identity in Python `info`, allowing evaluation by encounter type.
-- An experimental `Sts2RunEnv` wrapper for simplified full-run training: act-specific first-three weak combats, deterministic map choices, normal/elite/boss combat nodes, card rewards, gold, shops, rest sites, relic rewards, run deck tracking, and upgraded-card encoding.
+- An experimental `Sts2RunEnv` wrapper for simplified full-run training: Neow rewards, act-specific first-three weak combats, deterministic map choices, normal/elite/boss combat nodes, card rewards, gold, shops, shop card removal, rest sites, events, relic rewards, potion slots, deterministic potion drops/purchases, run deck tracking, and upgraded-card encoding.
+- `Sts2RunEnv` uses a run-scale default truncation cap of 1000 steps; single-combat `Sts2CombatEnv` keeps its 50-step cap.
 - Modeled enemy powers for supported fights include Artifact, Hard to Kill, Shrink, Thorns, Ravenous, Slippery, Surprise, Two-Tailed Rat backup calls, Plating, Tangled, Constrict, Smoggy, Illusion, and Gas Bomb minions.
+- Initial native relic combat effects for Anchor, Bag of Preparation, Blood Vial, Bronze Scales, Oddly Smooth Stone, Orichalcum, and Vajra, with run-level HP, potions, and relics passed into native combat.
+- Secondary intent metadata for known mixed attack+buff/debuff enemy moves is exposed in the reserved observation area.
 
-This is not yet a full game emulator. Full live map generation, exact shop/reward odds, event routing, and native relic effects are still future work.
+This is not yet a full game emulator. Full live map generation, exact Neow/shop/reward/event odds and broad native relic coverage are still future work.
 
 ## Requirements
 
@@ -103,10 +106,22 @@ Run a short training job:
 uv run python scripts\train.py --timesteps 5000 --n-envs 2
 ```
 
+Train against the simplified full-run wrapper:
+
+```powershell
+uv run python scripts\train.py --run-env --timesteps 5000 --n-envs 2
+```
+
 Evaluate a simple baseline policy over fixed seeds, including per-encounter win rates:
 
 ```powershell
 uv run python scripts\evaluate.py --episodes 100 --policy first-valid
+```
+
+Evaluate simplified full-run episodes:
+
+```powershell
+uv run python scripts\evaluate.py --run-env --episodes 10 --policy first-valid
 ```
 
 Force a specific encounter and use the starter-deck-aware baseline:
@@ -125,6 +140,12 @@ Emit a trace from a running Slay the Spire 2 instance with the STS2MCP mod enabl
 
 ```powershell
 uv run python scripts\trace_real_game.py --actions 0 1 2
+```
+
+Capture a full-run trace from a running Slay the Spire 2 instance with STS2MCP enabled:
+
+```powershell
+uv run python scripts\trace_real_game_run.py FULLRUN_SEED --abandon-existing --output traces\full-run\FULLRUN_SEED.json
 ```
 
 Start a new real-game standard run with a specific seed through STS2MCP before tracing:
@@ -147,6 +168,18 @@ uv run python scripts\validate_real_game_sweep.py --suite all --continue-on-fail
 
 Use `--suite direct` for one-passive-turn direct encounter checks, `--suite passive-boss` for the current three-turn boss checks, or `--encounter aeonglass` to narrow the run.
 
+When using STS2MCP, launch Slay the Spire 2 through Steam rather than starting the executable directly:
+
+```powershell
+Start-Process "steam://rungameid/2868840"
+```
+
+Then verify STS2MCP is reachable:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing -Uri "http://localhost:15526/"
+```
+
 ## Training
 
 `scripts\train.py` trains `MaskablePPO` from `sb3-contrib` using action masks from the environment:
@@ -166,4 +199,4 @@ The repository includes scripts intended to keep generated data synchronized wit
 - `scripts\diff_patch.py`: summarize generated data changes.
 - `scripts\patch_update.sh`: run the full patch-update pipeline.
 
-See `PLAN.md` for the longer design notes and planned expansion path.
+See `PLAN.md` for the active parity gaps and next implementation steps.

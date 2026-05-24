@@ -44,6 +44,8 @@ def summarize_observation(obs: np.ndarray) -> dict:
                 "block": int(obs[base + 2]),
                 "intent_type": int(obs[base + 3]),
                 "intent_magnitude": int(obs[base + 4]),
+                "secondary_intent_type": int(obs[144 + enemy_index * 2]),
+                "secondary_intent_magnitude": int(obs[145 + enemy_index * 2]),
                 "status": buffs,
             }
         )

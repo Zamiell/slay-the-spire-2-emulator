@@ -1,4 +1,4 @@
-"""Evaluate a simple policy over seeded combat episodes."""
+"""Evaluate a simple policy over seeded combat or simplified run episodes."""
 
 import argparse
 import sys
@@ -9,19 +9,25 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from sts2_gym import Sts2CombatEnv
+from sts2_gym import Sts2CombatEnv, Sts2RunEnv
 from sts2_gym.env import ENCOUNTER_IDS
+from sts2_gym.run_env import PHASE_COMBAT, RUN_OBS_SIZE
+from sts2_gym import native
 
 HAND_ID_INDICES = range(8, 28, 2)
 STARTER_AGGRESSIVE_PRIORITY = (30, 472, 13, 358, 508, 519, 18, 433, 137)
+EvaluatedEnv = Sts2CombatEnv | Sts2RunEnv
 
 
-def choose_action(env: Sts2CombatEnv, policy: str) -> int:
+def choose_action(env: EvaluatedEnv, policy: str) -> int:
     valid = np.flatnonzero(env.action_masks())
+    obs = env._obs()
+    if len(obs) == RUN_OBS_SIZE and int(obs[native.OBS_SIZE]) != PHASE_COMBAT:
+        return int(valid[0])
+
     if policy == "end-turn":
         return int(valid[-1])
     if policy == "starter-aggressive":
-        obs = env._obs()
         valid_set = set(int(action) for action in valid)
         hand_ids = [int(obs[i]) for i in HAND_ID_INDICES]
         for card_id in STARTER_AGGRESSIVE_PRIORITY:
@@ -46,7 +52,15 @@ def main() -> None:
         choices=sorted(ENCOUNTER_IDS),
         help="Force every episode to use one encounter instead of seeded sampling.",
     )
+    parser.add_argument(
+        "--run-env",
+        action="store_true",
+        help="Evaluate simplified full-run episodes instead of single combats.",
+    )
     args = parser.parse_args()
+
+    if args.run_env and args.encounter is not None:
+        parser.error("--encounter cannot be combined with --run-env")
 
     wins = 0
     lengths: list[int] = []
@@ -56,10 +70,16 @@ def main() -> None:
     )
 
     for episode in range(args.episodes):
-        env = Sts2CombatEnv(seed=args.seed + episode, encounter=args.encounter)
+        env: EvaluatedEnv = (
+            Sts2RunEnv(seed=args.seed + episode)
+            if args.run_env
+            else Sts2CombatEnv(seed=args.seed + episode, encounter=args.encounter)
+        )
         try:
             _, reset_info = env.reset()
-            encounter = str(reset_info.get("encounter", "unknown"))
+            encounter = (
+                "run" if args.run_env else str(reset_info.get("encounter", "unknown"))
+            )
             total_reward = 0.0
             steps = 0
             info = {"player_won": False}

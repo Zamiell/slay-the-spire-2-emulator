@@ -19,6 +19,7 @@ public sealed class EnemyState
     public int MaxHp;
     public int Block;
     public Intent CurrentIntent;
+    public Intent? SecondaryIntent;
     public List<BuffState> Buffs = [];
     public int MoveIndex;
 }

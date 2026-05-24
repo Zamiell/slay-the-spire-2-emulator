@@ -7,7 +7,16 @@ public static class EnemyAI
     public static void ChooseIntents(List<EnemyState> enemies, int turn, Random rng)
     {
         foreach (var enemy in enemies.Where(e => e.Hp > 0))
+        {
             enemy.CurrentIntent = SelectIntent(enemy, rng);
+            enemy.SecondaryIntent = SecondaryIntentFor(enemy);
+        }
+    }
+
+    public static void UpdateSecondaryIntents(IEnumerable<EnemyState> enemies)
+    {
+        foreach (var enemy in enemies)
+            enemy.SecondaryIntent = SecondaryIntentFor(enemy);
     }
 
     public static void ExecuteIntent(EnemyState enemy, CombatState state, Random rng)
@@ -46,6 +55,7 @@ public static class EnemyAI
                 int absorbed = Math.Min(state.PlayerBlock, damage);
                 state.PlayerBlock -= absorbed;
                 state.PlayerHp = Math.Max(0, state.PlayerHp - (damage - absorbed));
+                ApplyPlayerThorns(enemy, state);
 
                 // FlameBarrier: retaliate with flat unpowered damage.
                 int fb = BuffSystem.Get(state.PlayerBuffs, BuffId.FlameBarrier);
@@ -832,6 +842,23 @@ public static class EnemyAI
         }
     }
 
+    private static Intent? SecondaryIntentFor(EnemyState enemy)
+    {
+        return enemy.DefId switch
+        {
+            KE.GremlinMerc when enemy.MoveIndex % 3 is 1 or 2 =>
+                new Intent(IntentType.Attack, enemy.CurrentIntent.Magnitude),
+            KE.SludgeSpinner when enemy.MoveIndex % 3 is 0 or 2 =>
+                new Intent(IntentType.Attack, enemy.CurrentIntent.Magnitude),
+            KE.LivingFog when enemy.MoveIndex % 3 == 0 =>
+                new Intent(IntentType.Attack, enemy.CurrentIntent.Magnitude),
+            KE.Flyconid when enemy.CurrentIntent.Type == IntentType.Debuff
+                && enemy.CurrentIntent.Magnitude > 2 =>
+                new Intent(IntentType.Attack, enemy.CurrentIntent.Magnitude),
+            _ => null,
+        };
+    }
+
     // ── Per-enemy buff actions ─────────────────────────────────────────────────
 
     private static void ApplyBuffIntent(EnemyState enemy, CombatState state, Random rng)
@@ -1278,6 +1305,18 @@ public static class EnemyAI
         int absorbed = Math.Min(state.PlayerBlock, damage);
         state.PlayerBlock -= absorbed;
         state.PlayerHp = Math.Max(0, state.PlayerHp - (damage - absorbed));
+        ApplyPlayerThorns(enemy, state);
+    }
+
+    private static void ApplyPlayerThorns(EnemyState enemy, CombatState state)
+    {
+        int thorns = BuffSystem.Get(state.PlayerBuffs, BuffId.Thorns);
+        if (thorns <= 0)
+            return;
+
+        int absorbed = Math.Min(enemy.Block, thorns);
+        enemy.Block -= absorbed;
+        enemy.Hp = Math.Max(0, enemy.Hp - (thorns - absorbed));
     }
 
     private static void StealDrawOrDiscardCard(CombatState state)
@@ -1383,7 +1422,7 @@ public static class EnemyAI
 
     private static void SummonRatBackup(EnemyState enemy, CombatState state, Random rng)
     {
-        if (state.Enemies.Count(e => e.Hp > 0 && e.DefId == KE.TwoTailedRat) >= 6)
+        if (state.Enemies.Count(e => e.DefId == KE.TwoTailedRat) >= 6)
             return;
 
         state.Enemies.Add(CreateEnemy(KE.TwoTailedRat, rng, new Intent(IntentType.Unknown, 0), stunned: true));

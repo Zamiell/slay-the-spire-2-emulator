@@ -18,6 +18,9 @@ public sealed class CombatState
     // Potions: slot index → potion def ID, 0 = empty
     public int[] PotionSlots = new int[3];
 
+    // Relics
+    public List<RelicInstance> Relics = [];
+
     // Buffs/debuffs on the player
     public List<BuffState> PlayerBuffs = [];
 

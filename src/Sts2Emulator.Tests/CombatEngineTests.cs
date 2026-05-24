@@ -115,6 +115,124 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void ResetWithRelics_AppliesCombatStartRelics()
+    {
+        var state = new CombatState();
+
+        CombatFactory.Reset(
+            state,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 1,
+            relicIds:
+            [
+                RelicEffects.Anchor,
+                RelicEffects.BagOfPreparation,
+                RelicEffects.BloodVial,
+                RelicEffects.BronzeScales,
+                RelicEffects.OddlySmoothStone,
+                RelicEffects.Vajra,
+            ]
+        );
+
+        Assert.Equal(7, state.Hand.Count);
+        Assert.Equal(66, state.PlayerHp);
+        Assert.Equal(10, state.PlayerBlock);
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Strength));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Dexterity));
+        Assert.Equal(3, BuffSystem.Get(state.PlayerBuffs, BuffId.Thorns));
+    }
+
+    [Fact]
+    public void Orichalcum_GainsBlockWhenEndingTurnWithoutBlock()
+    {
+        var state = new CombatState();
+        CombatFactory.Reset(
+            state,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 1,
+            relicIds: [RelicEffects.Orichalcum],
+            playerHp: 64,
+            playerMaxHp: 80
+        );
+        state.Hand.Clear();
+        state.DrawPile.Clear();
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Attack, 1),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(64, state.PlayerHp);
+    }
+
+    [Fact]
+    public void ResetWithRunHp_PreservesCurrentRunHp()
+    {
+        var state = new CombatState();
+
+        CombatFactory.Reset(
+            state,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 1,
+            relicIds: [],
+            playerHp: 37,
+            playerMaxHp: 80
+        );
+
+        Assert.Equal(37, state.PlayerHp);
+        Assert.Equal(80, state.PlayerMaxHp);
+    }
+
+    [Fact]
+    public void ResetWithPotions_PreservesRunPotionSlots()
+    {
+        var state = new CombatState();
+
+        CombatFactory.Reset(
+            state,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 1,
+            relicIds: [],
+            playerHp: 37,
+            playerMaxHp: 80,
+            potionIds: [1, 0, 2]
+        );
+
+        Assert.Equal(new[] { 1, 0, 2 }, state.PotionSlots);
+    }
+
+    [Fact]
+    public void PlayerThorns_RetaliatesAgainstEnemyAttacks()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var enemy = new EnemyState
+        {
+            DefId = 16,
+            Hp = 20,
+            MaxHp = 20,
+            CurrentIntent = new Intent(IntentType.Attack, 1),
+            Buffs = [],
+        };
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.Thorns, 3);
+
+        EnemyAI.ExecuteIntent(enemy, state, new Random(0));
+
+        Assert.Equal(17, enemy.Hp);
+    }
+
+    [Fact]
     public void NewCombat_SamplesActOneWeakEncounterPools()
     {
         var states = Enumerable.Range(0, 64)
@@ -424,6 +542,41 @@ public class CombatEngineTests
         Assert.All(state.Enemies.Where(e => e.DefId == 101),
             rat => Assert.Equal(1, BuffSystem.Get(rat.Buffs, BuffId.BackupCount)));
         Assert.Contains(state.Enemies, e => e.DefId == 101 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
+    }
+
+    [Fact]
+    public void TwoTailedRat_CallForBackupRespectsTotalSlotLimit()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Enemies = Enumerable.Range(0, 6)
+            .Select(i => new EnemyState
+            {
+                DefId = 101,
+                Hp = i == 0 ? 20 : 0,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Buff, 0),
+                Buffs = [],
+            })
+            .ToList();
+
+        EnemyAI.ExecuteIntent(state.Enemies[0], state, new Random(0));
+
+        Assert.Equal(6, state.Enemies.Count(e => e.DefId == 101));
+    }
+
+    [Fact]
+    public void MixedEnemyIntents_ExposeSecondaryAttackMetadata()
+    {
+        var state = new CombatState();
+
+        CombatFactory.Reset(state, new Random(0), StarterDeckIds, encounterId: 7);
+        var merc = Assert.Single(state.Enemies);
+        merc.MoveIndex = 1;
+        merc.CurrentIntent = new Intent(IntentType.Debuff, 14);
+        EnemyAI.UpdateSecondaryIntents(state.Enemies);
+
+        Assert.Equal(IntentType.Attack, merc.SecondaryIntent?.Type);
+        Assert.Equal(14, merc.SecondaryIntent?.Magnitude);
     }
 
     [Fact]

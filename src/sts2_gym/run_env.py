@@ -9,15 +9,20 @@ import numpy as np
 from gymnasium import spaces
 
 from . import native
-from .env import ENCOUNTER_NAMES, MAX_ACTIONS, MAX_EPISODE_STEPS
+from .env import ENCOUNTER_NAMES, MAX_ACTIONS
 
 REWARD_SKIP_ACTION = 3
 REST_HEAL_ACTION = 0
 REST_UPGRADE_ACTION = 1
 SHOP_SKIP_ACTION = 4
-MAP_CHOICES = 3
-RUN_EXTRA_OBS = 22
+SHOP_POTION_ACTION = 5
+SHOP_REMOVE_ACTION = 6
+EVENT_SKIP_ACTION = 3
+NEOW_SKIP_ACTION = 3
+MAP_CHOICES = 4
+RUN_EXTRA_OBS = 28
 RUN_OBS_SIZE = native.OBS_SIZE + RUN_EXTRA_OBS
+RUN_MAX_EPISODE_STEPS = 1000
 
 PHASE_COMBAT = 0
 PHASE_CARD_REWARD = 1
@@ -26,6 +31,8 @@ PHASE_REST = 3
 PHASE_SHOP = 4
 PHASE_RELIC_REWARD = 5
 PHASE_COMPLETE = 6
+PHASE_EVENT = 7
+PHASE_NEOW = 8
 
 NODE_NONE = 0
 NODE_NORMAL = 1
@@ -34,20 +41,26 @@ NODE_REST = 3
 NODE_SHOP = 4
 NODE_RELIC = 5
 NODE_BOSS = 6
+NODE_EVENT = 7
 
 ACT_OVERGROWTH = 1
 ACT_UNDERDOCKS = 2
 
-RELIC_BURNING_BLOOD = 1
-RELIC_ANCHOR = 2
-RELIC_VAJRA = 3
-RELIC_ODDLY_SMOOTH_STONE = 4
-RELIC_BAG_OF_PREPARATION = 5
+RELIC_BURNING_BLOOD = 36
+RELIC_ANCHOR = 4
+RELIC_BLOOD_VIAL = 23
+RELIC_GOLDEN_PEARL = 105
+RELIC_VAJRA = 279
+RELIC_ODDLY_SMOOTH_STONE = 169
+RELIC_ORICHALCUM = 172
+RELIC_BAG_OF_PREPARATION = 10
 RELIC_REWARD_POOL = np.array(
     [
         RELIC_ANCHOR,
+        RELIC_BLOOD_VIAL,
         RELIC_VAJRA,
         RELIC_ODDLY_SMOOTH_STONE,
+        RELIC_ORICHALCUM,
         RELIC_BAG_OF_PREPARATION,
     ],
     dtype=np.int32,
@@ -70,6 +83,7 @@ ELITE_ENCOUNTERS = np.array(
 BOSS_ENCOUNTERS = np.array(
     [73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84], dtype=np.int32
 )
+GREMLIN_MERC_ENCOUNTER = 7
 
 
 class Sts2RunEnv(gym.Env):
@@ -85,7 +99,7 @@ class Sts2RunEnv(gym.Env):
     def __init__(
         self,
         seed: int = 0,
-        max_episode_steps: int = MAX_EPISODE_STEPS,
+        max_episode_steps: int = RUN_MAX_EPISODE_STEPS,
         max_floors: int = 16,
     ):
         super().__init__()
@@ -95,11 +109,12 @@ class Sts2RunEnv(gym.Env):
         self._max_floors = max_floors
         self._elapsed_steps = 0
         self._floor = 1
-        self._phase = PHASE_COMBAT
+        self._phase = PHASE_NEOW
         self._deck = list(STARTER_DECK)
         self._gold = 99
         self._player_hp = 64
         self._player_max_hp = 80
+        self._potions = [0, 0, 0]
         self._relics = [RELIC_BURNING_BLOOD]
         self._current_node_type = NODE_NORMAL
         self._pending_relic_reward = False
@@ -108,6 +123,7 @@ class Sts2RunEnv(gym.Env):
         self._map_node_types = np.zeros(MAP_CHOICES, dtype=np.int32)
         self._map_choices = np.zeros(MAP_CHOICES, dtype=np.int32)
         self._relic_reward = 0
+        self._event_id = 0
         self._act = "overgrowth"
         self._weak_encounters = np.zeros(3, dtype=np.int32)
         self._handle: int | None = None
@@ -129,11 +145,12 @@ class Sts2RunEnv(gym.Env):
         self._rng = np.random.default_rng(actual_seed)
         self._elapsed_steps = 0
         self._floor = 1
-        self._phase = PHASE_COMBAT
+        self._phase = PHASE_NEOW
         self._deck = list(STARTER_DECK)
         self._gold = 99
         self._player_hp = 64
         self._player_max_hp = 80
+        self._potions = [0, 0, 0]
         self._relics = [RELIC_BURNING_BLOOD]
         self._current_node_type = NODE_NORMAL
         self._pending_relic_reward = False
@@ -142,8 +159,13 @@ class Sts2RunEnv(gym.Env):
         self._map_node_types[:] = 0
         self._map_choices[:] = 0
         self._relic_reward = 0
+        self._event_id = 0
+        if self._handle is not None:
+            native.destroy(self._handle)
+            self._handle = None
+        for i in range(native.OBS_SIZE):
+            self._combat_obs_buf[i] = 0
         self._select_act_and_weak_encounters()
-        self._reset_combat(actual_seed, int(self._weak_encounters[0]))
         return self._obs(), self._info()
 
     def step(self, action: int):
@@ -159,6 +181,10 @@ class Sts2RunEnv(gym.Env):
             return self._step_shop(action)
         if self._phase == PHASE_RELIC_REWARD:
             return self._step_relic_reward(action)
+        if self._phase == PHASE_EVENT:
+            return self._step_event(action)
+        if self._phase == PHASE_NEOW:
+            return self._step_neow(action)
         if self._phase == PHASE_COMPLETE:
             return self._obs(), 0.0, True, False, self._info()
 
@@ -167,10 +193,10 @@ class Sts2RunEnv(gym.Env):
             self._handle, action, self._combat_obs_buf, self._rew_buf
         )
         reward = float(self._rew_buf[0])
+        self._sync_run_state_from_combat_obs()
         truncated = not terminal and self._elapsed_steps >= self._max_episode_steps
 
         if terminal and native.player_won(self._handle):
-            self._player_hp = max(0, int(self._combat_obs_buf[0]))
             self._after_combat_win()
             return self._obs(), reward, False, truncated, self._info()
 
@@ -201,11 +227,24 @@ class Sts2RunEnv(gym.Env):
                     int(card_id)
                 )
             mask[3] = self._gold >= 120
+            mask[SHOP_POTION_ACTION] = self._gold >= 40 and any(
+                potion == 0 for potion in self._potions
+            )
+            mask[SHOP_REMOVE_ACTION] = self._gold >= 75 and len(self._deck) > 1
             mask[SHOP_SKIP_ACTION] = True
             return mask
 
         if self._phase == PHASE_RELIC_REWARD:
             mask[0] = self._relic_reward != 0
+            return mask
+
+        if self._phase == PHASE_EVENT:
+            mask[: EVENT_SKIP_ACTION + 1] = True
+            mask[1] = self._player_hp < self._player_max_hp
+            return mask
+
+        if self._phase == PHASE_NEOW:
+            mask[: NEOW_SKIP_ACTION + 1] = True
             return mask
 
         if self._phase == PHASE_COMPLETE:
@@ -260,6 +299,10 @@ class Sts2RunEnv(gym.Env):
             self._enter_relic_reward_phase()
             return self._obs(), 0.0, False, False, self._info()
 
+        if self._current_node_type == NODE_EVENT:
+            self._enter_event_phase()
+            return self._obs(), 0.0, False, False, self._info()
+
         raise ValueError(f"Unsupported map node type: {self._current_node_type}")
 
     def _step_rest(self, action: int):
@@ -287,6 +330,15 @@ class Sts2RunEnv(gym.Env):
                 raise ValueError("Cannot afford shop relic.")
             self._gold -= 120
             self._relics.append(self._next_relic())
+        elif action == SHOP_POTION_ACTION:
+            if self._gold < 40 or not self._add_potion(self._next_potion()):
+                raise ValueError("Cannot buy shop potion.")
+            self._gold -= 40
+        elif action == SHOP_REMOVE_ACTION:
+            if self._gold < 75 or len(self._deck) <= 1:
+                raise ValueError("Cannot remove a card.")
+            self._gold -= 75
+            self._remove_lowest_priority_card()
         elif action != SHOP_SKIP_ACTION:
             raise ValueError(f"Invalid shop action: {action}")
 
@@ -303,8 +355,42 @@ class Sts2RunEnv(gym.Env):
             return self._obs(), 1.0, True, False, self._info()
         return self._advance_after_node()
 
+    def _step_event(self, action: int):
+        if action == 0:
+            self._gold += 50
+            self._add_potion(1)
+        elif action == 1:
+            if self._player_hp >= self._player_max_hp:
+                raise ValueError("Cannot choose event heal at full HP.")
+            self._player_hp = min(self._player_max_hp, self._player_hp + 15)
+        elif action == 2:
+            self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
+        elif action != EVENT_SKIP_ACTION:
+            raise ValueError(f"Invalid event action: {action}")
+
+        self._event_id = 0
+        return self._advance_after_node()
+
+    def _step_neow(self, action: int):
+        if action == 0:
+            self._gold += 150
+            self._relics.append(RELIC_GOLDEN_PEARL)
+        elif action == 1:
+            self._player_max_hp += 7
+            self._player_hp = min(self._player_max_hp, self._player_hp + 7)
+        elif action == 2:
+            self._relics.append(self._next_relic())
+        elif action != NEOW_SKIP_ACTION:
+            pass
+
+        self._phase = PHASE_COMBAT
+        self._reset_combat(self._seed, int(self._weak_encounters[0]))
+        return self._obs(), 0.0, False, False, self._info()
+
     def _after_combat_win(self) -> None:
         self._gold += self._gold_reward_for_node()
+        if self._floor % 3 == 0:
+            self._add_potion(self._next_potion())
         if RELIC_BURNING_BLOOD in self._relics:
             self._player_hp = min(self._player_max_hp, self._player_hp + 6)
         self._pending_relic_reward = self._current_node_type in (NODE_ELITE, NODE_BOSS)
@@ -338,8 +424,8 @@ class Sts2RunEnv(gym.Env):
         self._phase = PHASE_MAP
         if self._floor >= self._max_floors:
             boss = int(self._rng.choice(BOSS_ENCOUNTERS))
-            self._map_node_types[:] = [NODE_BOSS, NODE_BOSS, NODE_BOSS]
-            self._map_choices[:] = [boss, boss, boss]
+            self._map_node_types[:] = [NODE_BOSS, NODE_BOSS, NODE_BOSS, NODE_BOSS]
+            self._map_choices[:] = [boss, boss, boss, boss]
             return
 
         self._map_node_types[:] = self._node_types_for_floor()
@@ -355,6 +441,10 @@ class Sts2RunEnv(gym.Env):
     def _enter_relic_reward_phase(self):
         self._phase = PHASE_RELIC_REWARD
         self._relic_reward = self._next_relic()
+
+    def _enter_event_phase(self):
+        self._phase = PHASE_EVENT
+        self._event_id = int(self._rng.integers(1, 4))
 
     def _select_act_and_weak_encounters(self):
         if self._rng.integers(2) == 0:
@@ -374,10 +464,20 @@ class Sts2RunEnv(gym.Env):
 
     def _node_types_for_floor(self) -> np.ndarray:
         if self._floor in (6, 11):
-            return np.array([NODE_REST, NODE_SHOP, NODE_NORMAL], dtype=np.int32)
+            return np.array(
+                [NODE_REST, NODE_SHOP, NODE_NORMAL, NODE_NORMAL], dtype=np.int32
+            )
         if self._floor in (8, 13):
-            return np.array([NODE_ELITE, NODE_NORMAL, NODE_RELIC], dtype=np.int32)
-        return np.array([NODE_NORMAL, NODE_NORMAL, NODE_SHOP], dtype=np.int32)
+            return np.array(
+                [NODE_ELITE, NODE_NORMAL, NODE_RELIC, NODE_REST], dtype=np.int32
+            )
+        if self._floor in (5, 10, 15):
+            return np.array(
+                [NODE_EVENT, NODE_NORMAL, NODE_SHOP, NODE_NORMAL], dtype=np.int32
+            )
+        return np.array(
+            [NODE_NORMAL, NODE_NORMAL, NODE_SHOP, NODE_EVENT], dtype=np.int32
+        )
 
     def _encounter_for_node(self, node_type: int) -> int:
         if node_type == NODE_NORMAL:
@@ -395,9 +495,21 @@ class Sts2RunEnv(gym.Env):
         if encounter_id is None:
             native.reset_with_deck(self._handle, self._deck, self._combat_obs_buf)
         else:
-            native.reset_with_deck_and_encounter(
-                self._handle, self._deck, encounter_id, self._combat_obs_buf
+            native.reset_run_combat(
+                self._handle,
+                self._deck,
+                encounter_id,
+                self._relics,
+                self._player_hp,
+                self._player_max_hp,
+                self._potions,
+                self._combat_obs_buf,
             )
+
+    def _sync_run_state_from_combat_obs(self) -> None:
+        self._player_hp = max(0, int(self._combat_obs_buf[0]))
+        self._player_max_hp = max(1, int(self._combat_obs_buf[1]))
+        self._potions = [int(self._combat_obs_buf[28 + i * 2]) for i in range(3)]
 
     def _obs(self) -> np.ndarray:
         obs = np.zeros(RUN_OBS_SIZE, dtype=np.int32)
@@ -419,13 +531,19 @@ class Sts2RunEnv(gym.Env):
                 int(self._map_node_types[0]),
                 int(self._map_node_types[1]),
                 int(self._map_node_types[2]),
+                int(self._map_node_types[3]),
                 int(self._map_choices[0]),
                 int(self._map_choices[1]),
                 int(self._map_choices[2]),
+                int(self._map_choices[3]),
                 int(self._shop_cards[0]),
                 int(self._shop_cards[1]),
                 int(self._shop_cards[2]),
                 int(self._relic_reward),
+                int(self._event_id),
+                int(self._potions[0]),
+                int(self._potions[1]),
+                int(self._potions[2]),
             ],
             dtype=np.int32,
         )
@@ -440,11 +558,13 @@ class Sts2RunEnv(gym.Env):
             "gold": self._gold,
             "player_hp": self._player_hp,
             "player_max_hp": self._player_max_hp,
+            "potions": tuple(self._potions),
             "relics": tuple(self._relics),
             "current_node_type": self._current_node_type,
             "card_rewards": tuple(int(card_id) for card_id in self._reward_cards),
             "shop_cards": tuple(int(card_id) for card_id in self._shop_cards),
             "relic_reward": int(self._relic_reward),
+            "event_id": int(self._event_id),
             "map_choices": (
                 tuple(
                     {
@@ -478,14 +598,37 @@ class Sts2RunEnv(gym.Env):
         return self._seed + self._floor - 1
 
     def _gold_reward_for_node(self) -> int:
+        if (
+            self._handle is not None
+            and native.encounter_id(self._handle) == GREMLIN_MERC_ENCOUNTER
+        ):
+            return 40
         if self._current_node_type == NODE_ELITE:
             return 35
         if self._current_node_type == NODE_BOSS:
             return 100
-        return 15
+        return 7 + ((self._seed + self._floor) % 7)
 
     def _shop_card_cost(self, card_id: int) -> int:
         return 50 + (card_id % 3) * 25
+
+    def _add_potion(self, potion_id: int) -> bool:
+        for index, current in enumerate(self._potions):
+            if current == 0:
+                self._potions[index] = potion_id
+                return True
+        return False
+
+    def _next_potion(self) -> int:
+        return 1 + ((self._seed + self._floor + sum(self._potions)) % 5)
+
+    def _remove_lowest_priority_card(self) -> None:
+        for card_id in (10001, 472, 131, 30):
+            for index, encoded_card in enumerate(self._deck):
+                if abs(encoded_card) == card_id:
+                    del self._deck[index]
+                    return
+        self._deck.pop()
 
     def _next_relic(self) -> int:
         available = [

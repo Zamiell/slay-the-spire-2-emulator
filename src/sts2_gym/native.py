@@ -69,6 +69,32 @@ _lib.Sts2_ResetWithDeckAndEncounter.argtypes = [
     ctypes.POINTER(ctypes.c_int),
 ]
 
+_lib.Sts2_ResetWithDeckEncounterAndRelics.restype = None
+_lib.Sts2_ResetWithDeckEncounterAndRelics.argtypes = [
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+]
+
+_lib.Sts2_ResetRunCombat.restype = None
+_lib.Sts2_ResetRunCombat.argtypes = [
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+]
+
 _lib.Sts2_Step.restype = ctypes.c_int
 _lib.Sts2_Step.argtypes = [
     ctypes.c_int,
@@ -128,6 +154,54 @@ def reset_with_deck_and_encounter(
     deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
     _lib.Sts2_ResetWithDeckAndEncounter(
         handle, deck_buf, len(deck_ids), encounter_id, obs_buf
+    )
+
+
+def reset_with_deck_encounter_and_relics(
+    handle: int,
+    deck_ids: list[int],
+    encounter_id: int,
+    relic_ids: list[int],
+    obs_buf: ctypes.Array,
+) -> None:
+    deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
+    relic_buf = (ctypes.c_int * len(relic_ids))(*relic_ids)
+    _lib.Sts2_ResetWithDeckEncounterAndRelics(
+        handle,
+        deck_buf,
+        len(deck_ids),
+        encounter_id,
+        relic_buf,
+        len(relic_ids),
+        obs_buf,
+    )
+
+
+def reset_run_combat(
+    handle: int,
+    deck_ids: list[int],
+    encounter_id: int,
+    relic_ids: list[int],
+    player_hp: int,
+    player_max_hp: int,
+    potion_ids: list[int],
+    obs_buf: ctypes.Array,
+) -> None:
+    deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
+    relic_buf = (ctypes.c_int * len(relic_ids))(*relic_ids)
+    potion_buf = (ctypes.c_int * len(potion_ids))(*potion_ids)
+    _lib.Sts2_ResetRunCombat(
+        handle,
+        deck_buf,
+        len(deck_ids),
+        encounter_id,
+        relic_buf,
+        len(relic_ids),
+        player_hp,
+        player_max_hp,
+        potion_buf,
+        len(potion_ids),
+        obs_buf,
     )
 
 

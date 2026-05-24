@@ -82,6 +82,7 @@ public static class CombatEngine
         // Metallicize: gain block at end of player turn.
         int metallicize = BuffSystem.Get(state.PlayerBuffs, BuffId.Metallicize);
         if (metallicize > 0) Effects.CardEffects.GainBlock(state, metallicize);
+        Effects.RelicEffects.ApplyEndOfPlayerTurn(state);
 
         // Rage expires at end of player turn.
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Rage);

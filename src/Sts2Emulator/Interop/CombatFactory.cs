@@ -156,8 +156,43 @@ public static class CombatFactory
 
     public static void Reset(CombatState state, Random rng, ReadOnlySpan<int> deckIds, int? encounterId)
     {
-        state.PlayerHp     = StartingPlayerHp;
-        state.PlayerMaxHp  = StartingPlayerMaxHp;
+        Reset(state, rng, deckIds, encounterId, []);
+    }
+
+    public static void Reset(
+        CombatState state,
+        Random rng,
+        ReadOnlySpan<int> deckIds,
+        int? encounterId,
+        ReadOnlySpan<int> relicIds)
+    {
+        Reset(state, rng, deckIds, encounterId, relicIds, StartingPlayerHp, StartingPlayerMaxHp);
+    }
+
+    public static void Reset(
+        CombatState state,
+        Random rng,
+        ReadOnlySpan<int> deckIds,
+        int? encounterId,
+        ReadOnlySpan<int> relicIds,
+        int playerHp,
+        int playerMaxHp)
+    {
+        Reset(state, rng, deckIds, encounterId, relicIds, playerHp, playerMaxHp, []);
+    }
+
+    public static void Reset(
+        CombatState state,
+        Random rng,
+        ReadOnlySpan<int> deckIds,
+        int? encounterId,
+        ReadOnlySpan<int> relicIds,
+        int playerHp,
+        int playerMaxHp,
+        ReadOnlySpan<int> potionIds)
+    {
+        state.PlayerMaxHp  = Math.Max(1, playerMaxHp);
+        state.PlayerHp     = Math.Clamp(playerHp, 0, state.PlayerMaxHp);
         state.Energy       = StartingEnergy;
         state.MaxEnergy    = StartingEnergy;
         state.PlayerBlock  = 0;
@@ -166,6 +201,9 @@ public static class CombatFactory
         state.DiscardPile  = [];
         state.ExhaustPile  = [];
         state.PotionSlots  = new int[3];
+        for (int i = 0; i < Math.Min(state.PotionSlots.Length, potionIds.Length); i++)
+            state.PotionSlots[i] = potionIds[i];
+        state.Relics       = relicIds.ToArray().Select(id => new RelicInstance(id)).ToList();
         state.Turn         = 0;
         state.PlayerTurn   = true;
         state.SkillPlayedWhileSmoggy = false;
@@ -180,6 +218,7 @@ public static class CombatFactory
             : SelectFirstCombatEncounter(rng);
         state.EncounterId = (int)encounter;
         state.Enemies = CreateEncounter(encounter, rng);
+        EnemyAI.UpdateSecondaryIntents(state.Enemies);
 
         // Shuffle draw pile and deal opening hand of 5.
         CardEffects.ShufflePile(state.DrawPile, rng);
@@ -188,6 +227,8 @@ public static class CombatFactory
             state.Hand.Add(state.DrawPile[0]);
             state.DrawPile.RemoveAt(0);
         }
+
+        RelicEffects.ApplyCombatStart(state, rng);
     }
 
     private static int[] StarterDeck() =>
