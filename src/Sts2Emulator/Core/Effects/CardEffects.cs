@@ -26,6 +26,11 @@ public static class CardEffects
                 DealDamage(state, state.PlayerBlock);
                 break;
 
+            case IC.Breakthrough: // 1-cost, lose 1 HP + 9/13 dmg to ALL enemies
+                LoseHp(state, 1);
+                DealDamageToAll(state, Dmg(def, upgraded));
+                break;
+
             case IC.AshenStrike: // 1-cost, 6 + 3/4 per exhausted card
                 DealDamage(state, 6 + state.ExhaustPile.Count * (upgraded ? 4 : 3));
                 break;

@@ -6,6 +6,7 @@
 - Use `scripts\replay_full_run_trace.py` to replay retained STS2MCP full-run traces against `Sts2RunEnv` and identify the first floor/combat-boundary parity mismatch.
 - Native C# card powers are commonly modeled as `BuffId` entries, with timing handled in `CombatEngine` and damage/effect hooks in `EnemyAI` or `CardEffects`.
 - Native card powers with extra dynamic variables can use companion `BuffId` entries to track hidden per-power state alongside the visible counter.
+- Native card effects that cause player HP loss should use `CardEffects.LoseHp` so Rupture and Inferno hooks stay consistent with other card-effect self-damage.
 - Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
 - Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
 
@@ -84,6 +85,19 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Inferno applies a visible counter power and separately increments a `SelfDamage` dynamic var each time the power is played.
   - `CombatState.PlayerTurn` can gate player-turn-only self-damage hooks; set it false while enemies execute and true before start-of-player-turn power effects.
+  - Rebuild `out\Sts2Emulator.dll` before Python checks after native C# edits, or the stale-native guard will fail.
+
+---
+
+## 2026-05-24 13:49 - PLAN-M2-BREAKTHROUGH
+
+- Implemented native Breakthrough combat behavior: the card now loses 1 player HP before dealing upgraded-aware attack damage to all enemies.
+- Added C# regression coverage for base and upgraded Breakthrough all-enemy damage and self-HP loss.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Breakthrough applies unblocked, unpowered player self-damage before its all-enemy attack.
+  - Use `CardEffects.LoseHp` for card-effect self-damage so existing Rupture and Inferno hooks are preserved.
   - Rebuild `out\Sts2Emulator.dll` before Python checks after native C# edits, or the stale-native guard will fail.
 
 ---
