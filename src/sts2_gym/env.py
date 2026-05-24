@@ -154,6 +154,7 @@ class Sts2CombatEnv(gym.Env):
 
     def action_masks(self) -> np.ndarray:
         """Return a boolean mask of valid actions (for MaskablePPO)."""
+        assert self._handle is not None, "Call reset() before action_masks()"
         mask_buf = native.valid_actions(self._handle, MAX_ACTIONS)
         return np.array(mask_buf, dtype=bool)
 
@@ -165,7 +166,7 @@ class Sts2CombatEnv(gym.Env):
     # ── internals ─────────────────────────────────────────────────────────────
 
     def _obs(self) -> np.ndarray:
-        return np.frombuffer(self._obs_buf, dtype=np.int32).copy()
+        return np.ctypeslib.as_array(self._obs_buf).copy()
 
     def _info(self) -> dict:
         if self._handle is None:

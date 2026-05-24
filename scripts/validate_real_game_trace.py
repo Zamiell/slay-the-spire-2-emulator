@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import sys
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -14,8 +16,20 @@ from sts2_gym import Sts2CombatEnv
 
 import compare_traces
 import start_real_game_run
-import trace as emulator_trace
 import trace_real_game
+
+
+def load_emulator_trace_module() -> ModuleType:
+    path = Path(__file__).with_name("trace.py")
+    spec = importlib.util.spec_from_file_location("emulator_trace", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Could not load emulator trace module from {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+emulator_trace = load_emulator_trace_module()
 
 CARD_IDS = {
     "ASCENDERS_BANE": 10001,

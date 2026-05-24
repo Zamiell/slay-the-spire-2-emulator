@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   ty:
-    name: ty
+    name: Type-Check Python
     runs-on: ubuntu-latest
 
     steps:

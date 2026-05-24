@@ -3,6 +3,7 @@
 import sys
 import os
 from pathlib import Path
+from typing import cast
 
 # Allow running from project root: python scripts/train.py
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -21,7 +22,7 @@ from sts2_gym import Sts2CombatEnv
 def make_env(rank: int):
     def _init():
         env = Sts2CombatEnv(seed=rank)
-        env = ActionMasker(env, lambda e: e.action_masks())
+        env = ActionMasker(env, lambda e: cast(Sts2CombatEnv, e).action_masks())
         return env
 
     return _init

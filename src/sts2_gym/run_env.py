@@ -120,6 +120,7 @@ class Sts2RunEnv(gym.Env):
             mask[:MAP_CHOICES] = True
             return mask
 
+        assert self._handle is not None, "Call reset() before action_masks()"
         mask_buf = native.valid_actions(self._handle, MAX_ACTIONS)
         return np.array(mask_buf, dtype=bool)
 
@@ -198,7 +199,7 @@ class Sts2RunEnv(gym.Env):
 
     def _obs(self) -> np.ndarray:
         obs = np.zeros(RUN_OBS_SIZE, dtype=np.int32)
-        obs[: native.OBS_SIZE] = np.frombuffer(self._combat_obs_buf, dtype=np.int32)
+        obs[: native.OBS_SIZE] = np.ctypeslib.as_array(self._combat_obs_buf)
         obs[native.OBS_SIZE :] = np.array(
             [
                 self._phase,

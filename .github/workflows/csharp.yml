@@ -1,0 +1,26 @@
+name: C#
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build C#
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj
+
+      - name: Build
+        run: dotnet build src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj --configuration Release --no-restore
