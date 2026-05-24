@@ -245,6 +245,8 @@ public static class CombatFactory
         }
 
         RelicEffects.ApplyCombatStart(state, rng);
+        RelicEffects.ApplyStartOfPlayerTurn(state);
+        RelicEffects.ApplyAfterPlayerHpChanged(state);
     }
 
     private static int[] StarterDeck() =>

@@ -33,18 +33,25 @@ from sts2_gym.run_env import (
     RELIC_FISHING_ROD,
     RELIC_KALEIDOSCOPE,
     RELIC_LEAD_PAPERWEIGHT,
+    RELIC_LEES_WAFFLE,
     RELIC_LARGE_CAPSULE,
     RELIC_LOST_COFFER,
+    RELIC_MANGO,
+    RELIC_MEAT_ON_THE_BONE,
     RELIC_MASSIVE_SCROLL,
     RELIC_NEOWS_TALISMAN,
     RELIC_NEW_LEAF,
     RELIC_NUTRITIOUS_OYSTER,
+    RELIC_OLD_COIN,
     RELIC_PHIAL_HOLSTER,
+    RELIC_PEAR,
     RELIC_PRECISE_SCISSORS,
     RELIC_ORICHALCUM,
     RELIC_SCROLL_BOXES,
     RELIC_SILVER_CRUCIBLE,
     RELIC_SILKEN_TRESS,
+    RELIC_STRAWBERRY,
+    RELIC_VENERABLE_TEA_SET,
     RELIC_WAR_HAMMER,
     RELIC_WINGED_BOOTS,
     EVENT_SIMPLE_REWARD,
@@ -252,6 +259,7 @@ class Sts2GymTests(unittest.TestCase):
 
             env._gold = 200
             env._enter_shop_phase()
+            env._gold = int(env._shop_costs[7])
             relic_count = len(env._relics)
             env.step(7)
 
@@ -275,6 +283,44 @@ class Sts2GymTests(unittest.TestCase):
         finally:
             env.close()
 
+    def test_run_env_shop_uses_decompiled_slot_layout_and_prices(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._enter_shop_phase()
+
+            self.assertIn(
+                int(env._shop_cards[0]), {13, 60, 87, 268, 358, 454, 486, 508, 519}
+            )
+            self.assertIn(
+                int(env._shop_cards[1]), {13, 60, 87, 268, 358, 454, 486, 508, 519}
+            )
+            self.assertIn(
+                int(env._shop_cards[2]), {18, 31, 175, 238, 396, 414, 433, 455, 521}
+            )
+            self.assertIn(
+                int(env._shop_cards[3]), {18, 31, 175, 238, 396, 414, 433, 455, 521}
+            )
+            self.assertIn(int(env._shop_cards[4]), {265, 273})
+
+            for action, card_id in enumerate(env._shop_cards):
+                base = (
+                    75
+                    if int(card_id) in {31, 175, 265, 273, 396, 414, 454, 455, 521}
+                    else 50
+                )
+                if action >= 5:
+                    base = int(base * 1.15 + 0.5)
+                cost = int(env._shop_costs[action])
+                if action < 5 and cost < base * 0.75:
+                    self.assertEqual(cost, int((base * 1.05 + 0.5) // 2))
+                else:
+                    self.assertIn(
+                        cost, range(int(base * 0.95 + 0.5), int(base * 1.05 + 0.5) + 1)
+                    )
+        finally:
+            env.close()
+
     def test_run_env_shop_removes_card(self):
         env = Sts2RunEnv(seed=0)
         try:
@@ -289,6 +335,20 @@ class Sts2GymTests(unittest.TestCase):
             self.assertEqual(info["deck_size"], deck_size - 1)
             self.assertLess(info["gold"], 200)
             self.assertNotIn(10001, env._deck)
+        finally:
+            env.close()
+
+    def test_run_env_shop_removal_cost_increases(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._gold = 300
+            env._enter_shop_phase()
+
+            _, _, _, _, info = env.step(13)
+
+            self.assertEqual(info["shop_removals_used"], 1)
+            self.assertEqual(env._shop_removal_cost(), 150)
         finally:
             env.close()
 
@@ -395,6 +455,31 @@ class Sts2GymTests(unittest.TestCase):
 
             env._obtain_relic(RELIC_SILKEN_TRESS)
             self.assertEqual(env._gold, 0)
+        finally:
+            env.close()
+
+    def test_run_env_fruit_and_gold_pickup_relic_effects(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._player_hp = 20
+            env._player_max_hp = 80
+
+            env._obtain_relic(RELIC_STRAWBERRY)
+            self.assertEqual((env._player_hp, env._player_max_hp), (27, 87))
+
+            env._obtain_relic(RELIC_PEAR)
+            self.assertEqual((env._player_hp, env._player_max_hp), (37, 97))
+
+            env._obtain_relic(RELIC_MANGO)
+            self.assertEqual((env._player_hp, env._player_max_hp), (51, 111))
+
+            env._obtain_relic(RELIC_LEES_WAFFLE)
+            self.assertEqual((env._player_hp, env._player_max_hp), (118, 118))
+
+            gold_before = env._gold
+            env._obtain_relic(RELIC_OLD_COIN)
+            self.assertEqual(env._gold, gold_before + 300)
         finally:
             env.close()
 
@@ -579,6 +664,42 @@ class Sts2GymTests(unittest.TestCase):
 
             self.assertEqual(env._player_hp, 58)
             self.assertEqual(sum(1 for card in env._deck if card < 0), 4)
+        finally:
+            env.close()
+
+    def test_run_env_meat_on_the_bone_heals_after_low_hp_combat(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._relics = [RELIC_MEAT_ON_THE_BONE]
+            env._player_hp = 30
+            env._player_max_hp = 80
+            env._current_node_type = NODE_NORMAL
+
+            env._after_combat_win()
+
+            self.assertEqual(env._player_hp, 42)
+        finally:
+            env.close()
+
+    def test_run_env_venerable_tea_set_activates_after_rest(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._relics.append(RELIC_VENERABLE_TEA_SET)
+            env._phase = PHASE_REST
+            env._player_hp = 20
+
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertFalse(terminated)
+            self.assertTrue(info["venerable_tea_set_active"])
+
+            env._reset_combat(seed=0, encounter_id=1)
+            obs = env._obs()
+
+            self.assertEqual(int(obs[3]), 5)
+            self.assertFalse(env._info()["venerable_tea_set_active"])
         finally:
             env.close()
 

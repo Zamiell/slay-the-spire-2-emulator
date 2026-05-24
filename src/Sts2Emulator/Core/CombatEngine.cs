@@ -48,6 +48,14 @@ public static class CombatEngine
         // Rage: gain block when playing an Attack.
         if (def.Type == CardType.Attack)
         {
+            state.AttackCardsPlayedThisTurn++;
+            if (state.AttackCardsPlayedThisTurn == 3)
+            {
+                int juggling = BuffSystem.Get(state.PlayerBuffs, BuffId.Juggling);
+                for (int i = 0; i < juggling; i++)
+                    state.Hand.Add(new CardInstance(card.DefId, card.Upgraded));
+            }
+
             int rage = BuffSystem.Get(state.PlayerBuffs, BuffId.Rage);
             if (rage > 0) Effects.CardEffects.GainBlock(state, rage);
         }
@@ -59,6 +67,8 @@ public static class CombatEngine
             Effects.CardEffects.ExhaustCard(state, card);
         else
             state.DiscardPile.Add(card);
+
+        Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
 
         bool playerDead = state.PlayerHp <= 0;
         bool allDead = state.Enemies.All(e => e.Hp <= 0);
@@ -129,6 +139,8 @@ public static class CombatEngine
         if (BuffSystem.Get(state.PlayerBuffs, BuffId.Barricade) == 0)
             state.PlayerBlock = 0;
 
+        Effects.RelicEffects.ApplyStartOfPlayerTurn(state);
+
         // DemonForm: gain Strength at start of player turn.
         int demonForm = BuffSystem.Get(state.PlayerBuffs, BuffId.DemonForm);
         if (demonForm > 0)
@@ -139,12 +151,14 @@ public static class CombatEngine
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Tangled);
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Smoggy);
         state.SkillPlayedWhileSmoggy = false;
+        state.AttackCardsPlayedThisTurn = 0;
 
         // Draw five cards.
         Effects.CardEffects.DrawCards(state, 5, rng);
 
         // Enemies choose their next intent.
         EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng);
+        Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
 
         bool playerDead = state.PlayerHp <= 0;
         bool allDead = state.Enemies.All(e => e.Hp <= 0);
@@ -163,6 +177,7 @@ public static class CombatEngine
 
         Effects.PotionEffects.Apply(state.PotionSlots[slot], state);
         state.PotionSlots[slot] = 0;
+        Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
 
         return new StepResult(Terminal: false, PlayerWon: false, Reward: 0f);
     }

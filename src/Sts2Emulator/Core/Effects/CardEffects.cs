@@ -151,6 +151,14 @@ public static class CardEffects
                 break;
             }
 
+            case IC.ExpectAFight: // 2/1-cost, gain 1 energy per Attack in hand
+            {
+                int attackCount = state.Hand.Count(card =>
+                    GeneratedData.Cards.Get(card.DefId).Type == CardType.Attack);
+                state.Energy += attackCount;
+                break;
+            }
+
             case IC.FlameBarrier: // 2-cost, 12/16 block + FlameBarrier 4/6
                 GainBlock(state, Blk(def, upgraded));
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.FlameBarrier, upgraded ? 6 : 4);
@@ -159,6 +167,19 @@ public static class CardEffects
             case IC.ForgottenRitual: // 1-cost, gain 3 energy (exhaust-trigger check omitted)
                 state.Energy += 3;
                 break;
+
+            case IC.Havoc: // 1/0-cost, play top card of draw pile and exhaust it
+            {
+                if (state.DrawPile.Count > 0)
+                {
+                    var top = state.DrawPile[0];
+                    state.DrawPile.RemoveAt(0);
+                    var topDef = GeneratedData.Cards.Get(top.DefId);
+                    Apply(topDef, top.Upgraded, state, rng);
+                    ExhaustCard(state, top);
+                }
+                break;
+            }
 
             case IC.NotYet: // 2-cost, heal 10/13 HP
                 state.PlayerHp = Math.Min(state.PlayerHp + (upgraded ? 13 : 10), state.PlayerMaxHp);
@@ -185,9 +206,21 @@ public static class CardEffects
                 break;
             }
 
+            case IC.Restlessness: // 0-cost, if this was the only card in hand, draw and gain energy
+                if (state.Hand.Count == 0)
+                {
+                    DrawCards(state, upgraded ? 3 : 2, rng);
+                    state.Energy += upgraded ? 3 : 2;
+                }
+                break;
+
             case IC.ShrugItOff: // 1-cost, 8/11 block + draw 1
                 GainBlock(state, Blk(def, upgraded));
                 DrawCards(state, 1, rng);
+                break;
+
+            case IC.Splash: // 1-cost, approximate generated off-character attack with a free Strike
+                state.Hand.Add(new CardInstance(IC.StrikeIronclad, upgraded));
                 break;
 
             case IC.Taunt: // 1-cost, 7/8 block + Vulnerable 1 to enemy
@@ -234,6 +267,10 @@ public static class CardEffects
 
             case IC.Juggernaut: // 2-cost, deal 5/7 dmg when gaining block
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Juggernaut, upgraded ? 7 : 5);
+                break;
+
+            case IC.Juggling: // 1-cost, copy the third Attack played each turn into hand
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Juggling, 1);
                 break;
 
             case IC.Rage: // 0-cost, gain 3/5 block when playing an Attack this turn
@@ -472,9 +509,13 @@ public static class IC
     public const int ExpectAFight  = 175;
     public const int FlameBarrier  = 195;
     public const int ForgottenRitual = 205;
+    public const int Havoc         = 238;
     public const int Rage          = 378;
+    public const int Restlessness  = 396;
     public const int SecondWind    = 414;
+    public const int Splash        = 455;
     public const int Taunt         = 493;
+    public const int UltimateDefend = 521;
 
     // Rare Attacks
     public const int FiendFire     = 188;
@@ -499,6 +540,7 @@ public static class IC
     public const int DemonForm   = 141;
     public const int FeelNoPain  = 185;
     public const int Inflame     = 265;
+    public const int Juggling    = 273;
     public const int Juggernaut  = 272;
     public const int Rupture     = 404;
 }

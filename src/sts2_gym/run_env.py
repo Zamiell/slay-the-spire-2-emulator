@@ -74,19 +74,27 @@ RELIC_BURNING_BLOOD = 36
 RELIC_ANCHOR = 4
 RELIC_AMETHYST_AUBERGINE = 3
 RELIC_ARCANE_SCROLL = 5
+RELIC_BAG_OF_MARBLES = 9
 RELIC_BLOOD_VIAL = 23
 RELIC_BOOMING_CONCH = 29
+RELIC_CAPTAINS_WHEEL = 41
 RELIC_CURSED_PEARL = 54
 RELIC_FISHING_ROD = 89
 RELIC_GOLDEN_PEARL = 105
+RELIC_HAPPY_FLOWER = 110
 RELIC_HEFTY_TABLET = 111
+RELIC_HORN_CLEAT = 114
 RELIC_KALEIDOSCOPE = 124
+RELIC_LANTERN = 128
 RELIC_LARGE_CAPSULE = 129
 RELIC_LAVA_ROCK = 132
 RELIC_LEAD_PAPERWEIGHT = 133
 RELIC_LEAFY_POULTICE = 134
+RELIC_LEES_WAFFLE = 135
 RELIC_LOST_COFFER = 140
+RELIC_MANGO = 144
 RELIC_MASSIVE_SCROLL = 145
+RELIC_MEAT_ON_THE_BONE = 149
 RELIC_NEOWS_BONES = 161
 RELIC_NEOWS_TALISMAN = 162
 RELIC_NEOWS_TORMENT = 163
@@ -97,16 +105,22 @@ RELIC_PHIAL_HOLSTER = 195
 RELIC_POMANDER = 201
 RELIC_PRECARIOUS_SHEARS = 205
 RELIC_PRECISE_SCISSORS = 206
+RELIC_RED_SKULL = 215
 RELIC_SCROLL_BOXES = 231
 RELIC_SILKEN_TRESS = 239
 RELIC_SILVER_CRUCIBLE = 240
 RELIC_SMALL_CAPSULE = 242
+RELIC_STRAWBERRY = 252
 RELIC_VAJRA = 279
 RELIC_ODDLY_SMOOTH_STONE = 169
+RELIC_OLD_COIN = 170
 RELIC_ORICHALCUM = 172
 RELIC_BAG_OF_PREPARATION = 10
 RELIC_BLACK_BLOOD = 19
+RELIC_PEAR = 190
 RELIC_STONE_HUMIDIFIER = 250
+RELIC_VENERABLE_TEA_SET = 282
+RELIC_VENERABLE_TEA_SET_ACTIVE = 100282
 RELIC_WAR_HAMMER = 286
 RELIC_WINGED_BOOTS = 293
 NEOWS_FURY_CARD = 321
@@ -115,14 +129,27 @@ RELIC_REWARD_POOL = np.array(
     [
         RELIC_AMETHYST_AUBERGINE,
         RELIC_ANCHOR,
+        RELIC_BAG_OF_MARBLES,
         RELIC_BLACK_BLOOD,
         RELIC_BLOOD_VIAL,
+        RELIC_CAPTAINS_WHEEL,
+        RELIC_HAPPY_FLOWER,
+        RELIC_HORN_CLEAT,
+        RELIC_LANTERN,
+        RELIC_LEES_WAFFLE,
+        RELIC_MANGO,
+        RELIC_MEAT_ON_THE_BONE,
         RELIC_VAJRA,
+        RELIC_VENERABLE_TEA_SET,
+        RELIC_OLD_COIN,
         RELIC_ODDLY_SMOOTH_STONE,
         RELIC_ORICHALCUM,
         RELIC_BAG_OF_PREPARATION,
         RELIC_PANTOGRAPH,
+        RELIC_PEAR,
+        RELIC_RED_SKULL,
         RELIC_STONE_HUMIDIFIER,
+        RELIC_STRAWBERRY,
         RELIC_WAR_HAMMER,
     ],
     dtype=np.int32,
@@ -160,7 +187,89 @@ NEOW_CURSE_RELICS = np.array(
 )
 
 STARTER_DECK = [472] * 5 + [131] * 4 + [30, 10001]
-IRONCLAD_REWARD_POOL = np.array([13, 18, 265, 358, 433, 508, 519], dtype=np.int32)
+IRONCLAD_REWARD_POOL = np.array(
+    [
+        13,
+        18,
+        31,
+        60,
+        87,
+        175,
+        238,
+        265,
+        268,
+        273,
+        358,
+        396,
+        414,
+        433,
+        454,
+        455,
+        486,
+        508,
+        519,
+        521,
+    ],
+    dtype=np.int32,
+)
+SHOP_ATTACK_CARDS = np.array([13, 60, 87, 268, 358, 454, 486, 508, 519], dtype=np.int32)
+SHOP_SKILL_CARDS = np.array([18, 31, 175, 238, 396, 414, 433, 455, 521], dtype=np.int32)
+SHOP_POWER_CARDS = np.array([265, 273], dtype=np.int32)
+SHOP_COLORLESS_CARDS = IRONCLAD_REWARD_POOL
+SHOP_CARD_BASE_COSTS = {
+    13: 50,
+    18: 50,
+    31: 75,
+    60: 50,
+    87: 50,
+    175: 75,
+    238: 50,
+    265: 75,
+    268: 50,
+    273: 75,
+    358: 50,
+    396: 75,
+    414: 75,
+    433: 50,
+    454: 75,
+    455: 75,
+    486: 50,
+    508: 50,
+    519: 50,
+    521: 75,
+}
+SHOP_POTION_BASE_COSTS = {
+    1: 75,
+    2: 50,
+    3: 100,
+    4: 75,
+    5: 50,
+}
+SHOP_RELIC_BASE_COSTS = {
+    RELIC_AMETHYST_AUBERGINE: 175,
+    RELIC_ANCHOR: 175,
+    RELIC_BAG_OF_PREPARATION: 175,
+    RELIC_BAG_OF_MARBLES: 175,
+    RELIC_BLOOD_VIAL: 175,
+    RELIC_CAPTAINS_WHEEL: 275,
+    RELIC_HAPPY_FLOWER: 175,
+    RELIC_HORN_CLEAT: 225,
+    RELIC_LANTERN: 175,
+    RELIC_LEES_WAFFLE: 200,
+    RELIC_MANGO: 275,
+    RELIC_MEAT_ON_THE_BONE: 275,
+    RELIC_ODDLY_SMOOTH_STONE: 175,
+    RELIC_OLD_COIN: 275,
+    RELIC_ORICHALCUM: 175,
+    RELIC_PANTOGRAPH: 175,
+    RELIC_PEAR: 225,
+    RELIC_RED_SKULL: 175,
+    RELIC_STONE_HUMIDIFIER: 175,
+    RELIC_STRAWBERRY: 175,
+    RELIC_VENERABLE_TEA_SET: 175,
+    RELIC_VAJRA: 175,
+    RELIC_WAR_HAMMER: 999999999,
+}
 UPGRADABLE_STARTER_CARDS = {30, 131, 472}
 OVERGROWTH_WEAK_ENCOUNTERS = np.array([2, 3, 11, 8], dtype=np.int32)
 UNDERDOCKS_WEAK_ENCOUNTERS = np.array([9, 12, 10, 13], dtype=np.int32)
@@ -236,7 +345,9 @@ class Sts2RunEnv(gym.Env):
         self._silver_crucible_card_rewards_seen = 0
         self._silver_crucible_treasure_seen = 0
         self._fishing_rod_combats_seen = 0
+        self._venerable_tea_set_active = False
         self._winged_boots_times_used = 0
+        self._shop_removals_used = 0
         self._event_id = 0
         self._act = "overgrowth"
         self._weak_encounters = np.zeros(3, dtype=np.int32)
@@ -284,7 +395,9 @@ class Sts2RunEnv(gym.Env):
         self._silver_crucible_card_rewards_seen = 0
         self._silver_crucible_treasure_seen = 0
         self._fishing_rod_combats_seen = 0
+        self._venerable_tea_set_active = False
         self._winged_boots_times_used = 0
+        self._shop_removals_used = 0
         self._event_id = 0
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
@@ -367,7 +480,9 @@ class Sts2RunEnv(gym.Env):
                     and self._gold >= int(self._shop_costs[action])
                     and any(potion == 0 for potion in self._potions)
                 )
-            mask[SHOP_REMOVE_ACTION] = self._gold >= 75 and len(self._deck) > 1
+            mask[SHOP_REMOVE_ACTION] = (
+                self._gold >= self._shop_removal_cost() and len(self._deck) > 1
+            )
             mask[SHOP_SKIP_ACTION] = True
             return mask
 
@@ -480,6 +595,8 @@ class Sts2RunEnv(gym.Env):
                 return self._invalid_action()
         else:
             return self._invalid_action()
+        if RELIC_VENERABLE_TEA_SET in self._relics:
+            self._venerable_tea_set_active = True
         return self._advance_after_node()
 
     def _step_shop(self, action: int):
@@ -509,10 +626,11 @@ class Sts2RunEnv(gym.Env):
             self._gold -= cost
             self._shop_potions[index] = 0
         elif action == SHOP_REMOVE_ACTION:
-            if self._gold < 75 or len(self._deck) <= 1:
+            if self._gold < self._shop_removal_cost() or len(self._deck) <= 1:
                 return self._invalid_action()
             self._gold -= self._shop_removal_cost()
             self._remove_lowest_priority_card()
+            self._shop_removals_used += 1
         elif action != SHOP_SKIP_ACTION:
             return self._invalid_action()
 
@@ -588,8 +706,18 @@ class Sts2RunEnv(gym.Env):
                     self._relics.append(bonus)
             self._deck.append(CURSE_PLACEHOLDER_CARD)
         elif relic_id == RELIC_NUTRITIOUS_OYSTER:
-            self._player_max_hp += 11
-            self._player_hp = min(self._player_max_hp, self._player_hp + 11)
+            self._gain_max_hp(11)
+        elif relic_id == RELIC_STRAWBERRY:
+            self._gain_max_hp(7)
+        elif relic_id == RELIC_PEAR:
+            self._gain_max_hp(10)
+        elif relic_id == RELIC_MANGO:
+            self._gain_max_hp(14)
+        elif relic_id == RELIC_LEES_WAFFLE:
+            self._gain_max_hp(7)
+            self._player_hp = self._player_max_hp
+        elif relic_id == RELIC_OLD_COIN:
+            self._gold += 300
         elif relic_id == RELIC_SMALL_CAPSULE:
             self._obtain_relic(self._next_relic())
         elif relic_id == RELIC_LARGE_CAPSULE:
@@ -660,6 +788,11 @@ class Sts2RunEnv(gym.Env):
             self._player_hp = min(self._player_max_hp, self._player_hp + 6)
         if RELIC_BLACK_BLOOD in self._relics:
             self._player_hp = min(self._player_max_hp, self._player_hp + 12)
+        if (
+            RELIC_MEAT_ON_THE_BONE in self._relics
+            and self._player_hp <= self._player_max_hp // 2
+        ):
+            self._player_hp = min(self._player_max_hp, self._player_hp + 12)
         if RELIC_FISHING_ROD in self._relics and self._current_node_type == NODE_NORMAL:
             self._fishing_rod_combats_seen += 1
             if self._fishing_rod_combats_seen % 3 == 0:
@@ -723,9 +856,7 @@ class Sts2RunEnv(gym.Env):
 
     def _enter_shop_phase(self):
         self._phase = PHASE_SHOP
-        self._shop_cards[:] = self._rng.choice(
-            IRONCLAD_REWARD_POOL, size=len(self._shop_cards), replace=False
-        )
+        self._shop_cards[:] = self._generate_shop_cards()
         self._shop_relics[:] = [self._next_relic() for _ in range(3)]
         self._shop_potions[:] = [self._next_potion() for _ in range(3)]
         self._shop_costs[:] = 0
@@ -736,9 +867,15 @@ class Sts2RunEnv(gym.Env):
                 cost //= 2
             self._shop_costs[action] = cost
         for action in SHOP_RELIC_ACTIONS:
-            self._shop_costs[action] = self._shop_relic_cost()
+            index = action - SHOP_RELIC_ACTIONS.start
+            self._shop_costs[action] = self._shop_relic_cost(
+                int(self._shop_relics[index])
+            )
         for action in SHOP_POTION_ACTIONS:
-            self._shop_costs[action] = self._shop_potion_cost(action)
+            index = action - SHOP_POTION_ACTIONS.start
+            self._shop_costs[action] = self._shop_potion_cost(
+                int(self._shop_potions[index])
+            )
         self._shop_costs[SHOP_REMOVE_ACTION] = self._shop_removal_cost()
 
     def _enter_relic_reward_phase(self):
@@ -945,11 +1082,15 @@ class Sts2RunEnv(gym.Env):
         if encounter_id is None:
             native.reset_with_deck(self._handle, self._deck, self._combat_obs_buf)
         else:
+            relics = self._relics
+            if self._venerable_tea_set_active:
+                relics = [*relics, RELIC_VENERABLE_TEA_SET_ACTIVE]
+                self._venerable_tea_set_active = False
             native.reset_run_combat(
                 self._handle,
                 self._deck,
                 encounter_id,
-                self._relics,
+                relics,
                 self._player_hp,
                 self._player_max_hp,
                 self._potions,
@@ -1033,7 +1174,9 @@ class Sts2RunEnv(gym.Env):
             "silver_crucible_card_rewards_seen": self._silver_crucible_card_rewards_seen,
             "silver_crucible_treasure_seen": self._silver_crucible_treasure_seen,
             "fishing_rod_combats_seen": self._fishing_rod_combats_seen,
+            "venerable_tea_set_active": self._venerable_tea_set_active,
             "winged_boots_times_used": self._winged_boots_times_used,
+            "shop_removals_used": self._shop_removals_used,
             "event_id": int(self._event_id),
             "map_choices": (
                 tuple(
@@ -1074,21 +1217,47 @@ class Sts2RunEnv(gym.Env):
             return 75
         return int(self._rng.integers(7, 16))
 
+    def _generate_shop_cards(self) -> np.ndarray:
+        cards: list[int] = []
+        for pool in (
+            SHOP_ATTACK_CARDS,
+            SHOP_ATTACK_CARDS,
+            SHOP_SKILL_CARDS,
+            SHOP_SKILL_CARDS,
+            SHOP_POWER_CARDS,
+            SHOP_COLORLESS_CARDS,
+            SHOP_COLORLESS_CARDS,
+        ):
+            available = [int(card_id) for card_id in pool if int(card_id) not in cards]
+            if not available:
+                available = [
+                    int(card_id)
+                    for card_id in IRONCLAD_REWARD_POOL
+                    if int(card_id) not in cards
+                ]
+            cards.append(int(self._rng.choice(available)))
+        return np.array(cards, dtype=np.int32)
+
     def _shop_card_cost(self, card_id: int, *, colorless: bool = False) -> int:
-        base_cost = 50 + (card_id % 3) * 25
+        base_cost = SHOP_CARD_BASE_COSTS.get(card_id, 50)
         if colorless:
-            base_cost = int(round(base_cost * 1.15))
-        return int(round(base_cost * self._rng.uniform(0.95, 1.05)))
+            base_cost = self._round_positive(base_cost * 1.15)
+        return self._round_positive(base_cost * self._rng.uniform(0.95, 1.05))
 
-    def _shop_relic_cost(self) -> int:
-        return int(round(200 * self._rng.uniform(0.85, 1.15)))
+    def _shop_relic_cost(self, relic_id: int) -> int:
+        base_cost = SHOP_RELIC_BASE_COSTS.get(relic_id, 200)
+        return self._round_positive(base_cost * self._rng.uniform(0.85, 1.15))
 
-    def _shop_potion_cost(self, action: int) -> int:
-        rarity_base = (50, 75, 100)[action % 3]
-        return int(round(rarity_base * self._rng.uniform(0.95, 1.05)))
+    def _shop_potion_cost(self, potion_id: int) -> int:
+        base_cost = SHOP_POTION_BASE_COSTS.get(potion_id, 50)
+        return self._round_positive(base_cost * self._rng.uniform(0.95, 1.05))
 
     def _shop_removal_cost(self) -> int:
-        return 100
+        return 100 + 50 * self._shop_removals_used
+
+    @staticmethod
+    def _round_positive(value: float) -> int:
+        return int(value + 0.5)
 
     def _add_potion(self, potion_id: int) -> bool:
         for index, current in enumerate(self._potions):
@@ -1096,6 +1265,10 @@ class Sts2RunEnv(gym.Env):
                 self._potions[index] = potion_id
                 return True
         return False
+
+    def _gain_max_hp(self, amount: int) -> None:
+        self._player_max_hp += amount
+        self._player_hp = min(self._player_max_hp, self._player_hp + amount)
 
     def _next_potion(self) -> int:
         return 1 + ((self._seed + self._floor + sum(self._potions)) % 5)

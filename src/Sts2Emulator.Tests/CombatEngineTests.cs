@@ -179,6 +179,214 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void HappyFlower_GivesEnergyEveryThirdPlayerTurn()
+    {
+        var state = new CombatState();
+        CombatFactory.Reset(
+            state,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 1,
+            relicIds: [RelicEffects.HappyFlower],
+            playerHp: 64,
+            playerMaxHp: 80
+        );
+
+        Assert.Equal(1, state.Relics.Single().Counter);
+        Assert.Equal(3, state.Energy);
+
+        state.Energy = 3;
+        RelicEffects.ApplyStartOfPlayerTurn(state);
+
+        Assert.Equal(2, state.Relics.Single().Counter);
+        Assert.Equal(3, state.Energy);
+
+        RelicEffects.ApplyStartOfPlayerTurn(state);
+
+        Assert.Equal(0, state.Relics.Single().Counter);
+        Assert.Equal(4, state.Energy);
+    }
+
+    [Fact]
+    public void FirstTurnRelics_ApplyLanternEnergyAndBagOfMarblesVulnerable()
+    {
+        var state = new CombatState();
+        CombatFactory.Reset(
+            state,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 2,
+            relicIds: [RelicEffects.Lantern, RelicEffects.BagOfMarbles],
+            playerHp: 64,
+            playerMaxHp: 80
+        );
+
+        Assert.Equal(4, state.Energy);
+        Assert.All(
+            state.Enemies.Where(enemy => enemy.Hp > 0),
+            enemy => Assert.Equal(1, BuffSystem.Get(enemy.Buffs, BuffId.Vulnerable))
+        );
+    }
+
+    [Fact]
+    public void VenerableTeaSetActive_GivesTwoEnergyOnFirstTurn()
+    {
+        var state = new CombatState();
+        CombatFactory.Reset(
+            state,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 2,
+            relicIds: [RelicEffects.VenerableTeaSetActive],
+            playerHp: 64,
+            playerMaxHp: 80
+        );
+
+        Assert.Equal(5, state.Energy);
+    }
+
+    [Fact]
+    public void ExpectAFight_GainsEnergyForAttacksInHand()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.ExpectAFight, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.SwordBoomerang, false),
+        ];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(2, state.Energy);
+    }
+
+    [Fact]
+    public void Juggling_CopiesThirdAttackPlayedEachTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.Juggling, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+        ];
+        state.Energy = 4;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Juggling));
+        Assert.Single(state.Hand);
+        Assert.Equal(IC.StrikeIronclad, state.Hand[0].DefId);
+    }
+
+    [Fact]
+    public void Restlessness_DrawsAndGainsEnergyWhenOnlyCardInHand()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Restlessness, false)];
+        state.DrawPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.Energy = 0;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(2, state.Energy);
+        Assert.Equal([IC.StrikeIronclad, IC.DefendIronclad], state.Hand.Select(card => card.DefId));
+    }
+
+    [Fact]
+    public void Havoc_PlaysAndExhaustsTopDrawPileCard()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Havoc, false)];
+        state.DrawPile = [new CardInstance(IC.DefendIronclad, false)];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(5, state.PlayerBlock);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.Havoc);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.DefendIronclad);
+    }
+
+    [Fact]
+    public void Splash_AddsGeneratedAttackToHand()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Splash, false)];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Single(state.Hand);
+        Assert.Equal(IC.StrikeIronclad, state.Hand[0].DefId);
+    }
+
+    [Fact]
+    public void TurnBlockRelics_ApplyHornCleatAndCaptainsWheel()
+    {
+        var state = new CombatState
+        {
+            Relics =
+            [
+                new RelicInstance(RelicEffects.HornCleat),
+                new RelicInstance(RelicEffects.CaptainsWheel),
+            ],
+        };
+
+        state.Turn = 1;
+        RelicEffects.ApplyStartOfPlayerTurn(state);
+        Assert.Equal(14, state.PlayerBlock);
+
+        state.PlayerBlock = 0;
+        state.Turn = 2;
+        RelicEffects.ApplyStartOfPlayerTurn(state);
+        Assert.Equal(18, state.PlayerBlock);
+    }
+
+    [Fact]
+    public void RedSkull_TracksLowHpStrength()
+    {
+        var state = new CombatState();
+        CombatFactory.Reset(
+            state,
+            new Random(0),
+            StarterDeckIds,
+            encounterId: 2,
+            relicIds: [RelicEffects.RedSkull],
+            playerHp: 40,
+            playerMaxHp: 80
+        );
+
+        Assert.Equal(3, BuffSystem.Get(state.PlayerBuffs, BuffId.Strength));
+        Assert.Equal(1, state.Relics.Single().Counter);
+
+        state.PlayerHp = 41;
+        RelicEffects.ApplyAfterPlayerHpChanged(state);
+
+        Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.Strength));
+        Assert.Equal(0, state.Relics.Single().Counter);
+    }
+
+    [Fact]
     public void Orichalcum_GainsBlockWhenEndingTurnWithoutBlock()
     {
         var state = new CombatState();

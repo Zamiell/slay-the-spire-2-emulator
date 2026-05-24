@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -54,6 +55,8 @@ def compact_state(state: dict[str, Any]) -> dict[str, Any]:
             "character": player.get("character"),
             "hp": player.get("hp"),
             "max_hp": player.get("max_hp"),
+            "block": player.get("block"),
+            "energy": player.get("energy"),
             "gold": player.get("gold"),
             "deck_size": len(player.get("deck") or []),
             "relics": simplify_named_list(player.get("relics") or []),
@@ -119,6 +122,7 @@ def simplify_cards(cards: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "name": card.get("name"),
             "type": card.get("type"),
             "cost": card.get("cost"),
+            "description": card.get("description"),
             "can_play": card.get("can_play"),
             "target_type": card.get("target_type"),
             "is_upgraded": card.get("is_upgraded"),
@@ -199,10 +203,13 @@ def is_actionable_state(state: dict[str, Any], *, min_combat_hand: int = 1) -> b
     if state_type == "card_reward":
         return bool((state.get("card_reward") or {}).get("cards"))
     if state_type == "shop":
-        return bool(state.get("options") or state.get(state_type))
+        shop = state.get("shop") or {}
+        return bool(
+            state.get("options") or shop.get("items") or shop.get("can_proceed")
+        )
     if state_type == "rest_site":
         rest_site = state.get("rest_site") or {}
-        return bool(rest_site.get("options")) or rest_site.get("can_proceed") is False
+        return bool(rest_site.get("options")) or rest_site.get("can_proceed") is True
     if state_type == "rest":
         return bool(state.get("options") or state.get(state_type))
     if state_type in {"card_select", "map"}:
@@ -219,16 +226,7 @@ def choose_action(state: dict[str, Any], map_index: int) -> dict[str, Any] | Non
     if state_type == "rewards":
         return choose_reward_action(state)
     if state_type == "map":
-        options = (state.get("map") or {}).get("next_options") or []
-        if options:
-            index = min(map_index, len(options) - 1)
-            option_index = (
-                options[index].get("index")
-                if isinstance(options[index], dict)
-                else index
-            )
-            return {"action": "choose_map_node", "index": option_index}
-        return {"action": "choose_map_node", "index": 0}
+        return choose_map_action(state, map_index)
     if state_type == "shop":
         return choose_shop_action(state)
     if state_type == "treasure":
@@ -246,20 +244,128 @@ def choose_combat_action(state: dict[str, Any]) -> dict[str, Any]:
     player = state.get("player") or {}
     hand = player.get("hand") or []
     playable = [card for card in hand if card.get("can_play") is True]
+    if not playable:
+        return {"action": "end_turn"}
+
+    incoming_damage = incoming_attack_damage(state)
+    current_block = int(player.get("block") or 0)
+    hp = int(player.get("hp") or 0)
+    if incoming_damage > current_block:
+        lethal_attack = best_lethal_attack(state, playable)
+        if lethal_attack is not None:
+            return card_action(state, lethal_attack)
+
+        block_card = best_block_card(playable)
+        if block_card is not None and (
+            incoming_damage - current_block >= 6
+            or hp <= incoming_damage - current_block + 10
+        ):
+            return card_action(state, block_card)
+
     for wanted in STARTER_AGGRESSIVE_PRIORITY:
         for card in playable:
             card_text = f"{card.get('id') or ''} {card.get('name') or ''}".lower()
             if wanted in card_text:
-                payload: dict[str, Any] = {
-                    "action": "play_card",
-                    "card_index": card.get("index", 0),
-                }
-                if "Enemy" in str(card.get("target_type") or ""):
-                    target = first_living_enemy_id(state)
-                    if target is not None:
-                        payload["target"] = target
-                return payload
+                return card_action(state, card)
     return {"action": "end_turn"}
+
+
+def card_action(state: dict[str, Any], card: dict[str, Any]) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "action": "play_card",
+        "card_index": card.get("index", 0),
+    }
+    if "Enemy" in str(card.get("target_type") or ""):
+        target = best_target_enemy_id(state, damage=card_damage(card))
+        if target is not None:
+            payload["target"] = target
+    return payload
+
+
+def incoming_attack_damage(state: dict[str, Any]) -> int:
+    total = 0
+    for enemy in (state.get("battle") or {}).get("enemies") or []:
+        if not isinstance(enemy, dict) or (enemy.get("hp") or 0) <= 0:
+            continue
+        for intent in enemy.get("intents") or []:
+            if not isinstance(intent, dict) or intent.get("type") != "Attack":
+                continue
+            total += first_int(intent.get("label")) or first_int(
+                intent.get("description")
+            )
+    return total
+
+
+def best_lethal_attack(
+    state: dict[str, Any], playable: list[dict[str, Any]]
+) -> dict[str, Any] | None:
+    enemies = [
+        enemy
+        for enemy in (state.get("battle") or {}).get("enemies") or []
+        if isinstance(enemy, dict) and (enemy.get("hp") or 0) > 0
+    ]
+    if len(enemies) != 1:
+        return None
+    enemy_hp = int(enemies[0].get("hp") or 0)
+    lethal_attacks = [
+        card
+        for card in playable
+        if "Enemy" in str(card.get("target_type") or "")
+        and card_damage(card) >= enemy_hp + int(enemies[0].get("block") or 0)
+    ]
+    if not lethal_attacks:
+        return None
+    return max(lethal_attacks, key=card_damage)
+
+
+def best_block_card(playable: list[dict[str, Any]]) -> dict[str, Any] | None:
+    block_cards = [card for card in playable if card_block(card) > 0]
+    if not block_cards:
+        return None
+    return max(block_cards, key=card_block)
+
+
+def best_target_enemy_id(state: dict[str, Any], *, damage: int) -> str | None:
+    enemies = [
+        enemy
+        for enemy in (state.get("battle") or {}).get("enemies") or []
+        if isinstance(enemy, dict) and (enemy.get("hp") or 0) > 0
+    ]
+    if not enemies:
+        return None
+    killable = [
+        enemy
+        for enemy in enemies
+        if int(enemy.get("hp") or 0) + int(enemy.get("block") or 0) <= damage
+    ]
+    target = min(killable or enemies, key=lambda enemy: int(enemy.get("hp") or 0))
+    entity_id = target.get("entity_id")
+    return str(entity_id) if entity_id is not None else None
+
+
+def card_damage(card: dict[str, Any]) -> int:
+    text = f"{card.get('id') or ''} {card.get('name') or ''} {card.get('description') or ''}"
+    lowered = text.lower()
+    if "bash" in lowered:
+        return 10 if card.get("is_upgraded") else 8
+    if "strike" in lowered:
+        return 9 if card.get("is_upgraded") else 6
+    damage_match = re.search(r"deal\s+(\d+)\s+damage", lowered)
+    return int(damage_match.group(1)) if damage_match else 0
+
+
+def card_block(card: dict[str, Any]) -> int:
+    text = f"{card.get('id') or ''} {card.get('name') or ''} {card.get('description') or ''}"
+    lowered = text.lower()
+    if "defend" in lowered:
+        return 8 if card.get("is_upgraded") else 5
+    block_match = re.search(r"gain\s+(\d+)\s+block", lowered)
+    return int(block_match.group(1)) if block_match else 0
+
+
+def first_int(value: Any) -> int:
+    match = re.search(r"\d+", str(value or ""))
+    return int(match.group(0)) if match else 0
 
 
 def first_living_enemy_id(state: dict[str, Any]) -> str | None:
@@ -385,6 +491,59 @@ def choose_card_reward_action(state: dict[str, Any]) -> dict[str, Any]:
     return {"action": "skip_card_reward"}
 
 
+def choose_map_action(state: dict[str, Any], map_index: int) -> dict[str, Any]:
+    options = (state.get("map") or {}).get("next_options") or []
+    if not options:
+        return {"action": "choose_map_node", "index": 0}
+    if not isinstance(options, list):
+        options = [options]
+    best = max(
+        enumerate(options),
+        key=lambda item: map_option_score(state, item[1], fallback_index=item[0]),
+    )
+    option = best[1]
+    if isinstance(option, dict):
+        option_index = option.get("index", best[0])
+    else:
+        option_index = min(map_index, len(options) - 1)
+    return {"action": "choose_map_node", "index": option_index}
+
+
+def map_option_score(
+    state: dict[str, Any], option: Any, *, fallback_index: int
+) -> tuple[int, int]:
+    if not isinstance(option, dict):
+        return (0, -fallback_index)
+    player = state.get("player") or {}
+    hp = int(player.get("hp") or 0)
+    max_hp = max(1, int(player.get("max_hp") or 1))
+    low_hp = hp <= int(max_hp * 0.55)
+    score = node_type_score(str(option.get("type") or ""), low_hp=low_hp)
+    for lead in option.get("leads_to") or []:
+        if isinstance(lead, dict):
+            score += node_type_score(str(lead.get("type") or ""), low_hp=low_hp) // 3
+    return (score, -fallback_index)
+
+
+def node_type_score(node_type: str, *, low_hp: bool) -> int:
+    normalized = node_type.lower()
+    if normalized == "restsite":
+        return 120 if low_hp else 50
+    if normalized == "shop":
+        return 70
+    if normalized == "treasure":
+        return 55
+    if normalized == "unknown":
+        return 35
+    if normalized == "monster":
+        return 25 if low_hp else 45
+    if normalized == "elite":
+        return -80 if low_hp else -10
+    if normalized == "boss":
+        return 0
+    return 0
+
+
 def choose_card_select_action(state: dict[str, Any]) -> dict[str, Any]:
     card_select = state.get("card_select") or {}
     if card_select.get("can_confirm"):
@@ -411,12 +570,44 @@ def choose_card_select_action(state: dict[str, Any]) -> dict[str, Any]:
 def choose_shop_action(state: dict[str, Any]) -> dict[str, Any] | None:
     shop = state.get("shop") or {}
     if "items" in shop:
+        purchase = best_shop_purchase(shop.get("items") or [])
+        if purchase is not None:
+            return {"action": "shop_purchase", "index": purchase}
+        if shop.get("can_proceed") is False:
+            return None
         return {"action": "proceed"}
     options = state.get("options") or []
     leave = first_named_option(options, ("leave", "proceed", "skip"))
     if leave is None:
         return None
     return {"action": "shop_option", "index": leave}
+
+
+def best_shop_purchase(items: list[Any]) -> int | None:
+    candidates = [
+        item
+        for item in items
+        if isinstance(item, dict)
+        and item.get("is_stocked") is True
+        and item.get("can_afford") is True
+        and item.get("category") != "card_removal"
+    ]
+    if not candidates:
+        return None
+    priority = {
+        "relic": 0,
+        "potion": 1,
+        "card": 2,
+    }
+    best = min(
+        candidates,
+        key=lambda item: (
+            priority.get(str(item.get("category") or ""), 99),
+            int(item.get("price") or 0),
+        ),
+    )
+    index = best.get("index")
+    return int(index) if isinstance(index, int) else None
 
 
 def choose_rest_action(state: dict[str, Any]) -> dict[str, Any] | None:
