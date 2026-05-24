@@ -170,7 +170,10 @@ public static class CombatFactory
         state.PlayerTurn   = true;
         state.SkillPlayedWhileSmoggy = false;
 
-        state.DrawPile = deckIds.ToArray().Select(id => new CardInstance(id, false)).ToList();
+        state.DrawPile = deckIds
+            .ToArray()
+            .Select(id => new CardInstance(Math.Abs(id), id < 0))
+            .ToList();
 
         var encounter = encounterId.HasValue
             ? (ActOneEncounter)encounterId.Value

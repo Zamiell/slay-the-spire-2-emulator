@@ -48,10 +48,10 @@ The current combat factory starts an Ironclad-style combat with:
 - Dense reward shaping based on enemy HP damage, player HP loss, and terminal win/loss bonus.
 - A default 50-step Gymnasium truncation cap.
 - Encounter identity in Python `info`, allowing evaluation by encounter type.
-- An experimental `Sts2RunEnv` wrapper that adds deterministic card reward choices, act-specific first-three weak combats, map encounter choices after the opening fights, and run deck tracking.
+- An experimental `Sts2RunEnv` wrapper for simplified full-run training: act-specific first-three weak combats, deterministic map choices, normal/elite/boss combat nodes, card rewards, gold, shops, rest sites, relic rewards, run deck tracking, and upgraded-card encoding.
 - Modeled enemy powers for supported fights include Artifact, Hard to Kill, Shrink, Thorns, Ravenous, Slippery, Surprise, Two-Tailed Rat backup calls, Plating, Tangled, Constrict, Smoggy, Illusion, and Gas Bomb minions.
 
-This is not yet a full game emulator. Shops, rests, relics, elites, bosses, and richer map node types are still future work.
+This is not yet a full game emulator. Full live map generation, exact shop/reward odds, event routing, and native relic effects are still future work.
 
 ## Requirements
 

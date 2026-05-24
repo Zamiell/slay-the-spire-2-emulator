@@ -177,10 +177,10 @@ None currently identified.
 
 1. Run `uv run python scripts\validate_real_game_sweep.py --suite all` after behavior changes to catch regressions.
 2. Add emulator support for newly discovered live fights as game patches introduce them.
-3. Continue adding map, reward, rest-site, shop, relic, elite, and boss behavior for full-run training.
+3. Improve full-run fidelity by replacing simplified Python map/shop/relic behavior with native/live-validated systems.
 
 ## Known fidelity gaps
 
 - Some enemy details remain simplified: Gremlin Merc theft/heist rewards, exact Two-Tailed Rat summon constraints, Slithering Strangler's small-slime variant, and mixed attack/buff intent fidelity.
 - Neow relics and rewards are only handled enough for validation setup, not fully emulated.
-- Full-run systems are incomplete: shops, rests, relic interactions, elites, bosses, events, and richer map routing.
+- Full-run systems are simplified for training: map generation, card rewards, shops, rests, relic rewards, elites, and bosses are deterministic Python-level models rather than live-validated native systems.

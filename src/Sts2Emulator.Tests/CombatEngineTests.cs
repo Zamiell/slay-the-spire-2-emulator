@@ -100,6 +100,21 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void ResetWithDeck_NegativeCardIdsEncodeUpgradedCards()
+    {
+        var state = new CombatState();
+
+        CombatFactory.Reset(state, new Random(0), [-IC.Bash], encounterId: 1);
+
+        Assert.Single(state.Hand.Concat(state.DrawPile));
+        Assert.All(state.Hand.Concat(state.DrawPile), card =>
+        {
+            Assert.Equal(IC.Bash, card.DefId);
+            Assert.True(card.Upgraded);
+        });
+    }
+
+    [Fact]
     public void NewCombat_SamplesActOneWeakEncounterPools()
     {
         var states = Enumerable.Range(0, 64)

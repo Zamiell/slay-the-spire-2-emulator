@@ -7,6 +7,19 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 from sts2_gym import Sts2CombatEnv, Sts2RunEnv
+from sts2_gym.run_env import (
+    NODE_BOSS,
+    NODE_ELITE,
+    NODE_RELIC,
+    NODE_REST,
+    NODE_SHOP,
+    PHASE_COMBAT,
+    PHASE_COMPLETE,
+    PHASE_MAP,
+    PHASE_RELIC_REWARD,
+    PHASE_REST,
+    PHASE_SHOP,
+)
 
 HAND_ID_INDICES = range(8, 28, 2)
 ENEMY_INTENT_INDICES = (47, 87, 127)
@@ -115,7 +128,7 @@ class Sts2GymTests(unittest.TestCase):
         env = Sts2RunEnv(seed=0, max_floors=2)
         try:
             _, info = env.reset()
-            self.assertEqual(info["phase"], 0)
+            self.assertEqual(info["phase"], PHASE_COMBAT)
             self.assertEqual(info["deck_size"], 11)
 
             env._enter_reward_phase()
@@ -130,12 +143,116 @@ class Sts2GymTests(unittest.TestCase):
 
             self.assertFalse(terminated)
             self.assertFalse(truncated)
-            self.assertEqual(info["phase"], 0)
+            self.assertEqual(info["phase"], PHASE_COMBAT)
             self.assertEqual(info["floor"], 2)
             self.assertEqual(info["deck_size"], 12)
             self.assertIn(int(reward_card), env._deck)
             hand_count = sum(1 for i in HAND_ID_INDICES if int(obs[i]) != 0)
             self.assertEqual(int(obs[5]) + hand_count, 12)
+        finally:
+            env.close()
+
+    def test_run_env_map_can_route_to_utility_nodes(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._floor = 6
+            env._enter_map_phase()
+
+            self.assertEqual(env._phase, PHASE_MAP)
+            self.assertEqual(
+                [int(node_type) for node_type in env._map_node_types],
+                [NODE_REST, NODE_SHOP, 1],
+            )
+
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertFalse(terminated)
+            self.assertEqual(info["phase"], PHASE_REST)
+        finally:
+            env.close()
+
+    def test_run_env_rest_site_heals_or_upgrades(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._phase = PHASE_REST
+            env._player_hp = 10
+
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertFalse(terminated)
+            self.assertGreater(info["player_hp"], 10)
+
+            env._phase = PHASE_REST
+            positive_upgrades_before = sum(1 for card in env._deck if card > 0)
+            env.step(1)
+
+            self.assertEqual(sum(1 for card in env._deck if card < 0), 1)
+            self.assertEqual(
+                sum(1 for card in env._deck if card > 0),
+                positive_upgrades_before - 1,
+            )
+        finally:
+            env.close()
+
+    def test_run_env_shop_buys_card_or_relic(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._gold = 200
+            env._enter_shop_phase()
+            card = int(env._shop_cards[0])
+
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertFalse(terminated)
+            self.assertIn(card, env._deck)
+            self.assertLess(info["gold"], 200)
+
+            env._gold = 200
+            env._enter_shop_phase()
+            relic_count = len(env._relics)
+            env.step(3)
+
+            self.assertEqual(len(env._relics), relic_count + 1)
+        finally:
+            env.close()
+
+    def test_run_env_relic_reward_and_boss_completion(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._current_node_type = NODE_ELITE
+            env._enter_relic_reward_phase()
+            reward = env._relic_reward
+
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertFalse(terminated)
+            self.assertIn(reward, info["relics"])
+
+            env._current_node_type = NODE_BOSS
+            env._enter_relic_reward_phase()
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertTrue(terminated)
+            self.assertEqual(info["phase"], PHASE_COMPLETE)
+        finally:
+            env.close()
+
+    def test_run_env_relic_node_enters_relic_reward_phase(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._phase = PHASE_MAP
+            env._map_node_types[:] = [NODE_RELIC, 0, 0]
+            env._map_choices[:] = [0, 0, 0]
+
+            _, _, terminated, _, info = env.step(0)
+
+            self.assertFalse(terminated)
+            self.assertEqual(info["phase"], PHASE_RELIC_REWARD)
         finally:
             env.close()
 
