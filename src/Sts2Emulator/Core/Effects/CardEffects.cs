@@ -268,7 +268,6 @@ public static class CardEffects
 
             case IC.DrumOfBattle: // 1-cost, draw 2; on self-exhaust gain 2/3 energy
                 DrawCards(state, 2, rng);
-                state.Energy += upgraded ? 3 : 2;
                 break;
 
             case IC.EvilEye: // 1-cost, gain block twice if a card exhausted this turn
@@ -468,11 +467,14 @@ public static class CardEffects
         }
     }
 
-    // Adds card to exhaust pile and triggers FeelNoPain.
+    // Adds card to exhaust pile and triggers exhaust hooks.
     public static void ExhaustCard(CombatState state, CardInstance card)
     {
         state.ExhaustPile.Add(card with { FreeThisTurn = false });
         state.CardsExhaustedThisTurn++;
+        if (card.DefId == IC.DrumOfBattle)
+            state.Energy += card.Upgraded ? 3 : 2;
+
         int fnp = BuffSystem.Get(state.PlayerBuffs, BuffId.FeelNoPain);
         if (fnp > 0)
             state.PlayerBlock += BuffSystem.IncomingBlock(fnp, state.PlayerBuffs);

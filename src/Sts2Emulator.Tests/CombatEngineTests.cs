@@ -373,6 +373,25 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void DrumOfBattle_GainsEnergyWhenExhaustedByAnotherCard()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.TrueGrit, false),
+            new CardInstance(IC.DrumOfBattle, true),
+        ];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(3, state.Energy);
+        Assert.Equal(7, state.PlayerBlock);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.DrumOfBattle);
+        Assert.DoesNotContain(state.Hand, card => card.DefId == IC.DrumOfBattle);
+    }
+
+    [Fact]
     public void FightMe_HitsTwiceAndAppliesStrengthToBothSides()
     {
         var state = CombatFactory.NewCombat(seed: 0);
