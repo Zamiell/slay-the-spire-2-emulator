@@ -27,6 +27,7 @@
 - Native card effects that splash based on the first hit should use the effective first-hit HP-loss plus overkill amount, then apply splash as unpowered damage unless decompiled value props say otherwise.
 - Native cards that care whether any card exhausted this turn should use `CombatState.CardsExhaustedThisTurn`, increment it only through `CardEffects.ExhaustCard`, and reset it at the start of each player turn.
 - Native card effects that repeat block gain should call `CardEffects.GainBlock` once per decompiled gain so block hooks trigger per gain.
+- Native cards that grant next-turn block should store a `BuffId.BlockNextTurn` amount, resolve it after the next player-turn block clear in `CombatEngine`, and grant it as unpowered block.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -336,5 +337,18 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Evil Eye uses the same current-turn card-exhaust history as Forgotten Ritual, but applies the conditional by repeating its block gain rather than by changing a single block value.
   - Repeated block-gain card effects should call `GainBlock` once per decompiled action so block hooks such as Juggernaut remain observable per gain.
+
+---
+
+## 2026-05-24 14:52 - PLAN-M2-PROLONG
+
+- Implemented native Prolong combat behavior: the colorless card now stores current player block, grants that amount as unpowered block after the next player-turn block clear, and respects the upgraded no-exhaust behavior.
+- Added C# regression coverage for next-turn unpowered block timing, base exhaust handling, and upgraded discard behavior.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable next-turn block pattern.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Prolong applies `BlockNextTurnPower` using the player's current block at play time, not a fixed card value.
+  - `BlockNextTurnPower` grants unpowered block after block clear, so Dexterity should not increase the restored block amount.
+  - Prolong's upgraded behavior removes Exhaust even though the generated card definition marks the base card as exhausting.
 
 ---

@@ -77,6 +77,10 @@ public static class CardEffects
                 DealOmnislice(state, Dmg(def, upgraded));
                 break;
 
+            case CL.Prolong: // 0-cost, gain current block again next turn; upgrade removes exhaust
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.BlockNextTurn, state.PlayerBlock);
+                break;
+
             case CL.Salvo: // 1-cost, 12/16 damage + retain remaining hand this turn
                 DealDamage(state, Dmg(def, upgraded));
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, 1);
@@ -542,8 +546,14 @@ public static class CardEffects
     }
 
     public static void GainBlock(CombatState state, int amount)
+        => GainBlock(state, amount, powered: true);
+
+    public static void GainUnpoweredBlock(CombatState state, int amount)
+        => GainBlock(state, amount, powered: false);
+
+    private static void GainBlock(CombatState state, int amount, bool powered)
     {
-        int effective = BuffSystem.IncomingBlock(amount, state.PlayerBuffs);
+        int effective = powered ? BuffSystem.IncomingBlock(amount, state.PlayerBuffs) : amount;
         if (effective <= 0) return;
         state.PlayerBlock += effective;
 
@@ -919,6 +929,7 @@ public static class CL
     public const int Bolas = 51;
     public const int DramaticEntrance = 153;
     public const int Omnislice = 333;
+    public const int Prolong = 366;
     public const int Salvo = 406;
     public const int Volley = 535;
 }

@@ -76,7 +76,7 @@ public static class CombatEngine
         // Corruption: Skills exhaust instead of discard.
         bool corruptedSkill = def.Type == CardType.Skill
             && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0;
-        if (def.Exhaust || corruptedSkill)
+        if (ShouldExhaustAfterPlay(def, card) || corruptedSkill)
             Effects.CardEffects.ExhaustCard(state, card);
         else
             state.DiscardPile.Add(card with { FreeThisTurn = false });
@@ -178,6 +178,7 @@ public static class CombatEngine
         // Barricade: block does not reset.
         if (BuffSystem.Get(state.PlayerBuffs, BuffId.Barricade) == 0)
             state.PlayerBlock = 0;
+        ApplyBlockNextTurn(state);
 
         Effects.RelicEffects.ApplyStartOfPlayerTurn(state);
 
@@ -428,7 +429,7 @@ public static class CombatEngine
             if (rage > 0) Effects.CardEffects.GainBlock(state, rage);
         }
 
-        if (def.Exhaust)
+        if (ShouldExhaustAfterPlay(def, card))
             Effects.CardEffects.ExhaustCard(state, card);
         else
             state.DiscardPile.Add(card with { FreeThisTurn = false });
@@ -440,6 +441,23 @@ public static class CombatEngine
     {
         if (card.DefId == Effects.CL.Bolas)
             state.ReturnToHandBeforeDraw.Add(card with { FreeThisTurn = false });
+    }
+
+    private static bool ShouldExhaustAfterPlay(CardDef def, CardInstance card)
+    {
+        if (def.Id == Effects.CL.Prolong && card.Upgraded)
+            return false;
+        return def.Exhaust;
+    }
+
+    private static void ApplyBlockNextTurn(CombatState state)
+    {
+        int blockNextTurn = BuffSystem.Get(state.PlayerBuffs, BuffId.BlockNextTurn);
+        if (blockNextTurn <= 0)
+            return;
+
+        Effects.CardEffects.GainUnpoweredBlock(state, blockNextTurn);
+        BuffSystem.Remove(state.PlayerBuffs, BuffId.BlockNextTurn);
     }
 
     private static EnemyState CreateEnemy(int defId, Random rng, Intent intent, bool stunned = false)
