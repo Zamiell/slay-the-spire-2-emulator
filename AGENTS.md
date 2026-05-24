@@ -29,6 +29,7 @@
 - Native card powers that modify a played card's destination pile should make that decision in `CombatEngine` after effects resolve but before adding the card to discard.
 - Native card powers with extra dynamic variables can be represented with companion `BuffId` entries when `BuffState` needs to track both the visible counter and hidden per-power state.
 - Full-run replay diagnostics should report available boundary diffs before stopping on unsupported trace actions, and unsupported action errors should include the reference step, state type, and floor.
+- Full-run replay may coalesce live reward/event substeps as no-ops when `Sts2RunEnv` has already applied those rewards or advanced to map, so retained traces continue to the next meaningful mismatch.
 
 ## STS2MCP
 

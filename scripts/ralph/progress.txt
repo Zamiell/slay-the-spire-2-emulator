@@ -31,6 +31,7 @@
 - Native cards that grant next-turn block should store a `BuffId.BlockNextTurn` amount, resolve it after the next player-turn block clear in `CombatEngine`, and grant it as unpowered block.
 - Native cards that apply temporary enemy Strength loss should consume Artifact before applying paired `Strength` and `TemporaryStrength` buffs, then restore the enemy Strength in `EnemyAI.ExecuteIntent` at that enemy's turn end.
 - Native card powers that modify a played card's destination pile should make that decision in `CombatEngine` after effects resolve but before adding the card to discard.
+- Full-run replay may coalesce live reward/event substeps as no-ops when `Sts2RunEnv` has already applied those rewards or advanced to map, allowing retained traces to continue to the next meaningful mismatch.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -390,5 +391,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
   - Decompiled Nostalgia applies a counter power and changes the result pile for player Attack/Skill cards that would otherwise go to discard.
   - Destination-pile powers should be handled in `CombatEngine` after card effects resolve and after exhaust/corruption checks, but before adding the played card to discard.
   - Track Nostalgia with a per-turn Attack-or-Skill play counter separate from `AttackCardsPlayedThisTurn` so Skill cards count and Attack-specific mechanics stay unchanged.
+
+---
+
+## 2026-05-24 15:04 - PLAN-M1-REWARD-REPLAY
+
+- Improved full-run replay to coalesce live reward/event substeps that the simplified `Sts2RunEnv` has already applied, including redundant reward claims, empty reward proceed actions, and delayed Neow proceed events.
+- Added Python regression coverage for coalesced reward/event replay steps and card-reward claim translation.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable replay coalescing pattern.
+- Files changed: `scripts\replay_full_run_trace.py`, `tests\python\test_sts2_gym.py`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Live full-run traces expose granular `rewards` and post-Neow proceed states that `Sts2RunEnv` may model as immediate state changes; replay should skip those no-op live substeps rather than spending an emulator action.
+  - `translate_action` can return `None` for trace-only no-ops, and `replay_trace` should append the unchanged emulator snapshot so reference and emulator step numbers remain aligned for diagnostics.
 
 ---

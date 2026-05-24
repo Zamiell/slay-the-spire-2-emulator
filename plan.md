@@ -37,6 +37,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Added `scripts\replay_full_run_trace.py` to replay retained STS2MCP full-run traces against `Sts2RunEnv` and report the first floor/combat-boundary mismatch on configured summary fields.
 - Added replay diagnostics that print any available boundary mismatches before stopping on an unsupported live trace action, and include the reference step, state type, and floor in unsupported-action errors. Current retained traces now identify reward/card-select divergence with combat-boundary context instead of stopping without the mismatch context.
 - Recorded the current first deterministic mismatch with enough context to reproduce it in tests: retained reward/card-select traces diverge from `Sts2RunEnv` because live `rewards` and `card_select` screens are not directly modeled, while `FULLRUN_DRUM_1.json` also surfaces earlier floor/enemy/player combat-boundary differences.
+- Added replay coalescing for live reward/event substeps that `Sts2RunEnv` already applies immediately, so traces can advance past redundant `claim_reward`, `proceed`, and delayed Neow proceed actions until a real emulator mismatch remains.
 - Keep curated traces small and purposeful; do not retain large temporary captures unless they document a durable parity target.
 
 ### Milestone 2: close the next native card gap

@@ -1255,6 +1255,65 @@ class Sts2GymTests(unittest.TestCase):
         self.assertIn("reference state_type='card_select'", result.unsupported_action)
         self.assertIn("floor=1", result.unsupported_action)
 
+    def test_full_run_replay_coalesces_live_reward_substeps(self):
+        payload = {
+            "trace": [
+                {
+                    "step": 0,
+                    "summary": {
+                        "state_type": "event",
+                        "run": {"floor": 1},
+                        "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                    },
+                },
+                {
+                    "step": 1,
+                    "action": {"action": "choose_event_option", "index": 0},
+                    "summary": {"state_type": "event", "run": {"floor": 1}},
+                },
+                {
+                    "step": 2,
+                    "action": {"action": "claim_reward", "index": 0},
+                    "summary": {"state_type": "rewards", "run": {"floor": 1}},
+                },
+                {
+                    "step": 3,
+                    "action": {"action": "proceed"},
+                    "summary": {"state_type": "map", "run": {"floor": 1}},
+                },
+                {
+                    "step": 4,
+                    "action": {"action": "choose_map_node", "index": 0},
+                    "summary": {"state_type": "monster", "run": {"floor": 1}},
+                },
+            ]
+        }
+
+        result = replay_full_run_trace.replay_trace(payload, emulator_seed=0)
+
+        self.assertIsNone(result.unsupported_action)
+        self.assertEqual(
+            [
+                "event",
+                "map",
+                "map",
+                "map",
+                "monster",
+            ],
+            [step["summary"]["state_type"] for step in result.payload["trace"]],
+        )
+
+    def test_full_run_replay_treats_card_reward_claim_as_noop(self):
+        obs = np.zeros(1, dtype=np.int32)
+
+        self.assertIsNone(
+            replay_full_run_trace.translate_action(
+                {"action": "claim_reward", "index": 0},
+                obs,
+                {"phase": PHASE_CARD_REWARD},
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

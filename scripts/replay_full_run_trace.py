@@ -201,7 +201,12 @@ def replay_trace(
                     ),
                 )
 
-            obs, reward, terminated, truncated, info = env.step(action)
+            if action is None:
+                reward = 0.0
+                terminated = False
+                truncated = False
+            else:
+                obs, reward, terminated, truncated, info = env.step(action)
             emulator_trace.append(
                 make_step(
                     int(reference_step.get("step") or len(emulator_trace)),
@@ -226,7 +231,7 @@ def replay_trace(
 
 def translate_action(
     payload: dict[str, Any] | None, obs: np.ndarray, info: dict[str, Any]
-) -> int:
+) -> int | None:
     if payload is None:
         raise UnsupportedTraceActionError("step has no replayable action")
 
@@ -240,14 +245,19 @@ def translate_action(
         return hand_count(obs) + 1 + int(payload.get("slot", payload.get("index", 0)))
     if action_name == "choose_map_node":
         return min(int(payload.get("index", 0)), MAP_CHOICES - 1)
+    if action_name == "choose_event_option" and phase == PHASE_MAP:
+        return None
     if action_name in {"choose_event_option", "rest_option", "choose_rest_option"}:
         return int(payload.get("index", 0))
     if action_name == "select_card_reward":
         return int(payload.get("card_index", payload.get("index", 0)))
     if action_name == "skip_card_reward":
         return REWARD_SKIP_ACTION
-    if action_name == "claim_reward" and phase == PHASE_RELIC_REWARD:
-        return 0
+    if action_name == "claim_reward":
+        if phase == PHASE_RELIC_REWARD:
+            return 0
+        if phase in {PHASE_CARD_REWARD, PHASE_MAP}:
+            return None
     if action_name == "proceed":
         return proceed_action(phase)
     if action_name == "shop_option":
@@ -258,7 +268,9 @@ def translate_action(
     )
 
 
-def proceed_action(phase: int) -> int:
+def proceed_action(phase: int) -> int | None:
+    if phase == PHASE_MAP:
+        return None
     if phase == PHASE_CARD_REWARD:
         return REWARD_SKIP_ACTION
     if phase == PHASE_SHOP:
