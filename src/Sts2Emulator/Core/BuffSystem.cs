@@ -8,16 +8,8 @@ public static class BuffSystem
 
         if (magnitude > 0 && IsDebuff(id))
         {
-            int artifact = Get(buffs, BuffId.Artifact);
-            if (artifact > 0)
-            {
-                int artifactIdx = buffs.FindIndex(b => b.Id == BuffId.Artifact);
-                if (artifact == 1)
-                    buffs.RemoveAt(artifactIdx);
-                else
-                    buffs[artifactIdx] = buffs[artifactIdx] with { Magnitude = artifact - 1 };
+            if (TryConsumeArtifact(buffs))
                 return;
-            }
         }
 
         int idx = buffs.FindIndex(b => b.Id == id);
@@ -35,6 +27,20 @@ public static class BuffSystem
 
     public static void Remove(List<BuffState> buffs, BuffId id)
         => buffs.RemoveAll(b => b.Id == id);
+
+     public static bool TryConsumeArtifact(List<BuffState> buffs)
+    {
+        int artifact = Get(buffs, BuffId.Artifact);
+        if (artifact <= 0)
+            return false;
+
+        int artifactIdx = buffs.FindIndex(b => b.Id == BuffId.Artifact);
+        if (artifact == 1)
+            buffs.RemoveAt(artifactIdx);
+        else
+            buffs[artifactIdx] = buffs[artifactIdx] with { Magnitude = artifact - 1 };
+        return true;
+    }
 
     // Called at end of turn for the owning side (tick debuffs down by 1).
     public static void TickEndOfTurn(List<BuffState> buffs)

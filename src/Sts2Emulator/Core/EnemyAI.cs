@@ -28,6 +28,7 @@ public static class EnemyAI
         {
             BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, -1);
             enemy.MoveIndex++;
+            RestoreTemporaryEnemyStrength(enemy);
             return;
         }
 
@@ -159,6 +160,18 @@ public static class EnemyAI
             if (ritual > 0)
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, ritual);
         }
+
+        RestoreTemporaryEnemyStrength(enemy);
+    }
+
+    private static void RestoreTemporaryEnemyStrength(EnemyState enemy)
+    {
+        int temporaryStrength = BuffSystem.Get(enemy.Buffs, BuffId.TemporaryStrength);
+        if (temporaryStrength == 0)
+            return;
+
+        BuffSystem.Apply(enemy.Buffs, BuffId.Strength, temporaryStrength);
+        BuffSystem.Remove(enemy.Buffs, BuffId.TemporaryStrength);
     }
 
     // ── Per-enemy intent selection ─────────────────────────────────────────────

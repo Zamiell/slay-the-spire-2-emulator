@@ -65,6 +65,10 @@ public static class CardEffects
                 DealDamage(state, Dmg(def, upgraded));
                 break;
 
+            case CL.DarkShackles: // 0-cost, enemy loses 9/15 Strength this turn, exhaust
+                ApplyTemporaryStrengthDownToEnemy(state, upgraded ? 15 : 9);
+                break;
+
             case CL.Volley: // X-cost, 10/14 damage X times to random enemies
             {
                 int x = state.Energy;
@@ -755,6 +759,18 @@ public static class CardEffects
         DrawForVicious(state, id, before, BuffSystem.Get(target.Buffs, id), rng);
     }
 
+    private static void ApplyTemporaryStrengthDownToEnemy(CombatState state, int amount)
+    {
+        var target = FirstEnemy(state);
+        if (target == null)
+            return;
+        if (BuffSystem.TryConsumeArtifact(target.Buffs))
+            return;
+
+        BuffSystem.Apply(target.Buffs, BuffId.Strength, -amount);
+        BuffSystem.Apply(target.Buffs, BuffId.TemporaryStrength, amount);
+    }
+
     private static void ApplyAllEnemyDebuff(CombatState state, BuffId id, int magnitude, Random rng)
     {
         foreach (var enemy in state.Enemies.Where(e => e.Hp > 0))
@@ -929,6 +945,7 @@ public static class IC
 public static class CL
 {
     public const int Bolas = 51;
+    public const int DarkShackles = 121;
     public const int DramaticEntrance = 153;
     public const int Omnislice = 333;
     public const int Prolong = 366;

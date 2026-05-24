@@ -29,6 +29,7 @@
 - Native card effects that trigger when the card itself exhausts should put the hook in `CardEffects.ExhaustCard` so it works for normal self-exhaust and secondary exhaust effects.
 - Native card effects that repeat block gain should call `CardEffects.GainBlock` once per decompiled gain so block hooks trigger per gain.
 - Native cards that grant next-turn block should store a `BuffId.BlockNextTurn` amount, resolve it after the next player-turn block clear in `CombatEngine`, and grant it as unpowered block.
+- Native cards that apply temporary enemy Strength loss should consume Artifact before applying paired `Strength` and `TemporaryStrength` buffs, then restore the enemy Strength in `EnemyAI.ExecuteIntent` at that enemy's turn end.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -363,5 +364,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Drum of Battle draws in `OnPlay`, but its energy gain lives in `AfterCardExhausted` and checks that the exhausted card is itself.
   - Card-specific self-exhaust hooks belong in `CardEffects.ExhaustCard` so they fire for normal played-card exhaust, True Grit, Cinder, ethereal exhaust, and future secondary exhaust effects.
+
+---
+
+## 2026-05-24 14:58 - PLAN-M2-DARK-SHACKLES
+
+- Implemented native Dark Shackles combat behavior: the card now applies upgraded-aware temporary Strength loss to the target enemy, consumes Artifact as a debuff, exhausts, and restores Strength after that enemy turn.
+- Added C# regression coverage for temporary enemy Strength loss, enemy-turn restoration, exhaust handling, and Artifact prevention.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable temporary enemy Strength-down pattern.
+- Files changed: `src\Sts2Emulator\Core\BuffSystem.cs`, `src\Sts2Emulator\Core\EnemyAI.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Dark Shackles applies a negative `TemporaryStrengthPower`, so Artifact prevents the temporary power before any Strength change is applied.
+  - Enemy temporary Strength loss should restore at that enemy's side-turn end, including stunned turns, rather than using player end-turn cleanup.
 
 ---
