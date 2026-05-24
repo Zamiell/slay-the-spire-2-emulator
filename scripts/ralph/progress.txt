@@ -23,6 +23,7 @@
 - Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
 - Native cards that depend on player HP lost this turn should read `CombatState.PlayerHpLostThisTurn`; reset it at the start of each player turn and increment it from unblocked player HP-loss paths.
 - Trace-observed colorless card constants can live in `CL` beside `IC` and `ST` in `CardEffects.cs`; add explicit cases when fallback damage/block ordering or targeting is wrong.
+- Native card effects that move cards from discard to hand should operate after the played card has left hand, clear `FreeThisTurn`, and respect the 10-card hand cap.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -284,5 +285,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Salvo applies `RetainHandPower` after dealing attack damage; the emulator can model the power as a player buff consumed during `CombatEngine.EndTurn`.
   - Retain-hand effects should preserve non-ethereal cards in `state.Hand` before the normal next-turn draw so retained cards keep their relative order.
+
+---
+
+## 2026-05-24 14:36 - PLAN-M2-NEOWS-FURY
+
+- Implemented native Neow's Fury combat behavior: the ancient trace-observed card now deals upgraded-aware attack damage, moves up to two or three discard-pile cards back to hand, respects the 10-card hand cap, and exhausts through the generated card definition.
+- Added C# regression coverage for base damage/card return/exhaust behavior and upgraded hand-cap behavior.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable discard-to-hand card movement pattern.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Neow's Fury deals attack damage before selecting cards from discard to move to hand.
+  - Discard-to-hand card effects should cap movement by current hand size after the played card has left hand.
 
 ---

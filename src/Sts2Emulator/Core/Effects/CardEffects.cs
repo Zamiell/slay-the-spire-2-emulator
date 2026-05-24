@@ -78,6 +78,11 @@ public static class CardEffects
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, 1);
                 break;
 
+            case AN.NeowsFury: // 1-cost, 10/14 damage + move 2/3 discard cards to hand, exhaust
+                DealDamage(state, Dmg(def, upgraded));
+                MoveDiscardCardsToHand(state, upgraded ? 3 : 2);
+                break;
+
             case IC.Dismantle: // 1-cost, 8/10 dmg, hits twice if target is Vulnerable
             {
                 var t = FirstEnemy(state);
@@ -632,6 +637,17 @@ public static class CardEffects
         }
     }
 
+    private static void MoveDiscardCardsToHand(CombatState state, int count)
+    {
+        int cardsToMove = Math.Min(count, MaxCardsInHand - state.Hand.Count);
+        for (int i = 0; i < cardsToMove && state.DiscardPile.Count > 0; i++)
+        {
+            var card = state.DiscardPile[0];
+            state.DiscardPile.RemoveAt(0);
+            state.Hand.Add(card with { FreeThisTurn = false });
+        }
+    }
+
     private static void TriggerInfernoAfterPlayerSelfDamage(CombatState state, int unblockedDamage)
     {
         int inferno = BuffSystem.Get(state.PlayerBuffs, BuffId.Inferno);
@@ -862,6 +878,11 @@ public static class CL
     public const int DramaticEntrance = 153;
     public const int Salvo = 406;
     public const int Volley = 535;
+}
+
+public static class AN
+{
+    public const int NeowsFury = 321;
 }
 
 public static class ST
