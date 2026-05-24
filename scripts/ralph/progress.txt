@@ -15,10 +15,9 @@
 - Native card effects that reapply or scale an enemy debuff after dealing damage should keep the pre-damage target reference, verify the target survived, and reuse the relevant debuff hooks.
 - Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
 - Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
+- Native cards that depend on player HP lost this turn should read `CombatState.PlayerHpLostThisTurn`; reset it at the start of each player turn and increment it from unblocked player HP-loss paths.
 
 Started: Sun, May 24, 2026 1:18:25 PM
-
----
 
 ## 2026-05-24 13:21 - US-001
 
@@ -179,5 +178,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Molten Fist captures the target, attacks first, then reads Vulnerable from that same target only if it survived.
   - Reapplying Vulnerable should still use the existing Vicious draw hook when stacks increase.
+
+---
+
+## 2026-05-24 14:11 - PLAN-M2-SPITE
+
+- Implemented native Spite combat behavior: the card now deals one hit normally, two hits after the player has lost HP this turn, and three hits when upgraded after HP loss.
+- Added C# regression coverage for normal, HP-loss, upgraded, and next-turn reset behavior.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\CombatState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Interop\CombatFactory.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Spite checks combat history for unblocked player HP loss during the current turn before choosing one versus repeated hits.
+  - Turn-local HP-loss tracking should reset before start-of-player-turn effects so effects like Inferno self-damage can still enable same-turn conditional cards.
 
 ---

@@ -160,6 +160,7 @@ public static class CombatEngine
         state.Turn++;
         state.PlayerTurn = true;
         state.Energy = state.MaxEnergy;
+        state.PlayerHpLostThisTurn = 0;
 
         // Barricade: block does not reset.
         if (BuffSystem.Get(state.PlayerBuffs, BuffId.Barricade) == 0)

@@ -149,6 +149,10 @@ public static class CardEffects
                 break;
             }
 
+            case IC.Spite: // 0-cost, 5 dmg; 2/3 hits if the player lost HP this turn
+                DealDamageMultiHit(state, Dmg(def, upgraded), state.PlayerHpLostThisTurn > 0 ? (upgraded ? 3 : 2) : 1, rng);
+                break;
+
             case IC.Stomp: // 3-cost, reduced by Attacks played this turn, 12/15 dmg to ALL enemies
                 DealDamageToAll(state, Dmg(def, upgraded));
                 break;
@@ -461,7 +465,11 @@ public static class CardEffects
     {
         int thorns = BuffSystem.Get(target.Buffs, BuffId.Thorns);
         if (thorns > 0)
+        {
+            int hpBeforeThorns = state.PlayerHp;
             state.PlayerHp = Math.Max(0, state.PlayerHp - thorns);
+            state.PlayerHpLostThisTurn += Math.Max(0, hpBeforeThorns - state.PlayerHp);
+        }
 
         int damage = BuffSystem.IncomingDamage(amount, state.PlayerBuffs, target.Buffs);
         int cap = BuffSystem.Get(target.Buffs, BuffId.HardToKill);
@@ -504,6 +512,7 @@ public static class CardEffects
     {
         int hpBefore = state.PlayerHp;
         state.PlayerHp = Math.Max(0, state.PlayerHp - amount);
+        state.PlayerHpLostThisTurn += Math.Max(0, hpBefore - state.PlayerHp);
 
         int rupt = BuffSystem.Get(state.PlayerBuffs, BuffId.RupturePower);
         if (rupt > 0 && hpBefore > state.PlayerHp)
@@ -675,6 +684,7 @@ public static class IC
     public const int MoltenFist   = 313;
     public const int PommelStrike = 358;
     public const int SetupStrike  = 421;
+    public const int Spite        = 454;
     public const int Thunderclap  = 508;
     public const int TwinStrike   = 519;
 
