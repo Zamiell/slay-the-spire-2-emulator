@@ -202,6 +202,7 @@ public static class CombatEngine
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Smoggy);
         state.SkillPlayedWhileSmoggy = false;
         state.AttackCardsPlayedThisTurn = 0;
+        state.CardsExhaustedThisTurn = 0;
 
         ReturnQueuedCardsToHandBeforeDraw(state);
 

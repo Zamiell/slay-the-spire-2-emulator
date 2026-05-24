@@ -25,6 +25,7 @@
 - Trace-observed colorless card constants can live in `CL` beside `IC` and `ST` in `CardEffects.cs`; add explicit cases when fallback damage/block ordering or targeting is wrong.
 - Native card effects that move cards from discard to hand should operate after the played card has left hand, clear `FreeThisTurn`, and respect the 10-card hand cap.
 - Native card effects that splash based on the first hit should use the effective first-hit HP-loss plus overkill amount, then apply splash as unpowered damage unless decompiled value props say otherwise.
+- Native cards that care whether any card exhausted this turn should use `CombatState.CardsExhaustedThisTurn`, increment it only through `CardEffects.ExhaustCard`, and reset it at the start of each player turn.
 
 Started: Sun, May 24, 2026 1:18:25 PM
 
@@ -310,5 +311,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
 - **Learnings for future iterations:**
   - Decompiled Omnislice uses the first hit's `TotalDamage + OverkillDamage` for its splash amount, then applies that amount to the target's teammates with `Unpowered | Move` value props.
   - Splash targets should still respect block and enemy defensive caps, while avoiding player Strength and target Vulnerable scaling when the splash is unpowered.
+
+---
+
+## 2026-05-24 14:44 - PLAN-M2-FORGOTTEN-RITUAL
+
+- Implemented native Forgotten Ritual combat behavior: the card now checks whether a card already exhausted this turn before granting upgraded-aware energy, then exhausts through the generated card definition.
+- Added C# regression coverage for no-energy-without-prior-exhaust, upgraded energy after an exhaust, and reset timing for the turn-local exhaust counter.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable exhaust-this-turn tracking pattern.
+- Files changed: `src\Sts2Emulator\Core\CombatState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Interop\CombatFactory.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Forgotten Ritual only grants energy when a player card has already exhausted during the current turn; it does not always gain energy.
+  - Exhaust-this-turn card checks should be based on a turn-local counter updated by the central `CardEffects.ExhaustCard` helper so self-exhaust, ethereal exhaust, and secondary exhaust effects stay consistent.
 
 ---

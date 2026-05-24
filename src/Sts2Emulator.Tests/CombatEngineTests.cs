@@ -1229,6 +1229,67 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void ForgottenRitual_DoesNotGainEnergyWithoutPriorExhaust()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.ForgottenRitual, false)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, state.Energy);
+        Assert.Equal(1, state.CardsExhaustedThisTurn);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.ForgottenRitual);
+    }
+
+    [Fact]
+    public void ForgottenRitual_GainsEnergyAfterCardExhaustedThisTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.ForgottenRitual, true)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+        CardEffects.ExhaustCard(state, new CardInstance(IC.StrikeIronclad, false));
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(4, state.Energy);
+        Assert.Equal(2, state.CardsExhaustedThisTurn);
+    }
+
+    [Fact]
+    public void CardsExhaustedThisTurn_ResetsAtStartOfNextPlayerTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.ForgottenRitual, false)];
+        state.DrawPile.Clear();
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, state.CardsExhaustedThisTurn);
+    }
+
+    [Fact]
     public void OneTwoPunch_DuplicatesNextAttack()
     {
         var state = CombatFactory.NewCombat(seed: 0);

@@ -37,4 +37,5 @@ public sealed class CombatState
     public bool SkillPlayedWhileSmoggy;
     public int AttackCardsPlayedThisTurn;
     public int PlayerHpLostThisTurn;
+    public int CardsExhaustedThisTurn;
 }

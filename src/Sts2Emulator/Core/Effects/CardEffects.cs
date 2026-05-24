@@ -280,8 +280,9 @@ public static class CardEffects
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.FlameBarrier, upgraded ? 6 : 4);
                 break;
 
-            case IC.ForgottenRitual: // 1-cost, gain 3 energy (exhaust-trigger check omitted)
-                state.Energy += 3;
+            case IC.ForgottenRitual: // 1-cost, gain 3/4 energy only if a card exhausted this turn
+                if (state.CardsExhaustedThisTurn > 0)
+                    state.Energy += upgraded ? 4 : 3;
                 break;
 
             case IC.Havoc: // 1/0-cost, play top card of draw pile and exhaust it
@@ -461,6 +462,7 @@ public static class CardEffects
     public static void ExhaustCard(CombatState state, CardInstance card)
     {
         state.ExhaustPile.Add(card with { FreeThisTurn = false });
+        state.CardsExhaustedThisTurn++;
         int fnp = BuffSystem.Get(state.PlayerBuffs, BuffId.FeelNoPain);
         if (fnp > 0)
             state.PlayerBlock += BuffSystem.IncomingBlock(fnp, state.PlayerBuffs);

@@ -225,6 +225,7 @@ public static class CombatFactory
         state.SkillPlayedWhileSmoggy = false;
         state.AttackCardsPlayedThisTurn = 0;
         state.PlayerHpLostThisTurn = 0;
+        state.CardsExhaustedThisTurn = 0;
 
         state.DrawPile = deckIds
             .ToArray()
