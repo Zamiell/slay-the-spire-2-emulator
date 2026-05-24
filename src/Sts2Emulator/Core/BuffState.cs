@@ -23,7 +23,7 @@ public enum BuffId
     Juggernaut,   // player: deal N unpowered damage to random enemy when gaining block
     RupturePower, // player: gain 1 Strength when losing HP from card effects
     Juggling,     // player: copy the third Attack played each turn into hand
-    Stampede,     // player: auto-play a random Attack when play phase starts (tracked only)
+    Stampede,     // player: auto-play random Attacks when play phase starts
     Vicious,      // player: draw N cards when applying Vulnerable
     OneTwoPunch,  // player: duplicate the next N Attack cards this turn
     TemporaryStrength, // player/enemy: remove this much Strength at side turn end

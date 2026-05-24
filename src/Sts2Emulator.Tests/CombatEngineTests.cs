@@ -780,6 +780,73 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void Stampede_AutoPlaysRandomAttackWhenPlayPhaseStarts()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Stampede, false)];
+        state.DrawPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.DiscardPile.Clear();
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(24, state.Enemies[0].Hp);
+        Assert.Equal(1, state.AttackCardsPlayedThisTurn);
+        Assert.Equal([IC.DefendIronclad, IC.Stampede], state.Hand.Select(card => card.DefId));
+        Assert.Contains(state.DiscardPile, card => card.DefId == IC.StrikeIronclad);
+    }
+
+    [Fact]
+    public void Stampede_RepeatsForStackCountAndSkipsUnplayableCards()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.AscendersBane, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.DiscardPile.Clear();
+        state.PlayerBuffs = [new BuffState(BuffId.Stampede, 2)];
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(38, state.Enemies[0].Hp);
+        Assert.Equal(2, state.AttackCardsPlayedThisTurn);
+        Assert.Equal([IC.AscendersBane, IC.DefendIronclad], state.Hand.Select(card => card.DefId));
+        Assert.Equal(2, state.DiscardPile.Count(card => card.DefId == IC.StrikeIronclad));
+    }
+
+    [Fact]
     public void Vicious_DrawsWhenPlayerAppliesVulnerable()
     {
         var state = CombatFactory.NewCombat(seed: 0);

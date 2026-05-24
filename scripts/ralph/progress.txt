@@ -12,6 +12,7 @@
 - Native card effects that conditionally draw multiple cards should draw one card at a time and respect the 10-card hand cap so the newly drawn card controls whether drawing continues.
 - Native card powers that modify attack play count belong in `CombatEngine.PlayCard`: apply one extra `CardEffects.Apply` for affected Attack cards, decrement the counter per Attack, and remove the power at end of player turn.
 - Native cards with dynamic per-turn costs should compute those costs in `CombatEngine.EffectiveCost` so play validation and energy spending stay aligned.
+- Native card powers that auto-play cards at the start of player play phase should run in `CombatEngine` after turn-start draw, bypass energy spending, and still apply normal played-Attack hooks plus discard/exhaust cleanup.
 - Native generated cards that are free only for the current turn should use `CardInstance.FreeThisTurn`; clear it when cards leave hand for discard or exhaust piles.
 - Native card effects that reapply or scale an enemy debuff after dealing damage should keep the pre-damage target reference, verify the target survived, and reuse the relevant debuff hooks.
 - Native card effects with multiple actions should use explicit card cases when decompiled effect order matters; do not rely on fallback damage/block ordering.
@@ -218,5 +219,17 @@ Started: Sun, May 24, 2026 1:18:25 PM
   - Decompiled Infernal Blade uses combat card generation, filters to non-basic/non-ancient/non-event Ironclad Attacks, shuffles the options, and takes one generated card.
   - Temporary generated-card costs need to affect both `ValidActions` and `PlayCard`, so `CombatEngine.EffectiveCost` must receive the `CardInstance`, not only the `CardDef`.
   - Free-this-turn state should not persist after the generated card leaves hand for discard or exhaust piles.
+
+---
+
+## 2026-05-24 14:22 - PLAN-M2-STAMPEDE
+
+- Implemented native Stampede combat behavior: the power now auto-plays random playable Attacks from hand after the player-turn draw, repeats by stack count, bypasses energy spending, and preserves normal Attack play hooks.
+- Added C# regression coverage for start-of-play-phase auto-play, stack-count repetition, and skipping unplayable Attack cards.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable play-phase auto-play pattern.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled `StampedePower.AfterAutoPostPlayPhaseEntered` runs after the turn-start draw and chooses from current hand Attacks that are not unplayable.
+  - Auto-played cards should bypass energy costs but still move through normal card effect, Attack play hook, and discard/exhaust cleanup paths.
 
 ---

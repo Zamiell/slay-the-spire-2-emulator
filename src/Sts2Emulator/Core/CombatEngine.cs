@@ -192,6 +192,7 @@ public static class CombatEngine
 
         // Draw five cards.
         Effects.CardEffects.DrawCards(state, 5, rng);
+        AutoPlayStampedeAttacks(state, rng);
 
         // Enemies choose their next intent.
         EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng);
@@ -327,6 +328,75 @@ public static class CombatEngine
         var fatGremlin = CreateEnemy(28, rng, new Intent(IntentType.Unknown, 0), stunned: true);
         fatGremlin.HeistGold = stolenGold;
         state.Enemies.Add(fatGremlin);
+    }
+
+    private static void AutoPlayStampedeAttacks(CombatState state, Random rng)
+    {
+        int stampede = BuffSystem.Get(state.PlayerBuffs, BuffId.Stampede);
+        for (int i = 0; i < stampede && state.Enemies.Any(e => e.Hp > 0); i++)
+        {
+            var attackIndexes = state.Hand
+                .Select((card, index) => (card, index))
+                .Where(item =>
+                {
+                    var def = GeneratedData.Cards.Get(item.card.DefId);
+                    return def.Type == CardType.Attack && !def.Unplayable;
+                })
+                .Select(item => item.index)
+                .ToList();
+            if (attackIndexes.Count == 0)
+                return;
+
+            int handIndex = attackIndexes[rng.Next(attackIndexes.Count)];
+            AutoPlayCardFromHand(state, handIndex, rng);
+        }
+    }
+
+    private static void AutoPlayCardFromHand(CombatState state, int handIndex, Random rng)
+    {
+        var card = state.Hand[handIndex];
+        var def = GeneratedData.Cards.Get(card.DefId);
+
+        Span<int> enemyHpsBefore = stackalloc int[state.Enemies.Count];
+        for (int i = 0; i < state.Enemies.Count; i++)
+            enemyHpsBefore[i] = state.Enemies[i].Hp;
+
+        state.Hand.RemoveAt(handIndex);
+        Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+        if (def.Type == CardType.Attack)
+        {
+            int oneTwoPunch = BuffSystem.Get(state.PlayerBuffs, BuffId.OneTwoPunch);
+            if (oneTwoPunch > 0)
+            {
+                Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+                if (oneTwoPunch == 1)
+                    BuffSystem.Remove(state.PlayerBuffs, BuffId.OneTwoPunch);
+                else
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.OneTwoPunch, -1);
+            }
+        }
+        HandleEnemyDeaths(state, enemyHpsBefore, rng);
+
+        if (def.Type == CardType.Attack)
+        {
+            state.AttackCardsPlayedThisTurn++;
+            if (state.AttackCardsPlayedThisTurn == 3)
+            {
+                int juggling = BuffSystem.Get(state.PlayerBuffs, BuffId.Juggling);
+                for (int i = 0; i < juggling; i++)
+                    state.Hand.Add(new CardInstance(card.DefId, card.Upgraded));
+            }
+
+            int rage = BuffSystem.Get(state.PlayerBuffs, BuffId.Rage);
+            if (rage > 0) Effects.CardEffects.GainBlock(state, rage);
+        }
+
+        if (def.Exhaust)
+            Effects.CardEffects.ExhaustCard(state, card);
+        else
+            state.DiscardPile.Add(card with { FreeThisTurn = false });
+
+        Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
     }
 
     private static EnemyState CreateEnemy(int defId, Random rng, Intent intent, bool stunned = false)
