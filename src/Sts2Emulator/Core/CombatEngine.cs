@@ -108,6 +108,9 @@ public static class CombatEngine
         // Metallicize: gain block at end of player turn.
         int metallicize = BuffSystem.Get(state.PlayerBuffs, BuffId.Metallicize);
         if (metallicize > 0) Effects.CardEffects.GainBlock(state, metallicize);
+        // Plating (Stone Armor): gain block at end of player turn.
+        int plating = BuffSystem.Get(state.PlayerBuffs, BuffId.Plating);
+        if (plating > 0) Effects.CardEffects.GainBlock(state, plating);
         Effects.RelicEffects.ApplyEndOfPlayerTurn(state);
 
         int temporaryStrength = BuffSystem.Get(state.PlayerBuffs, BuffId.TemporaryStrength);
@@ -198,6 +201,14 @@ public static class CombatEngine
                 enemyHpsBeforeInferno[i] = state.Enemies[i].Hp;
             Effects.CardEffects.LoseHp(state, infernoSelfDamage);
             HandleEnemyDeaths(state, enemyHpsBeforeInferno, rng);
+        }
+
+        // Plating decays by 1 at start of player turn.
+        int platingNow = BuffSystem.Get(state.PlayerBuffs, BuffId.Plating);
+        if (platingNow > 0)
+        {
+            if (platingNow == 1) BuffSystem.Remove(state.PlayerBuffs, BuffId.Plating);
+            else BuffSystem.Apply(state.PlayerBuffs, BuffId.Plating, -1);
         }
 
         // Tick player debuffs at start of player turn (Vulnerable etc. tick down).

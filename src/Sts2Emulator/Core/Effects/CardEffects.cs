@@ -432,6 +432,10 @@ public static class CardEffects
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.RupturePower, upgraded ? 2 : 1);
                 break;
 
+            case IC.StoneArmor: // 1-cost, gain 4/6 Plating (block each end of turn, decays 1/turn)
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Plating, upgraded ? 6 : 4);
+                break;
+
             case IC.Vicious: // 1-cost, draw 1/2 whenever you apply Vulnerable
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Vicious, upgraded ? 2 : 1);
                 break;
@@ -944,6 +948,7 @@ public static class IC
     public const int Juggernaut  = 272;
     public const int Rupture     = 404;
     public const int Stampede    = 462;
+    public const int StoneArmor  = 466;
     public const int Vicious     = 533;
 }
 
