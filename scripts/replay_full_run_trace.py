@@ -163,7 +163,7 @@ def compare_combat_boundary(
 def replay_trace(
     reference_payload: dict[str, Any],
     *,
-    emulator_seed: int,
+    emulator_seed: int | str,
     max_steps: int | None = None,
 ) -> ReplayResult:
     reference = compare_traces.load_trace_from_payload(reference_payload)
@@ -441,7 +441,7 @@ def valid_actions(env: Sts2RunEnv) -> list[int]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("trace", type=Path)
-    parser.add_argument("--emulator-seed", type=int, default=0)
+    parser.add_argument("--emulator-seed", type=str, default=None)
     parser.add_argument("--max-steps", type=int)
     parser.add_argument("--field", action="append", default=[])
     parser.add_argument("--max-diffs", type=int, default=20)
@@ -449,9 +449,12 @@ def main() -> None:
     args = parser.parse_args()
 
     reference_payload = load_payload(args.trace)
+    emulator_seed = args.emulator_seed
+    if emulator_seed is None:
+        emulator_seed = reference_payload.get("seed", "0")
     result = replay_trace(
         reference_payload,
-        emulator_seed=args.emulator_seed,
+        emulator_seed=emulator_seed,
         max_steps=args.max_steps,
     )
     if args.output is not None:

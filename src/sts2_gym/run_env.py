@@ -11,6 +11,7 @@ from gymnasium import spaces
 
 from . import native
 from .env import ENCOUNTER_NAMES, MAX_ACTIONS
+from .game_rng import RunRngSet
 
 REWARD_SKIP_ACTION = 3
 REST_HEAL_ACTION = 0
@@ -185,6 +186,36 @@ NEOW_CURSE_RELICS = np.array(
     ],
     dtype=np.int32,
 )
+
+# Ordered to match Neow.cs CurseOptions and PositiveOptions exactly.
+# MassiveScroll is absent from NEOW_POSITIVE_OPTIONS because it is filtered
+# by IsAllowedAtNeow for the Ironclad in a fully-unlocked state.
+NEOW_CURSE_OPTIONS = [
+    RELIC_CURSED_PEARL,
+    RELIC_HEFTY_TABLET,
+    RELIC_LARGE_CAPSULE,
+    RELIC_LEAFY_POULTICE,
+    RELIC_NEOWS_BONES,
+    RELIC_PRECARIOUS_SHEARS,
+    RELIC_SILKEN_TRESS,
+    RELIC_SILVER_CRUCIBLE,
+]
+NEOW_POSITIVE_OPTIONS = [
+    RELIC_ARCANE_SCROLL,
+    RELIC_BOOMING_CONCH,
+    RELIC_FISHING_ROD,
+    RELIC_GOLDEN_PEARL,
+    RELIC_KALEIDOSCOPE,
+    RELIC_LEAD_PAPERWEIGHT,
+    RELIC_LOST_COFFER,
+    # MassiveScroll absent (not allowed at Neow for Ironclad / not yet unlocked)
+    RELIC_NEOWS_TORMENT,
+    RELIC_NEW_LEAF,
+    RELIC_PHIAL_HOLSTER,
+    RELIC_PRECISE_SCISSORS,
+    RELIC_SCROLL_BOXES,
+    RELIC_WINGED_BOOTS,
+]
 
 STARTER_DECK = [472] * 5 + [131] * 4 + [30, 10001]
 CARD_RARITY_COMMON = 1
@@ -484,13 +515,14 @@ class Sts2RunEnv(gym.Env):
 
     def __init__(
         self,
-        seed: int = 0,
+        seed: int | str = 0,
         max_episode_steps: int = RUN_MAX_EPISODE_STEPS,
         max_floors: int = 16,
     ):
         super().__init__()
         self._seed = seed
-        self._rng = np.random.default_rng(seed)
+        self._run_rng_set = RunRngSet(str(seed))
+        self._rng = np.random.default_rng(self._run_rng_set.seed)
         self._max_episode_steps = max_episode_steps
         self._max_floors = max_floors
         self._elapsed_steps = 0
@@ -544,7 +576,8 @@ class Sts2RunEnv(gym.Env):
         super().reset(seed=seed)
         actual_seed = seed if seed is not None else self._seed
         self._seed = actual_seed
-        self._rng = np.random.default_rng(actual_seed)
+        self._run_rng_set = RunRngSet(str(actual_seed))
+        self._rng = np.random.default_rng(self._run_rng_set.seed)
         self._elapsed_steps = 0
         self._floor = 1
         self._phase = PHASE_NEOW
@@ -1445,7 +1478,7 @@ class Sts2RunEnv(gym.Env):
         }
 
     def _combat_seed(self) -> int:
-        return self._seed + self._floor - 1
+        return int(self._run_rng_set.seed) + self._floor - 1
 
     def _gold_reward_for_node(self) -> int:
         if self._current_node_type == NODE_ELITE:
@@ -1638,27 +1671,24 @@ class Sts2RunEnv(gym.Env):
         return int(self._rng.choice(available))
 
     def _generate_neow_options(self) -> None:
-        positive = [int(relic) for relic in self._rng.permutation(NEOW_POSITIVE_RELICS)]
-        positive.extend(
-            [
-                RELIC_LAVA_ROCK if self._rng.integers(0, 2) else RELIC_SMALL_CAPSULE,
-                (
-                    RELIC_NUTRITIOUS_OYSTER
-                    if self._rng.integers(0, 2)
-                    else RELIC_STONE_HUMIDIFIER
-                ),
-                RELIC_NEOWS_TALISMAN if self._rng.integers(0, 2) else RELIC_POMANDER,
-            ]
-        )
-        cursed = int(self._rng.choice(NEOW_CURSE_RELICS))
+        rng = self._run_rng_set.neow_rng()
+        cursed = NEOW_CURSE_OPTIONS[rng.next_int(len(NEOW_CURSE_OPTIONS))]
+        positive = list(NEOW_POSITIVE_OPTIONS)
         if cursed == RELIC_CURSED_PEARL:
-            positive = [relic for relic in positive if relic != RELIC_GOLDEN_PEARL]
+            positive = [r for r in positive if r != RELIC_GOLDEN_PEARL]
         elif cursed == RELIC_HEFTY_TABLET:
-            positive = [relic for relic in positive if relic != RELIC_ARCANE_SCROLL]
+            positive = [r for r in positive if r != RELIC_ARCANE_SCROLL]
         elif cursed == RELIC_LEAFY_POULTICE:
-            positive = [relic for relic in positive if relic != RELIC_NEW_LEAF]
+            positive = [r for r in positive if r != RELIC_NEW_LEAF]
         elif cursed == RELIC_PRECARIOUS_SHEARS:
-            positive = [relic for relic in positive if relic != RELIC_PRECISE_SCISSORS]
+            positive = [r for r in positive if r != RELIC_PRECISE_SCISSORS]
+        if cursed != RELIC_LARGE_CAPSULE:
+            positive.append(RELIC_LAVA_ROCK if rng.next_bool() else RELIC_SMALL_CAPSULE)
+        positive.append(
+            RELIC_NUTRITIOUS_OYSTER if rng.next_bool() else RELIC_STONE_HUMIDIFIER
+        )
+        positive.append(RELIC_NEOWS_TALISMAN if rng.next_bool() else RELIC_POMANDER)
+        rng.shuffle(positive)
         self._neow_options[:] = [positive[0], positive[1], cursed]
 
     def _is_upgradable(self, encoded_card: int) -> bool:
