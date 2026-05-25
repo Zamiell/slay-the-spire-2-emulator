@@ -743,6 +743,7 @@ class Sts2RunEnv(gym.Env):
         self._map_node_types[:] = 0
         self._map_choices[:] = 0
         self._map_option_coords = [None] * MAP_CHOICES
+        self._floor += 1
 
         if self._current_node_type in (NODE_NORMAL, NODE_ELITE, NODE_BOSS):
             self._phase = PHASE_COMBAT
@@ -1038,7 +1039,6 @@ class Sts2RunEnv(gym.Env):
             self._phase = PHASE_COMPLETE
             return self._obs(), 0.0, True, False, self._info()
 
-        self._floor += 1
         self._enter_map_phase()
         return self._obs(), 0.0, False, False, self._info()
 

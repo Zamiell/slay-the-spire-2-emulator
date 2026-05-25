@@ -223,7 +223,7 @@ class Sts2GymTests(unittest.TestCase):
             env.close()
 
     def test_run_env_reward_pick_tracks_deck_and_advances_floor(self):
-        env = Sts2RunEnv(seed=0, max_floors=2)
+        env = Sts2RunEnv(seed=0, max_floors=3)
         try:
             _, info = env.reset()
             self.assertEqual(info["phase"], PHASE_NEOW)
