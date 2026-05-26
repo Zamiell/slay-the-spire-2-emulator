@@ -11,7 +11,13 @@ from gymnasium import spaces
 
 from . import native
 from .env import ENCOUNTER_NAMES, MAX_ACTIONS
-from .game_rng import RunRngSet
+from .game_rng import (
+    DotNetRandom,
+    RunRngSet,
+    _int32,
+    _uint32,
+    get_deterministic_hash_code,
+)
 
 REWARD_SKIP_ACTION = 3
 REST_HEAL_ACTION = 0
@@ -469,8 +475,23 @@ SHOP_RELIC_BASE_COSTS = {
     RELIC_WAR_HAMMER: 999999999,
 }
 UPGRADABLE_STARTER_CARDS = {30, 131, 472}
+# Decompiled GrabBag pool order for weak encounters (equal weight 1 each).
+# Overgrowth: [FuzzyWurmCrawler=8, Nibbit=2, ShrinkerBeetle=11, Slimes=3]
+# Underdocks:  [CorpseSlugs=9, Seapunk=12, SludgeSpinner=10, Toadpoles=13]
 OVERGROWTH_WEAK_ENCOUNTERS = np.array([2, 3, 11, 8], dtype=np.int32)
 UNDERDOCKS_WEAK_ENCOUNTERS = np.array([9, 12, 10, 13], dtype=np.int32)
+_OVERGROWTH_WEAK_POOL = [8, 2, 11, 3]
+_UNDERDOCKS_WEAK_POOL = [9, 12, 10, 13]
+# Empirically determined UpFront RNG pre-call counts before act.GenerateRooms():
+# K=201 (SharedRelicPool shuffles + PlayerRelicPool shuffles + ancient distribution).
+# After K calls: 2 more for SharedAncients NextInt distribution, then N-1 event shuffle
+# calls (N_o=31 for Overgrowth, N_u=12 for Underdocks), then NextDouble for first weak.
+_UPFRONT_PRE_CALLS = 202
+# Empirical event shuffle call counts (= N-1 for N events) before first weak grab.
+_OVERGROWTH_EVENT_SHUFFLE_CALLS = 31
+_UNDERDOCKS_EVENT_SHUFFLE_CALLS = 12
+# Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
+_NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
 OVERGROWTH_NORMAL_ENCOUNTERS = np.array(
     [5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32
 )
@@ -501,6 +522,7 @@ class RunMapNode:
     can_be_modified: bool = True
     children: set[tuple[int, int]] = field(default_factory=set)
     parents: set[tuple[int, int]] = field(default_factory=set)
+    encounter_id: int = 0
 
 
 class Sts2RunEnv(gym.Env):
@@ -557,6 +579,7 @@ class Sts2RunEnv(gym.Env):
         self._event_id = 0
         self._act = "overgrowth"
         self._weak_encounters = np.zeros(3, dtype=np.int32)
+        self._weak_encounters_used = 0
         self._map_nodes: dict[tuple[int, int], RunMapNode] = {}
         self._current_map_coord = MAP_START_COORD
         self._map_option_coords: list[tuple[int, int] | None] = [None] * MAP_CHOICES
@@ -608,6 +631,7 @@ class Sts2RunEnv(gym.Env):
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
         self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
+        self._weak_encounters_used = 0
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
         self._map_option_coords = [None] * MAP_CHOICES
@@ -1111,7 +1135,11 @@ class Sts2RunEnv(gym.Env):
             node = self._map_nodes[coord]
             node_type = MAP_NODE_TO_OBS[node.node_type]
             self._map_node_types[i] = node_type
-            self._map_choices[i] = self._encounter_for_node(node_type)
+            self._map_choices[i] = (
+                node.encounter_id
+                if node.encounter_id
+                else self._encounter_for_node(node_type)
+            )
             self._map_option_coords[i] = coord
 
     def _enter_shop_phase(self):
@@ -1158,13 +1186,38 @@ class Sts2RunEnv(gym.Env):
         self._event_id = int(self._rng.choice(event_pool))
 
     def _select_act_and_weak_encounters(self):
-        if self._rng.integers(2) == 0:
-            self._act = "overgrowth"
-            pool = OVERGROWTH_WEAK_ENCOUNTERS
-        else:
+        # Act selection: separate Rng seeded from uint(run_seed), matches
+        # BeginRunLocally's local rng used for ActModel.GetRandomList.
+        act_rng = DotNetRandom(_int32(self._run_rng_set.seed))
+        # ActModel.GetRandomList: selects Underdocks when next_bool() is true
+        # (decompiled: if flag && (flag2 || rng.NextBool()) → Underdocks).
+        # next_bool() returns True when next_int(2)==0; game picks Underdocks when True.
+        use_underdocks = act_rng.next_bool()
+        if use_underdocks:
             self._act = "underdocks"
-            pool = UNDERDOCKS_WEAK_ENCOUNTERS
-        self._weak_encounters[:] = self._rng.choice(pool, size=3, replace=False)
+            weak_pool = list(_UNDERDOCKS_WEAK_POOL)
+            event_shuffle_calls = _UNDERDOCKS_EVENT_SHUFFLE_CALLS
+        else:
+            self._act = "overgrowth"
+            weak_pool = list(_OVERGROWTH_WEAK_POOL)
+            event_shuffle_calls = _OVERGROWTH_EVENT_SHUFFLE_CALLS
+
+        # Fast-forward UpFront RNG through pre-calls, then event shuffle, then grab.
+        up_front = self._run_rng_set.up_front
+        for _ in range(_UPFRONT_PRE_CALLS):
+            up_front.next_double()
+        # Event list UnstableShuffle: event_shuffle_calls = N-1 for N events.
+        for _ in range(event_shuffle_calls):
+            up_front.next_int(event_shuffle_calls + 1)
+        # GrabBag.GrabAndRemove for 3 weak encounter slots.
+        encounters = []
+        remaining = list(weak_pool)
+        for _ in range(3):
+            d = up_front.next_double()
+            idx = int(d * len(remaining))
+            encounters.append(remaining[idx])
+            remaining.pop(idx)
+        self._weak_encounters[:] = encounters
 
     def _generate_act_map(self) -> None:
         self._map_nodes = {}
@@ -1240,6 +1293,33 @@ class Sts2RunEnv(gym.Env):
                 return True
         return False
 
+    def _assign_encounter_ids(self) -> None:
+        """Assign encounter IDs to all combat nodes.
+
+        Monster nodes are grouped by floor row; all nodes at the same floor
+        share the same pre-selected weak encounter from _weak_encounters.
+        """
+        monster_rows = sorted(
+            {n.row for n in self._map_nodes.values() if n.node_type == "Monster"}
+        )
+        weak_idx = 0
+        row_encounters: dict[int, int] = {}
+        for row in monster_rows:
+            if weak_idx < len(self._weak_encounters):
+                row_encounters[row] = int(self._weak_encounters[weak_idx])
+                weak_idx += 1
+            else:
+                row_encounters[row] = int(
+                    self._rng.choice(self._normal_encounter_pool())
+                )
+        for node in self._map_nodes.values():
+            if node.node_type == "Monster":
+                node.encounter_id = row_encounters[node.row]
+            elif node.node_type == "Elite":
+                node.encounter_id = int(self._rng.choice(self._elite_encounter_pool()))
+            elif node.node_type == "Boss":
+                node.encounter_id = int(self._rng.choice(self._boss_encounter_pool()))
+
     def _assign_map_point_types(self) -> None:
         for node in self._map_nodes.values():
             if node.row == MAP_FINAL_REST_ROW:
@@ -1280,6 +1360,7 @@ class Sts2RunEnv(gym.Env):
 
         self._map_nodes[MAP_START_COORD].node_type = "Ancient"
         self._map_nodes[MAP_BOSS_COORD].node_type = "Boss"
+        self._assign_encounter_ids()
 
     def _next_valid_map_point_type(
         self, type_queue: list[str], node: RunMapNode
@@ -1331,8 +1412,6 @@ class Sts2RunEnv(gym.Env):
         )
 
     def _encounter_for_node(self, node_type: int) -> int:
-        if node_type == NODE_NORMAL:
-            return int(self._rng.choice(self._normal_encounter_pool()))
         if node_type == NODE_ELITE:
             return int(self._rng.choice(self._elite_encounter_pool()))
         if node_type == NODE_BOSS:
@@ -1478,7 +1557,9 @@ class Sts2RunEnv(gym.Env):
         }
 
     def _combat_seed(self) -> int:
-        return int(self._run_rng_set.seed) + self._floor - 1
+        # Matches CombatState: creature.SetUniqueMonsterHpValue uses RunState.Rng.Niche,
+        # whose raw seed is _int32(_uint32(run_seed + niche_hash)).
+        return _int32(_uint32(self._run_rng_set.seed + _NICHE_HASH))
 
     def _gold_reward_for_node(self) -> int:
         if self._current_node_type == NODE_ELITE:
