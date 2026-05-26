@@ -62,7 +62,8 @@ def _init_seed_array(seed: int) -> list[int]:
             n = i + 30
             if n >= 55:
                 n -= 55
-            arr[i] -= arr[1 + n]
+            # C# uses int32 (unchecked overflow) arithmetic here
+            arr[i] = _int32(arr[i] - arr[1 + n])
             if arr[i] < 0:
                 arr[i] += _MBIG
     return arr
