@@ -13,6 +13,7 @@ from . import native
 from .env import ENCOUNTER_NAMES, MAX_ACTIONS
 from .game_rng import (
     DotNetRandom,
+    PlayerRngSet,
     RunRngSet,
     _int32,
     _uint32,
@@ -222,6 +223,22 @@ NEOW_POSITIVE_OPTIONS = [
     RELIC_SCROLL_BOXES,
     RELIC_WINGED_BOOTS,
 ]
+
+# Number of PlayerRng.Rewards calls made by each Neow relic's AfterObtained().
+# Advances the Rewards RNG counter to stay in sync with the game before first combat.
+# Formula per card created via CardFactory.CreateForReward:
+#   - Uniform rarity + NoUpgradeRoll: 1 call (NextItem only)
+#   - RegularEncounter rarity + NoUpgradeRoll: 2 calls (NextFloat rarity + NextItem)
+#   - RegularEncounter rarity (with upgrade roll): 3 calls (rarity + selection + upgrade)
+# Potion: PotionFactory.CreateRandomPotionOutOfCombat = 2 calls (NextFloat + NextItem).
+_NEOW_REWARDS_RNG_ADVANCES = {
+    RELIC_ARCANE_SCROLL: 1,  # 1 rare card: Uniform + NoUpgradeRoll → 1 selection
+    RELIC_LOST_COFFER: 11,  # 3 cards × 3 (RegularEncounter + upgrade) + potion × 2
+    RELIC_PHIAL_HOLSTER: 4,  # 2 potions × 2 (rarity + selection)
+    RELIC_HEFTY_TABLET: 3,  # 3 cards shown × 1 (Uniform + NoUpgradeRoll)
+    RELIC_LEAD_PAPERWEIGHT: 6,  # 2 colorless cards × 3 (RegularEncounter + upgrade)
+    RELIC_KALEIDOSCOPE: 18,  # 2 bundles × 3 cards × 3 (RegularEncounter + upgrade)
+}
 
 STARTER_DECK = [472] * 5 + [131] * 4 + [30, 10001]
 CARD_RARITY_COMMON = 1
@@ -545,6 +562,7 @@ class Sts2RunEnv(gym.Env):
         super().__init__()
         self._seed = seed
         self._run_rng_set = RunRngSet(str(seed))
+        self._player_rng = PlayerRngSet(self._run_rng_set)
         self._rng = np.random.default_rng(self._run_rng_set.seed)
         self._max_episode_steps = max_episode_steps
         self._max_floors = max_floors
@@ -601,6 +619,7 @@ class Sts2RunEnv(gym.Env):
         actual_seed = seed if seed is not None else self._seed
         self._seed = actual_seed
         self._run_rng_set = RunRngSet(str(actual_seed))
+        self._player_rng = PlayerRngSet(self._run_rng_set)
         self._rng = np.random.default_rng(self._run_rng_set.seed)
         self._elapsed_steps = 0
         self._floor = 1
@@ -977,6 +996,9 @@ class Sts2RunEnv(gym.Env):
             return self._invalid_action()
 
         self._obtain_relic(relic_id)
+        advance = _NEOW_REWARDS_RNG_ADVANCES.get(relic_id, 0)
+        for _ in range(advance):
+            self._player_rng.rewards.next_double()
         self._phase = PHASE_COMBAT
         self._enter_map_phase()
         return self._obs(), 0.0, False, False, self._info()
@@ -1064,14 +1086,27 @@ class Sts2RunEnv(gym.Env):
             self._gold = 0
 
     def _after_combat_win(self) -> None:
+        # Real game order in GenerateRewardsFor + GenerateWithoutOffering:
+        #   1. RollForPotionAndAddTo → PotionRewardOdds.Roll() → 1 Rewards RNG call
+        #   2. GoldReward.Populate() → 1 Rewards RNG call
+        #   3. PotionReward.Populate() (if potion won) → 2 Rewards RNG calls
+        #   4. CardReward.Populate() → 3 cards × 2 calls (ForRoom: rarity+selection, NoUpgradeRoll) = 6
+        potion_val = self._player_rng.rewards.next_double()
         self._gold += self._gold_reward_for_node()
         if RELIC_AMETHYST_AUBERGINE in self._relics and self._current_node_type in (
             NODE_NORMAL,
             NODE_ELITE,
         ):
             self._gold += 15
-        if self._roll_potion_reward():
+        potion_won = self._check_potion_roll(potion_val)
+        if potion_won:
+            # Advance 2 for PotionReward.Populate() (PotionFactory: NextFloat + NextItem)
+            self._player_rng.rewards.next_double()
+            self._player_rng.rewards.next_double()
             self._add_potion(self._next_potion())
+        # Advance 6 for CardReward.Populate() (3 cards × 2: rarity + selection, NoUpgradeRoll)
+        for _ in range(6):
+            self._player_rng.rewards.next_double()
         if RELIC_BURNING_BLOOD in self._relics:
             self._player_hp = min(self._player_max_hp, self._player_hp + 6)
         if RELIC_BLACK_BLOOD in self._relics:
@@ -1582,11 +1617,15 @@ class Sts2RunEnv(gym.Env):
         return _int32(_uint32(self._run_rng_set.seed + _NICHE_HASH))
 
     def _gold_reward_for_node(self) -> int:
+        # Uses PlayerRng.Rewards matching GoldReward.Populate() → Rng.NextInt(min, max+1).
+        # Poverty ascension (level 3+) reduces min/max by 0.75x (int truncation).
+        # Elite/Boss ranges are exact; Normal uses NextInt(7, 16) = 7 + next_int(9).
         if self._current_node_type == NODE_ELITE:
-            return int(self._rng.integers(26, 34))
+            return 26 + self._player_rng.rewards.next_int(8)  # NextInt(26, 34)
         if self._current_node_type == NODE_BOSS:
-            return 75
-        return int(self._rng.integers(7, 16))
+            self._player_rng.rewards.next_double()  # NextInt(100, 101) still makes a call
+            return 100
+        return 7 + self._player_rng.rewards.next_int(9)  # NextInt(7, 16)
 
     def _generate_card_rewards(self) -> np.ndarray:
         cards: list[int] = []
@@ -1721,17 +1760,21 @@ class Sts2RunEnv(gym.Env):
             potions.append(self._choose_potion_with_rarity(rarity, potions))
         return potions
 
-    def _roll_potion_reward(self) -> bool:
+    def _check_potion_roll(self, roll: float) -> bool:
+        """Evaluate a pre-rolled Rewards RNG value against the current potion odds."""
         elite_bonus = (
             POTION_REWARD_ELITE_BONUS * 0.5
             if self._current_node_type == NODE_ELITE
             else 0.0
         )
-        if float(self._rng.random()) < self._potion_reward_odds + elite_bonus:
+        if roll < self._potion_reward_odds + elite_bonus:
             self._potion_reward_odds -= POTION_REWARD_STEP
             return True
         self._potion_reward_odds += POTION_REWARD_STEP
         return False
+
+    def _roll_potion_reward(self) -> bool:
+        return self._check_potion_roll(float(self._rng.random()))
 
     def _roll_potion_rarity(self) -> int:
         roll = float(self._rng.random())

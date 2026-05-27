@@ -184,3 +184,16 @@ class RunRngSet:
         raw = GameRng.__new__(GameRng)
         raw._rng = DotNetRandom(_int32(seed))
         return raw
+
+
+class PlayerRngSet:
+    """Per-player RNG subsystems matching PlayerRngSet in the game.
+
+    Seeded as (uint)((ulong)GetDeterministicHashCode(string_seed) + net_id).
+    Each subsystem is a GameRng(player_seed, name) where name is snake_case of
+    the PlayerRngType enum value.
+    """
+
+    def __init__(self, run_rng_set: RunRngSet, net_id: int = 1) -> None:
+        player_seed = _uint32(run_rng_set.seed + net_id)
+        self.rewards = GameRng(player_seed, "rewards")
