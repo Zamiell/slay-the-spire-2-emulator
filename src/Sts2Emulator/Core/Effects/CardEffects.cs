@@ -12,6 +12,15 @@ public static class CardEffects
 
             // ── Ironclad Attacks ─────────────────────────────────────────────────
 
+            case IC.Break: // 1-cost, 20/30 dmg + Vulnerable 5/7
+                DealDamage(state, Dmg(def, upgraded));
+                ApplyEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 7 : 5, rng);
+                break;
+
+            case IC.Bludgeon: // 3-cost, 32/42 dmg
+                DealDamage(state, Dmg(def, upgraded));
+                break;
+
             case IC.Anger: // 0-cost, 6/8 dmg + add copy to discard
                 DealDamage(state, Dmg(def, upgraded));
                 state.DiscardPile.Add(new CardInstance(def.Id, upgraded));
@@ -161,6 +170,23 @@ public static class CardEffects
                 break;
             }
 
+            case IC.Feed: // 1-cost, 10/12 dmg; if kills gain 3/4 max HP; exhaust
+            {
+                var feedTarget = FirstEnemy(state);
+                if (feedTarget != null)
+                {
+                    DealDamageToEnemy(state, feedTarget, Dmg(def, upgraded));
+                    if (feedTarget.Hp <= 0)
+                        state.PlayerMaxHp += upgraded ? 4 : 3;
+                }
+                break;
+            }
+
+            case IC.Mangle: // 3-cost, 15/20 dmg + enemy loses Strength 10/15 this turn
+                DealDamage(state, Dmg(def, upgraded));
+                ApplyTemporaryStrengthDownToEnemy(state, upgraded ? 15 : 10);
+                break;
+
             case IC.HowlFromBeyond: // 3-cost, 16/21 dmg to ALL enemies
                 DealDamageToAll(state, Dmg(def, upgraded));
                 break;
@@ -211,6 +237,27 @@ public static class CardEffects
 
             case IC.TwinStrike: // 1-cost, 5/7 dmg × 2 hits
                 DealDamageMultiHit(state, Dmg(def, upgraded), 2, rng);
+                break;
+
+            case IC.Unrelenting: // 2-cost, 14/20 dmg + FreeAttackPower 1 (next Attack costs 0)
+                DealDamage(state, Dmg(def, upgraded));
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.FreeAttackPower, 1);
+                break;
+
+            case IC.Rampage: // 1-cost, 9 dmg + gains 5/6 more damage per prior play (approx: static base)
+                DealDamage(state, Dmg(def, upgraded));
+                break;
+
+            case IC.TearAsunder: // 2-cost, 5/7 dmg × (1 + unblocked damage hits received this combat)
+            {
+                int hits = 1 + state.UnblockedDamageHitCount;
+                DealDamageMultiHit(state, Dmg(def, upgraded), hits, rng);
+                break;
+            }
+
+            case IC.Thrash: // 1-cost, 4/6 dmg × 2 + exhaust a random Attack from hand
+                DealDamageMultiHit(state, Dmg(def, upgraded), 2, rng);
+                ExhaustRandomCardOfTypeFromHand(state, CardType.Attack, rng);
                 break;
 
             case IC.Uppercut: // 2-cost, 13/13 dmg + Weak 1/2 + Vulnerable 1/2
@@ -355,6 +402,14 @@ public static class CardEffects
             case IC.ShrugItOff: // 1-cost, 8/11 block + draw 1
                 GainBlock(state, Blk(def, upgraded));
                 DrawCards(state, 1, rng);
+                break;
+
+            case IC.UltimateDefend: // 1-cost, 11/15 block
+                GainBlock(state, Blk(def, upgraded));
+                break;
+
+            case IC.Impervious: // 2-cost, 30/40 block + exhaust (Exhaust handled by CardDef)
+                GainBlock(state, Blk(def, upgraded));
                 break;
 
             case IC.Splash: // 1-cost, approximate generated off-character attack with a free Strike
@@ -623,6 +678,20 @@ public static class CardEffects
         var card = state.Hand[index];
         state.Hand.RemoveAt(index);
         ExhaustCard(state, card);
+    }
+
+    private static void ExhaustRandomCardOfTypeFromHand(CombatState state, CardType type, Random rng)
+    {
+        var candidates = state.Hand
+            .Select((c, i) => (card: c, idx: i))
+            .Where(t => GeneratedData.Cards.Get(t.card.DefId).Type == type)
+            .ToList();
+        if (candidates.Count == 0)
+            return;
+
+        var chosen = candidates[rng.Next(candidates.Count)];
+        state.Hand.RemoveAt(chosen.idx);
+        ExhaustCard(state, chosen.card);
     }
 
     private static void UpgradeFirstCardInHand(CombatState state)

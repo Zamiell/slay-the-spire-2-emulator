@@ -59,6 +59,7 @@ public enum BuffId
     Sandpit,
     SteamEruption,
     Disintegration,
+    FreeAttackPower, // player: next N Attacks cost 0; decrements on each Attack played
 }
 
 public record struct BuffState(BuffId Id, int Magnitude);

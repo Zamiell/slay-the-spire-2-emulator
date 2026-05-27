@@ -42,6 +42,14 @@ public static class CombatEngine
         if (def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Smoggy) > 0)
             state.SkillPlayedWhileSmoggy = true;
 
+        // FreeAttackPower: consume one stack before the card effect runs (BeforeCardPlayed timing).
+        if (def.Type == CardType.Attack)
+        {
+            int freeAtk = BuffSystem.Get(state.PlayerBuffs, BuffId.FreeAttackPower);
+            if (freeAtk > 0)
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.FreeAttackPower, -1);
+        }
+
         Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
         if (def.Type == CardType.Attack)
         {
@@ -292,7 +300,11 @@ public static class CombatEngine
         if (def.Id == Effects.IC.Stomp)
             cost -= state.AttackCardsPlayedThisTurn;
         if (def.Type == CardType.Attack)
+        {
             cost += BuffSystem.Get(state.PlayerBuffs, BuffId.Tangled);
+            if (BuffSystem.Get(state.PlayerBuffs, BuffId.FreeAttackPower) > 0)
+                return 0;
+        }
         return cost;
     }
 

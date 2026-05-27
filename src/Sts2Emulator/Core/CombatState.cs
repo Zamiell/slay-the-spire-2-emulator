@@ -43,4 +43,5 @@ public sealed class CombatState
     public int AttackOrSkillCardsPlayedThisTurn;
     public int PlayerHpLostThisTurn;
     public int CardsExhaustedThisTurn;
+    public int UnblockedDamageHitCount; // times player took unblocked damage this combat (TearAsunder)
 }

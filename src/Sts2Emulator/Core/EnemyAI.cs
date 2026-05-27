@@ -1327,7 +1327,9 @@ public static class EnemyAI
         }
         int absorbed = Math.Min(state.PlayerBlock, damage);
         state.PlayerBlock -= absorbed;
-        state.PlayerHp = Math.Max(0, state.PlayerHp - (damage - absorbed));
+        int unblocked = damage - absorbed;
+        if (unblocked > 0) state.UnblockedDamageHitCount++;
+        state.PlayerHp = Math.Max(0, state.PlayerHp - unblocked);
         ApplyPlayerThorns(enemy, state);
     }
 

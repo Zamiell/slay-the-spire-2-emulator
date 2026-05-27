@@ -2893,4 +2893,241 @@ public class CombatEngineTests
         CombatEngine.Step(state, 0, rng); // play upgraded StoneArmor
         Assert.Equal(6, BuffSystem.Get(state.PlayerBuffs, BuffId.Plating));
     }
+
+    [Fact]
+    public void Break_DealsBaseAndAppliesVulnerable5()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Break, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+
+        Assert.True(enemy.Hp < hpBefore); // took damage
+        Assert.Equal(5, BuffSystem.Get(enemy.Buffs, BuffId.Vulnerable));
+    }
+
+    [Fact]
+    public void Break_Upgraded_AppliesVulnerable7()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Break, true));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(7, BuffSystem.Get(enemy.Buffs, BuffId.Vulnerable));
+    }
+
+    [Fact]
+    public void Bludgeon_Deals32Damage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100;
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Bludgeon, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(hpBefore - 32, enemy.Hp);
+    }
+
+    [Fact]
+    public void UltimateDefend_GainsBlock()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.UltimateDefend, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(11, state.PlayerBlock);
+    }
+
+    [Fact]
+    public void Impervious_Gains30BlockAndExhausts()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Impervious, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(30, state.PlayerBlock);
+        Assert.Equal(1, state.ExhaustPile.Count);
+        Assert.Equal(IC.Impervious, state.ExhaustPile[0].DefId);
+    }
+
+    [Fact]
+    public void Feed_KillsEnemyAndGrantsMaxHp()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        enemy.Hp = 1; // set enemy to 1 HP so Feed kills it
+        int maxHpBefore = state.PlayerMaxHp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Feed, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(0, enemy.Hp);
+        Assert.Equal(maxHpBefore + 3, state.PlayerMaxHp);
+    }
+
+    [Fact]
+    public void Feed_NoKillNoMaxHpGain()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100; // enemy survives
+        int maxHpBefore = state.PlayerMaxHp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Feed, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(maxHpBefore, state.PlayerMaxHp);
+    }
+
+    [Fact]
+    public void Mangle_DamagesAndAppliesTempStrength()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Mangle, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.True(enemy.Hp < hpBefore);
+        Assert.Equal(-10, BuffSystem.Get(enemy.Buffs, BuffId.Strength));
+        Assert.Equal(10, BuffSystem.Get(enemy.Buffs, BuffId.TemporaryStrength));
+    }
+
+    [Fact]
+    public void Unrelenting_DamagesAndGrantsFreeAttackPower()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Unrelenting, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.True(enemy.Hp < hpBefore);
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.FreeAttackPower));
+    }
+
+    [Fact]
+    public void FreeAttackPower_MakesNextAttackFree()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.FreeAttackPower, 1);
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false)); // normally costs 1
+        state.Energy = 0; // no energy, but FreeAttackPower makes it free
+
+        var actions = CombatEngine.ValidActions(state);
+        Assert.Contains(0, actions); // playable despite 0 energy
+    }
+
+    [Fact]
+    public void FreeAttackPower_DecrementsAfterAttack()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.FreeAttackPower, 2);
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 0;
+
+        CombatEngine.Step(state, 0, rng); // play first free Attack
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.FreeAttackPower));
+    }
+
+    [Fact]
+    public void Thrash_TwoHitsAndExhaustsRandomAttack()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Thrash, false));
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false)); // Attack to exhaust
+        state.Hand.Add(new CardInstance(IC.DefendIronclad, false)); // Skill, should not be exhausted
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        // Thrash deals 4×2=8 damage
+        Assert.Equal(hpBefore - 8, enemy.Hp);
+        // The Attack (Strike) should be exhausted, Skill (Defend) should remain
+        Assert.Equal(1, state.ExhaustPile.Count(c => c.DefId == IC.Thrash)); // Thrash itself also exhausts
+        Assert.DoesNotContain(state.Hand, c => c.DefId == IC.StrikeIronclad);
+    }
+
+    [Fact]
+    public void TearAsunder_HitsOnceWithNoUnblockedDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.TearAsunder, false));
+        state.Energy = 3;
+        // UnblockedDamageHitCount = 0 → 1 hit
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(hpBefore - 5, enemy.Hp); // 5 dmg × 1 hit
+    }
+
+    [Fact]
+    public void TearAsunder_HitsMoreWithUnblockedDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.UnblockedDamageHitCount = 2;
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.TearAsunder, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(hpBefore - 15, enemy.Hp); // 5 dmg × 3 hits
+    }
 }
