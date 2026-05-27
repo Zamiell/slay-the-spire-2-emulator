@@ -31,6 +31,10 @@ public sealed class CombatState
     public int EncounterId;
     public bool IsEliteCombat;
 
+    // Shuffle RNG (RunRngSet.shuffle subsystem) — used for mid-combat discard reshuffles.
+    // Null falls back to the combat RNG (only valid when no pre-shuffle was done).
+    public Random? ShuffleRng;
+
     // Turn tracking
     public int Turn;
     public bool PlayerTurn = true;

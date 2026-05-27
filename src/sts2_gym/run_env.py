@@ -492,6 +492,7 @@ _OVERGROWTH_EVENT_SHUFFLE_CALLS = 31
 _UNDERDOCKS_EVENT_SHUFFLE_CALLS = 12
 # Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
 _NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
+_SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
 OVERGROWTH_NORMAL_ENCOUNTERS = np.array(
     [5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32
 )
@@ -1434,17 +1435,36 @@ class Sts2RunEnv(gym.Env):
             if self._venerable_tea_set_active:
                 relics = [*relics, RELIC_VENERABLE_TEA_SET_ACTIVE]
                 self._venerable_tea_set_active = False
-            native.reset_run_combat(
-                self._handle,
-                self._combat_deck(),
-                encounter_id,
-                relics,
-                self._player_hp,
-                self._player_max_hp,
-                self._potions,
-                self._gold,
-                self._combat_obs_buf,
-            )
+            deck = self._combat_deck()
+            if self._run_rng_set is not None:
+                self._run_rng_set.shuffle.shuffle(deck)
+                shuffle_rng_seed = _int32(
+                    _uint32(self._run_rng_set.seed + _SHUFFLE_HASH)
+                )
+                native.reset_run_combat_pre_shuffled(
+                    self._handle,
+                    deck,
+                    encounter_id,
+                    relics,
+                    self._player_hp,
+                    self._player_max_hp,
+                    self._potions,
+                    self._gold,
+                    shuffle_rng_seed,
+                    self._combat_obs_buf,
+                )
+            else:
+                native.reset_run_combat(
+                    self._handle,
+                    deck,
+                    encounter_id,
+                    relics,
+                    self._player_hp,
+                    self._player_max_hp,
+                    self._potions,
+                    self._gold,
+                    self._combat_obs_buf,
+                )
 
     def _sync_run_state_from_combat_obs(self) -> None:
         self._player_hp = max(0, int(self._combat_obs_buf[0]))

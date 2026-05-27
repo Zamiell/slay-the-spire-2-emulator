@@ -459,8 +459,12 @@ public static class CardEffects
         {
             if (state.DrawPile.Count == 0)
             {
-                state.DrawPile = state.DiscardPile.ToList();
-                ShufflePile(state.DrawPile, rng);
+                // StableShuffle: sort then FY-shuffle (matches STS2 CardPileCmd.Shuffle).
+                state.DrawPile = state.DiscardPile
+                    .OrderBy(c => GeneratedData.Cards.Get(c.DefId).Name)
+                    .ThenBy(c => c.Upgraded ? 1 : 0)
+                    .ToList();
+                ShufflePile(state.DrawPile, state.ShuffleRng ?? rng);
                 state.DiscardPile.Clear();
             }
             if (state.DrawPile.Count == 0) break;
