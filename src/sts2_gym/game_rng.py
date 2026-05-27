@@ -129,11 +129,27 @@ class GameRng:
             return None
         return items[self._rng.next_int(n)]
 
+    def next_gaussian_int(self, mean: int, std_dev: int, min_val: int, max_val: int) -> int:
+        """Box-Muller Gaussian sample clamped to [min_val, max_val], matching Rng.NextGaussianInt."""
+        import math
+        while True:
+            d = 1.0 - self._rng.next_double()
+            num = 1.0 - self._rng.next_double()
+            num2 = math.sqrt(-2.0 * math.log(d)) * math.sin(math.pi * 2.0 * num)
+            result = int(round(mean + std_dev * num2))
+            if min_val <= result <= max_val:
+                return result
+
     def shuffle(self, lst: list) -> None:
-        """Fisher-Yates in-place shuffle matching Rng.Shuffle."""
+        """Fisher-Yates in-place shuffle matching Rng.Shuffle / UnstableShuffle."""
         for i in range(len(lst) - 1, 0, -1):
             j = self.next_int(i + 1)
             lst[i], lst[j] = lst[j], lst[i]
+
+    def stable_shuffle(self, lst: list, key=None) -> None:
+        """Sort then Fisher-Yates in-place, matching StableShuffle<T>."""
+        lst.sort(key=key)
+        self.shuffle(lst)
 
     def shuffled(self, lst: list) -> list:
         result = list(lst)
@@ -165,6 +181,11 @@ class RunRngSet:
         self._rngs: dict[str, GameRng] = {}
         for name in self._RNG_NAMES:
             self._rngs[name] = GameRng(self.seed, name)
+
+    def act_map_rng(self, act_index: int = 0) -> GameRng:
+        """Returns a fresh act-map RNG matching new Rng(seed, 'act_N_map')."""
+        name = f"act_{act_index + 1}_map"
+        return GameRng(self.seed, name)
 
     @property
     def up_front(self) -> GameRng:

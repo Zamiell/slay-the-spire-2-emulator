@@ -502,11 +502,12 @@ _UNDERDOCKS_WEAK_POOL = [9, 12, 10, 13]
 # Empirically determined UpFront RNG pre-call counts before act.GenerateRooms():
 # K=201 (SharedRelicPool shuffles + PlayerRelicPool shuffles + ancient distribution).
 # After K calls: 2 more for SharedAncients NextInt distribution, then N-1 event shuffle
-# calls (N_o=31 for Overgrowth, N_u=57 for Underdocks), then NextDouble for first weak.
+# calls (N_o=60 for Overgrowth, N_u=57 for Underdocks), then NextDouble for first weak.
 # N_u=57 calibrated against DRUM_1, TRACE_CARDS_1, INSTANT_10 (all three correct).
+# N_o=60 calibrated against INSTANT_5 and RARITY_1 (both first/second encounters correct).
 _UPFRONT_PRE_CALLS = 202
 # Empirical event shuffle call counts (= N-1 for N events) before first weak grab.
-_OVERGROWTH_EVENT_SHUFFLE_CALLS = 31
+_OVERGROWTH_EVENT_SHUFFLE_CALLS = 60
 _UNDERDOCKS_EVENT_SHUFFLE_CALLS = 57
 # Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
 _NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
@@ -621,6 +622,7 @@ class Sts2RunEnv(gym.Env):
         self._seed = actual_seed
         self._run_rng_set = RunRngSet(str(actual_seed))
         self._player_rng = PlayerRngSet(self._run_rng_set)
+        self._map_rng = self._run_rng_set.act_map_rng(act_index=0)
         self._rng = np.random.default_rng(self._run_rng_set.seed)
         self._elapsed_steps = 0
         self._floor = 1
@@ -1263,15 +1265,19 @@ class Sts2RunEnv(gym.Env):
         self._get_or_create_map_node(*MAP_START_COORD).node_type = "Ancient"
         self._get_or_create_map_node(*MAP_BOSS_COORD).node_type = "Boss"
 
+        # GetMapPointTypes is called before GenerateMap in the game constructor.
+        rest_count = self._map_rng.next_gaussian_int(7, 1, 6, 7)
+        unknown_count = self._map_rng.next_gaussian_int(12, 1, 10, 14)
+
         start_points: set[tuple[int, int]] = set()
         for path_index in range(MAP_PATH_ITERATIONS):
             start = self._get_or_create_map_node(
-                int(self._rng.integers(0, MAP_WIDTH)), 1
+                self._map_rng.next_int(MAP_WIDTH), 1
             )
             if path_index == 1:
                 while (start.col, start.row) in start_points:
                     start = self._get_or_create_map_node(
-                        int(self._rng.integers(0, MAP_WIDTH)), 1
+                        self._map_rng.next_int(MAP_WIDTH), 1
                     )
             start_points.add((start.col, start.row))
             self._generate_map_path(start)
@@ -1282,7 +1288,7 @@ class Sts2RunEnv(gym.Env):
             if node.row == MAP_BOSS_ROW - 1:
                 self._add_map_edge(coord, MAP_BOSS_COORD)
 
-        self._assign_map_point_types()
+        self._assign_map_point_types(rest_count, unknown_count)
 
     def _get_or_create_map_node(self, col: int, row: int) -> RunMapNode:
         coord = (col, row)
@@ -1308,8 +1314,8 @@ class Sts2RunEnv(gym.Env):
             current = self._map_nodes[child_coord]
 
     def _generate_next_map_coord(self, current: RunMapNode) -> tuple[int, int]:
-        deltas = np.array([-1, 0, 1], dtype=np.int32)
-        self._rng.shuffle(deltas)
+        deltas = [-1, 0, 1]
+        self._map_rng.stable_shuffle(deltas)
         for delta in deltas:
             target_col = max(0, min(MAP_WIDTH - 1, current.col + int(delta)))
             if not self._has_invalid_crossover(current, target_col):
@@ -1357,7 +1363,7 @@ class Sts2RunEnv(gym.Env):
             elif node.node_type == "Boss":
                 node.encounter_id = int(self._rng.choice(self._boss_encounter_pool()))
 
-    def _assign_map_point_types(self) -> None:
+    def _assign_map_point_types(self, rest_count: int, unknown_count: int) -> None:
         for node in self._map_nodes.values():
             if node.row == MAP_FINAL_REST_ROW:
                 node.node_type = "RestSite"
@@ -1369,8 +1375,6 @@ class Sts2RunEnv(gym.Env):
                 node.node_type = "Monster"
                 node.can_be_modified = False
 
-        rest_count = int(np.clip(np.rint(self._rng.normal(7, 1)), 6, 7))
-        unknown_count = int(np.clip(np.rint(self._rng.normal(12, 1)), 10, 14))
         type_queue = (
             ["RestSite"] * rest_count
             + ["Shop"] * 3
@@ -1385,7 +1389,7 @@ class Sts2RunEnv(gym.Env):
         for _ in range(3):
             if not type_queue:
                 break
-            self._rng.shuffle(candidates)
+            self._map_rng.stable_shuffle(candidates, key=lambda n: (n.col, n.row))
             for node in candidates:
                 if not type_queue or node.node_type != "Unassigned":
                     continue
