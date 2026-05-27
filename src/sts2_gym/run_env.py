@@ -502,11 +502,12 @@ _UNDERDOCKS_WEAK_POOL = [9, 12, 10, 13]
 # Empirically determined UpFront RNG pre-call counts before act.GenerateRooms():
 # K=201 (SharedRelicPool shuffles + PlayerRelicPool shuffles + ancient distribution).
 # After K calls: 2 more for SharedAncients NextInt distribution, then N-1 event shuffle
-# calls (N_o=31 for Overgrowth, N_u=12 for Underdocks), then NextDouble for first weak.
+# calls (N_o=31 for Overgrowth, N_u=57 for Underdocks), then NextDouble for first weak.
+# N_u=57 calibrated against DRUM_1, TRACE_CARDS_1, INSTANT_10 (all three correct).
 _UPFRONT_PRE_CALLS = 202
 # Empirical event shuffle call counts (= N-1 for N events) before first weak grab.
 _OVERGROWTH_EVENT_SHUFFLE_CALLS = 31
-_UNDERDOCKS_EVENT_SHUFFLE_CALLS = 12
+_UNDERDOCKS_EVENT_SHUFFLE_CALLS = 57
 # Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
 _NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
 _SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
