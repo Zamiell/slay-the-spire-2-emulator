@@ -6,8 +6,9 @@ __pycache__/
 node_modules/
 out/
 
-# Generated full-run captures can be large and are usually superseded quickly.
+# Generated captures can be large and are usually superseded quickly.
 # Keep only curated trace fixtures intentionally.
+traces/debug/
 traces/full-run/*.json
 !traces/full-run/FULLRUN_INSTANT_5.json
 !traces/full-run/FULLRUN_INSTANT_9.json
