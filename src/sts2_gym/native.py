@@ -11,7 +11,7 @@ _LIB_NAMES = {
     "darwin": "Sts2Emulator.dylib",
 }
 _ALLOW_STALE_ENV = "STS2_ALLOW_STALE_NATIVE"
-_REQUIRED_NATIVE_API_VERSION = 3
+_REQUIRED_NATIVE_API_VERSION = 4
 
 
 def _repo_root() -> Path:
@@ -271,6 +271,7 @@ def reset_run_combat(
     player_max_hp: int,
     potion_ids: list[int],
     player_gold: int,
+    encounter_rng_seed: int,
     obs_buf: ctypes.Array,
 ) -> None:
     deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
@@ -288,6 +289,7 @@ def reset_run_combat(
         potion_buf,
         len(potion_ids),
         player_gold,
+        ctypes.c_int32(encounter_rng_seed),
         obs_buf,
     )
 
@@ -302,6 +304,7 @@ def reset_run_combat_pre_shuffled(
     potion_ids: list[int],
     player_gold: int,
     shuffle_rng_seed: int,
+    encounter_rng_seed: int,
     obs_buf: ctypes.Array,
 ) -> None:
     deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
@@ -320,6 +323,7 @@ def reset_run_combat_pre_shuffled(
         len(potion_ids),
         player_gold,
         shuffle_rng_seed,
+        ctypes.c_int32(encounter_rng_seed),
         obs_buf,
     )
 

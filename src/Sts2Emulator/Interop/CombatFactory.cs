@@ -205,7 +205,8 @@ public static class CombatFactory
         ReadOnlySpan<int> potionIds,
         int playerGold,
         bool deckPreShuffled = false,
-        Random? shuffleRng = null)
+        Random? shuffleRng = null,
+        int? encounterRngSeed = null)
     {
         state.PlayerMaxHp  = Math.Max(1, playerMaxHp);
         state.PlayerHp     = Math.Clamp(playerHp, 0, state.PlayerMaxHp);
@@ -240,7 +241,7 @@ public static class CombatFactory
             : SelectFirstCombatEncounter(rng);
         state.EncounterId = (int)encounter;
         state.IsEliteCombat = IsEliteEncounter(encounter);
-        state.Enemies = CreateEncounter(encounter, rng);
+        state.Enemies = CreateEncounter(encounter, rng, encounterRngSeed);
         EnemyAI.UpdateSecondaryIntents(state.Enemies);
 
         // Shuffle draw pile (skip if caller pre-shuffled it) and deal opening hand of 5.
@@ -265,7 +266,7 @@ public static class CombatFactory
         AscendersBaneId,
     ];
 
-    private static List<EnemyState> CreateEncounter(ActOneEncounter encounter, Random rng) =>
+    private static List<EnemyState> CreateEncounter(ActOneEncounter encounter, Random rng, int? encounterRngSeed = null) =>
         encounter switch
         {
             ActOneEncounter.Cultists =>
@@ -285,7 +286,7 @@ public static class CombatFactory
                 CreateEnemy(KE.Nibbit, rng, new Intent(IntentType.Attack, 13)),
             ],
 
-            ActOneEncounter.Slimes => CreateSlimeEncounter(rng),
+            ActOneEncounter.Slimes => CreateSlimeEncounter(rng, encounterRngSeed),
 
             ActOneEncounter.Exoskeletons =>
             [
@@ -712,10 +713,13 @@ public static class CombatFactory
     private static bool IsEliteEncounter(ActOneEncounter encounter) =>
         encounter is >= ActOneEncounter.BygoneEffigy and <= ActOneEncounter.WaterfallGiant;
 
-    private static List<EnemyState> CreateSlimeEncounter(Random rng)
+    private static List<EnemyState> CreateSlimeEncounter(Random rng, int? encounterRngSeed = null)
     {
-        int firstSmall = rng.Next(2) == 0 ? KE.LeafSlimeS : KE.TwigSlimeS;
-        int middle = rng.Next(2) == 0 ? KE.LeafSlimeM : KE.TwigSlimeM;
+        // Type selection uses the encounter-specific RNG (seeded from run_seed + floor + hash("slimes_weak")),
+        // matching SlimesWeak.GenerateMonsters() which uses base.Rng separate from the niche RNG.
+        var typeRng = encounterRngSeed.HasValue ? new Random(encounterRngSeed.Value) : rng;
+        int firstSmall = typeRng.Next(2) == 0 ? KE.LeafSlimeS : KE.TwigSlimeS;
+        int middle = typeRng.Next(2) == 0 ? KE.LeafSlimeM : KE.TwigSlimeM;
         int secondSmall = firstSmall == KE.LeafSlimeS ? KE.TwigSlimeS : KE.LeafSlimeS;
 
         return

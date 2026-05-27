@@ -129,9 +129,12 @@ class GameRng:
             return None
         return items[self._rng.next_int(n)]
 
-    def next_gaussian_int(self, mean: int, std_dev: int, min_val: int, max_val: int) -> int:
+    def next_gaussian_int(
+        self, mean: int, std_dev: int, min_val: int, max_val: int
+    ) -> int:
         """Box-Muller Gaussian sample clamped to [min_val, max_val], matching Rng.NextGaussianInt."""
         import math
+
         while True:
             d = 1.0 - self._rng.next_double()
             num = 1.0 - self._rng.next_double()

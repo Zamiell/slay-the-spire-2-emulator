@@ -512,6 +512,10 @@ _UNDERDOCKS_EVENT_SHUFFLE_CALLS = 57
 # Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
 _NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
 _SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
+# Encounter-specific type-selection RNG: uint(int(run_seed) + total_floor + hash(entry)).
+# Only SlimesWeak (encounter ID 3) currently needs this; others use the niche RNG for HP only.
+_SLIMES_WEAK_ENCOUNTER_ID = 3
+_SLIMES_WEAK_ENTRY_HASH = get_deterministic_hash_code("SLIMES_WEAK")
 OVERGROWTH_NORMAL_ENCOUNTERS = np.array(
     [5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32
 )
@@ -1271,9 +1275,7 @@ class Sts2RunEnv(gym.Env):
 
         start_points: set[tuple[int, int]] = set()
         for path_index in range(MAP_PATH_ITERATIONS):
-            start = self._get_or_create_map_node(
-                self._map_rng.next_int(MAP_WIDTH), 1
-            )
+            start = self._get_or_create_map_node(self._map_rng.next_int(MAP_WIDTH), 1)
             if path_index == 1:
                 while (start.col, start.row) in start_points:
                     start = self._get_or_create_map_node(
@@ -1476,6 +1478,7 @@ class Sts2RunEnv(gym.Env):
                 relics = [*relics, RELIC_VENERABLE_TEA_SET_ACTIVE]
                 self._venerable_tea_set_active = False
             deck = self._combat_deck()
+            encounter_rng_seed = self._encounter_rng_seed(encounter_id)
             if self._run_rng_set is not None:
                 self._run_rng_set.shuffle.shuffle(deck)
                 shuffle_rng_seed = _int32(
@@ -1491,6 +1494,7 @@ class Sts2RunEnv(gym.Env):
                     self._potions,
                     self._gold,
                     shuffle_rng_seed,
+                    encounter_rng_seed,
                     self._combat_obs_buf,
                 )
             else:
@@ -1503,6 +1507,7 @@ class Sts2RunEnv(gym.Env):
                     self._player_max_hp,
                     self._potions,
                     self._gold,
+                    encounter_rng_seed,
                     self._combat_obs_buf,
                 )
 
@@ -1620,6 +1625,20 @@ class Sts2RunEnv(gym.Env):
         # Matches CombatState: creature.SetUniqueMonsterHpValue uses RunState.Rng.Niche,
         # whose raw seed is _int32(_uint32(run_seed + niche_hash)).
         return _int32(_uint32(self._run_rng_set.seed + _NICHE_HASH))
+
+    def _encounter_rng_seed(self, encounter_id: int) -> int:
+        # Matches EncounterModel.GenerateMonstersWithSlots:
+        #   uint seed = (uint)((int)runState.Rng.Seed + runState.TotalFloor + hash(entry))
+        # Only SlimesWeak uses this for type selection; pass 0 for others (ignored by C#).
+        if encounter_id == _SLIMES_WEAK_ENCOUNTER_ID and self._run_rng_set is not None:
+            return _int32(
+                _uint32(
+                    _int32(self._run_rng_set.seed)
+                    + self._floor
+                    + _SLIMES_WEAK_ENTRY_HASH
+                )
+            )
+        return 0
 
     def _gold_reward_for_node(self) -> int:
         # Uses PlayerRng.Rewards matching GoldReward.Populate() → Rng.NextInt(min, max+1).

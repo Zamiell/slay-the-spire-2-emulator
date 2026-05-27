@@ -35,7 +35,7 @@ public static class NativeExports
     public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
-    public const int NATIVE_API_VERSION = 3;
+    public const int NATIVE_API_VERSION = 4;
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         472, 472, 472, 472, 472,
@@ -116,7 +116,8 @@ public static class NativeExports
             ReadOnlySpan<int> potionIds,
             int playerGold,
             bool deckPreShuffled = false,
-            Random? shuffleRng = null)
+            Random? shuffleRng = null,
+            int? encounterRngSeed = null)
         {
             Rng = new Random(Seed);
             LastPlayerWon = false;
@@ -131,7 +132,8 @@ public static class NativeExports
                 potionIds,
                 playerGold,
                 deckPreShuffled,
-                shuffleRng
+                shuffleRng,
+                encounterRngSeed
             );
         }
     }
@@ -227,6 +229,7 @@ public static class NativeExports
         int* potionIds,
         int potionLen,
         int playerGold,
+        int encounterRngSeed,
         int* obsBuf)
     {
         var combat = _pool[handle]!;
@@ -237,7 +240,10 @@ public static class NativeExports
             playerHp,
             playerMaxHp,
             new ReadOnlySpan<int>(potionIds, potionLen),
-            playerGold
+            playerGold,
+            deckPreShuffled: false,
+            shuffleRng: null,
+            encounterRngSeed
         );
         WriteObs(combat.State, obsBuf);
     }
@@ -256,6 +262,7 @@ public static class NativeExports
         int potionLen,
         int playerGold,
         int shuffleRngSeed,
+        int encounterRngSeed,
         int* obsBuf)
     {
         var combat = _pool[handle]!;
@@ -273,7 +280,8 @@ public static class NativeExports
             new ReadOnlySpan<int>(potionIds, potionLen),
             playerGold,
             deckPreShuffled: true,
-            shuffleRng
+            shuffleRng,
+            encounterRngSeed
         );
         WriteObs(combat.State, obsBuf);
     }
