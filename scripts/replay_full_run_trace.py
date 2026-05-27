@@ -260,9 +260,13 @@ def translate_action(
     if action_name in {"choose_event_option", "rest_option", "choose_rest_option"}:
         return int(payload.get("index", 0))
     if action_name == "select_card_reward":
-        return int(payload.get("card_index", payload.get("index", 0)))
+        if phase == PHASE_CARD_REWARD:
+            return int(payload.get("card_index", payload.get("index", 0)))
+        return None
     if action_name == "skip_card_reward":
-        return REWARD_SKIP_ACTION
+        if phase == PHASE_CARD_REWARD:
+            return REWARD_SKIP_ACTION
+        return None
     if action_name == "claim_reward":
         if phase == PHASE_RELIC_REWARD:
             return 0
