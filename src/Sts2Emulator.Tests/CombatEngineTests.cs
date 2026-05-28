@@ -1542,6 +1542,142 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void DarkEmbrace_DrawsCardOnImmediateExhaust()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.DarkEmbrace, false), new CardInstance(IC.TrueGrit, false)];
+        state.DrawPile = [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.IronWave, false)
+        ];
+        state.Energy = 3;
+
+        // Play Dark Embrace.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.DarkEmbrace));
+        Assert.Equal(2, state.Hand.Count); // True Grit + card drawn from DE exhaust
+
+        // Play True Grit (exhausts the other card in hand or itself if we are lucky? No, hand has 2 cards now).
+        state.Hand.Add(new CardInstance(IC.Bash, false));
+        // Hand now has: True Grit, card from DE (Strike), Bash.
+        // Action 0 is True Grit.
+        CombatEngine.Step(state, 0, new Random(0));
+
+        // True Grit played, exhausts a card, Dark Embrace triggers again.
+        // Expected: 2 cards in hand (one from DE exhaust, one from TG exhaust).
+        // True Grit itself does not exhaust, so it shouldn't trigger another draw.
+        Assert.Equal(2, state.Hand.Count);
+    }
+
+    [Fact]
+    public void DarkEmbrace_DrawsCardAfterTurnEndForEtherealExhaust()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.DarkEmbrace, false), new CardInstance(IC.AscendersBane, false)];
+        state.DrawPile = [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.IronWave, false),
+            new CardInstance(IC.Bash, false),
+            new CardInstance(IC.Anger, false),
+            new CardInstance(IC.BodySlam, false),
+            new CardInstance(IC.Break, false)
+        ];
+        state.Energy = 3;
+
+        // Play Dark Embrace.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.DarkEmbrace));
+        Assert.Equal(2, state.Hand.Count); // Ascender's Bane + card drawn from DE exhaust
+
+        // End turn. Ascender's Bane is Ethereal and should exhaust.
+        // Dark Embrace should trigger but the draw should be deferred.
+        CombatEngine.Step(state, 2, new Random(0)); // action 2 is End Turn when hand has 2 cards
+
+        // After end turn, we should have drawn 5 cards for next turn + 1 card from Dark Embrace.
+        Assert.Equal(6, state.Hand.Count);
+        Assert.Equal(1, state.ExhaustPile.Count(c => c.DefId == IC.AscendersBane));
+    }
+
+    [Fact]
+    public void Weakness_FromSludgeSpinner_LastsThroughNextPlayerTurn()
+    {
+        // SludgeSpinner Move 0 is Oil Spray (9 dmg + 1 Weak).
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Enemies = [CombatFactory.CreateEnemy(KE.SludgeSpinner, new Random(0), new Intent(IntentType.Debuff, 9), 0)];
+        state.Hand = [new CardInstance(IC.StrikeIronclad, false)];
+        state.DrawPile = [];
+        state.DiscardPile = [];
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100;
+
+        // Turn 1: End Turn.
+        // SludgeSpinner should use Oil Spray, dealing 9 damage and applying 1 Weak.
+        CombatEngine.Step(state, 1, new Random(0));
+
+        // Turn 2 start. Player should be Weak 1.
+        // If the bug exists, Weak 1 was ticked to 0 at the end of Turn 1 (start of Turn 2).
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Weak));
+
+        // Play Strike. Should deal 4 damage.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(96, enemy.Hp);
+    }
+
+    [Fact]
+    public void Aggression_AddsUpgradedCardAtStartOfTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Aggression, false)];
+        state.DrawPile = [];
+        state.DiscardPile = [];
+        state.Energy = 3;
+
+        // Play Aggression.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Aggression));
+        Assert.Empty(state.Hand);
+
+        // End turn.
+        CombatEngine.Step(state, 0, new Random(0));
+
+        // Start of next turn. Should have 5 cards (from draw) + 1 card from Aggression.
+        // Wait, draw pile was empty. So it should only have cards from Aggression?
+        // No, EndTurn draws 5 cards. If draw/discard empty, it draws 0.
+        // So hand should have exactly 1 card.
+        Assert.Single(state.Hand);
+        Assert.True(state.Hand[0].Upgraded);
+    }
+
+    [Fact]
+    public void Hellraiser_AutoPlaysDrawnStrike()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Hellraiser, false), new CardInstance(IC.PommelStrike, false)];
+        state.DrawPile = [new CardInstance(IC.StrikeIronclad, false)];
+        state.DiscardPile = [];
+        state.Energy = 3;
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100;
+
+        // Play Hellraiser.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Hellraiser));
+
+        // Play Pommel Strike (draws 1).
+        // It should draw StrikeIronclad, which Hellraiser should automatically play.
+        // StrikeIronclad deals 6 damage. Pommel Strike deals 9.
+        // Total damage should be 15.
+        CombatEngine.Step(state, 0, new Random(0));
+        
+        Assert.Equal(85, enemy.Hp);
+        // Hand should be empty (Pommel Strike played, StrikeIronclad auto-played).
+        Assert.Empty(state.Hand);
+        Assert.Contains(state.DiscardPile, c => c.DefId == IC.StrikeIronclad);
+    }
+
+    [Fact]
     public void DarkShackles_AppliesTemporaryStrengthLossUntilEnemyTurnEnds()
     {
         var state = CombatFactory.NewCombat(seed: 0);
@@ -3130,4 +3266,5 @@ public class CombatEngineTests
         CombatEngine.Step(state, 0, rng);
         Assert.Equal(hpBefore - 15, enemy.Hp); // 5 dmg × 3 hits
     }
+
 }

@@ -17,8 +17,8 @@ RELICS_DIR = DECOMPILED / "MegaCrit.Sts2.Core.Models.Relics"
 
 # ── patterns ──────────────────────────────────────────────────────────────────
 
-# Constructor: base(cost, CardType.Attack, ...)
-CARD_CTOR = re.compile(r"base\((-?\d+),\s*CardType\.(\w+)")
+# Constructor: base(cost, CardType.Attack, CardRarity.Common, ...)
+CARD_CTOR = re.compile(r"base\((-?\d+),\s*CardType\.(\w+),\s*CardRarity\.(\w+)")
 # DamageVar(6m, ...) or DamageVar(6, ...)
 DAMAGE_VAR = re.compile(r"new DamageVar\((\d+(?:\.\d+)?)m?,")
 # BlockVar(5m, ...)
@@ -84,6 +84,7 @@ def extract_cards() -> str:
 
         cost = int(ctor.group(1))
         card_type = ctor.group(2)  # Attack / Skill / Power / Status / Curse
+        rarity = ctor.group(3)
         if cost < 0 and name not in SPECIAL_CARD_IDS:
             continue
 
@@ -111,7 +112,7 @@ def extract_cards() -> str:
             f'        new CardDef(Id: {def_id}, Name: "{name}", '
             f"Cost: {cost}, BaseDamage: {base_dmg}, BaseBlock: {base_block}, "
             f"UpgradeDamage: {upg_dmg}, UpgradeBlock: {upg_block}, "
-            f"Type: CardType.{card_type}{flags_cs}),"
+            f"Type: CardType.{card_type}, Rarity: CardRarity.{rarity}{flags_cs}),"
         )
         if name not in SPECIAL_CARD_IDS:
             card_id += 1

@@ -11,8 +11,11 @@ public enum BuffId
     Burn,
     Ritual,       // enemy: gain N Strength at end of each turn (skips turn applied)
     DemonForm,    // player: gain N Strength at start of each player turn
+    Aggression,   // player: start of turn, add a random upgraded card
+    Hellraiser,   // player: whenever you draw a Strike, play it automatically
     Rage,         // player: gain N block when playing an Attack; removed at end of player turn
     FeelNoPain,   // player: gain N block when any card is exhausted
+    DarkEmbrace,  // player: draw N cards when any card is exhausted
     Barricade,    // player: block does not clear at start of turn
     Colossus,     // player: Vulnerable enemies deal half attack damage
     Corruption,   // player: Skills cost 0 and exhaust
@@ -26,6 +29,15 @@ public enum BuffId
     Stampede,     // player: auto-play random Attacks when play phase starts
     Vicious,      // player: draw N cards when applying Vulnerable
     OneTwoPunch,  // player: duplicate the next N Attack cards this turn
+    CrueltyPower, // player: increase Vulnerable multiplier by N%
+    PyrePower,    // player: gain N extra energy each turn
+    UnmovablePower, // player: first N block gains each turn are doubled
+    CrimsonMantleBlock, // player: gain N block at start of turn
+    CrimsonMantleSelfDamage, // player: lose N HP at start of turn
+    SetupStrikePower, // player: temporary Strength marker
+    EntropyPower,     // player: transform N cards in hand at turn start
+    FastenPower,      // player: gain extra block from Defend cards
+    FranticEscapePlayedCount, // player: track plays to increase cost
     RetainHand,   // player: keep remaining hand at end of player turn
     BlockNextTurn, // player: gain N unpowered block after next turn's block clear
     Nostalgia,    // player: first N Attack/Skill cards each turn go on top of draw pile
@@ -41,6 +53,7 @@ public enum BuffId
     SummonCooldown, // Two-Tailed Rat: turns until Call for Backup is available
     BackupCount,    // Two-Tailed Rat: number of successful backup calls
     Plating,      // Sewer Clam: recurring block that decays each turn
+    HardenedShell, // Skulking Colony: cannot lose more than N HP each turn
     Tangled,      // Vine Shambler card debuff, currently tracked as a player debuff
     Constrict,    // Slithering Strangler pressure debuff, currently tracked
     Smoggy,       // Living Fog card affliction debuff, currently tracked

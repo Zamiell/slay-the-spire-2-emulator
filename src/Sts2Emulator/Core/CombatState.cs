@@ -16,9 +16,11 @@ public sealed class CombatState
     public List<CardInstance> DiscardPile = [];
     public List<CardInstance> ExhaustPile = [];
     public List<CardInstance> ReturnToHandBeforeDraw = [];
+    public List<CardInstance> AutoPlayQueue = [];
 
     // Potions: slot index → potion def ID, 0 = empty
     public int[] PotionSlots = new int[3];
+    public int MaxPotionSlots = 3;
 
     // Relics
     public List<RelicInstance> Relics = [];
@@ -41,7 +43,9 @@ public sealed class CombatState
     public bool SkillPlayedWhileSmoggy;
     public int AttackCardsPlayedThisTurn;
     public int AttackOrSkillCardsPlayedThisTurn;
+    public int BlockGainsThisTurn;
     public int PlayerHpLostThisTurn;
     public int CardsExhaustedThisTurn;
+    public int EtherealExhaustCount; // number of cards exhausted by Ethereal this turn (Dark Embrace)
     public int UnblockedDamageHitCount; // times player took unblocked damage this combat (TearAsunder)
 }

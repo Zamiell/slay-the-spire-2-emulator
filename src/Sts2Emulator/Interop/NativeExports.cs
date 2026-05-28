@@ -35,7 +35,7 @@ public static class NativeExports
     public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
-    public const int NATIVE_API_VERSION = 4;
+    public const int NATIVE_API_VERSION = 5;
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         472, 472, 472, 472, 472,
@@ -117,7 +117,8 @@ public static class NativeExports
             int playerGold,
             bool deckPreShuffled = false,
             Random? shuffleRng = null,
-            int? encounterRngSeed = null)
+            int? encounterRngSeed = null,
+            int nicheSkipCount = 0)
         {
             Rng = new Random(Seed);
             LastPlayerWon = false;
@@ -133,7 +134,8 @@ public static class NativeExports
                 playerGold,
                 deckPreShuffled,
                 shuffleRng,
-                encounterRngSeed
+                encounterRngSeed,
+                nicheSkipCount
             );
         }
     }
@@ -262,6 +264,7 @@ public static class NativeExports
         int potionLen,
         int playerGold,
         int shuffleRngSeed,
+        int nicheSkipCount,
         int encounterRngSeed,
         int* obsBuf)
     {
@@ -281,7 +284,8 @@ public static class NativeExports
             playerGold,
             deckPreShuffled: true,
             shuffleRng,
-            encounterRngSeed
+            encounterRngSeed,
+            nicheSkipCount
         );
         WriteObs(combat.State, obsBuf);
     }

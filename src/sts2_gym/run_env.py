@@ -253,95 +253,171 @@ CARD_RARITY_ODDS_ELITE = (0.1, 0.4)
 CARD_RARITY_ODDS_BOSS = (1.0, 0.0)
 CARD_RARITY_ODDS_SHOP = (0.09, 0.37)
 CARD_RARITY_BY_ID = {
+    9: CARD_RARITY_RARE,
     13: CARD_RARITY_COMMON,
     18: CARD_RARITY_COMMON,
-    20: CARD_RARITY_COMMON,
+    20: CARD_RARITY_UNCOMMON,
+    29: CARD_RARITY_RARE,
     31: CARD_RARITY_UNCOMMON,
     45: CARD_RARITY_COMMON,
     46: CARD_RARITY_COMMON,
+    47: CARD_RARITY_UNCOMMON,
     50: CARD_RARITY_COMMON,
+    58: CARD_RARITY_RARE,
     60: CARD_RARITY_COMMON,
+    66: CARD_RARITY_UNCOMMON,
     69: CARD_RARITY_UNCOMMON,
     87: CARD_RARITY_COMMON,
+    95: CARD_RARITY_UNCOMMON,
+    99: CARD_RARITY_RARE,
+    113: CARD_RARITY_RARE,
+    114: CARD_RARITY_RARE,
+    119: CARD_RARITY_RARE,
+    141: CARD_RARITY_RARE,
+    142: CARD_RARITY_UNCOMMON,
     147: CARD_RARITY_UNCOMMON,
     150: CARD_RARITY_UNCOMMON,
     155: CARD_RARITY_UNCOMMON,
     174: CARD_RARITY_UNCOMMON,
     175: CARD_RARITY_UNCOMMON,
+    183: CARD_RARITY_RARE,
     185: CARD_RARITY_UNCOMMON,
+    188: CARD_RARITY_RARE,
     189: CARD_RARITY_UNCOMMON,
+    195: CARD_RARITY_UNCOMMON,
     205: CARD_RARITY_UNCOMMON,
     238: CARD_RARITY_COMMON,
     240: CARD_RARITY_COMMON,
+    246: CARD_RARITY_RARE,
     247: CARD_RARITY_UNCOMMON,
     254: CARD_RARITY_UNCOMMON,
+    261: CARD_RARITY_RARE,
+    262: CARD_RARITY_UNCOMMON,
+    263: CARD_RARITY_UNCOMMON,
     265: CARD_RARITY_UNCOMMON,
     268: CARD_RARITY_COMMON,
+    272: CARD_RARITY_RARE,
     273: CARD_RARITY_UNCOMMON,
+    295: CARD_RARITY_RARE,
+    313: CARD_RARITY_COMMON,
+    328: CARD_RARITY_RARE,
+    332: CARD_RARITY_RARE,
+    334: CARD_RARITY_RARE,
+    339: CARD_RARITY_RARE,
     349: CARD_RARITY_COMMON,
+    353: CARD_RARITY_UNCOMMON,
     358: CARD_RARITY_COMMON,
-    396: CARD_RARITY_UNCOMMON,
+    364: CARD_RARITY_RARE,
+    374: CARD_RARITY_RARE,
+    378: CARD_RARITY_UNCOMMON,
+    381: CARD_RARITY_UNCOMMON,
+    404: CARD_RARITY_UNCOMMON,
     414: CARD_RARITY_UNCOMMON,
     421: CARD_RARITY_COMMON,
     433: CARD_RARITY_COMMON,
     454: CARD_RARITY_UNCOMMON,
-    455: CARD_RARITY_UNCOMMON,
     462: CARD_RARITY_UNCOMMON,
+    464: CARD_RARITY_RARE,
     465: CARD_RARITY_UNCOMMON,
+    466: CARD_RARITY_UNCOMMON,
     486: CARD_RARITY_COMMON,
+    492: CARD_RARITY_RARE,
     493: CARD_RARITY_UNCOMMON,
+    494: CARD_RARITY_RARE,
+    505: CARD_RARITY_RARE,
     508: CARD_RARITY_COMMON,
     516: CARD_RARITY_COMMON,
     517: CARD_RARITY_COMMON,
     519: CARD_RARITY_COMMON,
-    521: CARD_RARITY_UNCOMMON,
+    525: CARD_RARITY_RARE,
+    526: CARD_RARITY_UNCOMMON,
+    529: CARD_RARITY_UNCOMMON,
     533: CARD_RARITY_UNCOMMON,
     538: CARD_RARITY_UNCOMMON,
 }
 IRONCLAD_REWARD_POOL = np.array(
     [
+        9,
         13,
         18,
         20,
+        29,
         31,
         45,
         46,
+        47,
         50,
+        58,
+        59,
         60,
+        66,
         69,
         87,
+        95,
+        99,
+        107,
+        113,
+        114,
+        119,
+        141,
+        142,
         147,
         150,
         155,
         174,
         175,
+        183,
         185,
+        188,
         189,
+        195,
         205,
         238,
         240,
+        246,
         247,
         254,
+        261,
+        262,
+        263,
         265,
         268,
+        272,
         273,
+        295,
+        313,
+        328,
+        332,
+        334,
+        339,
         349,
+        353,
         358,
-        396,
+        364,
+        374,
+        378,
+        381,
+        404,
         414,
         421,
         433,
         454,
-        455,
         462,
+        464,
         465,
+        466,
         486,
+        492,
         493,
+        494,
+        505,
         508,
         516,
         517,
         519,
-        521,
+        525,
+        526,
+        529,
         533,
         538,
     ],
@@ -611,6 +687,8 @@ class Sts2RunEnv(gym.Env):
         self._handle: int | None = None
         self._combat_obs_buf = (ctypes.c_int * native.OBS_SIZE)()
         self._rew_buf = (ctypes.c_float * 1)()
+        self._niche_calls_consumed = 0
+        self._last_combat_enemy_count = 0
 
         self.observation_space = spaces.Box(
             low=0,
@@ -667,6 +745,8 @@ class Sts2RunEnv(gym.Env):
             self._handle = None
         for i in range(native.OBS_SIZE):
             self._combat_obs_buf[i] = 0
+        self._niche_calls_consumed = 0
+        self._last_combat_enemy_count = 0
         self._select_act_and_weak_encounters()
         self._generate_act_map()
         self._generate_neow_options()
@@ -1462,6 +1542,10 @@ class Sts2RunEnv(gym.Env):
         return 0
 
     def _reset_combat(self, seed: int, encounter_id: int | None = None):
+        # Advance niche offset by the enemy count from the previous combat.
+        self._niche_calls_consumed += self._last_combat_enemy_count
+        self._last_combat_enemy_count = 0
+
         if self._handle is not None:
             native.destroy(self._handle)
         self._handle = native.create(seed)
@@ -1494,6 +1578,7 @@ class Sts2RunEnv(gym.Env):
                     self._potions,
                     self._gold,
                     shuffle_rng_seed,
+                    self._niche_calls_consumed,
                     encounter_rng_seed,
                     self._combat_obs_buf,
                 )
@@ -1510,6 +1595,17 @@ class Sts2RunEnv(gym.Env):
                     encounter_rng_seed,
                     self._combat_obs_buf,
                 )
+        # Count enemies in this combat for the niche RNG offset of the next combat.
+        self._last_combat_enemy_count = self._count_enemies_in_obs()
+
+    def _count_enemies_in_obs(self) -> int:
+        # Enemy slots start at obs[54], each 15 ints wide (5 + MAX_ENEMY_BUFFS*2).
+        # An enemy is present at combat start if its HP > 0.
+        count = 0
+        for e in range(6):
+            if self._combat_obs_buf[54 + e * 15] > 0:
+                count += 1
+        return count
 
     def _sync_run_state_from_combat_obs(self) -> None:
         self._player_hp = max(0, int(self._combat_obs_buf[0]))
@@ -1629,12 +1725,15 @@ class Sts2RunEnv(gym.Env):
     def _encounter_rng_seed(self, encounter_id: int) -> int:
         # Matches EncounterModel.GenerateMonstersWithSlots:
         #   uint seed = (uint)((int)runState.Rng.Seed + runState.TotalFloor + hash(entry))
+        # The reference game's TotalFloor is 0-indexed from the first combat; the emulator's
+        # self._floor starts at 1 and is incremented before _reset_combat, so the offset is -2.
         # Only SlimesWeak uses this for type selection; pass 0 for others (ignored by C#).
         if encounter_id == _SLIMES_WEAK_ENCOUNTER_ID and self._run_rng_set is not None:
+            total_floor = self._floor - 2
             return _int32(
                 _uint32(
                     _int32(self._run_rng_set.seed)
-                    + self._floor
+                    + total_floor
                     + _SLIMES_WEAK_ENTRY_HASH
                 )
             )

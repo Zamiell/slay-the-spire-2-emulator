@@ -96,6 +96,7 @@ ENCOUNTER_NAMES = {
     83: "vantom",
     84: "waterfall-giant",
     85: "architect",
+    86: "skulking-colony",
 }
 ENCOUNTER_IDS = {name: encounter_id for encounter_id, name in ENCOUNTER_NAMES.items()}
 

@@ -10,15 +10,38 @@ public static class CombatEngine
     public static StepResult Step(CombatState state, int action, Random rng)
     {
         int endTurnAction = state.Hand.Count;
+        StepResult result;
 
         if (action == endTurnAction)
-            return EndTurn(state, rng);
+            result = EndTurn(state, rng);
+        else if (action < endTurnAction)
+            result = PlayCard(state, action, rng);
+        else
+        {
+            int potionSlot = action - endTurnAction - 1;
+            result = UsePotion(state, potionSlot);
+        }
 
-        if (action < endTurnAction)
-            return PlayCard(state, action, rng);
+        // Process auto-plays (e.g. from Hellraiser).
+        while (state.AutoPlayQueue.Count > 0 && !result.Terminal)
+        {
+            var next = state.AutoPlayQueue[0];
+            state.AutoPlayQueue.RemoveAt(0);
+            AutoPlay(state, next, rng);
+            
+            // Re-check terminality after auto-play.
+            bool playerDead = state.PlayerHp <= 0;
+            bool allDead = state.Enemies.All(e => e.Hp <= 0);
+            if (playerDead || allDead)
+            {
+                result = result with {
+                    Terminal = true,
+                    PlayerWon = allDead && !playerDead
+                };
+            }
+        }
 
-        int potionSlot = action - endTurnAction - 1;
-        return UsePotion(state, potionSlot);
+        return result;
     }
 
     private static StepResult PlayCard(CombatState state, int handIndex, Random rng)
@@ -85,7 +108,7 @@ public static class CombatEngine
         bool corruptedSkill = def.Type == CardType.Skill
             && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0;
         if (ShouldExhaustAfterPlay(def, card) || corruptedSkill)
-            Effects.CardEffects.ExhaustCard(state, card);
+            Effects.CardEffects.ExhaustCard(state, card, rng: rng);
         else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
             state.DrawPile.Insert(0, card with { FreeThisTurn = false });
         else
@@ -121,6 +144,9 @@ public static class CombatEngine
         if (plating > 0) Effects.CardEffects.GainBlock(state, plating);
         Effects.RelicEffects.ApplyEndOfPlayerTurn(state);
 
+        // Tick player debuffs at end of player turn (Vulnerable etc. tick down).
+        BuffSystem.TickEndOfTurn(state.PlayerBuffs);
+
         int temporaryStrength = BuffSystem.Get(state.PlayerBuffs, BuffId.TemporaryStrength);
         if (temporaryStrength != 0)
         {
@@ -140,31 +166,38 @@ public static class CombatEngine
         if (disintegration > 0)
             state.PlayerHp = Math.Max(0, state.PlayerHp - disintegration);
 
-        int beckons = state.Hand.Count(card => card.DefId == Effects.ST.Beckon);
-        if (beckons > 0)
-            state.PlayerHp = Math.Max(0, state.PlayerHp - beckons * 6);
-
         // Move hand to discard, exhausting ethereal cards unless a retain-hand effect is active.
         int retainHand = BuffSystem.Get(state.PlayerBuffs, BuffId.RetainHand);
-        var retainedCards = retainHand > 0 ? new List<CardInstance>() : null;
+        var nextHand = new List<CardInstance>();
         foreach (var card in state.Hand)
         {
-            if (GeneratedData.Cards.Get(card.DefId).Ethereal)
-                Effects.CardEffects.ExhaustCard(state, card);
-            else if (retainedCards != null)
-                retainedCards.Add(card with { FreeThisTurn = false });
+            var def = GeneratedData.Cards.Get(card.DefId);
+            if (def.Ethereal)
+            {
+                Effects.CardEffects.ExhaustCard(state, card, causedByEthereal: true, rng: rng);
+                continue;
+            }
+            
+            // Status card end-of-turn effects
+            if (def.Id == Effects.ST.Burn)
+                Effects.CardEffects.DealDamageToPlayer(state, 2);
+            else if (def.Id == Effects.ST.Toxic)
+                Effects.CardEffects.DealDamageToPlayer(state, 5);
+            else if (def.Id == Effects.ST.Beckon)
+                state.PlayerHp = Math.Max(0, state.PlayerHp - 6); // Beckon is unblockable
+
+            if (retainHand > 0 || def.Retain)
+                nextHand.Add(card with { FreeThisTurn = false });
             else
                 state.DiscardPile.Add(card with { FreeThisTurn = false });
         }
         state.Hand.Clear();
-        if (retainedCards != null)
-        {
-            state.Hand.AddRange(retainedCards);
-            if (retainHand == 1)
-                BuffSystem.Remove(state.PlayerBuffs, BuffId.RetainHand);
-            else
-                BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, -1);
-        }
+        state.Hand.AddRange(nextHand);
+
+        if (retainHand == 1)
+            BuffSystem.Remove(state.PlayerBuffs, BuffId.RetainHand);
+        else if (retainHand > 1)
+            BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, -1);
 
         // Tick enemy debuffs before enemies act (Vulnerable/Weak on enemies tick down).
         foreach (var enemy in state.Enemies.ToArray())
@@ -173,8 +206,38 @@ public static class CombatEngine
         // ── Enemy turns ───────────────────────────────────────────────────────
         state.PlayerTurn = false;
         foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToArray())
+        {
+            // Poison damage at start of enemy turn.
+            int poison = BuffSystem.Get(enemy.Buffs, BuffId.Poison);
+            if (poison > 0)
+            {
+                enemy.Hp -= poison;
+                BuffSystem.Apply(enemy.Buffs, BuffId.Poison, -1);
+                if (enemy.Hp <= 0) continue;
+            }
+
+            int sandpit = BuffSystem.Get(enemy.Buffs, BuffId.Sandpit);
+            if (sandpit > 0)
+            {
+                BuffSystem.Apply(enemy.Buffs, BuffId.Sandpit, -1);
+                if (BuffSystem.Get(enemy.Buffs, BuffId.Sandpit) == 0)
+                {
+                    state.PlayerHp = 0;
+                    return new StepResult(Terminal: true, PlayerWon: false, Reward: -1f);
+                }
+            }
+
             EnemyAI.ExecuteIntent(enemy, state, rng);
+        }
         HandleEnemyDeaths(state, enemyHpsBefore, rng);
+
+        // Dark Embrace: deferred draw for Ethereal cards exhausted at end of turn.
+        int de = BuffSystem.Get(state.PlayerBuffs, BuffId.DarkEmbrace);
+        if (de > 0 && state.EtherealExhaustCount > 0)
+        {
+            Effects.CardEffects.DrawCards(state, de * state.EtherealExhaustCount, rng);
+            state.EtherealExhaustCount = 0;
+        }
 
         int colossus = BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus);
         if (colossus > 0)
@@ -186,20 +249,58 @@ public static class CombatEngine
         // ── Start of next player turn ─────────────────────────────────────────
         state.Turn++;
         state.PlayerTurn = true;
-        state.Energy = state.MaxEnergy;
+        state.Energy = EffectiveMaxEnergy(state);
         state.PlayerHpLostThisTurn = 0;
+
+        // Poison damage at start of player turn.
+        int playerPoison = BuffSystem.Get(state.PlayerBuffs, BuffId.Poison);
+        if (playerPoison > 0)
+        {
+            state.PlayerHp -= playerPoison;
+            BuffSystem.Apply(state.PlayerBuffs, BuffId.Poison, -1);
+            if (state.PlayerHp <= 0)
+            {
+                return new StepResult(
+                    Terminal: true,
+                    PlayerWon: false,
+                    Reward: ComputeReward(state, true, false, playerHpBefore, enemyHpsBefore)
+                );
+            }
+        }
+
+        int entropy = BuffSystem.Get(state.PlayerBuffs, BuffId.EntropyPower);
+        for (int i = 0; i < entropy; i++)
+            Effects.CardEffects.TransformRandomCardInHand(state, rng);
 
         // Barricade: block does not reset.
         if (BuffSystem.Get(state.PlayerBuffs, BuffId.Barricade) == 0)
             state.PlayerBlock = 0;
         ApplyBlockNextTurn(state);
 
+        foreach (var enemy in state.Enemies)
+        {
+            if (enemy.DefId == KE.SkulkingColony)
+                BuffSystem.Apply(enemy.Buffs, BuffId.HardenedShell, 20 - BuffSystem.Get(enemy.Buffs, BuffId.HardenedShell));
+        }
+
         Effects.RelicEffects.ApplyStartOfPlayerTurn(state);
+
+        int crimsonDmg = BuffSystem.Get(state.PlayerBuffs, BuffId.CrimsonMantleSelfDamage);
+        if (crimsonDmg > 0)
+            Effects.CardEffects.LoseHp(state, crimsonDmg);
+        int crimsonBlock = BuffSystem.Get(state.PlayerBuffs, BuffId.CrimsonMantleBlock);
+        if (crimsonBlock > 0)
+            Effects.CardEffects.GainUnpoweredBlock(state, crimsonBlock);
 
         // DemonForm: gain Strength at start of player turn.
         int demonForm = BuffSystem.Get(state.PlayerBuffs, BuffId.DemonForm);
         if (demonForm > 0)
             BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, demonForm);
+
+        // Aggression: add random upgraded card at start of player turn.
+        int aggression = BuffSystem.Get(state.PlayerBuffs, BuffId.Aggression);
+        if (aggression > 0)
+            Effects.CardEffects.AddRandomUpgradedIroncladCardToHand(state, aggression, rng);
 
         int infernoSelfDamage = BuffSystem.Get(state.PlayerBuffs, BuffId.InfernoSelfDamage);
         if (infernoSelfDamage > 0)
@@ -219,13 +320,12 @@ public static class CombatEngine
             else BuffSystem.Apply(state.PlayerBuffs, BuffId.Plating, -1);
         }
 
-        // Tick player debuffs at start of player turn (Vulnerable etc. tick down).
-        BuffSystem.TickEndOfTurn(state.PlayerBuffs);
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Tangled);
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Smoggy);
         state.SkillPlayedWhileSmoggy = false;
         state.AttackCardsPlayedThisTurn = 0;
         state.AttackOrSkillCardsPlayedThisTurn = 0;
+        state.BlockGainsThisTurn = 0;
         state.CardsExhaustedThisTurn = 0;
 
         ReturnQueuedCardsToHandBeforeDraw(state);
@@ -285,6 +385,11 @@ public static class CombatEngine
         return shaped + terminal;
     }
 
+    private static int EffectiveMaxEnergy(CombatState state)
+    {
+        return state.MaxEnergy + BuffSystem.Get(state.PlayerBuffs, BuffId.PyrePower);
+    }
+
     // Returns the energy cost of a card after applying active powers (e.g. Corruption).
     private static int EffectiveCost(CardInstance card, CardDef def, CombatState state)
     {
@@ -299,6 +404,8 @@ public static class CombatEngine
             cost -= 1;
         if (def.Id == Effects.IC.Stomp)
             cost -= state.AttackCardsPlayedThisTurn;
+        if (def.Id == Effects.ST.FranticEscape)
+            cost += BuffSystem.Get(state.PlayerBuffs, BuffId.FranticEscapePlayedCount);
         if (def.Type == CardType.Attack)
         {
             cost += BuffSystem.Get(state.PlayerBuffs, BuffId.Tangled);
@@ -459,7 +566,7 @@ public static class CombatEngine
         }
 
         if (ShouldExhaustAfterPlay(def, card))
-            Effects.CardEffects.ExhaustCard(state, card);
+            Effects.CardEffects.ExhaustCard(state, card, rng: rng);
         else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
             state.DrawPile.Insert(0, card with { FreeThisTurn = false });
         else
@@ -477,6 +584,7 @@ public static class CombatEngine
 
     private static bool ShouldExhaustAfterPlay(CardDef def, CardInstance card)
     {
+        if (def.Type == CardType.Power) return true;
         if (def.Id == Effects.CL.Prolong && card.Upgraded)
             return false;
         return def.Exhaust;
@@ -489,6 +597,35 @@ public static class CombatEngine
             && (def.Type == CardType.Attack || def.Type == CardType.Skill);
     }
 
+    private static void AutoPlay(CombatState state, CardInstance card, Random rng)
+    {
+        var def = GeneratedData.Cards.Get(card.DefId);
+
+        // Auto-play uses random targeting for attacks.
+        int targetIndex = -1;
+        if (def.Type == CardType.Attack)
+        {
+            var living = state.Enemies.Where(e => e.Hp > 0).ToList();
+            if (living.Count > 0)
+                targetIndex = state.Enemies.IndexOf(living[rng.Next(living.Count)]);
+        }
+
+        // Apply card effects.
+        Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+
+        // Resolve status effects (Juggling, Rupture, etc. already handled in Apply or below).
+        // Powers, Ethereal, etc. handled in ShouldExhaustAfterPlay.
+
+        if (ShouldExhaustAfterPlay(def, card))
+            Effects.CardEffects.ExhaustCard(state, card, rng: rng);
+        else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
+            state.DrawPile.Insert(0, card with { FreeThisTurn = false });
+        else
+            state.DiscardPile.Add(card with { FreeThisTurn = false });
+
+        IncrementPlayedCardTypeCounters(state, def);
+        Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
+    }
     private static void IncrementPlayedCardTypeCounters(CombatState state, CardDef def)
     {
         if (def.Type == CardType.Attack || def.Type == CardType.Skill)

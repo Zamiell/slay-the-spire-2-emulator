@@ -14,7 +14,11 @@ public static class BuffSystem
 
         int idx = buffs.FindIndex(b => b.Id == id);
         if (idx >= 0)
-            buffs[idx] = buffs[idx] with { Magnitude = buffs[idx].Magnitude + magnitude };
+        {
+            int newVal = buffs[idx].Magnitude + magnitude;
+            if (newVal == 0) buffs.RemoveAt(idx);
+            else buffs[idx] = buffs[idx] with { Magnitude = newVal };
+        }
         else
             buffs.Add(new BuffState(id, magnitude));
     }
@@ -24,6 +28,9 @@ public static class BuffSystem
         int idx = buffs.FindIndex(b => b.Id == id);
         return idx >= 0 ? buffs[idx].Magnitude : 0;
     }
+
+    public static bool Has(List<BuffState> buffs, BuffId id)
+        => Get(buffs, id) > 0;
 
     public static void Remove(List<BuffState> buffs, BuffId id)
         => buffs.RemoveAll(b => b.Id == id);
@@ -48,9 +55,16 @@ public static class BuffSystem
         for (int i = buffs.Count - 1; i >= 0; i--)
         {
             var b = buffs[i];
+            if (b.Id == BuffId.TemporaryStrength || b.Id == BuffId.SetupStrikePower)
+            {
+                int magnitude = b.Magnitude;
+                buffs.RemoveAt(i);
+                Apply(buffs, BuffId.Strength, -magnitude);
+                continue;
+            }
+
             switch (b.Id)
             {
-                case BuffId.Poison:
                 case BuffId.Vulnerable:
                 case BuffId.Weak:
                 case BuffId.Frail:
@@ -68,17 +82,23 @@ public static class BuffSystem
         dmg += Get(attackerBuffs, BuffId.Strength);
         if (Get(attackerBuffs, BuffId.Weak) > 0) dmg *= 0.75f;
         if (Get(attackerBuffs, BuffId.Shrink) > 0) dmg *= 0.70f;
-        if (Get(defenderBuffs, BuffId.Vulnerable) > 0) dmg *= 1.5f;
+        if (Get(defenderBuffs, BuffId.Vulnerable) > 0)
+        {
+            float mult = 1.5f + Get(attackerBuffs, BuffId.CrueltyPower) / 100f;
+            dmg *= mult;
+        }
         return Math.Max(0, (int)dmg);
     }
 
-    public static int IncomingBlock(int baseBlock, List<BuffState> buffs)
+    public static int IncomingBlock(int baseBlock, List<BuffState> buffs, bool isDefend = false)
     {
-        float block = baseBlock;
-        block += Get(buffs, BuffId.Dexterity);
-        if (Get(buffs, BuffId.Frail) > 0) block *= 0.75f;
-        return Math.Max(0, (int)block);
+        float blk = baseBlock;
+        blk += Get(buffs, BuffId.Dexterity);
+        if (Get(buffs, BuffId.Frail) > 0) blk *= 0.75f;
+        if (isDefend) blk += Get(buffs, BuffId.FastenPower);
+        return Math.Max(0, (int)blk);
     }
+
 
     private static bool IsDebuff(BuffId id) =>
         id is BuffId.Vulnerable

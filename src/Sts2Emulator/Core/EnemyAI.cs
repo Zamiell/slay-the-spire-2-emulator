@@ -815,12 +815,27 @@ public static class EnemyAI
                 };
 
             case KE.SludgeSpinner:
-                return (enemy.MoveIndex % 3) switch
+            {
+                int move;
+                if (enemy.MoveIndex == 0) move = 0;
+                else
+                {
+                    // Random choice from the 2 moves that are NOT LastMove.
+                    int[] pool = enemy.LastMove switch {
+                        0 => [1, 2],
+                        1 => [0, 2],
+                        _ => [0, 1]
+                    };
+                    move = pool[rng.Next(pool.Length)];
+                }
+                enemy.LastMove = move;
+                return move switch
                 {
                     0 => new Intent(IntentType.Debuff, 9),
                     1 => new Intent(IntentType.Attack, 12),
                     _ => new Intent(IntentType.Buff, 7),
                 };
+            }
 
             case KE.Toadpole:
                 return (enemy.MoveIndex % 3) switch
@@ -1495,7 +1510,7 @@ public static class EnemyAI
 }
 
 // Known enemy def IDs (from Generated/Enemies.g.cs).
-internal static class KE
+public static class KE
 {
     public const int CalcifiedCultist = 14;
     public const int Aeonglass = 1;
@@ -1568,6 +1583,7 @@ internal static class KE
     public const int Seapunk = 69;
     public const int SewerClam = 70;
     public const int ShrinkerBeetle = 71;
+    public const int SkulkingColony = 72;
     public const int SneakyGremlin = 78;
     public const int SnappingJaxfruit = 77;
     public const int SpinyToad = 82;

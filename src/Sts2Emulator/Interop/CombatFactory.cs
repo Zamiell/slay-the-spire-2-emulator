@@ -103,6 +103,7 @@ public static class CombatFactory
         Vantom,
         WaterfallGiant,
         Architect,
+        SkulkingColony,
     }
 
     private static readonly ActOneEncounter[] OvergrowthWeakEncounters =
@@ -206,7 +207,8 @@ public static class CombatFactory
         int playerGold,
         bool deckPreShuffled = false,
         Random? shuffleRng = null,
-        int? encounterRngSeed = null)
+        int? encounterRngSeed = null,
+        int nicheSkipCount = 0)
     {
         state.PlayerMaxHp  = Math.Max(1, playerMaxHp);
         state.PlayerHp     = Math.Clamp(playerHp, 0, state.PlayerMaxHp);
@@ -241,7 +243,11 @@ public static class CombatFactory
             : SelectFirstCombatEncounter(rng);
         state.EncounterId = (int)encounter;
         state.IsEliteCombat = IsEliteEncounter(encounter);
+        // Advance niche RNG past HP calls from previous combats in the run.
+        for (int i = 0; i < nicheSkipCount; i++)
+            rng.Next();
         state.Enemies = CreateEncounter(encounter, rng, encounterRngSeed);
+        EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng);
         EnemyAI.UpdateSecondaryIntents(state.Enemies);
 
         // Shuffle draw pile (skip if caller pre-shuffled it) and deal opening hand of 5.
@@ -410,6 +416,11 @@ public static class CombatFactory
                 CreateSlitheringStranglerEncounter(rng),
 
             ActOneEncounter.RubyRaiders => CreateRubyRaiders(rng),
+
+            ActOneEncounter.SkulkingColony =>
+            [
+                CreateSkulkingColony(rng),
+            ],
 
             ActOneEncounter.Fogmog =>
             [
@@ -722,11 +733,21 @@ public static class CombatFactory
         int middle = typeRng.Next(2) == 0 ? KE.LeafSlimeM : KE.TwigSlimeM;
         int secondSmall = firstSmall == KE.LeafSlimeS ? KE.TwigSlimeS : KE.LeafSlimeS;
 
+        // LeafSlimeS starting intent depends on slot: firstSmall=Attack(0), secondSmall=Debuff(1).
+        // TwigSlimeS always starts with Attack(5). These are slot-deterministic, not niche-RNG-based.
+        var firstIntent = firstSmall == KE.LeafSlimeS
+            ? new Intent(IntentType.Attack, 4)
+            : new Intent(IntentType.Attack, 5);
+        var secondIntent = secondSmall == KE.LeafSlimeS
+            ? new Intent(IntentType.Debuff, 1)
+            : new Intent(IntentType.Attack, 5);
+        int secondMoveIndex = secondSmall == KE.LeafSlimeS ? 1 : 0;
+
         return
         [
-            CreateSlime(firstSmall, rng),
+            CreateEnemy(firstSmall, rng, firstIntent),
             CreateSlime(middle, rng),
-            CreateSlime(secondSmall, rng),
+            CreateEnemy(secondSmall, rng, secondIntent, secondMoveIndex),
         ];
     }
 
@@ -930,9 +951,7 @@ public static class CombatFactory
     {
         return defId switch
         {
-            KE.LeafSlimeS => rng.Next(2) == 0
-                ? CreateEnemy(defId, rng, new Intent(IntentType.Attack, 4))
-                : CreateEnemy(defId, rng, new Intent(IntentType.Debuff, 1), moveIndex: 1),
+            KE.LeafSlimeS => CreateEnemy(defId, rng, new Intent(IntentType.Debuff, 1), moveIndex: 1),
 
             KE.TwigSlimeS => CreateEnemy(defId, rng, new Intent(IntentType.Attack, 5)),
 
@@ -1051,7 +1070,7 @@ public static class CombatFactory
             _ => new Intent(IntentType.Debuff, 2),
         };
 
-    private static EnemyState CreateEnemy(
+    public static EnemyState CreateEnemy(
         int defId, Random rng, Intent startingIntent, int moveIndex = 0)
     {
         var def = GeneratedData.Enemies.Get(defId);
@@ -1122,6 +1141,13 @@ public static class CombatFactory
     {
         var enemy = CreateEnemy(KE.Exoskeleton, rng, startingIntent, moveIndex);
         BuffSystem.Apply(enemy.Buffs, BuffId.HardToKill, 9);
+        return enemy;
+    }
+
+    private static EnemyState CreateSkulkingColony(Random rng)
+    {
+        var enemy = CreateEnemy(KE.SkulkingColony, rng, new Intent(IntentType.Attack, 16));
+        BuffSystem.Apply(enemy.Buffs, BuffId.HardenedShell, 20);
         return enemy;
     }
 }
