@@ -13,6 +13,7 @@ from . import native
 from .env import ENCOUNTER_NAMES, MAX_ACTIONS
 from .game_rng import (
     DotNetRandom,
+    GameRng,
     PlayerRngSet,
     RunRngSet,
     _int32,
@@ -1177,7 +1178,7 @@ class Sts2RunEnv(gym.Env):
         #   1. RollForPotionAndAddTo → PotionRewardOdds.Roll() → 1 Rewards RNG call
         #   2. GoldReward.Populate() → 1 Rewards RNG call
         #   3. PotionReward.Populate() (if potion won) → 2 Rewards RNG calls
-        #   4. CardReward.Populate() → 3 cards × 2 calls (ForRoom: rarity+selection, NoUpgradeRoll) = 6
+        #   4. CardReward.Populate() → 3 cards × 3 calls (rarity + selection + upgrade roll) = 9
         potion_val = self._player_rng.rewards.next_double()
         self._gold += self._gold_reward_for_node()
         if RELIC_AMETHYST_AUBERGINE in self._relics and self._current_node_type in (
@@ -1737,13 +1738,19 @@ class Sts2RunEnv(gym.Env):
         return 7 + self._player_rng.rewards.next_int(9)  # NextInt(7, 16)
 
     def _generate_card_rewards(self) -> np.ndarray:
+        # CardReward.Populate() calls CardFactory.CreateForReward per card, which:
+        #   1. Rolls rarity via PlayerOdds.CardRarity.Roll() → 1 Rewards RNG call
+        #   2. Picks card via rng.NextItem() → 1 Rewards RNG call
+        #   3. Rolls upgrade via RollForUpgrade() → 1 Rewards RNG call (rng.NextFloat())
+        # Total: 3 Rewards RNG calls per card × 3 cards = 9 calls.
+        rng = self._player_rng.rewards
         cards: list[int] = []
         for _ in range(3):
-            rarity = self._roll_reward_card_rarity()
+            rarity = self._roll_reward_card_rarity(rng)
             cards.append(
-                self._choose_card_with_rarity(IRONCLAD_REWARD_POOL, rarity, cards)
+                self._choose_card_with_rarity(IRONCLAD_REWARD_POOL, rarity, cards, rng)
             )
-            self._rng.random()
+            rng.next_double()  # RollForUpgrade: rng.NextFloat() → 1 Rewards RNG call
         return np.array(cards, dtype=np.int32)
 
     def _generate_shop_cards(self) -> np.ndarray:
@@ -1770,21 +1777,25 @@ class Sts2RunEnv(gym.Env):
             base_cost = self._round_positive(base_cost * 1.15)
         return self._round_positive(base_cost * self._rng.uniform(0.95, 1.05))
 
-    def _roll_reward_card_rarity(self) -> int:
+    def _roll_reward_card_rarity(self, rng: GameRng) -> int:
         if self._current_node_type == NODE_ELITE:
             odds = CARD_RARITY_ODDS_ELITE
         elif self._current_node_type == NODE_BOSS:
             odds = CARD_RARITY_ODDS_BOSS
         else:
             odds = CARD_RARITY_ODDS_REGULAR
-        return self._roll_card_rarity(odds, change_future_odds=True)
+        return self._roll_card_rarity(odds, change_future_odds=True, rng=rng)
 
     def _roll_card_rarity(
-        self, odds: tuple[float, float], *, change_future_odds: bool = False
+        self,
+        odds: tuple[float, float],
+        *,
+        change_future_odds: bool = False,
+        rng: GameRng | None = None,
     ) -> int:
         rare_odds, uncommon_odds = odds
         offset = 0.0 if odds == CARD_RARITY_ODDS_BOSS else self._card_rarity_offset
-        roll = float(self._rng.random())
+        roll = rng.next_double() if rng is not None else float(self._rng.random())
         rare_threshold = rare_odds + offset
         if roll < rare_threshold:
             rarity = CARD_RARITY_RARE
@@ -1804,7 +1815,11 @@ class Sts2RunEnv(gym.Env):
         return rarity
 
     def _choose_card_with_rarity(
-        self, pool: np.ndarray, rarity: int, blacklist: list[int]
+        self,
+        pool: np.ndarray,
+        rarity: int,
+        blacklist: list[int],
+        rng: GameRng | None = None,
     ) -> int:
         for allowed_rarity in self._rarity_fallbacks(rarity):
             available = [
@@ -1815,10 +1830,16 @@ class Sts2RunEnv(gym.Env):
                 == allowed_rarity
             ]
             if available:
+                if rng is not None:
+                    return available[rng.next_int(len(available))]
                 return int(self._rng.choice(available))
         available = [int(card_id) for card_id in pool if int(card_id) not in blacklist]
         if available:
+            if rng is not None:
+                return available[rng.next_int(len(available))]
             return int(self._rng.choice(available))
+        if rng is not None:
+            return int(pool[rng.next_int(len(pool))])
         return int(self._rng.choice(pool))
 
     @staticmethod

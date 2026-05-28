@@ -87,6 +87,7 @@ Native combat currently supports the starter deck plus a growing subset of trace
 - Fixed Power card cycle: Powers now correctly exhaust after play by default, preventing them from being shuffled back and re-drawn.
 - Added native Aggression support: the power now adds a random upgraded Ironclad card to hand at the start of each player turn.
 - Added native Hellraiser support: the power now automatically plays any Strike card drawn during the player's turn.
+- Fixed card reward RNG: `_generate_card_rewards` now uses `_player_rng.rewards` (DotNetRandom GameRng) instead of numpy for rarity rolls and card selection, matching `CardFactory.CreateForReward` which uses `player.PlayerRng.Rewards.NextItem(items)`. Also added the upgrade roll (`rng.NextFloat()` → `rng.next_double()`) per card as required by `RollForUpgrade` in `CardFactory.CreateForReward`, bringing total per-card Rewards RNG calls from 2 to 3. DRUM_1 first-combat card rewards now match the reference [FightMe, BodySlam, PommelStrike] exactly; DRUM_1 trace mismatch advances from step 41 to step 51+ at floor 5+.
 - Select the highest-impact missing trace-observed card from the current curated traces.
 - Implement the card in `src\Sts2Emulator\Core` using decompiled game logic for effect order, targeting, exhaust/ethereal behavior, and upgraded values.
 - Add C# regression tests in `src\Sts2Emulator.Tests` and update Python expectations only if interop-visible behavior changes.
