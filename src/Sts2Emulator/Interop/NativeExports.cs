@@ -35,7 +35,7 @@ public static class NativeExports
     public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
-    public const int NATIVE_API_VERSION = 5;
+    public const int NATIVE_API_VERSION = 6;
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         472, 472, 472, 472, 472,
@@ -118,7 +118,8 @@ public static class NativeExports
             bool deckPreShuffled = false,
             Random? shuffleRng = null,
             int? encounterRngSeed = null,
-            int nicheSkipCount = 0)
+            int nicheSkipCount = 0,
+            Random? aiRng = null)
         {
             Rng = new Random(Seed);
             LastPlayerWon = false;
@@ -135,7 +136,8 @@ public static class NativeExports
                 deckPreShuffled,
                 shuffleRng,
                 encounterRngSeed,
-                nicheSkipCount
+                nicheSkipCount,
+                aiRng
             );
         }
     }
@@ -266,6 +268,7 @@ public static class NativeExports
         int shuffleRngSeed,
         int nicheSkipCount,
         int encounterRngSeed,
+        int monsterAiRngSeed,
         int* obsBuf)
     {
         var combat = _pool[handle]!;
@@ -274,6 +277,7 @@ public static class NativeExports
         var shuffleRng = new Random(shuffleRngSeed);
         for (int i = 0; i < deckLen - 1; i++)
             shuffleRng.Next();
+        var aiRng = new Random(monsterAiRngSeed);
         combat.Reset(
             new ReadOnlySpan<int>(deckIds, deckLen),
             encounterId,
@@ -285,7 +289,8 @@ public static class NativeExports
             deckPreShuffled: true,
             shuffleRng,
             encounterRngSeed,
-            nicheSkipCount
+            nicheSkipCount,
+            aiRng
         );
         WriteObs(combat.State, obsBuf);
     }

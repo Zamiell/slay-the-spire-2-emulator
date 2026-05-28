@@ -55,14 +55,6 @@ public static class BuffSystem
         for (int i = buffs.Count - 1; i >= 0; i--)
         {
             var b = buffs[i];
-            if (b.Id == BuffId.TemporaryStrength || b.Id == BuffId.SetupStrikePower)
-            {
-                int magnitude = b.Magnitude;
-                buffs.RemoveAt(i);
-                Apply(buffs, BuffId.Strength, -magnitude);
-                continue;
-            }
-
             switch (b.Id)
             {
                 case BuffId.Vulnerable:

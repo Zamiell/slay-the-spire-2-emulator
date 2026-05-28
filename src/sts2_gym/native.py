@@ -11,7 +11,7 @@ _LIB_NAMES = {
     "darwin": "Sts2Emulator.dylib",
 }
 _ALLOW_STALE_ENV = "STS2_ALLOW_STALE_NATIVE"
-_REQUIRED_NATIVE_API_VERSION = 5
+_REQUIRED_NATIVE_API_VERSION = 6
 
 
 def _repo_root() -> Path:
@@ -180,6 +180,7 @@ _lib.Sts2_ResetRunCombatPreShuffled.argtypes = [
     ctypes.c_int,  # shuffleRngSeed
     ctypes.c_int,  # nicheSkipCount
     ctypes.c_int,  # encounterRngSeed
+    ctypes.c_int,  # monsterAiRngSeed
     ctypes.POINTER(ctypes.c_int),  # obsBuf
 ]
 
@@ -309,6 +310,7 @@ def reset_run_combat_pre_shuffled(
     shuffle_rng_seed: int,
     niche_skip_count: int,
     encounter_rng_seed: int,
+    monster_ai_rng_seed: int,
     obs_buf: ctypes.Array,
 ) -> None:
     deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
@@ -329,6 +331,7 @@ def reset_run_combat_pre_shuffled(
         shuffle_rng_seed,
         niche_skip_count,
         encounter_rng_seed,
+        monster_ai_rng_seed,
         obs_buf,
     )
 

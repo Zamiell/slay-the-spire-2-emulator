@@ -208,7 +208,8 @@ public static class CombatFactory
         bool deckPreShuffled = false,
         Random? shuffleRng = null,
         int? encounterRngSeed = null,
-        int nicheSkipCount = 0)
+        int nicheSkipCount = 0,
+        Random? aiRng = null)
     {
         state.PlayerMaxHp  = Math.Max(1, playerMaxHp);
         state.PlayerHp     = Math.Clamp(playerHp, 0, state.PlayerMaxHp);
@@ -232,6 +233,7 @@ public static class CombatFactory
         state.PlayerHpLostThisTurn = 0;
         state.CardsExhaustedThisTurn = 0;
         state.ShuffleRng   = shuffleRng;
+        state.AiRng        = aiRng;
 
         state.DrawPile = deckIds
             .ToArray()
@@ -247,7 +249,7 @@ public static class CombatFactory
         for (int i = 0; i < nicheSkipCount; i++)
             rng.Next();
         state.Enemies = CreateEncounter(encounter, rng, encounterRngSeed);
-        EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng);
+        EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng, state.AiRng);
         EnemyAI.UpdateSecondaryIntents(state.Enemies);
 
         // Shuffle draw pile (skip if caller pre-shuffled it) and deal opening hand of 5.

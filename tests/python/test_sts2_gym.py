@@ -72,7 +72,9 @@ from sts2_gym.run_env import (
     CARD_RARITY_BY_ID,
     CARD_RARITY_COMMON,
     CARD_RARITY_UNCOMMON,
+    CARD_RARITY_RARE,
     IRONCLAD_REWARD_POOL,
+    SHOP_CARD_BASE_COSTS_BY_RARITY,
     OVERGROWTH_BOSS_ENCOUNTERS,
     OVERGROWTH_ELITE_ENCOUNTERS,
     POTION_RARITY_BY_ID,
@@ -467,37 +469,8 @@ class Sts2GymTests(unittest.TestCase):
             self.assertIn(int(env._shop_cards[4]), {185, 265, 273, 462, 533})
 
             for action, card_id in enumerate(env._shop_cards):
-                base = (
-                    75
-                    if int(card_id)
-                    in {
-                        31,
-                        69,
-                        147,
-                        150,
-                        155,
-                        174,
-                        175,
-                        185,
-                        189,
-                        205,
-                        247,
-                        254,
-                        265,
-                        273,
-                        396,
-                        414,
-                        454,
-                        455,
-                        462,
-                        465,
-                        493,
-                        521,
-                        533,
-                        538,
-                    }
-                    else 50
-                )
+                rarity = CARD_RARITY_BY_ID.get(int(card_id), CARD_RARITY_COMMON)
+                base = SHOP_CARD_BASE_COSTS_BY_RARITY[rarity]
                 if action >= 5:
                     base = int(base * 1.15 + 0.5)
                 cost = int(env._shop_costs[action])
@@ -533,7 +506,7 @@ class Sts2GymTests(unittest.TestCase):
 
             self.assertTrue(
                 all(
-                    CARD_RARITY_BY_ID[int(card)] == CARD_RARITY_COMMON
+                    CARD_RARITY_BY_ID[int(card)] == CARD_RARITY_RARE
                     for card in env._reward_cards
                 )
             )

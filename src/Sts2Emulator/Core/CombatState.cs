@@ -37,6 +37,10 @@ public sealed class CombatState
     // Null falls back to the combat RNG (only valid when no pre-shuffle was done).
     public Random? ShuffleRng;
 
+    // AI RNG (RunRngSet.monster_ai subsystem) — used for enemy intent selection.
+    // Null falls back to the combat RNG (used in single-combat tests).
+    public Random? AiRng;
+
     // Turn tracking
     public int Turn;
     public bool PlayerTurn = true;

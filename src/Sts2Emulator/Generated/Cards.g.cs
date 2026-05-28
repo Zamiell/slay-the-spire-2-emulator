@@ -524,7 +524,7 @@ internal static class Cards
         new CardDef(Id: 514, Name: "Transfigure", Cost: 1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Skill, Rarity: CardRarity.Rare, Exhaust: true),
         new CardDef(Id: 515, Name: "TrashToTreasure", Cost: 1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Power, Rarity: CardRarity.Rare),
         new CardDef(Id: 516, Name: "Tremble", Cost: 1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Skill, Rarity: CardRarity.Common, Exhaust: true),
-        new CardDef(Id: 517, Name: "TrueGrit", Cost: 1, BaseDamage: 0, BaseBlock: 7, UpgradeDamage: 0, UpgradeBlock: 2, Type: CardType.Skill, Rarity: CardRarity.Common, Exhaust: true),
+        new CardDef(Id: 517, Name: "TrueGrit", Cost: 1, BaseDamage: 0, BaseBlock: 7, UpgradeDamage: 0, UpgradeBlock: 2, Type: CardType.Skill, Rarity: CardRarity.Common),
         new CardDef(Id: 518, Name: "Turbo", Cost: 0, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Skill, Rarity: CardRarity.Common),
         new CardDef(Id: 519, Name: "TwinStrike", Cost: 1, BaseDamage: 5, BaseBlock: 0, UpgradeDamage: 2, UpgradeBlock: 0, Type: CardType.Attack, Rarity: CardRarity.Common),
         new CardDef(Id: 520, Name: "Tyranny", Cost: 1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Power, Rarity: CardRarity.Rare, Exhaust: true),

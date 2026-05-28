@@ -234,7 +234,7 @@ public static class CardEffects
                 DealDamage(state, Dmg(def, upgraded));
                 int strength = upgraded ? 3 : 2;
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, strength);
-                BuffSystem.Apply(state.PlayerBuffs, BuffId.SetupStrikePower, strength);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.TemporaryStrength, strength);
                 break;
             }
 

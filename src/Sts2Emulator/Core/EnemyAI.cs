@@ -4,11 +4,12 @@ using Effects;
 
 public static class EnemyAI
 {
-    public static void ChooseIntents(List<EnemyState> enemies, int turn, Random rng)
+    public static void ChooseIntents(List<EnemyState> enemies, int turn, Random rng, Random? aiRng = null)
     {
+        var effectiveAiRng = aiRng ?? rng;
         foreach (var enemy in enemies.Where(e => e.Hp > 0))
         {
-            enemy.CurrentIntent = SelectIntent(enemy, rng);
+            enemy.CurrentIntent = SelectIntent(enemy, effectiveAiRng);
             enemy.SecondaryIntent = SecondaryIntentFor(enemy);
         }
     }
@@ -820,7 +821,6 @@ public static class EnemyAI
                 if (enemy.MoveIndex == 0) move = 0;
                 else
                 {
-                    // Random choice from the 2 moves that are NOT LastMove.
                     int[] pool = enemy.LastMove switch {
                         0 => [1, 2],
                         1 => [0, 2],

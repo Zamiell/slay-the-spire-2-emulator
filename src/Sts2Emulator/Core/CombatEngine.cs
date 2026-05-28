@@ -231,6 +231,17 @@ public static class CombatEngine
         }
         HandleEnemyDeaths(state, enemyHpsBefore, rng);
 
+        // Restore temporary Strength debuffs applied this turn (e.g. DarkShackles).
+        foreach (var enemy in state.Enemies)
+        {
+            int tempStr = BuffSystem.Get(enemy.Buffs, BuffId.TemporaryStrength);
+            if (tempStr != 0)
+            {
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, tempStr);
+                BuffSystem.Remove(enemy.Buffs, BuffId.TemporaryStrength);
+            }
+        }
+
         // Dark Embrace: deferred draw for Ethereal cards exhausted at end of turn.
         int de = BuffSystem.Get(state.PlayerBuffs, BuffId.DarkEmbrace);
         if (de > 0 && state.EtherealExhaustCount > 0)
@@ -335,7 +346,7 @@ public static class CombatEngine
         AutoPlayStampedeAttacks(state, rng);
 
         // Enemies choose their next intent.
-        EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng);
+        EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng, state.AiRng);
         Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
 
         bool playerDead = state.PlayerHp <= 0;
@@ -584,6 +595,7 @@ public static class CombatEngine
 
     private static bool ShouldExhaustAfterPlay(CardDef def, CardInstance card)
     {
+        if (def.Id == Effects.IC.Stampede) return false;
         if (def.Type == CardType.Power) return true;
         if (def.Id == Effects.CL.Prolong && card.Upgraded)
             return false;

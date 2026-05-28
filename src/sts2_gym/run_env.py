@@ -311,11 +311,13 @@ CARD_RARITY_BY_ID = {
     374: CARD_RARITY_RARE,
     378: CARD_RARITY_UNCOMMON,
     381: CARD_RARITY_UNCOMMON,
+    396: CARD_RARITY_UNCOMMON,
     404: CARD_RARITY_UNCOMMON,
     414: CARD_RARITY_UNCOMMON,
     421: CARD_RARITY_COMMON,
     433: CARD_RARITY_COMMON,
     454: CARD_RARITY_UNCOMMON,
+    455: CARD_RARITY_UNCOMMON,
     462: CARD_RARITY_UNCOMMON,
     464: CARD_RARITY_RARE,
     465: CARD_RARITY_UNCOMMON,
@@ -329,6 +331,7 @@ CARD_RARITY_BY_ID = {
     516: CARD_RARITY_COMMON,
     517: CARD_RARITY_COMMON,
     519: CARD_RARITY_COMMON,
+    521: CARD_RARITY_UNCOMMON,
     525: CARD_RARITY_RARE,
     526: CARD_RARITY_UNCOMMON,
     529: CARD_RARITY_UNCOMMON,
@@ -348,14 +351,12 @@ IRONCLAD_REWARD_POOL = np.array(
         47,
         50,
         58,
-        59,
         60,
         66,
         69,
         87,
         95,
         99,
-        107,
         113,
         114,
         119,
@@ -397,11 +398,13 @@ IRONCLAD_REWARD_POOL = np.array(
         374,
         378,
         381,
+        396,
         404,
         414,
         421,
         433,
         454,
+        455,
         462,
         464,
         465,
@@ -415,6 +418,7 @@ IRONCLAD_REWARD_POOL = np.array(
         516,
         517,
         519,
+        521,
         525,
         526,
         529,
@@ -588,6 +592,7 @@ _UNDERDOCKS_EVENT_SHUFFLE_CALLS = 57
 # Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
 _NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
 _SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
+_MONSTER_AI_HASH = _uint32(get_deterministic_hash_code("monster_ai"))
 # Encounter-specific type-selection RNG: uint(int(run_seed) + total_floor + hash(entry)).
 # Only SlimesWeak (encounter ID 3) currently needs this; others use the niche RNG for HP only.
 _SLIMES_WEAK_ENCOUNTER_ID = 3
@@ -687,9 +692,6 @@ class Sts2RunEnv(gym.Env):
         self._handle: int | None = None
         self._combat_obs_buf = (ctypes.c_int * native.OBS_SIZE)()
         self._rew_buf = (ctypes.c_float * 1)()
-        self._niche_calls_consumed = 0
-        self._last_combat_enemy_count = 0
-
         self.observation_space = spaces.Box(
             low=0,
             high=2**15,
@@ -745,8 +747,6 @@ class Sts2RunEnv(gym.Env):
             self._handle = None
         for i in range(native.OBS_SIZE):
             self._combat_obs_buf[i] = 0
-        self._niche_calls_consumed = 0
-        self._last_combat_enemy_count = 0
         self._select_act_and_weak_encounters()
         self._generate_act_map()
         self._generate_neow_options()
@@ -1191,9 +1191,6 @@ class Sts2RunEnv(gym.Env):
             self._player_rng.rewards.next_double()
             self._player_rng.rewards.next_double()
             self._add_potion(self._next_potion())
-        # Advance 6 for CardReward.Populate() (3 cards × 2: rarity + selection, NoUpgradeRoll)
-        for _ in range(6):
-            self._player_rng.rewards.next_double()
         if RELIC_BURNING_BLOOD in self._relics:
             self._player_hp = min(self._player_max_hp, self._player_hp + 6)
         if RELIC_BLACK_BLOOD in self._relics:
@@ -1542,10 +1539,6 @@ class Sts2RunEnv(gym.Env):
         return 0
 
     def _reset_combat(self, seed: int, encounter_id: int | None = None):
-        # Advance niche offset by the enemy count from the previous combat.
-        self._niche_calls_consumed += self._last_combat_enemy_count
-        self._last_combat_enemy_count = 0
-
         if self._handle is not None:
             native.destroy(self._handle)
         self._handle = native.create(seed)
@@ -1568,6 +1561,9 @@ class Sts2RunEnv(gym.Env):
                 shuffle_rng_seed = _int32(
                     _uint32(self._run_rng_set.seed + _SHUFFLE_HASH)
                 )
+                monster_ai_rng_seed = _int32(
+                    _uint32(self._run_rng_set.seed + _MONSTER_AI_HASH)
+                )
                 native.reset_run_combat_pre_shuffled(
                     self._handle,
                     deck,
@@ -1578,8 +1574,9 @@ class Sts2RunEnv(gym.Env):
                     self._potions,
                     self._gold,
                     shuffle_rng_seed,
-                    self._niche_calls_consumed,
+                    0,
                     encounter_rng_seed,
+                    monster_ai_rng_seed,
                     self._combat_obs_buf,
                 )
             else:
@@ -1595,17 +1592,6 @@ class Sts2RunEnv(gym.Env):
                     encounter_rng_seed,
                     self._combat_obs_buf,
                 )
-        # Count enemies in this combat for the niche RNG offset of the next combat.
-        self._last_combat_enemy_count = self._count_enemies_in_obs()
-
-    def _count_enemies_in_obs(self) -> int:
-        # Enemy slots start at obs[54], each 15 ints wide (5 + MAX_ENEMY_BUFFS*2).
-        # An enemy is present at combat start if its HP > 0.
-        count = 0
-        for e in range(6):
-            if self._combat_obs_buf[54 + e * 15] > 0:
-                count += 1
-        return count
 
     def _sync_run_state_from_combat_obs(self) -> None:
         self._player_hp = max(0, int(self._combat_obs_buf[0]))
