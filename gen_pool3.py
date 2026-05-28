@@ -8,9 +8,9 @@ with open('src/Sts2Emulator/Generated/Cards.g.cs', 'r') as f:
         if m:
             card_defs[m.group(2)] = (int(m.group(1)), m.group(3))
 
-# Parse PLAN.md for all supported cards
+# Parse plan.md for all supported cards
 supported_cards = []
-with open('PLAN.md', 'r') as f:
+with open('plan.md', 'r') as f:
     in_cards = False
     for line in f:
         if line.startswith('### Ironclad') or line.startswith('### Colorless'):
