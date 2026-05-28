@@ -35,7 +35,7 @@ public static class NativeExports
     public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
-    public const int NATIVE_API_VERSION = 2;
+    public const int NATIVE_API_VERSION = 6;
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         472, 472, 472, 472, 472,
@@ -114,7 +114,12 @@ public static class NativeExports
             int playerHp,
             int playerMaxHp,
             ReadOnlySpan<int> potionIds,
-            int playerGold)
+            int playerGold,
+            bool deckPreShuffled = false,
+            Random? shuffleRng = null,
+            int? encounterRngSeed = null,
+            int nicheSkipCount = 0,
+            Random? aiRng = null)
         {
             Rng = new Random(Seed);
             LastPlayerWon = false;
@@ -127,7 +132,12 @@ public static class NativeExports
                 playerHp,
                 playerMaxHp,
                 potionIds,
-                playerGold
+                playerGold,
+                deckPreShuffled,
+                shuffleRng,
+                encounterRngSeed,
+                nicheSkipCount,
+                aiRng
             );
         }
     }
@@ -223,6 +233,7 @@ public static class NativeExports
         int* potionIds,
         int potionLen,
         int playerGold,
+        int encounterRngSeed,
         int* obsBuf)
     {
         var combat = _pool[handle]!;
@@ -233,7 +244,53 @@ public static class NativeExports
             playerHp,
             playerMaxHp,
             new ReadOnlySpan<int>(potionIds, potionLen),
-            playerGold
+            playerGold,
+            deckPreShuffled: false,
+            shuffleRng: null,
+            encounterRngSeed
+        );
+        WriteObs(combat.State, obsBuf);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe void Sts2_ResetRunCombatPreShuffled(
+        int handle,
+        int* deckIds,
+        int deckLen,
+        int encounterId,
+        int* relicIds,
+        int relicLen,
+        int playerHp,
+        int playerMaxHp,
+        int* potionIds,
+        int potionLen,
+        int playerGold,
+        int shuffleRngSeed,
+        int nicheSkipCount,
+        int encounterRngSeed,
+        int monsterAiRngSeed,
+        int* obsBuf)
+    {
+        var combat = _pool[handle]!;
+        // Reconstruct the shuffle RNG at the state it would be after the caller's
+        // Fisher-Yates pre-shuffle (deckLen-1 calls consumed).
+        var shuffleRng = new Random(shuffleRngSeed);
+        for (int i = 0; i < deckLen - 1; i++)
+            shuffleRng.Next();
+        var aiRng = new Random(monsterAiRngSeed);
+        combat.Reset(
+            new ReadOnlySpan<int>(deckIds, deckLen),
+            encounterId,
+            new ReadOnlySpan<int>(relicIds, relicLen),
+            playerHp,
+            playerMaxHp,
+            new ReadOnlySpan<int>(potionIds, potionLen),
+            playerGold,
+            deckPreShuffled: true,
+            shuffleRng,
+            encounterRngSeed,
+            nicheSkipCount,
+            aiRng
         );
         WriteObs(combat.State, obsBuf);
     }

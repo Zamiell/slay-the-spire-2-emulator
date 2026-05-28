@@ -11,6 +11,14 @@ from gymnasium import spaces
 
 from . import native
 from .env import ENCOUNTER_NAMES, MAX_ACTIONS
+from .game_rng import (
+    DotNetRandom,
+    PlayerRngSet,
+    RunRngSet,
+    _int32,
+    _uint32,
+    get_deterministic_hash_code,
+)
 
 REWARD_SKIP_ACTION = 3
 REST_HEAL_ACTION = 0
@@ -186,6 +194,52 @@ NEOW_CURSE_RELICS = np.array(
     dtype=np.int32,
 )
 
+# Ordered to match Neow.cs CurseOptions and PositiveOptions exactly.
+# MassiveScroll is absent from NEOW_POSITIVE_OPTIONS because it is filtered
+# by IsAllowedAtNeow for the Ironclad in a fully-unlocked state.
+NEOW_CURSE_OPTIONS = [
+    RELIC_CURSED_PEARL,
+    RELIC_HEFTY_TABLET,
+    RELIC_LARGE_CAPSULE,
+    RELIC_LEAFY_POULTICE,
+    RELIC_NEOWS_BONES,
+    RELIC_PRECARIOUS_SHEARS,
+    RELIC_SILKEN_TRESS,
+    RELIC_SILVER_CRUCIBLE,
+]
+NEOW_POSITIVE_OPTIONS = [
+    RELIC_ARCANE_SCROLL,
+    RELIC_BOOMING_CONCH,
+    RELIC_FISHING_ROD,
+    RELIC_GOLDEN_PEARL,
+    RELIC_KALEIDOSCOPE,
+    RELIC_LEAD_PAPERWEIGHT,
+    RELIC_LOST_COFFER,
+    # MassiveScroll absent (not allowed at Neow for Ironclad / not yet unlocked)
+    RELIC_NEOWS_TORMENT,
+    RELIC_NEW_LEAF,
+    RELIC_PHIAL_HOLSTER,
+    RELIC_PRECISE_SCISSORS,
+    RELIC_SCROLL_BOXES,
+    RELIC_WINGED_BOOTS,
+]
+
+# Number of PlayerRng.Rewards calls made by each Neow relic's AfterObtained().
+# Advances the Rewards RNG counter to stay in sync with the game before first combat.
+# Formula per card created via CardFactory.CreateForReward:
+#   - Uniform rarity + NoUpgradeRoll: 1 call (NextItem only)
+#   - RegularEncounter rarity + NoUpgradeRoll: 2 calls (NextFloat rarity + NextItem)
+#   - RegularEncounter rarity (with upgrade roll): 3 calls (rarity + selection + upgrade)
+# Potion: PotionFactory.CreateRandomPotionOutOfCombat = 2 calls (NextFloat + NextItem).
+_NEOW_REWARDS_RNG_ADVANCES = {
+    RELIC_ARCANE_SCROLL: 1,  # 1 rare card: Uniform + NoUpgradeRoll → 1 selection
+    RELIC_LOST_COFFER: 11,  # 3 cards × 3 (RegularEncounter + upgrade) + potion × 2
+    RELIC_PHIAL_HOLSTER: 4,  # 2 potions × 2 (rarity + selection)
+    RELIC_HEFTY_TABLET: 3,  # 3 cards shown × 1 (Uniform + NoUpgradeRoll)
+    RELIC_LEAD_PAPERWEIGHT: 6,  # 2 colorless cards × 3 (RegularEncounter + upgrade)
+    RELIC_KALEIDOSCOPE: 18,  # 2 bundles × 3 cards × 3 (RegularEncounter + upgrade)
+}
+
 STARTER_DECK = [472] * 5 + [131] * 4 + [30, 10001]
 CARD_RARITY_COMMON = 1
 CARD_RARITY_UNCOMMON = 2
@@ -199,95 +253,175 @@ CARD_RARITY_ODDS_ELITE = (0.1, 0.4)
 CARD_RARITY_ODDS_BOSS = (1.0, 0.0)
 CARD_RARITY_ODDS_SHOP = (0.09, 0.37)
 CARD_RARITY_BY_ID = {
+    9: CARD_RARITY_RARE,
     13: CARD_RARITY_COMMON,
     18: CARD_RARITY_COMMON,
-    20: CARD_RARITY_COMMON,
+    20: CARD_RARITY_UNCOMMON,
+    29: CARD_RARITY_RARE,
     31: CARD_RARITY_UNCOMMON,
     45: CARD_RARITY_COMMON,
     46: CARD_RARITY_COMMON,
+    47: CARD_RARITY_UNCOMMON,
     50: CARD_RARITY_COMMON,
+    58: CARD_RARITY_RARE,
     60: CARD_RARITY_COMMON,
+    66: CARD_RARITY_UNCOMMON,
     69: CARD_RARITY_UNCOMMON,
     87: CARD_RARITY_COMMON,
+    95: CARD_RARITY_UNCOMMON,
+    99: CARD_RARITY_RARE,
+    113: CARD_RARITY_RARE,
+    114: CARD_RARITY_RARE,
+    119: CARD_RARITY_RARE,
+    141: CARD_RARITY_RARE,
+    142: CARD_RARITY_UNCOMMON,
     147: CARD_RARITY_UNCOMMON,
     150: CARD_RARITY_UNCOMMON,
     155: CARD_RARITY_UNCOMMON,
     174: CARD_RARITY_UNCOMMON,
     175: CARD_RARITY_UNCOMMON,
+    183: CARD_RARITY_RARE,
     185: CARD_RARITY_UNCOMMON,
+    188: CARD_RARITY_RARE,
     189: CARD_RARITY_UNCOMMON,
+    195: CARD_RARITY_UNCOMMON,
     205: CARD_RARITY_UNCOMMON,
     238: CARD_RARITY_COMMON,
     240: CARD_RARITY_COMMON,
+    246: CARD_RARITY_RARE,
     247: CARD_RARITY_UNCOMMON,
     254: CARD_RARITY_UNCOMMON,
+    261: CARD_RARITY_RARE,
+    262: CARD_RARITY_UNCOMMON,
+    263: CARD_RARITY_UNCOMMON,
     265: CARD_RARITY_UNCOMMON,
     268: CARD_RARITY_COMMON,
+    272: CARD_RARITY_RARE,
     273: CARD_RARITY_UNCOMMON,
+    295: CARD_RARITY_RARE,
+    313: CARD_RARITY_COMMON,
+    328: CARD_RARITY_RARE,
+    332: CARD_RARITY_RARE,
+    334: CARD_RARITY_RARE,
+    339: CARD_RARITY_RARE,
     349: CARD_RARITY_COMMON,
+    353: CARD_RARITY_UNCOMMON,
     358: CARD_RARITY_COMMON,
+    364: CARD_RARITY_RARE,
+    374: CARD_RARITY_RARE,
+    378: CARD_RARITY_UNCOMMON,
+    381: CARD_RARITY_UNCOMMON,
     396: CARD_RARITY_UNCOMMON,
+    404: CARD_RARITY_UNCOMMON,
     414: CARD_RARITY_UNCOMMON,
     421: CARD_RARITY_COMMON,
     433: CARD_RARITY_COMMON,
     454: CARD_RARITY_UNCOMMON,
     455: CARD_RARITY_UNCOMMON,
     462: CARD_RARITY_UNCOMMON,
+    464: CARD_RARITY_RARE,
     465: CARD_RARITY_UNCOMMON,
+    466: CARD_RARITY_UNCOMMON,
     486: CARD_RARITY_COMMON,
+    492: CARD_RARITY_RARE,
     493: CARD_RARITY_UNCOMMON,
+    494: CARD_RARITY_RARE,
+    505: CARD_RARITY_RARE,
     508: CARD_RARITY_COMMON,
     516: CARD_RARITY_COMMON,
     517: CARD_RARITY_COMMON,
     519: CARD_RARITY_COMMON,
     521: CARD_RARITY_UNCOMMON,
+    525: CARD_RARITY_RARE,
+    526: CARD_RARITY_UNCOMMON,
+    529: CARD_RARITY_UNCOMMON,
     533: CARD_RARITY_UNCOMMON,
     538: CARD_RARITY_UNCOMMON,
 }
 IRONCLAD_REWARD_POOL = np.array(
     [
+        9,
         13,
         18,
         20,
+        29,
         31,
         45,
         46,
+        47,
         50,
+        58,
         60,
+        66,
         69,
         87,
+        95,
+        99,
+        113,
+        114,
+        119,
+        141,
+        142,
         147,
         150,
         155,
         174,
         175,
+        183,
         185,
+        188,
         189,
+        195,
         205,
         238,
         240,
+        246,
         247,
         254,
+        261,
+        262,
+        263,
         265,
         268,
+        272,
         273,
+        295,
+        313,
+        328,
+        332,
+        334,
+        339,
         349,
+        353,
         358,
+        364,
+        374,
+        378,
+        381,
         396,
+        404,
         414,
         421,
         433,
         454,
         455,
         462,
+        464,
         465,
+        466,
         486,
+        492,
         493,
+        494,
+        505,
         508,
         516,
         517,
         519,
         521,
+        525,
+        526,
+        529,
         533,
         538,
     ],
@@ -351,12 +485,67 @@ SHOP_CARD_BASE_COSTS_BY_RARITY = {
     CARD_RARITY_RARE: 150,
 }
 SHOP_POTION_BASE_COSTS = {
-    1: 75,
-    2: 50,
-    3: 100,
-    4: 75,
-    5: 50,
+    CARD_RARITY_COMMON: 50,
+    CARD_RARITY_UNCOMMON: 75,
+    CARD_RARITY_RARE: 100,
 }
+POTION_RARITY_COMMON = CARD_RARITY_COMMON
+POTION_RARITY_UNCOMMON = CARD_RARITY_UNCOMMON
+POTION_RARITY_RARE = CARD_RARITY_RARE
+POTION_REWARD_BASE_ODDS = 0.4
+POTION_REWARD_STEP = 0.1
+POTION_REWARD_ELITE_BONUS = 0.25
+POTION_RARITY_BY_ID = {
+    2: POTION_RARITY_COMMON,
+    3: POTION_RARITY_RARE,
+    4: POTION_RARITY_UNCOMMON,
+    5: POTION_RARITY_COMMON,
+    6: POTION_RARITY_COMMON,
+    8: POTION_RARITY_RARE,
+    9: POTION_RARITY_UNCOMMON,
+    10: POTION_RARITY_COMMON,
+    13: POTION_RARITY_UNCOMMON,
+    14: POTION_RARITY_COMMON,
+    15: POTION_RARITY_RARE,
+    16: POTION_RARITY_RARE,
+    17: POTION_RARITY_UNCOMMON,
+    18: POTION_RARITY_COMMON,
+    19: POTION_RARITY_RARE,
+    21: POTION_RARITY_COMMON,
+    22: POTION_RARITY_RARE,
+    23: POTION_RARITY_COMMON,
+    24: POTION_RARITY_COMMON,
+    26: POTION_RARITY_UNCOMMON,
+    28: POTION_RARITY_RARE,
+    29: POTION_RARITY_UNCOMMON,
+    30: POTION_RARITY_UNCOMMON,
+    32: POTION_RARITY_RARE,
+    34: POTION_RARITY_UNCOMMON,
+    36: POTION_RARITY_UNCOMMON,
+    37: POTION_RARITY_RARE,
+    38: POTION_RARITY_RARE,
+    39: POTION_RARITY_RARE,
+    40: POTION_RARITY_RARE,
+    42: POTION_RARITY_UNCOMMON,
+    47: POTION_RARITY_UNCOMMON,
+    48: POTION_RARITY_COMMON,
+    49: POTION_RARITY_UNCOMMON,
+    50: POTION_RARITY_UNCOMMON,
+    51: POTION_RARITY_RARE,
+    52: POTION_RARITY_RARE,
+    53: POTION_RARITY_COMMON,
+    54: POTION_RARITY_RARE,
+    56: POTION_RARITY_COMMON,
+    57: POTION_RARITY_UNCOMMON,
+    59: POTION_RARITY_COMMON,
+    60: POTION_RARITY_COMMON,
+    61: POTION_RARITY_UNCOMMON,
+    62: POTION_RARITY_COMMON,
+    63: POTION_RARITY_COMMON,
+    1: POTION_RARITY_UNCOMMON,
+    58: POTION_RARITY_RARE,
+}
+POTION_REWARD_POOL = np.array(sorted(POTION_RARITY_BY_ID), dtype=np.int32)
 SHOP_RELIC_BASE_COSTS = {
     RELIC_AMETHYST_AUBERGINE: 175,
     RELIC_ANCHOR: 175,
@@ -383,8 +572,31 @@ SHOP_RELIC_BASE_COSTS = {
     RELIC_WAR_HAMMER: 999999999,
 }
 UPGRADABLE_STARTER_CARDS = {30, 131, 472}
+# Decompiled GrabBag pool order for weak encounters (equal weight 1 each).
+# Overgrowth: [FuzzyWurmCrawler=8, Nibbit=2, ShrinkerBeetle=11, Slimes=3]
+# Underdocks:  [CorpseSlugs=9, Seapunk=12, SludgeSpinner=10, Toadpoles=13]
 OVERGROWTH_WEAK_ENCOUNTERS = np.array([2, 3, 11, 8], dtype=np.int32)
 UNDERDOCKS_WEAK_ENCOUNTERS = np.array([9, 12, 10, 13], dtype=np.int32)
+_OVERGROWTH_WEAK_POOL = [8, 2, 11, 3]
+_UNDERDOCKS_WEAK_POOL = [9, 12, 10, 13]
+# Empirically determined UpFront RNG pre-call counts before act.GenerateRooms():
+# K=201 (SharedRelicPool shuffles + PlayerRelicPool shuffles + ancient distribution).
+# After K calls: 2 more for SharedAncients NextInt distribution, then N-1 event shuffle
+# calls (N_o=60 for Overgrowth, N_u=57 for Underdocks), then NextDouble for first weak.
+# N_u=57 calibrated against DRUM_1, TRACE_CARDS_1, INSTANT_10 (all three correct).
+# N_o=60 calibrated against INSTANT_5 and RARITY_1 (both first/second encounters correct).
+_UPFRONT_PRE_CALLS = 202
+# Empirical event shuffle call counts (= N-1 for N events) before first weak grab.
+_OVERGROWTH_EVENT_SHUFFLE_CALLS = 60
+_UNDERDOCKS_EVENT_SHUFFLE_CALLS = 57
+# Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
+_NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
+_SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
+_MONSTER_AI_HASH = _uint32(get_deterministic_hash_code("monster_ai"))
+# Encounter-specific type-selection RNG: uint(int(run_seed) + total_floor + hash(entry)).
+# Only SlimesWeak (encounter ID 3) currently needs this; others use the niche RNG for HP only.
+_SLIMES_WEAK_ENCOUNTER_ID = 3
+_SLIMES_WEAK_ENTRY_HASH = get_deterministic_hash_code("SLIMES_WEAK")
 OVERGROWTH_NORMAL_ENCOUNTERS = np.array(
     [5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32
 )
@@ -415,6 +627,7 @@ class RunMapNode:
     can_be_modified: bool = True
     children: set[tuple[int, int]] = field(default_factory=set)
     parents: set[tuple[int, int]] = field(default_factory=set)
+    encounter_id: int = 0
 
 
 class Sts2RunEnv(gym.Env):
@@ -429,13 +642,15 @@ class Sts2RunEnv(gym.Env):
 
     def __init__(
         self,
-        seed: int = 0,
+        seed: int | str = 0,
         max_episode_steps: int = RUN_MAX_EPISODE_STEPS,
         max_floors: int = 16,
     ):
         super().__init__()
         self._seed = seed
-        self._rng = np.random.default_rng(seed)
+        self._run_rng_set = RunRngSet(str(seed))
+        self._player_rng = PlayerRngSet(self._run_rng_set)
+        self._rng = np.random.default_rng(self._run_rng_set.seed)
         self._max_episode_steps = max_episode_steps
         self._max_floors = max_floors
         self._elapsed_steps = 0
@@ -466,16 +681,17 @@ class Sts2RunEnv(gym.Env):
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
+        self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
         self._act = "overgrowth"
         self._weak_encounters = np.zeros(3, dtype=np.int32)
+        self._weak_encounters_used = 0
         self._map_nodes: dict[tuple[int, int], RunMapNode] = {}
         self._current_map_coord = MAP_START_COORD
         self._map_option_coords: list[tuple[int, int] | None] = [None] * MAP_CHOICES
         self._handle: int | None = None
         self._combat_obs_buf = (ctypes.c_int * native.OBS_SIZE)()
         self._rew_buf = (ctypes.c_float * 1)()
-
         self.observation_space = spaces.Box(
             low=0,
             high=2**15,
@@ -488,7 +704,10 @@ class Sts2RunEnv(gym.Env):
         super().reset(seed=seed)
         actual_seed = seed if seed is not None else self._seed
         self._seed = actual_seed
-        self._rng = np.random.default_rng(actual_seed)
+        self._run_rng_set = RunRngSet(str(actual_seed))
+        self._player_rng = PlayerRngSet(self._run_rng_set)
+        self._map_rng = self._run_rng_set.act_map_rng(act_index=0)
+        self._rng = np.random.default_rng(self._run_rng_set.seed)
         self._elapsed_steps = 0
         self._floor = 1
         self._phase = PHASE_NEOW
@@ -517,7 +736,9 @@ class Sts2RunEnv(gym.Env):
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
+        self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
+        self._weak_encounters_used = 0
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
         self._map_option_coords = [None] * MAP_CHOICES
@@ -686,6 +907,7 @@ class Sts2RunEnv(gym.Env):
         self._map_node_types[:] = 0
         self._map_choices[:] = 0
         self._map_option_coords = [None] * MAP_CHOICES
+        self._floor += 1
 
         if self._current_node_type in (NODE_NORMAL, NODE_ELITE, NODE_BOSS):
             self._phase = PHASE_COMBAT
@@ -861,6 +1083,9 @@ class Sts2RunEnv(gym.Env):
             return self._invalid_action()
 
         self._obtain_relic(relic_id)
+        advance = _NEOW_REWARDS_RNG_ADVANCES.get(relic_id, 0)
+        for _ in range(advance):
+            self._player_rng.rewards.next_double()
         self._phase = PHASE_COMBAT
         self._enter_map_phase()
         return self._obs(), 0.0, False, False, self._info()
@@ -948,13 +1173,23 @@ class Sts2RunEnv(gym.Env):
             self._gold = 0
 
     def _after_combat_win(self) -> None:
+        # Real game order in GenerateRewardsFor + GenerateWithoutOffering:
+        #   1. RollForPotionAndAddTo → PotionRewardOdds.Roll() → 1 Rewards RNG call
+        #   2. GoldReward.Populate() → 1 Rewards RNG call
+        #   3. PotionReward.Populate() (if potion won) → 2 Rewards RNG calls
+        #   4. CardReward.Populate() → 3 cards × 2 calls (ForRoom: rarity+selection, NoUpgradeRoll) = 6
+        potion_val = self._player_rng.rewards.next_double()
         self._gold += self._gold_reward_for_node()
         if RELIC_AMETHYST_AUBERGINE in self._relics and self._current_node_type in (
             NODE_NORMAL,
             NODE_ELITE,
         ):
             self._gold += 15
-        if self._floor % 3 == 0:
+        potion_won = self._check_potion_roll(potion_val)
+        if potion_won:
+            # Advance 2 for PotionReward.Populate() (PotionFactory: NextFloat + NextItem)
+            self._player_rng.rewards.next_double()
+            self._player_rng.rewards.next_double()
             self._add_potion(self._next_potion())
         if RELIC_BURNING_BLOOD in self._relics:
             self._player_hp = min(self._player_max_hp, self._player_hp + 6)
@@ -981,7 +1216,6 @@ class Sts2RunEnv(gym.Env):
             self._phase = PHASE_COMPLETE
             return self._obs(), 0.0, True, False, self._info()
 
-        self._floor += 1
         self._enter_map_phase()
         return self._obs(), 0.0, False, False, self._info()
 
@@ -1021,7 +1255,11 @@ class Sts2RunEnv(gym.Env):
             node = self._map_nodes[coord]
             node_type = MAP_NODE_TO_OBS[node.node_type]
             self._map_node_types[i] = node_type
-            self._map_choices[i] = self._encounter_for_node(node_type)
+            self._map_choices[i] = (
+                node.encounter_id
+                if node.encounter_id
+                else self._encounter_for_node(node_type)
+            )
             self._map_option_coords[i] = coord
 
     def _enter_shop_phase(self):
@@ -1029,7 +1267,7 @@ class Sts2RunEnv(gym.Env):
         sale_index = int(self._rng.integers(0, 5))
         self._shop_cards[:] = self._generate_shop_cards()
         self._shop_relics[:] = [self._next_relic() for _ in range(3)]
-        self._shop_potions[:] = [self._next_potion() for _ in range(3)]
+        self._shop_potions[:] = self._next_potions(3)
         self._shop_costs[:] = 0
         for action, card_id in enumerate(self._shop_cards):
             cost = self._shop_card_cost(int(card_id), colorless=action >= 5)
@@ -1068,13 +1306,38 @@ class Sts2RunEnv(gym.Env):
         self._event_id = int(self._rng.choice(event_pool))
 
     def _select_act_and_weak_encounters(self):
-        if self._rng.integers(2) == 0:
-            self._act = "overgrowth"
-            pool = OVERGROWTH_WEAK_ENCOUNTERS
-        else:
+        # Act selection: separate Rng seeded from uint(run_seed), matches
+        # BeginRunLocally's local rng used for ActModel.GetRandomList.
+        act_rng = DotNetRandom(_int32(self._run_rng_set.seed))
+        # ActModel.GetRandomList: selects Underdocks when next_bool() is true
+        # (decompiled: if flag && (flag2 || rng.NextBool()) → Underdocks).
+        # next_bool() returns True when next_int(2)==0; game picks Underdocks when True.
+        use_underdocks = act_rng.next_bool()
+        if use_underdocks:
             self._act = "underdocks"
-            pool = UNDERDOCKS_WEAK_ENCOUNTERS
-        self._weak_encounters[:] = self._rng.choice(pool, size=3, replace=False)
+            weak_pool = list(_UNDERDOCKS_WEAK_POOL)
+            event_shuffle_calls = _UNDERDOCKS_EVENT_SHUFFLE_CALLS
+        else:
+            self._act = "overgrowth"
+            weak_pool = list(_OVERGROWTH_WEAK_POOL)
+            event_shuffle_calls = _OVERGROWTH_EVENT_SHUFFLE_CALLS
+
+        # Fast-forward UpFront RNG through pre-calls, then event shuffle, then grab.
+        up_front = self._run_rng_set.up_front
+        for _ in range(_UPFRONT_PRE_CALLS):
+            up_front.next_double()
+        # Event list UnstableShuffle: event_shuffle_calls = N-1 for N events.
+        for _ in range(event_shuffle_calls):
+            up_front.next_int(event_shuffle_calls + 1)
+        # GrabBag.GrabAndRemove for 3 weak encounter slots.
+        encounters = []
+        remaining = list(weak_pool)
+        for _ in range(3):
+            d = up_front.next_double()
+            idx = int(d * len(remaining))
+            encounters.append(remaining[idx])
+            remaining.pop(idx)
+        self._weak_encounters[:] = encounters
 
     def _generate_act_map(self) -> None:
         self._map_nodes = {}
@@ -1083,15 +1346,17 @@ class Sts2RunEnv(gym.Env):
         self._get_or_create_map_node(*MAP_START_COORD).node_type = "Ancient"
         self._get_or_create_map_node(*MAP_BOSS_COORD).node_type = "Boss"
 
+        # GetMapPointTypes is called before GenerateMap in the game constructor.
+        rest_count = self._map_rng.next_gaussian_int(7, 1, 6, 7)
+        unknown_count = self._map_rng.next_gaussian_int(12, 1, 10, 14)
+
         start_points: set[tuple[int, int]] = set()
         for path_index in range(MAP_PATH_ITERATIONS):
-            start = self._get_or_create_map_node(
-                int(self._rng.integers(0, MAP_WIDTH)), 1
-            )
+            start = self._get_or_create_map_node(self._map_rng.next_int(MAP_WIDTH), 1)
             if path_index == 1:
                 while (start.col, start.row) in start_points:
                     start = self._get_or_create_map_node(
-                        int(self._rng.integers(0, MAP_WIDTH)), 1
+                        self._map_rng.next_int(MAP_WIDTH), 1
                     )
             start_points.add((start.col, start.row))
             self._generate_map_path(start)
@@ -1102,7 +1367,7 @@ class Sts2RunEnv(gym.Env):
             if node.row == MAP_BOSS_ROW - 1:
                 self._add_map_edge(coord, MAP_BOSS_COORD)
 
-        self._assign_map_point_types()
+        self._assign_map_point_types(rest_count, unknown_count)
 
     def _get_or_create_map_node(self, col: int, row: int) -> RunMapNode:
         coord = (col, row)
@@ -1128,8 +1393,8 @@ class Sts2RunEnv(gym.Env):
             current = self._map_nodes[child_coord]
 
     def _generate_next_map_coord(self, current: RunMapNode) -> tuple[int, int]:
-        deltas = np.array([-1, 0, 1], dtype=np.int32)
-        self._rng.shuffle(deltas)
+        deltas = [-1, 0, 1]
+        self._map_rng.stable_shuffle(deltas)
         for delta in deltas:
             target_col = max(0, min(MAP_WIDTH - 1, current.col + int(delta)))
             if not self._has_invalid_crossover(current, target_col):
@@ -1150,7 +1415,34 @@ class Sts2RunEnv(gym.Env):
                 return True
         return False
 
-    def _assign_map_point_types(self) -> None:
+    def _assign_encounter_ids(self) -> None:
+        """Assign encounter IDs to all combat nodes.
+
+        Monster nodes are grouped by floor row; all nodes at the same floor
+        share the same pre-selected weak encounter from _weak_encounters.
+        """
+        monster_rows = sorted(
+            {n.row for n in self._map_nodes.values() if n.node_type == "Monster"}
+        )
+        weak_idx = 0
+        row_encounters: dict[int, int] = {}
+        for row in monster_rows:
+            if weak_idx < len(self._weak_encounters):
+                row_encounters[row] = int(self._weak_encounters[weak_idx])
+                weak_idx += 1
+            else:
+                row_encounters[row] = int(
+                    self._rng.choice(self._normal_encounter_pool())
+                )
+        for node in self._map_nodes.values():
+            if node.node_type == "Monster":
+                node.encounter_id = row_encounters[node.row]
+            elif node.node_type == "Elite":
+                node.encounter_id = int(self._rng.choice(self._elite_encounter_pool()))
+            elif node.node_type == "Boss":
+                node.encounter_id = int(self._rng.choice(self._boss_encounter_pool()))
+
+    def _assign_map_point_types(self, rest_count: int, unknown_count: int) -> None:
         for node in self._map_nodes.values():
             if node.row == MAP_FINAL_REST_ROW:
                 node.node_type = "RestSite"
@@ -1162,8 +1454,6 @@ class Sts2RunEnv(gym.Env):
                 node.node_type = "Monster"
                 node.can_be_modified = False
 
-        rest_count = int(np.clip(np.rint(self._rng.normal(7, 1)), 6, 7))
-        unknown_count = int(np.clip(np.rint(self._rng.normal(12, 1)), 10, 14))
         type_queue = (
             ["RestSite"] * rest_count
             + ["Shop"] * 3
@@ -1178,7 +1468,7 @@ class Sts2RunEnv(gym.Env):
         for _ in range(3):
             if not type_queue:
                 break
-            self._rng.shuffle(candidates)
+            self._map_rng.stable_shuffle(candidates, key=lambda n: (n.col, n.row))
             for node in candidates:
                 if not type_queue or node.node_type != "Unassigned":
                     continue
@@ -1190,6 +1480,7 @@ class Sts2RunEnv(gym.Env):
 
         self._map_nodes[MAP_START_COORD].node_type = "Ancient"
         self._map_nodes[MAP_BOSS_COORD].node_type = "Boss"
+        self._assign_encounter_ids()
 
     def _next_valid_map_point_type(
         self, type_queue: list[str], node: RunMapNode
@@ -1241,8 +1532,6 @@ class Sts2RunEnv(gym.Env):
         )
 
     def _encounter_for_node(self, node_type: int) -> int:
-        if node_type == NODE_NORMAL:
-            return int(self._rng.choice(self._normal_encounter_pool()))
         if node_type == NODE_ELITE:
             return int(self._rng.choice(self._elite_encounter_pool()))
         if node_type == NODE_BOSS:
@@ -1265,17 +1554,44 @@ class Sts2RunEnv(gym.Env):
             if self._venerable_tea_set_active:
                 relics = [*relics, RELIC_VENERABLE_TEA_SET_ACTIVE]
                 self._venerable_tea_set_active = False
-            native.reset_run_combat(
-                self._handle,
-                self._combat_deck(),
-                encounter_id,
-                relics,
-                self._player_hp,
-                self._player_max_hp,
-                self._potions,
-                self._gold,
-                self._combat_obs_buf,
-            )
+            deck = self._combat_deck()
+            encounter_rng_seed = self._encounter_rng_seed(encounter_id)
+            if self._run_rng_set is not None:
+                self._run_rng_set.shuffle.shuffle(deck)
+                shuffle_rng_seed = _int32(
+                    _uint32(self._run_rng_set.seed + _SHUFFLE_HASH)
+                )
+                monster_ai_rng_seed = _int32(
+                    _uint32(self._run_rng_set.seed + _MONSTER_AI_HASH)
+                )
+                native.reset_run_combat_pre_shuffled(
+                    self._handle,
+                    deck,
+                    encounter_id,
+                    relics,
+                    self._player_hp,
+                    self._player_max_hp,
+                    self._potions,
+                    self._gold,
+                    shuffle_rng_seed,
+                    0,
+                    encounter_rng_seed,
+                    monster_ai_rng_seed,
+                    self._combat_obs_buf,
+                )
+            else:
+                native.reset_run_combat(
+                    self._handle,
+                    deck,
+                    encounter_id,
+                    relics,
+                    self._player_hp,
+                    self._player_max_hp,
+                    self._potions,
+                    self._gold,
+                    encounter_rng_seed,
+                    self._combat_obs_buf,
+                )
 
     def _sync_run_state_from_combat_obs(self) -> None:
         self._player_hp = max(0, int(self._combat_obs_buf[0]))
@@ -1356,6 +1672,7 @@ class Sts2RunEnv(gym.Env):
             "venerable_tea_set_active": self._venerable_tea_set_active,
             "winged_boots_times_used": self._winged_boots_times_used,
             "shop_removals_used": self._shop_removals_used,
+            "potion_reward_odds": self._potion_reward_odds,
             "event_id": int(self._event_id),
             "map_choices": (
                 tuple(
@@ -1387,14 +1704,37 @@ class Sts2RunEnv(gym.Env):
         }
 
     def _combat_seed(self) -> int:
-        return self._seed + self._floor - 1
+        # Matches CombatState: creature.SetUniqueMonsterHpValue uses RunState.Rng.Niche,
+        # whose raw seed is _int32(_uint32(run_seed + niche_hash)).
+        return _int32(_uint32(self._run_rng_set.seed + _NICHE_HASH))
+
+    def _encounter_rng_seed(self, encounter_id: int) -> int:
+        # Matches EncounterModel.GenerateMonstersWithSlots:
+        #   uint seed = (uint)((int)runState.Rng.Seed + runState.TotalFloor + hash(entry))
+        # The reference game's TotalFloor is 0-indexed from the first combat; the emulator's
+        # self._floor starts at 1 and is incremented before _reset_combat, so the offset is -2.
+        # Only SlimesWeak uses this for type selection; pass 0 for others (ignored by C#).
+        if encounter_id == _SLIMES_WEAK_ENCOUNTER_ID and self._run_rng_set is not None:
+            total_floor = self._floor - 2
+            return _int32(
+                _uint32(
+                    _int32(self._run_rng_set.seed)
+                    + total_floor
+                    + _SLIMES_WEAK_ENTRY_HASH
+                )
+            )
+        return 0
 
     def _gold_reward_for_node(self) -> int:
+        # Uses PlayerRng.Rewards matching GoldReward.Populate() → Rng.NextInt(min, max+1).
+        # Poverty ascension (level 3+) reduces min/max by 0.75x (int truncation).
+        # Elite/Boss ranges are exact; Normal uses NextInt(7, 16) = 7 + next_int(9).
         if self._current_node_type == NODE_ELITE:
-            return int(self._rng.integers(26, 34))
+            return 26 + self._player_rng.rewards.next_int(8)  # NextInt(26, 34)
         if self._current_node_type == NODE_BOSS:
-            return 75
-        return int(self._rng.integers(7, 16))
+            self._player_rng.rewards.next_double()  # NextInt(100, 101) still makes a call
+            return 100
+        return 7 + self._player_rng.rewards.next_int(9)  # NextInt(7, 16)
 
     def _generate_card_rewards(self) -> np.ndarray:
         cards: list[int] = []
@@ -1494,7 +1834,8 @@ class Sts2RunEnv(gym.Env):
         return self._round_positive(base_cost * self._rng.uniform(0.85, 1.15))
 
     def _shop_potion_cost(self, potion_id: int) -> int:
-        base_cost = SHOP_POTION_BASE_COSTS.get(potion_id, 50)
+        rarity = POTION_RARITY_BY_ID.get(potion_id, POTION_RARITY_COMMON)
+        base_cost = SHOP_POTION_BASE_COSTS[rarity]
         return self._round_positive(base_cost * self._rng.uniform(0.95, 1.05))
 
     def _shop_removal_cost(self) -> int:
@@ -1519,7 +1860,49 @@ class Sts2RunEnv(gym.Env):
         self._player_hp = min(self._player_max_hp, self._player_hp + amount)
 
     def _next_potion(self) -> int:
-        return 1 + ((self._seed + self._floor + sum(self._potions)) % 5)
+        return self._next_potions(1)[0]
+
+    def _next_potions(self, count: int) -> list[int]:
+        potions: list[int] = []
+        for _ in range(count):
+            rarity = self._roll_potion_rarity()
+            potions.append(self._choose_potion_with_rarity(rarity, potions))
+        return potions
+
+    def _check_potion_roll(self, roll: float) -> bool:
+        """Evaluate a pre-rolled Rewards RNG value against the current potion odds."""
+        elite_bonus = (
+            POTION_REWARD_ELITE_BONUS * 0.5
+            if self._current_node_type == NODE_ELITE
+            else 0.0
+        )
+        if roll < self._potion_reward_odds + elite_bonus:
+            self._potion_reward_odds -= POTION_REWARD_STEP
+            return True
+        self._potion_reward_odds += POTION_REWARD_STEP
+        return False
+
+    def _roll_potion_reward(self) -> bool:
+        return self._check_potion_roll(float(self._rng.random()))
+
+    def _roll_potion_rarity(self) -> int:
+        roll = float(self._rng.random())
+        if roll <= 0.1:
+            return POTION_RARITY_RARE
+        if roll <= 0.35:
+            return POTION_RARITY_UNCOMMON
+        return POTION_RARITY_COMMON
+
+    def _choose_potion_with_rarity(self, rarity: int, blacklist: list[int]) -> int:
+        available = [
+            int(potion_id)
+            for potion_id in POTION_REWARD_POOL
+            if int(potion_id) not in blacklist
+            and POTION_RARITY_BY_ID[int(potion_id)] == rarity
+        ]
+        if available:
+            return int(self._rng.choice(available))
+        return int(self._rng.choice(POTION_REWARD_POOL))
 
     def _combat_deck(self) -> list[int]:
         return [card for card in self._deck if abs(card) != SPOILS_MAP_CARD]
@@ -1541,27 +1924,24 @@ class Sts2RunEnv(gym.Env):
         return int(self._rng.choice(available))
 
     def _generate_neow_options(self) -> None:
-        positive = [int(relic) for relic in self._rng.permutation(NEOW_POSITIVE_RELICS)]
-        positive.extend(
-            [
-                RELIC_LAVA_ROCK if self._rng.integers(0, 2) else RELIC_SMALL_CAPSULE,
-                (
-                    RELIC_NUTRITIOUS_OYSTER
-                    if self._rng.integers(0, 2)
-                    else RELIC_STONE_HUMIDIFIER
-                ),
-                RELIC_NEOWS_TALISMAN if self._rng.integers(0, 2) else RELIC_POMANDER,
-            ]
-        )
-        cursed = int(self._rng.choice(NEOW_CURSE_RELICS))
+        rng = self._run_rng_set.neow_rng()
+        cursed = NEOW_CURSE_OPTIONS[rng.next_int(len(NEOW_CURSE_OPTIONS))]
+        positive = list(NEOW_POSITIVE_OPTIONS)
         if cursed == RELIC_CURSED_PEARL:
-            positive = [relic for relic in positive if relic != RELIC_GOLDEN_PEARL]
+            positive = [r for r in positive if r != RELIC_GOLDEN_PEARL]
         elif cursed == RELIC_HEFTY_TABLET:
-            positive = [relic for relic in positive if relic != RELIC_ARCANE_SCROLL]
+            positive = [r for r in positive if r != RELIC_ARCANE_SCROLL]
         elif cursed == RELIC_LEAFY_POULTICE:
-            positive = [relic for relic in positive if relic != RELIC_NEW_LEAF]
+            positive = [r for r in positive if r != RELIC_NEW_LEAF]
         elif cursed == RELIC_PRECARIOUS_SHEARS:
-            positive = [relic for relic in positive if relic != RELIC_PRECISE_SCISSORS]
+            positive = [r for r in positive if r != RELIC_PRECISE_SCISSORS]
+        if cursed != RELIC_LARGE_CAPSULE:
+            positive.append(RELIC_LAVA_ROCK if rng.next_bool() else RELIC_SMALL_CAPSULE)
+        positive.append(
+            RELIC_NUTRITIOUS_OYSTER if rng.next_bool() else RELIC_STONE_HUMIDIFIER
+        )
+        positive.append(RELIC_NEOWS_TALISMAN if rng.next_bool() else RELIC_POMANDER)
+        rng.shuffle(positive)
         self._neow_options[:] = [positive[0], positive[1], cursed]
 
     def _is_upgradable(self, encoded_card: int) -> bool:

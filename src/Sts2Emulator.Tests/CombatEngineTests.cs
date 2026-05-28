@@ -246,6 +246,47 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void Armaments_GainsBlockAndUpgradesFirstCardInHand()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.Armaments, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(5, state.PlayerBlock);
+        Assert.DoesNotContain(state.Hand, card => card.DefId == IC.StrikeIronclad && !card.Upgraded);
+        Assert.Contains(state.Hand, card => card.DefId == IC.StrikeIronclad && card.Upgraded);
+        Assert.Contains(state.Hand, card => card.DefId == IC.DefendIronclad && !card.Upgraded);
+    }
+
+    [Fact]
+    public void Armaments_UpgradedUpgradesAllCardsInHand()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.Armaments, true),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(ST.Slimed, false),
+        ];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(5, state.PlayerBlock);
+        Assert.Contains(state.Hand, card => card.DefId == IC.StrikeIronclad && card.Upgraded);
+        Assert.Contains(state.Hand, card => card.DefId == IC.DefendIronclad && card.Upgraded);
+        Assert.Contains(state.Hand, card => card.DefId == ST.Slimed && !card.Upgraded);
+    }
+
+    [Fact]
     public void ExpectAFight_GainsEnergyForAttacksInHand()
     {
         var state = CombatFactory.NewCombat(seed: 0);
@@ -332,6 +373,25 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void DrumOfBattle_GainsEnergyWhenExhaustedByAnotherCard()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.TrueGrit, false),
+            new CardInstance(IC.DrumOfBattle, true),
+        ];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(3, state.Energy);
+        Assert.Equal(7, state.PlayerBlock);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.DrumOfBattle);
+        Assert.DoesNotContain(state.Hand, card => card.DefId == IC.DrumOfBattle);
+    }
+
+    [Fact]
     public void FightMe_HitsTwiceAndAppliesStrengthToBothSides()
     {
         var state = CombatFactory.NewCombat(seed: 0);
@@ -347,6 +407,657 @@ public class CombatEngineTests
         Assert.Equal(90, state.Enemies[0].Hp);
         Assert.Equal(3, BuffSystem.Get(state.PlayerBuffs, BuffId.Strength));
         Assert.Equal(1, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Strength));
+    }
+
+    [Fact]
+    public void MoltenFist_DamagesAndDuplicatesTargetVulnerable()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.MoltenFist, false)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [new BuffState(BuffId.Vulnerable, 2)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(85, state.Enemies[0].Hp);
+        Assert.Equal(4, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Vulnerable));
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.MoltenFist);
+    }
+
+    [Fact]
+    public void MoltenFist_UpgradedUsesUpgradedDamageAndTriggersVicious()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.MoltenFist, true)];
+        state.DrawPile = [new CardInstance(IC.StrikeIronclad, false)];
+        state.Energy = 1;
+        state.PlayerBuffs = [new BuffState(BuffId.Vicious, 1)];
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [new BuffState(BuffId.Vulnerable, 1)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(79, state.Enemies[0].Hp);
+        Assert.Equal(2, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Vulnerable));
+        Assert.Equal([IC.StrikeIronclad], state.Hand.Select(card => card.DefId));
+    }
+
+    [Fact]
+    public void IronWave_GainsBlockBeforeDealingDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.IronWave, false)];
+        state.Energy = 1;
+        state.PlayerBuffs = [new BuffState(BuffId.Juggernaut, 5)];
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Block = 5,
+                Buffs = [new BuffState(BuffId.Vulnerable, 1)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(5, state.PlayerBlock);
+        Assert.Equal(23, state.Enemies[0].Hp);
+        Assert.Equal(0, state.Enemies[0].Block);
+    }
+
+    [Fact]
+    public void IronWave_UpgradedUsesUpgradedBlockAndDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.IronWave, true)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(7, state.PlayerBlock);
+        Assert.Equal(23, state.Enemies[0].Hp);
+    }
+
+    [Fact]
+    public void Pillage_DamagesAndDrawsUntilNonAttack()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Pillage, false)];
+        state.DrawPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.Bash, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+        ];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(44, state.Enemies[0].Hp);
+        Assert.Equal(
+            [IC.StrikeIronclad, IC.Bash, IC.DefendIronclad],
+            state.Hand.Select(card => card.DefId)
+        );
+        Assert.Equal([IC.StrikeIronclad], state.DrawPile.Select(card => card.DefId));
+    }
+
+    [Fact]
+    public void Pillage_UpgradedUsesUpgradedDamageAndStopsAtFullHand()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.Pillage, true),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+        ];
+        state.DrawPile =
+        [
+            new CardInstance(IC.Bash, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(41, state.Enemies[0].Hp);
+        Assert.Equal(10, state.Hand.Count);
+        Assert.Equal([IC.DefendIronclad], state.DrawPile.Select(card => card.DefId));
+    }
+
+    [Fact]
+    public void Breakthrough_LosesHpAndDamagesAllEnemies()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 50;
+        state.Hand = [new CardInstance(IC.Breakthrough, false)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(49, state.PlayerHp);
+        Assert.Equal([21, 21], state.Enemies.Select(enemy => enemy.Hp));
+    }
+
+    [Fact]
+    public void Breakthrough_UpgradedUsesUpgradedAllEnemyDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 50;
+        state.Hand = [new CardInstance(IC.Breakthrough, true)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(49, state.PlayerHp);
+        Assert.Equal([17, 17], state.Enemies.Select(enemy => enemy.Hp));
+    }
+
+    [Fact]
+    public void DramaticEntrance_DamagesAllEnemiesAndExhausts()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.DramaticEntrance, false)];
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal([19, 19], state.Enemies.Select(enemy => enemy.Hp));
+        Assert.Empty(state.Hand);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == CL.DramaticEntrance);
+    }
+
+    [Fact]
+    public void DramaticEntrance_UpgradedUsesUpgradedAllEnemyDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.DramaticEntrance, true)];
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal([15, 15], state.Enemies.Select(enemy => enemy.Hp));
+    }
+
+    [Fact]
+    public void Omnislice_SplashesEffectiveFirstHitDamageToOtherEnemies()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.Omnislice, false)];
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 5, MaxHp = 5, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Block = 3, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal([0, 22, 25], state.Enemies.Select(enemy => enemy.Hp));
+        Assert.Empty(state.Hand);
+        Assert.Contains(state.DiscardPile, card => card.DefId == CL.Omnislice);
+    }
+
+    [Fact]
+    public void Omnislice_UpgradedSplashIsUnpowered()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.Omnislice, true)];
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [new BuffState(BuffId.Vulnerable, 1)] },
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [new BuffState(BuffId.Vulnerable, 1)] },
+        ];
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, 2);
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal([31, 31], state.Enemies.Select(enemy => enemy.Hp));
+    }
+
+    [Fact]
+    public void Volley_SpendsAllEnergyForRepeatedRandomEnemyHits()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.Volley, false)];
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, state.Energy);
+        Assert.Equal(10, state.Enemies[0].Hp);
+    }
+
+    [Fact]
+    public void Volley_UpgradedUsesUpgradedDamagePerEnergy()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.Volley, true)];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(12, state.Enemies[0].Hp);
+    }
+
+    [Fact]
+    public void Salvo_DamagesTargetAndRetainsRemainingHand()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(CL.Salvo, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.DrawPile =
+        [
+            new CardInstance(IC.Bash, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.DiscardPile.Clear();
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 40,
+                MaxHp = 40,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(28, state.Enemies[0].Hp);
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.RetainHand));
+        Assert.Equal([IC.StrikeIronclad, IC.DefendIronclad], state.Hand.Select(card => card.DefId));
+        Assert.Contains(state.DiscardPile, card => card.DefId == CL.Salvo);
+
+        CombatEngine.Step(state, state.Hand.Count, new Random(0));
+
+        Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.RetainHand));
+        Assert.Equal([IC.StrikeIronclad, IC.DefendIronclad], state.Hand.Take(2).Select(card => card.DefId));
+        Assert.DoesNotContain(state.DiscardPile, card =>
+            card.DefId is IC.StrikeIronclad or IC.DefendIronclad);
+    }
+
+    [Fact]
+    public void Salvo_UpgradedUsesUpgradedDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.Salvo, true)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(24, state.Enemies[0].Hp);
+    }
+
+    [Fact]
+    public void NeowsFury_DamagesTargetMovesDiscardCardsToHandAndExhausts()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(AN.NeowsFury, false)];
+        state.DiscardPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.Bash, false),
+        ];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(30, state.Enemies[0].Hp);
+        Assert.Equal(
+            [IC.StrikeIronclad, IC.DefendIronclad],
+            state.Hand.Select(card => card.DefId)
+        );
+        Assert.Equal([IC.Bash], state.DiscardPile.Select(card => card.DefId));
+        Assert.Contains(state.ExhaustPile, card => card.DefId == AN.NeowsFury);
+    }
+
+    [Fact]
+    public void NeowsFury_UpgradedMovesThreeCardsAndRespectsHandCap()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(AN.NeowsFury, true),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+        ];
+        state.DiscardPile =
+        [
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.Bash, false),
+        ];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(26, state.Enemies[0].Hp);
+        Assert.Equal(10, state.Hand.Count);
+        Assert.Equal(
+            [
+                IC.StrikeIronclad,
+                IC.StrikeIronclad,
+                IC.StrikeIronclad,
+                IC.StrikeIronclad,
+                IC.StrikeIronclad,
+                IC.StrikeIronclad,
+                IC.StrikeIronclad,
+                IC.StrikeIronclad,
+                IC.StrikeIronclad,
+                IC.DefendIronclad,
+            ],
+            state.Hand.Select(card => card.DefId)
+        );
+        Assert.Equal([IC.Bash], state.DiscardPile.Select(card => card.DefId));
+    }
+
+    [Fact]
+    public void Bolas_DamagesTargetAndReturnsBeforeNextDraw()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.Bolas, false)];
+        state.DrawPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+        ];
+        state.DiscardPile.Clear();
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(17, state.Enemies[0].Hp);
+        Assert.Contains(state.DiscardPile, card => card.DefId == CL.Bolas);
+        Assert.Single(state.ReturnToHandBeforeDraw);
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(CL.Bolas, state.Hand[0].DefId);
+        Assert.Equal(6, state.Hand.Count);
+        Assert.DoesNotContain(state.DiscardPile, card => card.DefId == CL.Bolas);
+        Assert.Empty(state.ReturnToHandBeforeDraw);
+    }
+
+    [Fact]
+    public void Bolas_UpgradedUsesUpgradedDamageAndReturnsUpgraded()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.Bolas, true)];
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(16, state.Enemies[0].Hp);
+        Assert.Single(state.Hand);
+        Assert.Equal(CL.Bolas, state.Hand[0].DefId);
+        Assert.True(state.Hand[0].Upgraded);
+    }
+
+    [Fact]
+    public void Bolas_ReturnsOnceWhenAttackEffectIsDuplicated()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.OneTwoPunch, false),
+            new CardInstance(CL.Bolas, false),
+        ];
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(14, state.Enemies[0].Hp);
+        Assert.Single(state.ReturnToHandBeforeDraw);
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(1, state.Hand.Count(card => card.DefId == CL.Bolas));
+        Assert.Empty(state.ReturnToHandBeforeDraw);
+    }
+
+    [Fact]
+    public void Cinder_DamagesTargetAndExhaustsRandomCardFromHand()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.Cinder, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(32, state.Enemies[0].Hp);
+        Assert.Empty(state.Hand);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.Cinder);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.DefendIronclad);
+    }
+
+    [Fact]
+    public void Cinder_UpgradedUsesUpgradedDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Cinder, true)];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(26, state.Enemies[0].Hp);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.Cinder);
+    }
+
+    [Fact]
+    public void Stomp_DamagesAllEnemies()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Stomp, false)];
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal([18, 18], state.Enemies.Select(enemy => enemy.Hp));
+    }
+
+    [Fact]
+    public void Stomp_UpgradedUsesUpgradedAllEnemyDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Stomp, true)];
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal([15, 15], state.Enemies.Select(enemy => enemy.Hp));
+    }
+
+    [Fact]
+    public void Stomp_CostIsReducedByAttacksPlayedThisTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.Stomp, false),
+        ];
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(1, state.Energy);
+        Assert.Contains(0, CombatEngine.ValidActions(state));
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(76, state.Enemies[0].Hp);
+        Assert.Equal(88, state.Enemies[1].Hp);
     }
 
     [Fact]
@@ -378,6 +1089,58 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void InfernalBlade_AddsRandomAttackFreeThisTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.InfernalBlade, false)];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Single(state.Hand);
+        Assert.Equal(IC.AshenStrike, state.Hand[0].DefId);
+        Assert.True(state.Hand[0].FreeThisTurn);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.InfernalBlade);
+    }
+
+    [Fact]
+    public void InfernalBlade_GeneratedAttackCanBePlayedWithoutEnergy()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.InfernalBlade, false)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        state.Energy = 0;
+
+        Assert.Contains(0, CombatEngine.ValidActions(state));
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(41, state.Enemies[0].Hp);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.AshenStrike && !card.FreeThisTurn);
+    }
+
+    [Fact]
+    public void InfernalBlade_UpgradedCostsZero()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.InfernalBlade, true)];
+        state.Energy = 0;
+
+        Assert.Contains(0, CombatEngine.ValidActions(state));
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Single(state.Hand);
+        Assert.Equal(IC.AshenStrike, state.Hand[0].DefId);
+    }
+
+    [Fact]
     public void Stampede_AppliesTrackedPower()
     {
         var state = CombatFactory.NewCombat(seed: 0);
@@ -387,6 +1150,73 @@ public class CombatEngineTests
         CombatEngine.Step(state, 0, new Random(0));
 
         Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Stampede));
+    }
+
+    [Fact]
+    public void Stampede_AutoPlaysRandomAttackWhenPlayPhaseStarts()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Stampede, false)];
+        state.DrawPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.DiscardPile.Clear();
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(24, state.Enemies[0].Hp);
+        Assert.Equal(1, state.AttackCardsPlayedThisTurn);
+        Assert.Equal([IC.DefendIronclad, IC.Stampede], state.Hand.Select(card => card.DefId));
+        Assert.Contains(state.DiscardPile, card => card.DefId == IC.StrikeIronclad);
+    }
+
+    [Fact]
+    public void Stampede_RepeatsForStackCountAndSkipsUnplayableCards()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand.Clear();
+        state.DrawPile =
+        [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.AscendersBane, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.DiscardPile.Clear();
+        state.PlayerBuffs = [new BuffState(BuffId.Stampede, 2)];
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(38, state.Enemies[0].Hp);
+        Assert.Equal(2, state.AttackCardsPlayedThisTurn);
+        Assert.Equal([IC.AscendersBane, IC.DefendIronclad], state.Hand.Select(card => card.DefId));
+        Assert.Equal(2, state.DiscardPile.Count(card => card.DefId == IC.StrikeIronclad));
     }
 
     [Fact]
@@ -418,6 +1248,559 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void Nostalgia_PutsFirstAttackOrSkillEachTurnOnTopOfDrawPile()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.Nostalgia, false),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+        ];
+        state.DrawPile = [new CardInstance(IC.Bash, false)];
+        state.DiscardPile.Clear();
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Nostalgia));
+        Assert.Equal(IC.StrikeIronclad, state.DrawPile[0].DefId);
+        Assert.DoesNotContain(state.DiscardPile, card => card.DefId == IC.StrikeIronclad);
+        Assert.Contains(state.DiscardPile, card => card.DefId == IC.DefendIronclad);
+    }
+
+    [Fact]
+    public void Nostalgia_UpgradedCostsZeroAndResetsEachTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Nostalgia, true)];
+        state.DrawPile = [];
+        state.DiscardPile.Clear();
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        Assert.Contains(0, CombatEngine.ValidActions(state));
+        CombatEngine.Step(state, 0, new Random(0));
+        state.Hand = [new CardInstance(IC.StrikeIronclad, false)];
+        state.Energy = 1;
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+        state.Hand = [new CardInstance(IC.DefendIronclad, false)];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(IC.DefendIronclad, state.DrawPile[0].DefId);
+    }
+
+    [Fact]
+    public void ForgottenRitual_DoesNotGainEnergyWithoutPriorExhaust()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.ForgottenRitual, false)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, state.Energy);
+        Assert.Equal(1, state.CardsExhaustedThisTurn);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.ForgottenRitual);
+    }
+
+    [Fact]
+    public void ForgottenRitual_GainsEnergyAfterCardExhaustedThisTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.ForgottenRitual, true)];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+        CardEffects.ExhaustCard(state, new CardInstance(IC.StrikeIronclad, false));
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(4, state.Energy);
+        Assert.Equal(2, state.CardsExhaustedThisTurn);
+    }
+
+    [Fact]
+    public void CardsExhaustedThisTurn_ResetsAtStartOfNextPlayerTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.ForgottenRitual, false)];
+        state.DrawPile.Clear();
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, state.CardsExhaustedThisTurn);
+    }
+
+    [Fact]
+    public void EvilEye_GainsBlockOnceWithoutPriorExhaust()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.EvilEye, false)];
+        state.Energy = 1;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(8, state.PlayerBlock);
+        Assert.Equal(1, state.CardsExhaustedThisTurn);
+        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.EvilEye);
+    }
+
+    [Fact]
+    public void EvilEye_GainsBlockTwiceAfterCardExhaustedThisTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.EvilEye, true)];
+        state.Energy = 1;
+        CardEffects.ExhaustCard(state, new CardInstance(IC.StrikeIronclad, false));
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(22, state.PlayerBlock);
+        Assert.Equal(2, state.CardsExhaustedThisTurn);
+    }
+
+    [Fact]
+    public void Prolong_GainsCurrentBlockAfterNextTurnBlockClear()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerBlock = 12;
+        state.PlayerBuffs = [new BuffState(BuffId.Dexterity, 3)];
+        state.Hand = [new CardInstance(CL.Prolong, false)];
+        state.DrawPile.Clear();
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(12, BuffSystem.Get(state.PlayerBuffs, BuffId.BlockNextTurn));
+        Assert.Contains(state.ExhaustPile, card => card.DefId == CL.Prolong);
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(12, state.PlayerBlock);
+        Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.BlockNextTurn));
+    }
+
+    [Fact]
+    public void Prolong_UpgradedDoesNotExhaust()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerBlock = 4;
+        state.Hand = [new CardInstance(CL.Prolong, true)];
+        state.Energy = 0;
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.DoesNotContain(state.ExhaustPile, card => card.DefId == CL.Prolong);
+        Assert.Contains(state.DiscardPile, card => card.DefId == CL.Prolong && card.Upgraded);
+        Assert.Equal(4, BuffSystem.Get(state.PlayerBuffs, BuffId.BlockNextTurn));
+    }
+
+    [Fact]
+    public void OneTwoPunch_DuplicatesNextAttack()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.OneTwoPunch, false),
+            new CardInstance(IC.StrikeIronclad, false),
+        ];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(88, state.Enemies[0].Hp);
+        Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.OneTwoPunch));
+    }
+
+    [Fact]
+    public void OneTwoPunch_UpgradedDuplicatesNextTwoAttacks()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.OneTwoPunch, true),
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+        ];
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(76, state.Enemies[0].Hp);
+        Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.OneTwoPunch));
+    }
+
+    [Fact]
+    public void OneTwoPunch_ExpiresAtEndOfPlayerTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.OneTwoPunch, false)];
+        state.DrawPile.Clear();
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.OneTwoPunch));
+    }
+
+    [Fact]
+    public void Colossus_GainsBlockAndHalvesVulnerableEnemyAttackDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 100;
+        state.PlayerMaxHp = 100;
+        state.Hand = [new CardInstance(IC.Colossus, false)];
+        state.DrawPile.Clear();
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                CurrentIntent = new Intent(IntentType.Attack, 20),
+                Buffs = [new BuffState(BuffId.Vulnerable, 2)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(5, state.PlayerBlock);
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus));
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(95, state.PlayerHp);
+        Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus));
+    }
+
+    [Fact]
+    public void DarkEmbrace_DrawsCardOnImmediateExhaust()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.DarkEmbrace, false), new CardInstance(IC.TrueGrit, false)];
+        state.DrawPile = [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.IronWave, false)
+        ];
+        state.Energy = 3;
+
+        // Play Dark Embrace.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.DarkEmbrace));
+        Assert.Equal(2, state.Hand.Count); // True Grit + card drawn from DE exhaust
+
+        // Play True Grit (exhausts the other card in hand or itself if we are lucky? No, hand has 2 cards now).
+        state.Hand.Add(new CardInstance(IC.Bash, false));
+        // Hand now has: True Grit, card from DE (Strike), Bash.
+        // Action 0 is True Grit.
+        CombatEngine.Step(state, 0, new Random(0));
+
+        // True Grit played, exhausts a card, Dark Embrace triggers again.
+        // Expected: 2 cards in hand (one from DE exhaust, one from TG exhaust).
+        // True Grit itself does not exhaust, so it shouldn't trigger another draw.
+        Assert.Equal(2, state.Hand.Count);
+    }
+
+    [Fact]
+    public void DarkEmbrace_DrawsCardAfterTurnEndForEtherealExhaust()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.DarkEmbrace, false), new CardInstance(IC.AscendersBane, false)];
+        state.DrawPile = [
+            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.IronWave, false),
+            new CardInstance(IC.Bash, false),
+            new CardInstance(IC.Anger, false),
+            new CardInstance(IC.BodySlam, false),
+            new CardInstance(IC.Break, false)
+        ];
+        state.Energy = 3;
+
+        // Play Dark Embrace.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.DarkEmbrace));
+        Assert.Equal(2, state.Hand.Count); // Ascender's Bane + card drawn from DE exhaust
+
+        // End turn. Ascender's Bane is Ethereal and should exhaust.
+        // Dark Embrace should trigger but the draw should be deferred.
+        CombatEngine.Step(state, 2, new Random(0)); // action 2 is End Turn when hand has 2 cards
+
+        // After end turn, we should have drawn 5 cards for next turn + 1 card from Dark Embrace.
+        Assert.Equal(6, state.Hand.Count);
+        Assert.Equal(1, state.ExhaustPile.Count(c => c.DefId == IC.AscendersBane));
+    }
+
+    [Fact]
+    public void Weakness_FromSludgeSpinner_LastsThroughNextPlayerTurn()
+    {
+        // SludgeSpinner Move 0 is Oil Spray (9 dmg + 1 Weak).
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Enemies = [CombatFactory.CreateEnemy(KE.SludgeSpinner, new Random(0), new Intent(IntentType.Debuff, 9), 0)];
+        state.Hand = [new CardInstance(IC.StrikeIronclad, false)];
+        state.DrawPile = [];
+        state.DiscardPile = [];
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100;
+
+        // Turn 1: End Turn.
+        // SludgeSpinner should use Oil Spray, dealing 9 damage and applying 1 Weak.
+        CombatEngine.Step(state, 1, new Random(0));
+
+        // Turn 2 start. Player should be Weak 1.
+        // If the bug exists, Weak 1 was ticked to 0 at the end of Turn 1 (start of Turn 2).
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Weak));
+
+        // Play Strike. Should deal 4 damage.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(96, enemy.Hp);
+    }
+
+    [Fact]
+    public void Aggression_AddsUpgradedCardAtStartOfTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Aggression, false)];
+        state.DrawPile = [];
+        state.DiscardPile = [];
+        state.Energy = 3;
+
+        // Play Aggression.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Aggression));
+        Assert.Empty(state.Hand);
+
+        // End turn.
+        CombatEngine.Step(state, 0, new Random(0));
+
+        // Start of next turn. Should have 5 cards (from draw) + 1 card from Aggression.
+        // Wait, draw pile was empty. So it should only have cards from Aggression?
+        // No, EndTurn draws 5 cards. If draw/discard empty, it draws 0.
+        // So hand should have exactly 1 card.
+        Assert.Single(state.Hand);
+        Assert.True(state.Hand[0].Upgraded);
+    }
+
+    [Fact]
+    public void Hellraiser_AutoPlaysDrawnStrike()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Hellraiser, false), new CardInstance(IC.PommelStrike, false)];
+        state.DrawPile = [new CardInstance(IC.StrikeIronclad, false)];
+        state.DiscardPile = [];
+        state.Energy = 3;
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100;
+
+        // Play Hellraiser.
+        CombatEngine.Step(state, 0, new Random(0));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Hellraiser));
+
+        // Play Pommel Strike (draws 1).
+        // It should draw StrikeIronclad, which Hellraiser should automatically play.
+        // StrikeIronclad deals 6 damage. Pommel Strike deals 9.
+        // Total damage should be 15.
+        CombatEngine.Step(state, 0, new Random(0));
+        
+        Assert.Equal(85, enemy.Hp);
+        // Hand should be empty (Pommel Strike played, StrikeIronclad auto-played).
+        Assert.Empty(state.Hand);
+        Assert.Contains(state.DiscardPile, c => c.DefId == IC.StrikeIronclad);
+    }
+
+    [Fact]
+    public void DarkShackles_AppliesTemporaryStrengthLossUntilEnemyTurnEnds()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 100;
+        state.PlayerMaxHp = 100;
+        state.Hand = [new CardInstance(CL.DarkShackles, false)];
+        state.DrawPile.Clear();
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                CurrentIntent = new Intent(IntentType.Attack, 20),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(-9, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Strength));
+        Assert.Equal(9, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.TemporaryStrength));
+        Assert.Contains(state.ExhaustPile, card => card.DefId == CL.DarkShackles);
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(89, state.PlayerHp);
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Strength));
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.TemporaryStrength));
+    }
+
+    [Fact]
+    public void DarkShackles_IsPreventedByArtifact()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(CL.DarkShackles, true)];
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [new BuffState(BuffId.Artifact, 1)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Artifact));
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Strength));
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.TemporaryStrength));
+    }
+
+    [Fact]
+    public void Inferno_TriggersWhenPlayerLosesHpOnPlayerTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 50;
+        state.Hand =
+        [
+            new CardInstance(IC.Inferno, false),
+            new CardInstance(IC.Hemokinesis, false),
+        ];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(48, state.PlayerHp);
+        Assert.Equal(6, BuffSystem.Get(state.PlayerBuffs, BuffId.Inferno));
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.InfernoSelfDamage));
+        Assert.Equal(79, state.Enemies[0].Hp);
+        Assert.Equal(94, state.Enemies[1].Hp);
+    }
+
+    [Fact]
+    public void Inferno_DamagesPlayerAndEnemiesAtStartOfPlayerTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 50;
+        state.Hand = [new CardInstance(IC.Inferno, true)];
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(49, state.PlayerHp);
+        Assert.Equal(9, BuffSystem.Get(state.PlayerBuffs, BuffId.Inferno));
+        Assert.Equal(91, state.Enemies[0].Hp);
+        Assert.Equal(91, state.Enemies[1].Hp);
+    }
+
+    [Fact]
     public void SetupStrike_AppliesTemporaryStrengthUntilEndOfTurn()
     {
         var state = CombatFactory.NewCombat(seed: 0);
@@ -438,6 +1821,96 @@ public class CombatEngineTests
 
         Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.Strength));
         Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.TemporaryStrength));
+    }
+
+    [Fact]
+    public void Spite_HitsOnceBeforePlayerLosesHpThisTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Spite, false)];
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(45, state.Enemies[0].Hp);
+    }
+
+    [Fact]
+    public void Spite_HitsTwiceAfterCardHpLossThisTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 50;
+        state.Hand =
+        [
+            new CardInstance(IC.Bloodletting, false),
+            new CardInstance(IC.Spite, false),
+        ];
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(47, state.PlayerHp);
+        Assert.Equal(40, state.Enemies[0].Hp);
+    }
+
+    [Fact]
+    public void Spite_UpgradedHitsThreeTimesAfterHpLossThisTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 50;
+        state.Hand =
+        [
+            new CardInstance(IC.Breakthrough, false),
+            new CardInstance(IC.Spite, true),
+        ];
+        state.Energy = 1;
+        state.Enemies =
+        [
+            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(49, state.PlayerHp);
+        Assert.Equal(26, state.Enemies[0].Hp);
+    }
+
+    [Fact]
+    public void Spite_HpLossConditionResetsOnNextPlayerTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 50;
+        state.Hand = [new CardInstance(IC.Bloodletting, false)];
+        state.DrawPile = [new CardInstance(IC.Spite, false)];
+        state.DiscardPile.Clear();
+        state.Energy = 0;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(45, state.Enemies[0].Hp);
     }
 
     [Fact]
@@ -1523,4 +2996,275 @@ public class CombatEngineTests
         var actions = CombatEngine.ValidActions(state);
         Assert.Contains(0, actions); // card 0 should be playable despite 0 energy
     }
+
+    [Fact]
+    public void StoneArmor_AppliesPlatingAndDecaysEachTurn()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.StoneArmor, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng); // play StoneArmor (base: 4 Plating)
+        Assert.Equal(4, BuffSystem.Get(state.PlayerBuffs, BuffId.Plating));
+        Assert.Equal(0, state.PlayerBlock); // block not yet gained (end of turn pending)
+
+        // end_turn → end-of-turn: gain 4 block → enemy turn → start-of-turn: plating decrements to 3
+        CombatEngine.Step(state, state.Hand.Count, rng);
+        Assert.Equal(3, BuffSystem.Get(state.PlayerBuffs, BuffId.Plating));
+    }
+
+    [Fact]
+    public void StoneArmor_Upgraded_Applies6Plating()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.StoneArmor, true));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng); // play upgraded StoneArmor
+        Assert.Equal(6, BuffSystem.Get(state.PlayerBuffs, BuffId.Plating));
+    }
+
+    [Fact]
+    public void Break_DealsBaseAndAppliesVulnerable5()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Break, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+
+        Assert.True(enemy.Hp < hpBefore); // took damage
+        Assert.Equal(5, BuffSystem.Get(enemy.Buffs, BuffId.Vulnerable));
+    }
+
+    [Fact]
+    public void Break_Upgraded_AppliesVulnerable7()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Break, true));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(7, BuffSystem.Get(enemy.Buffs, BuffId.Vulnerable));
+    }
+
+    [Fact]
+    public void Bludgeon_Deals32Damage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100;
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Bludgeon, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(hpBefore - 32, enemy.Hp);
+    }
+
+    [Fact]
+    public void UltimateDefend_GainsBlock()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.UltimateDefend, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(11, state.PlayerBlock);
+    }
+
+    [Fact]
+    public void Impervious_Gains30BlockAndExhausts()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Impervious, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(30, state.PlayerBlock);
+        Assert.Equal(1, state.ExhaustPile.Count);
+        Assert.Equal(IC.Impervious, state.ExhaustPile[0].DefId);
+    }
+
+    [Fact]
+    public void Feed_KillsEnemyAndGrantsMaxHp()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        enemy.Hp = 1; // set enemy to 1 HP so Feed kills it
+        int maxHpBefore = state.PlayerMaxHp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Feed, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(0, enemy.Hp);
+        Assert.Equal(maxHpBefore + 3, state.PlayerMaxHp);
+    }
+
+    [Fact]
+    public void Feed_NoKillNoMaxHpGain()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        enemy.Hp = 100; // enemy survives
+        int maxHpBefore = state.PlayerMaxHp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Feed, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(maxHpBefore, state.PlayerMaxHp);
+    }
+
+    [Fact]
+    public void Mangle_DamagesAndAppliesTempStrength()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Mangle, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.True(enemy.Hp < hpBefore);
+        Assert.Equal(-10, BuffSystem.Get(enemy.Buffs, BuffId.Strength));
+        Assert.Equal(10, BuffSystem.Get(enemy.Buffs, BuffId.TemporaryStrength));
+    }
+
+    [Fact]
+    public void Unrelenting_DamagesAndGrantsFreeAttackPower()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Unrelenting, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.True(enemy.Hp < hpBefore);
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.FreeAttackPower));
+    }
+
+    [Fact]
+    public void FreeAttackPower_MakesNextAttackFree()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.FreeAttackPower, 1);
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false)); // normally costs 1
+        state.Energy = 0; // no energy, but FreeAttackPower makes it free
+
+        var actions = CombatEngine.ValidActions(state);
+        Assert.Contains(0, actions); // playable despite 0 energy
+    }
+
+    [Fact]
+    public void FreeAttackPower_DecrementsAfterAttack()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+
+        BuffSystem.Apply(state.PlayerBuffs, BuffId.FreeAttackPower, 2);
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false));
+        state.Energy = 0;
+
+        CombatEngine.Step(state, 0, rng); // play first free Attack
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.FreeAttackPower));
+    }
+
+    [Fact]
+    public void Thrash_TwoHitsAndExhaustsRandomAttack()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.Thrash, false));
+        state.Hand.Add(new CardInstance(IC.StrikeIronclad, false)); // Attack to exhaust
+        state.Hand.Add(new CardInstance(IC.DefendIronclad, false)); // Skill, should not be exhausted
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        // Thrash deals 4×2=8 damage
+        Assert.Equal(hpBefore - 8, enemy.Hp);
+        // The Attack (Strike) should be exhausted, Skill (Defend) should remain
+        Assert.Equal(1, state.ExhaustPile.Count(c => c.DefId == IC.Thrash)); // Thrash itself also exhausts
+        Assert.DoesNotContain(state.Hand, c => c.DefId == IC.StrikeIronclad);
+    }
+
+    [Fact]
+    public void TearAsunder_HitsOnceWithNoUnblockedDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.TearAsunder, false));
+        state.Energy = 3;
+        // UnblockedDamageHitCount = 0 → 1 hit
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(hpBefore - 5, enemy.Hp); // 5 dmg × 1 hit
+    }
+
+    [Fact]
+    public void TearAsunder_HitsMoreWithUnblockedDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var rng = new Random(0);
+        var enemy = state.Enemies[0];
+        int hpBefore = enemy.Hp;
+
+        state.UnblockedDamageHitCount = 2;
+        state.Hand.Clear();
+        state.Hand.Add(new CardInstance(IC.TearAsunder, false));
+        state.Energy = 3;
+
+        CombatEngine.Step(state, 0, rng);
+        Assert.Equal(hpBefore - 15, enemy.Hp); // 5 dmg × 3 hits
+    }
+
 }

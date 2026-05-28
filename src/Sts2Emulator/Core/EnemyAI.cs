@@ -4,11 +4,12 @@ using Effects;
 
 public static class EnemyAI
 {
-    public static void ChooseIntents(List<EnemyState> enemies, int turn, Random rng)
+    public static void ChooseIntents(List<EnemyState> enemies, int turn, Random rng, Random? aiRng = null)
     {
+        var effectiveAiRng = aiRng ?? rng;
         foreach (var enemy in enemies.Where(e => e.Hp > 0))
         {
-            enemy.CurrentIntent = SelectIntent(enemy, rng);
+            enemy.CurrentIntent = SelectIntent(enemy, effectiveAiRng);
             enemy.SecondaryIntent = SecondaryIntentFor(enemy);
         }
     }
@@ -28,6 +29,7 @@ public static class EnemyAI
         {
             BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, -1);
             enemy.MoveIndex++;
+            RestoreTemporaryEnemyStrength(enemy);
             return;
         }
 
@@ -56,15 +58,7 @@ public static class EnemyAI
                 if (enemy.DefId == KE.FlailKnight)
                     baseDamage = Math.Max(0, baseDamage - BuffSystem.Get(enemy.Buffs, BuffId.Strength));
 
-                int damage = BuffSystem.IncomingDamage(
-                    baseDamage,
-                    enemy.Buffs,
-                    state.PlayerBuffs
-                );
-                int absorbed = Math.Min(state.PlayerBlock, damage);
-                state.PlayerBlock -= absorbed;
-                state.PlayerHp = Math.Max(0, state.PlayerHp - (damage - absorbed));
-                ApplyPlayerThorns(enemy, state);
+                DealAttackDamage(enemy, state, baseDamage);
 
                 // FlameBarrier: retaliate with flat unpowered damage.
                 int fb = BuffSystem.Get(state.PlayerBuffs, BuffId.FlameBarrier);
@@ -167,6 +161,18 @@ public static class EnemyAI
             if (ritual > 0)
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, ritual);
         }
+
+        RestoreTemporaryEnemyStrength(enemy);
+    }
+
+    private static void RestoreTemporaryEnemyStrength(EnemyState enemy)
+    {
+        int temporaryStrength = BuffSystem.Get(enemy.Buffs, BuffId.TemporaryStrength);
+        if (temporaryStrength == 0)
+            return;
+
+        BuffSystem.Apply(enemy.Buffs, BuffId.Strength, temporaryStrength);
+        BuffSystem.Remove(enemy.Buffs, BuffId.TemporaryStrength);
     }
 
     // ── Per-enemy intent selection ─────────────────────────────────────────────
@@ -810,12 +816,26 @@ public static class EnemyAI
                 };
 
             case KE.SludgeSpinner:
-                return (enemy.MoveIndex % 3) switch
+            {
+                int move;
+                if (enemy.MoveIndex == 0) move = 0;
+                else
+                {
+                    int[] pool = enemy.LastMove switch {
+                        0 => [1, 2],
+                        1 => [0, 2],
+                        _ => [0, 1]
+                    };
+                    move = pool[rng.Next(pool.Length)];
+                }
+                enemy.LastMove = move;
+                return move switch
                 {
                     0 => new Intent(IntentType.Debuff, 9),
                     1 => new Intent(IntentType.Attack, 12),
                     _ => new Intent(IntentType.Buff, 7),
                 };
+            }
 
             case KE.Toadpole:
                 return (enemy.MoveIndex % 3) switch
@@ -1315,9 +1335,16 @@ public static class EnemyAI
     private static void DealAttackDamage(EnemyState enemy, CombatState state, int baseDamage)
     {
         int damage = BuffSystem.IncomingDamage(baseDamage, enemy.Buffs, state.PlayerBuffs);
+        if (BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus) > 0
+            && BuffSystem.Get(enemy.Buffs, BuffId.Vulnerable) > 0)
+        {
+            damage /= 2;
+        }
         int absorbed = Math.Min(state.PlayerBlock, damage);
         state.PlayerBlock -= absorbed;
-        state.PlayerHp = Math.Max(0, state.PlayerHp - (damage - absorbed));
+        int unblocked = damage - absorbed;
+        if (unblocked > 0) state.UnblockedDamageHitCount++;
+        state.PlayerHp = Math.Max(0, state.PlayerHp - unblocked);
         ApplyPlayerThorns(enemy, state);
     }
 
@@ -1483,7 +1510,7 @@ public static class EnemyAI
 }
 
 // Known enemy def IDs (from Generated/Enemies.g.cs).
-internal static class KE
+public static class KE
 {
     public const int CalcifiedCultist = 14;
     public const int Aeonglass = 1;
@@ -1556,6 +1583,7 @@ internal static class KE
     public const int Seapunk = 69;
     public const int SewerClam = 70;
     public const int ShrinkerBeetle = 71;
+    public const int SkulkingColony = 72;
     public const int SneakyGremlin = 78;
     public const int SnappingJaxfruit = 77;
     public const int SpinyToad = 82;

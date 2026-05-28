@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import sys
 import unittest
@@ -6,6 +7,17 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+
+REPLAY_TRACE_SPEC = importlib.util.spec_from_file_location(
+    "replay_full_run_trace",
+    Path(__file__).resolve().parents[2] / "scripts" / "replay_full_run_trace.py",
+)
+if REPLAY_TRACE_SPEC is None or REPLAY_TRACE_SPEC.loader is None:
+    raise RuntimeError("Could not load replay_full_run_trace.py")
+replay_full_run_trace = importlib.util.module_from_spec(REPLAY_TRACE_SPEC)
+sys.modules["replay_full_run_trace"] = replay_full_run_trace
+REPLAY_TRACE_SPEC.loader.exec_module(replay_full_run_trace)
 
 from sts2_gym import Sts2CombatEnv, Sts2RunEnv
 from sts2_gym.run_env import (
@@ -60,9 +72,16 @@ from sts2_gym.run_env import (
     CARD_RARITY_BY_ID,
     CARD_RARITY_COMMON,
     CARD_RARITY_UNCOMMON,
+    CARD_RARITY_RARE,
     IRONCLAD_REWARD_POOL,
+    SHOP_CARD_BASE_COSTS_BY_RARITY,
     OVERGROWTH_BOSS_ENCOUNTERS,
     OVERGROWTH_ELITE_ENCOUNTERS,
+    POTION_RARITY_BY_ID,
+    POTION_RARITY_COMMON,
+    POTION_RARITY_RARE,
+    POTION_REWARD_BASE_ODDS,
+    POTION_REWARD_STEP,
     SHOP_ATTACK_CARDS,
     SHOP_SKILL_CARDS,
     SPOILS_MAP_CARD,
@@ -206,7 +225,7 @@ class Sts2GymTests(unittest.TestCase):
             env.close()
 
     def test_run_env_reward_pick_tracks_deck_and_advances_floor(self):
-        env = Sts2RunEnv(seed=0, max_floors=2)
+        env = Sts2RunEnv(seed=0, max_floors=3)
         try:
             _, info = env.reset()
             self.assertEqual(info["phase"], PHASE_NEOW)
@@ -324,6 +343,25 @@ class Sts2GymTests(unittest.TestCase):
         finally:
             env.close()
 
+    def test_run_env_shop_potions_use_rarity_pool_and_prices(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._enter_shop_phase()
+
+            self.assertEqual(len(set(int(potion) for potion in env._shop_potions)), 3)
+            for action, potion_id in zip(range(10, 13), env._shop_potions):
+                rarity = POTION_RARITY_BY_ID[int(potion_id)]
+                base = 100 if rarity == POTION_RARITY_RARE else 50
+                if rarity != POTION_RARITY_COMMON:
+                    base = 75 if rarity != POTION_RARITY_RARE else base
+                self.assertIn(
+                    int(env._shop_costs[action]),
+                    range(int(base * 0.95 + 0.5), int(base * 1.05 + 0.5) + 1),
+                )
+        finally:
+            env.close()
+
     def test_run_env_shop_uses_decompiled_slot_layout_and_prices(self):
         env = Sts2RunEnv(seed=0)
         try:
@@ -431,37 +469,8 @@ class Sts2GymTests(unittest.TestCase):
             self.assertIn(int(env._shop_cards[4]), {185, 265, 273, 462, 533})
 
             for action, card_id in enumerate(env._shop_cards):
-                base = (
-                    75
-                    if int(card_id)
-                    in {
-                        31,
-                        69,
-                        147,
-                        150,
-                        155,
-                        174,
-                        175,
-                        185,
-                        189,
-                        205,
-                        247,
-                        254,
-                        265,
-                        273,
-                        396,
-                        414,
-                        454,
-                        455,
-                        462,
-                        465,
-                        493,
-                        521,
-                        533,
-                        538,
-                    }
-                    else 50
-                )
+                rarity = CARD_RARITY_BY_ID.get(int(card_id), CARD_RARITY_COMMON)
+                base = SHOP_CARD_BASE_COSTS_BY_RARITY[rarity]
                 if action >= 5:
                     base = int(base * 1.15 + 0.5)
                 cost = int(env._shop_costs[action])
@@ -497,7 +506,7 @@ class Sts2GymTests(unittest.TestCase):
 
             self.assertTrue(
                 all(
-                    CARD_RARITY_BY_ID[int(card)] == CARD_RARITY_COMMON
+                    CARD_RARITY_BY_ID[int(card)] == CARD_RARITY_RARE
                     for card in env._reward_cards
                 )
             )
@@ -1012,15 +1021,42 @@ class Sts2GymTests(unittest.TestCase):
         finally:
             env.close()
 
-    def test_run_env_periodically_awards_combat_potions(self):
+    def test_run_env_potion_reward_roll_awards_combat_potions(self):
         env = Sts2RunEnv(seed=0)
         try:
             env.reset()
-            env._floor = 3
             env._potions = [0, 0, 0]
+            env._potion_reward_odds = 1.0
             env._after_combat_win()
 
             self.assertGreater(env._potions[0], 0)
+            self.assertAlmostEqual(env._potion_reward_odds, 1.0 - POTION_REWARD_STEP)
+        finally:
+            env.close()
+
+    def test_run_env_potion_reward_odds_use_decompiled_step_and_elite_bonus(self):
+        env = Sts2RunEnv(seed=0)
+        try:
+            env.reset()
+            env._current_node_type = NODE_NORMAL
+            env._potion_reward_odds = 0.0
+
+            self.assertFalse(env._roll_potion_reward())
+            self.assertAlmostEqual(
+                env._potion_reward_odds, POTION_REWARD_BASE_ODDS - 0.3
+            )
+
+            env._current_node_type = NODE_ELITE
+            env._potion_reward_odds = 0.0
+            env._rng = np.random.default_rng(0)
+
+            self.assertFalse(env._roll_potion_reward())
+            self.assertAlmostEqual(env._potion_reward_odds, POTION_REWARD_STEP)
+
+            env._rng = np.random.default_rng(3)
+
+            self.assertTrue(env._roll_potion_reward())
+            self.assertAlmostEqual(env._potion_reward_odds, 0.0)
         finally:
             env.close()
 
@@ -1097,6 +1133,158 @@ class Sts2GymTests(unittest.TestCase):
                 *[int(card) for card in SHOP_ATTACK_CARDS],
                 *[int(card) for card in SHOP_SKILL_CARDS],
             }
+        )
+
+    def test_full_run_trace_boundaries_include_floor_and_combat_edges(self):
+        trace = [
+            {"summary": {"state_type": "event", "run": {"floor": 1}}},
+            {"summary": {"state_type": "map", "run": {"floor": 1}}},
+            {"summary": {"state_type": "monster", "run": {"floor": 1}}},
+            {"summary": {"state_type": "monster", "run": {"floor": 1}}},
+            {"summary": {"state_type": "card_reward", "run": {"floor": 2}}},
+        ]
+
+        self.assertEqual(replay_full_run_trace.boundary_indices(trace), [0, 2, 4])
+
+    def test_full_run_trace_boundary_compare_reports_first_mismatch(self):
+        reference = [
+            {
+                "summary": {
+                    "state_type": "event",
+                    "run": {"floor": 1},
+                    "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                }
+            },
+            {
+                "summary": {
+                    "state_type": "monster",
+                    "run": {"floor": 1},
+                    "player": {"hp": 60, "max_hp": 80, "gold": 99},
+                    "battle": {"enemies": [{"hp": 20, "max_hp": 20, "block": 0}]},
+                }
+            },
+        ]
+        emulator = [
+            {
+                "summary": {
+                    "state_type": "event",
+                    "run": {"floor": 1},
+                    "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                }
+            },
+            {
+                "summary": {
+                    "state_type": "monster",
+                    "run": {"floor": 1},
+                    "player": {"hp": 61, "max_hp": 80, "gold": 99},
+                    "battle": {"enemies": [{"hp": 18, "max_hp": 20, "block": 0}]},
+                }
+            },
+        ]
+
+        diffs = replay_full_run_trace.compare_boundary_snapshots(
+            reference,
+            emulator,
+            replay_full_run_trace.DEFAULT_BOUNDARY_FIELDS,
+        )
+
+        self.assertEqual(
+            diffs,
+            [
+                "step 1 field player.hp: reference=60 emulator=61",
+                "step 1 enemy 0 hp: reference=20 emulator=18",
+            ],
+        )
+
+    def test_full_run_replay_unsupported_action_reports_reference_context(self):
+        payload = {
+            "trace": [
+                {
+                    "step": 0,
+                    "summary": {
+                        "state_type": "event",
+                        "run": {"floor": 1},
+                        "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                    },
+                },
+                {
+                    "step": 1,
+                    "action": {"action": "select_card", "index": 9},
+                    "summary": {
+                        "state_type": "card_select",
+                        "run": {"floor": 1},
+                        "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                    },
+                },
+            ]
+        }
+
+        result = replay_full_run_trace.replay_trace(payload, emulator_seed=0)
+
+        self.assertIsNotNone(result.unsupported_action)
+        self.assertIn(
+            "step 1: unsupported action 'select_card'", result.unsupported_action
+        )
+        self.assertIn("reference state_type='card_select'", result.unsupported_action)
+        self.assertIn("floor=1", result.unsupported_action)
+
+    def test_full_run_replay_coalesces_live_reward_substeps(self):
+        payload = {
+            "trace": [
+                {
+                    "step": 0,
+                    "summary": {
+                        "state_type": "event",
+                        "run": {"floor": 1},
+                        "player": {"hp": 64, "max_hp": 80, "gold": 99},
+                    },
+                },
+                {
+                    "step": 1,
+                    "action": {"action": "choose_event_option", "index": 0},
+                    "summary": {"state_type": "event", "run": {"floor": 1}},
+                },
+                {
+                    "step": 2,
+                    "action": {"action": "claim_reward", "index": 0},
+                    "summary": {"state_type": "rewards", "run": {"floor": 1}},
+                },
+                {
+                    "step": 3,
+                    "action": {"action": "proceed"},
+                    "summary": {"state_type": "map", "run": {"floor": 1}},
+                },
+                {
+                    "step": 4,
+                    "action": {"action": "choose_map_node", "index": 0},
+                    "summary": {"state_type": "monster", "run": {"floor": 1}},
+                },
+            ]
+        }
+
+        result = replay_full_run_trace.replay_trace(payload, emulator_seed=0)
+
+        self.assertIsNone(result.unsupported_action)
+        self.assertEqual(
+            [
+                "event",
+                "map",
+                "map",
+                "map",
+                "monster",
+            ],
+            [step["summary"]["state_type"] for step in result.payload["trace"]],
+        )
+
+    def test_full_run_replay_treats_card_reward_claim_as_noop(self):
+        obs = np.zeros(1, dtype=np.int32)
+
+        self.assertIsNone(
+            replay_full_run_trace.translate_action(
+                {"action": "claim_reward", "index": 0},
+                obs,
+                {"phase": PHASE_CARD_REWARD},
+            )
         )
 
 

@@ -202,4 +202,4 @@ The repository includes scripts intended to keep generated data synchronized wit
 - `scripts\diff_patch.py`: summarize generated data changes.
 - `scripts\patch_update.sh`: run the full patch-update pipeline.
 
-See `PLAN.md` for the active parity gaps and next implementation steps.
+See `plan.md` for the active parity gaps and next implementation steps.

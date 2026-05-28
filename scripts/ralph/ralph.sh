@@ -1,16 +1,24 @@
 #!/bin/bash
 # Ralph Wiggum - Long-running AI agent loop
-# Usage: ./ralph.sh [--tool amp|claude|copilot] [max_iterations]
+# Usage: ./ralph.sh [--tool amp|claude|copilot] [--max-iterations N|--forever] [max_iterations]
 
 set -e
 
 # Parse arguments
 TOOL="copilot"
-MAX_ITERATIONS=10
+MAX_ITERATIONS=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --help|-h)
+      echo "Usage: ./ralph.sh [--tool amp|claude|copilot] [--max-iterations N|--forever] [max_iterations]"
+      exit 0
+      ;;
     --tool)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --tool requires a value."
+        exit 1
+      fi
       TOOL="$2"
       shift 2
       ;;
@@ -18,10 +26,29 @@ while [[ $# -gt 0 ]]; do
       TOOL="${1#*=}"
       shift
       ;;
+    --max-iterations)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --max-iterations requires a value."
+        exit 1
+      fi
+      MAX_ITERATIONS="$2"
+      shift 2
+      ;;
+    --max-iterations=*)
+      MAX_ITERATIONS="${1#*=}"
+      shift
+      ;;
+    --forever)
+      MAX_ITERATIONS=""
+      shift
+      ;;
     *)
       # Assume it's max_iterations if it's a number
       if [[ "$1" =~ ^[0-9]+$ ]]; then
         MAX_ITERATIONS="$1"
+      else
+        echo "Error: Unknown argument '$1'."
+        exit 1
       fi
       shift
       ;;
@@ -33,7 +60,14 @@ if [[ "$TOOL" != "amp" && "$TOOL" != "claude" && "$TOOL" != "copilot" ]]; then
   echo "Error: Invalid tool '$TOOL'. Must be 'amp', 'claude', or 'copilot'."
   exit 1
 fi
+
+if [[ -n "$MAX_ITERATIONS" && ! "$MAX_ITERATIONS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "Error: Max iterations must be a positive integer."
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PRD_FILE="$SCRIPT_DIR/prd.json"
 PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
 ARCHIVE_DIR="$SCRIPT_DIR/archive"
@@ -79,12 +113,20 @@ if [ ! -f "$PROGRESS_FILE" ]; then
   echo "---" >> "$PROGRESS_FILE"
 fi
 
-echo "Starting Ralph - Tool: $TOOL - Max iterations: $MAX_ITERATIONS"
+if [[ -n "$MAX_ITERATIONS" ]]; then
+  ITERATION_LABEL="$MAX_ITERATIONS"
+else
+  ITERATION_LABEL="unlimited"
+fi
 
-for i in $(seq 1 "$MAX_ITERATIONS"); do
+echo "Starting Ralph - Tool: $TOOL - Max iterations: $ITERATION_LABEL"
+cd "$REPO_ROOT"
+
+i=1
+while [[ -z "$MAX_ITERATIONS" || "$i" -le "$MAX_ITERATIONS" ]]; do
   echo ""
   echo "==============================================================="
-  echo "  Ralph Iteration $i of $MAX_ITERATIONS ($TOOL)"
+  echo "  Ralph Iteration $i of $ITERATION_LABEL ($TOOL)"
   echo "==============================================================="
 
   # Run the selected tool with the ralph prompt
@@ -102,11 +144,12 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then
     echo ""
     echo "Ralph completed all tasks!"
-    echo "Completed at iteration $i of $MAX_ITERATIONS"
+    echo "Completed at iteration $i of $ITERATION_LABEL"
     exit 0
   fi
 
   echo "Iteration $i complete. Continuing..."
+  i=$((i + 1))
   sleep 2
 done
 

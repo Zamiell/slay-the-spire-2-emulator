@@ -15,9 +15,12 @@ public sealed class CombatState
     public List<CardInstance> DrawPile = [];
     public List<CardInstance> DiscardPile = [];
     public List<CardInstance> ExhaustPile = [];
+    public List<CardInstance> ReturnToHandBeforeDraw = [];
+    public List<CardInstance> AutoPlayQueue = [];
 
     // Potions: slot index → potion def ID, 0 = empty
     public int[] PotionSlots = new int[3];
+    public int MaxPotionSlots = 3;
 
     // Relics
     public List<RelicInstance> Relics = [];
@@ -30,9 +33,23 @@ public sealed class CombatState
     public int EncounterId;
     public bool IsEliteCombat;
 
+    // Shuffle RNG (RunRngSet.shuffle subsystem) — used for mid-combat discard reshuffles.
+    // Null falls back to the combat RNG (only valid when no pre-shuffle was done).
+    public Random? ShuffleRng;
+
+    // AI RNG (RunRngSet.monster_ai subsystem) — used for enemy intent selection.
+    // Null falls back to the combat RNG (used in single-combat tests).
+    public Random? AiRng;
+
     // Turn tracking
     public int Turn;
     public bool PlayerTurn = true;
     public bool SkillPlayedWhileSmoggy;
     public int AttackCardsPlayedThisTurn;
+    public int AttackOrSkillCardsPlayedThisTurn;
+    public int BlockGainsThisTurn;
+    public int PlayerHpLostThisTurn;
+    public int CardsExhaustedThisTurn;
+    public int EtherealExhaustCount; // number of cards exhausted by Ethereal this turn (Dark Embrace)
+    public int UnblockedDamageHitCount; // times player took unblocked damage this combat (TearAsunder)
 }

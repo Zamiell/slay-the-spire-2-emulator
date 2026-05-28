@@ -1,3 +1,408 @@
 # Ralph Progress Log
-Started: Sun, May 24, 2026  1:18:25 PM
+
+## Codebase Patterns
+
+- Ralph task metadata lives under `scripts\ralph`; use `scripts\ralph\prd.json` and `scripts\ralph\progress.txt` when the files are not present at the repository root.
+- Use `scripts\replay_full_run_trace.py` to replay retained STS2MCP full-run traces against `Sts2RunEnv` and identify the first floor/combat-boundary parity mismatch.
+- Native C# card powers are commonly modeled as `BuffId` entries, with timing handled in `CombatEngine` and damage/effect hooks in `EnemyAI` or `CardEffects`.
+- Native card powers with extra dynamic variables can use companion `BuffId` entries to track hidden per-power state alongside the visible counter.
+- Native card effects that cause player HP loss should use `CardEffects.LoseHp` so Rupture and Inferno hooks stay consistent with other card-effect self-damage.
+- Native card effects that exhaust another card from hand should select from `state.Hand` after the played card has already been removed, then call `CardEffects.ExhaustCard` so exhaust hooks stay consistent.
+- Native card effects that upgrade hand cards should replace `CardInstance` values in `state.Hand` with upgraded copies after the played card has already been removed.
+- Native card effects that conditionally draw multiple cards should draw one card at a time and respect the 10-card hand cap so the newly drawn card controls whether drawing continues.
+- Native card powers that modify attack play count belong in `CombatEngine.PlayCard`: apply one extra `CardEffects.Apply` for affected Attack cards, decrement the counter per Attack, and remove the power at end of player turn.
+- Native cards with dynamic per-turn costs should compute those costs in `CombatEngine.EffectiveCost` so play validation and energy spending stay aligned.
+- Native card powers that auto-play cards at the start of player play phase should run in `CombatEngine` after turn-start draw, bypass energy spending, and still apply normal played-Attack hooks plus discard/exhaust cleanup.
+- Native generated cards that are free only for the current turn should use `CardInstance.FreeThisTurn`; clear it when cards leave hand for discard or exhaust piles.
+- Native cards that return themselves before the next turn's draw should queue the played `CardInstance` from `CombatEngine` play lifecycle hooks, then move the matching card from discard/draw/exhaust to hand before normal draw.
+- Native X-cost cards should spend current `state.Energy` inside `CardEffects.Apply` after the played card's printed cost has been handled; generated X-cost cards currently encode cost as 0.
+- Native cards that retain the remaining hand should apply a player `BuffId` and let `CombatEngine.EndTurn` skip normal discard for non-ethereal cards, then decrement/remove the retain counter at player side turn end.
+- Native card effects that reapply or scale an enemy debuff after dealing damage should keep the pre-damage target reference, verify the target survived, and reuse the relevant debuff hooks.
+- Native card effects with multiple actions should use explicit card cases when decompiled effect order matters; do not rely on fallback damage/block ordering.
+- Run-level potion rewards in `Sts2RunEnv` should follow decompiled `PotionRewardOdds`: 40% base odds, +/-10% on fail/success, and half of the 25% elite bonus added to the roll threshold.
+- Full-run replay diagnostics should compare available boundary snapshots before stopping on unsupported live trace actions, and unsupported action messages should include the reference step, state type, and floor.
+- Native cards that depend on player HP lost this turn should read `CombatState.PlayerHpLostThisTurn`; reset it at the start of each player turn and increment it from unblocked player HP-loss paths.
+- Trace-observed colorless card constants can live in `CL` beside `IC` and `ST` in `CardEffects.cs`; add explicit cases when fallback damage/block ordering or targeting is wrong.
+- Native card effects that move cards from discard to hand should operate after the played card has left hand, clear `FreeThisTurn`, and respect the 10-card hand cap.
+- Native card effects that splash based on the first hit should use the effective first-hit HP-loss plus overkill amount, then apply splash as unpowered damage unless decompiled value props say otherwise.
+- Native cards that care whether any card exhausted this turn should use `CombatState.CardsExhaustedThisTurn`, increment it only through `CardEffects.ExhaustCard`, and reset it at the start of each player turn.
+- Native card effects that trigger when the card itself exhausts should put the hook in `CardEffects.ExhaustCard` so it works for normal self-exhaust and secondary exhaust effects.
+- Native card effects that repeat block gain should call `CardEffects.GainBlock` once per decompiled gain so block hooks trigger per gain.
+- Native cards that grant next-turn block should store a `BuffId.BlockNextTurn` amount, resolve it after the next player-turn block clear in `CombatEngine`, and grant it as unpowered block.
+- Native cards that apply temporary enemy Strength loss should consume Artifact before applying paired `Strength` and `TemporaryStrength` buffs, then restore the enemy Strength in `EnemyAI.ExecuteIntent` at that enemy's turn end.
+- Native card powers that modify a played card's destination pile should make that decision in `CombatEngine` after effects resolve but before adding the card to discard.
+- Full-run replay may coalesce live reward/event substeps as no-ops when `Sts2RunEnv` has already applied those rewards or advanced to map, allowing retained traces to continue to the next meaningful mismatch.
+- Use `uv run python scripts\ralph\card_coverage.py` before trace/card batches to find generated cards that appear in retained traces or run reward/shop pools and likely need explicit native `CardEffects` cases.
+
+Started: Sun, May 24, 2026 1:18:25 PM
+
+## 2026-05-24 13:21 - US-001
+
+- Created the root emulator completion plan as `plan.md`, summarizing current scope, prioritized parity gaps, and actionable implementation milestones.
+- Updated the README plan reference and marked US-001 as passing in the Ralph PRD.
+- Files changed: `plan.md`, `README.md`, `scripts\ralph\prd.json`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - The active Ralph work queue files are stored in `scripts\ralph`, not at the repository root.
+  - The root plan should be the source of truth for selecting future emulator parity work.
+
+---
+
+## 2026-05-24 13:27 - US-002
+
+- Implemented deterministic full-run trace replay tooling for comparing retained STS2MCP traces against `Sts2RunEnv` at floor and combat boundaries.
+- Added regression coverage for boundary selection and mismatch reporting.
+- Updated `plan.md` to record the new replay tool as progress on Milestone 1 and marked US-002 as passing in the Ralph PRD.
+- Files changed: `scripts\replay_full_run_trace.py`, `tests\python\test_sts2_gym.py`, `plan.md`, `scripts\ralph\prd.json`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - `Sts2RunEnv` exposes run-level state through `_info()`, while combat boundary HP/enemy details are still read from the native observation vector.
+  - Full-run live traces store enemies under `summary.battle.enemies`; boundary parity checks need to compare that shape rather than the single-combat `summary.enemies` shape.
+  - The retained full-run trace seed is a game seed string, so the replay tool accepts an explicit integer `--emulator-seed` for the current Python emulator RNG.
+
+---
+
+## 2026-05-24 13:30 - US-003
+
+- Implemented native Colossus combat behavior: the card now grants block, applies its temporary player power, halves powered attack damage from Vulnerable enemies, and expires after the enemy side turn.
+- Added C# regression coverage for Colossus block, damage reduction, and expiration.
+- Updated `plan.md` to record the completed native card gap and marked US-003 as passing in the Ralph PRD.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\EnemyAI.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `scripts\ralph\prd.json`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - ColossusPower is a counter buff from decompiled logic; it modifies incoming powered attack damage only when the attacking enemy has Vulnerable.
+  - Player-side temporary defensive powers that expire after enemies act should be decremented after `EnemyAI.ExecuteIntent` processing and before the next player turn starts.
+  - After C# source edits, rebuild `out\Sts2Emulator.dll` before Python tests if the stale-native guard runs before the publish step.
+
+---
+
+## 2026-05-24 13:34 - US-004
+
+- Implemented decompilation-derived run-level potion reward behavior: mutable potion reward odds, elite bonus thresholds, rarity-based potion generation, and rarity-based shop potion prices for the supported potion pool.
+- Added Python regression coverage for shop potion rarity/pricing, potion reward odds updates, elite bonus handling, and combat potion reward state updates.
+- Updated `plan.md` to record progress on Milestone 3 and marked US-004 as passing in the Ralph PRD.
+- Files changed: `src\sts2_gym\run_env.py`, `tests\python\test_sts2_gym.py`, `plan.md`, `scripts\ralph\prd.json`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled `PotionRewardOdds.Roll` starts at 0.4, subtracts 0.1 after a potion reward, adds 0.1 after a miss, and applies elite bonus as `0.25 * 0.5`.
+  - `PotionFactory.CreateRandomPotion` rolls rarity with rare at `<= 0.1`, uncommon at `<= 0.35`, then picks an available potion of that rarity.
+  - Shop potion base costs come from potion rarity: common 50, uncommon 75, rare 100, then the shop RNG applies a 0.95-1.05 multiplier.
+
+---
+
+## 2026-05-24 13:41 - PLAN-M1-REPLAY-DIAGNOSTICS
+
+- Improved full-run trace replay diagnostics so boundary mismatches are printed before unsupported live trace actions stop replay, and unsupported action errors include the reference step, state type, and floor.
+- Added Python regression coverage for unsupported replay action context.
+- Recorded current Milestone 1 progress in `plan.md`; `FULLRUN_DRUM_1.json` now surfaces floor/enemy/player boundary diffs before stopping on the reward-claim divergence.
+- Files changed: `scripts\replay_full_run_trace.py`, `tests\python\test_sts2_gym.py`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Retained full-run traces can enter live `rewards` or `card_select` states that `Sts2RunEnv` does not model directly; replay diagnostics should preserve the first boundary mismatch before reporting the unsupported action.
+  - `ReplayResult.unsupported_action` is the right place to attach reference trace context because the replay payload only contains emulator steps completed before the stop.
+
+---
+
+## 2026-05-24 13:44 - PLAN-M2-INFERNO
+
+- Implemented native Inferno combat behavior: the power now applies its burn counter, tracks stacking start-of-turn self-damage, triggers all-enemy burn damage after unblocked player self-damage during the player turn, and supports upgraded values.
+- Added C# regression coverage for Inferno triggering from player-turn HP loss and at the next player-turn start.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Inferno applies a visible counter power and separately increments a `SelfDamage` dynamic var each time the power is played.
+  - `CombatState.PlayerTurn` can gate player-turn-only self-damage hooks; set it false while enemies execute and true before start-of-player-turn power effects.
+  - Rebuild `out\Sts2Emulator.dll` before Python checks after native C# edits, or the stale-native guard will fail.
+
+---
+
+## 2026-05-24 13:49 - PLAN-M2-BREAKTHROUGH
+
+- Implemented native Breakthrough combat behavior: the card now loses 1 player HP before dealing upgraded-aware attack damage to all enemies.
+- Added C# regression coverage for base and upgraded Breakthrough all-enemy damage and self-HP loss.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Breakthrough applies unblocked, unpowered player self-damage before its all-enemy attack.
+  - Use `CardEffects.LoseHp` for card-effect self-damage so existing Rupture and Inferno hooks are preserved.
+  - Rebuild `out\Sts2Emulator.dll` before Python checks after native C# edits, or the stale-native guard will fail.
+
+---
+
+## 2026-05-24 13:50 - PLAN-M2-CINDER
+
+- Implemented native Cinder combat behavior: the card now deals upgraded-aware attack damage and exhausts one random remaining card from hand after damage.
+- Added C# regression coverage for Cinder base damage, upgraded damage, self-exhaust, and the random hand-card exhaust effect.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Cinder chooses from the current hand after the played Cinder card has left hand, so a one-card remaining hand is a deterministic way to test the exhaust side effect.
+  - Use `CardEffects.ExhaustCard` for secondary card exhaust effects so Feel No Pain and future exhaust hooks stay centralized.
+
+---
+
+## 2026-05-24 13:54 - PLAN-M2-ARMAMENTS
+
+- Implemented native Armaments combat behavior: base Armaments gains block and upgrades the first remaining upgradable card in hand, while upgraded Armaments upgrades all remaining upgradable hand cards.
+- Added C# regression coverage for base and upgraded Armaments, including status cards staying unupgraded.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Armaments gains block before upgrading cards; the upgraded version upgrades every upgradable card currently in hand.
+  - Because the emulator has no card-selection UI for single-card Armaments, base Armaments uses the existing deterministic convention of selecting the first valid hand card.
+  - `CardInstance` is immutable, so upgrade effects should replace hand entries with upgraded copies instead of mutating instances.
+
+---
+
+## 2026-05-24 13:56 - PLAN-M2-PILLAGE
+
+- Implemented native Pillage combat behavior: the card now deals upgraded-aware attack damage and draws one card at a time until a non-Attack card is drawn or the hand reaches 10 cards.
+- Added C# regression coverage for drawing through attacks, stopping on a non-Attack, upgraded damage, and the hand-size cap.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Pillage uses the type of each newly drawn card to decide whether to continue drawing.
+  - Conditional multi-card draw effects need to enforce the 10-card hand cap locally because the emulator's generic draw helper does not currently cap hand size.
+
+---
+
+## 2026-05-24 14:01 - PLAN-M2-ONE-TWO-PUNCH
+
+- Implemented native One-Two Punch combat behavior: the card now applies a counter power that duplicates the next one or two Attack card effects, decrements after each affected Attack, and expires at end of player turn.
+- Added C# regression coverage for base duplication, upgraded two-Attack duplication, and end-of-turn expiration.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled One-Two Punch uses a counter power: base affects one Attack, upgraded affects two, and each affected Attack gets one extra play count rather than extra damage only.
+  - Attack play-count powers are best modeled in `CombatEngine.PlayCard` so they can duplicate full card effects while still spending energy and moving the played card only once.
+  - End-of-player-turn cleanup should remove unused temporary play-count powers before the enemy side acts.
+
+---
+
+## 2026-05-24 14:02 - PLAN-M2-STOMP
+
+- Implemented native Stomp combat behavior: the card now deals upgraded-aware attack damage to all enemies and its effective cost is reduced by each Attack played this turn.
+- Added C# regression coverage for base all-enemy damage, upgraded all-enemy damage, and reduced-cost playability after prior Attacks.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Stomp reduces its current-turn cost whenever the owner plays an Attack; the emulator can model this from `CombatState.AttackCardsPlayedThisTurn`.
+  - Card-specific dynamic cost logic should live in `CombatEngine.EffectiveCost` because that path is shared by `ValidActions` and `PlayCard`.
+
+---
+
+## 2026-05-24 14:05 - PLAN-M2-MOLTEN-FIST
+
+- Implemented native Molten Fist combat behavior: the card now deals upgraded-aware attack damage, then reapplies the surviving target's current Vulnerable stacks.
+- Added C# regression coverage for base damage, upgraded damage, Vulnerable doubling, exhaust handling, and Vicious draw hooks.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Molten Fist captures the target, attacks first, then reads Vulnerable from that same target only if it survived.
+  - Reapplying Vulnerable should still use the existing Vicious draw hook when stacks increase.
+
+---
+
+## 2026-05-24 14:11 - PLAN-M2-SPITE
+
+- Implemented native Spite combat behavior: the card now deals one hit normally, two hits after the player has lost HP this turn, and three hits when upgraded after HP loss.
+- Added C# regression coverage for normal, HP-loss, upgraded, and next-turn reset behavior.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\CombatState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Interop\CombatFactory.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Spite checks combat history for unblocked player HP loss during the current turn before choosing one versus repeated hits.
+  - Turn-local HP-loss tracking should reset before start-of-player-turn effects so effects like Inferno self-damage can still enable same-turn conditional cards.
+
+---
+
+## 2026-05-24 14:13 - PLAN-M2-IRON-WAVE
+
+- Implemented native Iron Wave combat behavior: the card now gains upgraded-aware block before dealing upgraded-aware attack damage, matching decompiled effect order.
+- Added C# regression coverage for base effect ordering with Juggernaut/block/Vulnerable interactions and upgraded block/damage values.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable multi-action card ordering pattern.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`, `out\Sts2Emulator.dll`, `out\Sts2Emulator.pdb`
+- **Learnings for future iterations:**
+  - Decompiled Iron Wave gains block before attacking; fallback damage-then-block handling can be wrong when block triggers powers such as Juggernaut.
+  - Tests for effect order should include a hook or modifier that makes ordering observable, such as enemy block plus Vulnerable and Juggernaut.
+  - Rebuilding `out\Sts2Emulator.dll` is required after native C# edits before Python checks will pass the stale-native guard.
+
+---
+
+## 2026-05-24 14:19 - PLAN-M2-INFERNAL-BLADE
+
+- Implemented native Infernal Blade combat behavior: the card now creates a random Ironclad Attack in hand, marks the generated card free for the current turn, and costs 0 when upgraded.
+- Added C# regression coverage for generated-card selection, free-this-turn playability, free flag cleanup, and upgraded cost handling.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable temporary-free generated card pattern.
+- Files changed: `src\Sts2Emulator\Core\Card.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Infernal Blade uses combat card generation, filters to non-basic/non-ancient/non-event Ironclad Attacks, shuffles the options, and takes one generated card.
+  - Temporary generated-card costs need to affect both `ValidActions` and `PlayCard`, so `CombatEngine.EffectiveCost` must receive the `CardInstance`, not only the `CardDef`.
+  - Free-this-turn state should not persist after the generated card leaves hand for discard or exhaust piles.
+
+---
+
+## 2026-05-24 14:22 - PLAN-M2-STAMPEDE
+
+- Implemented native Stampede combat behavior: the power now auto-plays random playable Attacks from hand after the player-turn draw, repeats by stack count, bypasses energy spending, and preserves normal Attack play hooks.
+- Added C# regression coverage for start-of-play-phase auto-play, stack-count repetition, and skipping unplayable Attack cards.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable play-phase auto-play pattern.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled `StampedePower.AfterAutoPostPlayPhaseEntered` runs after the turn-start draw and chooses from current hand Attacks that are not unplayable.
+  - Auto-played cards should bypass energy costs but still move through normal card effect, Attack play hook, and discard/exhaust cleanup paths.
+
+---
+
+## 2026-05-24 14:23 - PLAN-M2-DRAMATIC-ENTRANCE
+
+- Implemented native Dramatic Entrance combat behavior: the colorless trace-observed card now deals upgraded-aware damage to all living enemies and exhausts through the generated card definition.
+- Added C# regression coverage for base/upgraded all-enemy damage and exhaust handling.
+- Updated `plan.md` and the consolidated codebase patterns with the reusable colorless-card constant convention.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Generated non-Ironclad combat cards may still appear in retained traces; keep their IDs separate from `IC` constants so trace-driven card support remains readable.
+  - The generic fallback only targets the first living enemy for positive damage, so all-enemy cards need explicit `CardEffects` cases even when their generated damage values are correct.
+
+---
+
+## 2026-05-24 14:26 - PLAN-M2-BOLAS
+
+- Implemented native Bolas combat behavior: the colorless trace-observed card now deals upgraded-aware damage, queues itself after play, and returns to hand before the next player-turn draw.
+- Added C# regression coverage for base damage, upgraded damage, return timing, removing the returned card from discard, and queueing only one return when attack effects are duplicated.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable before-draw self-return pattern.
+- Files changed: `src\Sts2Emulator\Core\CombatState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Interop\CombatFactory.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Bolas uses `BeforeHandDraw` to move itself back to hand if it was played last player turn, so emulator return logic belongs immediately before the normal turn-start draw.
+  - Self-returning card lifecycle hooks should queue from `CombatEngine` after a physical play rather than from `CardEffects.Apply`, because powers like One-Two Punch can duplicate attack effects without playing a second physical card.
+  - Self-returning cards should move the existing matching card out of discard/draw/exhaust instead of duplicating it into hand.
+
+---
+
+## 2026-05-24 14:31 - PLAN-M2-VOLLEY
+
+- Implemented native Volley combat behavior: the colorless trace-observed X-cost card now spends all current energy and deals one upgraded-aware random-enemy attack hit per energy.
+- Added C# regression coverage for base Volley energy spending/repeated hits and upgraded per-hit damage.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable X-cost card handling pattern.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Volley uses `HasEnergyCostX` and resolves X from current energy even though the generated card definition has cost 0.
+  - X-cost card effects should consume `state.Energy` inside the effect body so the hit count reflects available energy at play time.
+
+---
+
+## 2026-05-24 14:33 - PLAN-M2-SALVO
+
+- Implemented native Salvo combat behavior: the colorless trace-observed card now deals upgraded-aware attack damage and applies a retain-hand counter that preserves remaining non-ethereal hand cards through end-turn discard.
+- Added C# regression coverage for Salvo damage, upgraded damage, retained hand ordering, and retain counter expiration.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable retain-hand lifecycle pattern.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Salvo applies `RetainHandPower` after dealing attack damage; the emulator can model the power as a player buff consumed during `CombatEngine.EndTurn`.
+  - Retain-hand effects should preserve non-ethereal cards in `state.Hand` before the normal next-turn draw so retained cards keep their relative order.
+
+---
+
+## 2026-05-24 14:36 - PLAN-M2-NEOWS-FURY
+
+- Implemented native Neow's Fury combat behavior: the ancient trace-observed card now deals upgraded-aware attack damage, moves up to two or three discard-pile cards back to hand, respects the 10-card hand cap, and exhausts through the generated card definition.
+- Added C# regression coverage for base damage/card return/exhaust behavior and upgraded hand-cap behavior.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable discard-to-hand card movement pattern.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Neow's Fury deals attack damage before selecting cards from discard to move to hand.
+  - Discard-to-hand card effects should cap movement by current hand size after the played card has left hand.
+
+---
+
+## 2026-05-24 14:40 - PLAN-M2-OMNISLICE
+
+- Implemented native Omnislice combat behavior: the colorless trace-observed card now deals upgraded-aware attack damage, then splashes the effective first-hit damage as unpowered damage to the other living enemies.
+- Added C# regression coverage for first-target overkill splash, block interaction on splash targets, upgraded damage, and unpowered splash behavior.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable first-hit splash pattern.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Omnislice uses the first hit's `TotalDamage + OverkillDamage` for its splash amount, then applies that amount to the target's teammates with `Unpowered | Move` value props.
+  - Splash targets should still respect block and enemy defensive caps, while avoiding player Strength and target Vulnerable scaling when the splash is unpowered.
+
+---
+
+## 2026-05-24 14:44 - PLAN-M2-FORGOTTEN-RITUAL
+
+- Implemented native Forgotten Ritual combat behavior: the card now checks whether a card already exhausted this turn before granting upgraded-aware energy, then exhausts through the generated card definition.
+- Added C# regression coverage for no-energy-without-prior-exhaust, upgraded energy after an exhaust, and reset timing for the turn-local exhaust counter.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable exhaust-this-turn tracking pattern.
+- Files changed: `src\Sts2Emulator\Core\CombatState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator\Interop\CombatFactory.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Forgotten Ritual only grants energy when a player card has already exhausted during the current turn; it does not always gain energy.
+  - Exhaust-this-turn card checks should be based on a turn-local counter updated by the central `CardEffects.ExhaustCard` helper so self-exhaust, ethereal exhaust, and secondary exhaust effects stay consistent.
+
+---
+
+## 2026-05-24 14:47 - PLAN-M2-EVIL-EYE
+
+- Implemented native Evil Eye combat behavior: the card now gains upgraded-aware block once normally and twice if a card already exhausted during the current player turn, then exhausts through the generated card definition.
+- Added C# regression coverage for normal block, upgraded doubled block after a prior exhaust, and self-exhaust tracking.
+- Updated `plan.md` to record Milestone 2 progress.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Evil Eye uses the same current-turn card-exhaust history as Forgotten Ritual, but applies the conditional by repeating its block gain rather than by changing a single block value.
+  - Repeated block-gain card effects should call `GainBlock` once per decompiled action so block hooks such as Juggernaut remain observable per gain.
+
+---
+
+## 2026-05-24 14:52 - PLAN-M2-PROLONG
+
+- Implemented native Prolong combat behavior: the colorless card now stores current player block, grants that amount as unpowered block after the next player-turn block clear, and respects the upgraded no-exhaust behavior.
+- Added C# regression coverage for next-turn unpowered block timing, base exhaust handling, and upgraded discard behavior.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable next-turn block pattern.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Prolong applies `BlockNextTurnPower` using the player's current block at play time, not a fixed card value.
+  - `BlockNextTurnPower` grants unpowered block after block clear, so Dexterity should not increase the restored block amount.
+  - Prolong's upgraded behavior removes Exhaust even though the generated card definition marks the base card as exhausting.
+
+---
+
+## 2026-05-24 14:57 - PLAN-M2-DRUM-OF-BATTLE
+
+- Refined native Drum of Battle combat behavior: the card now draws on play and grants upgraded-aware energy from the centralized self-exhaust hook, including when another card exhausts it from hand.
+- Added C# regression coverage for Drum of Battle being exhausted by True Grit.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable self-exhaust hook pattern.
+- Files changed: `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Drum of Battle draws in `OnPlay`, but its energy gain lives in `AfterCardExhausted` and checks that the exhausted card is itself.
+  - Card-specific self-exhaust hooks belong in `CardEffects.ExhaustCard` so they fire for normal played-card exhaust, True Grit, Cinder, ethereal exhaust, and future secondary exhaust effects.
+
+---
+
+## 2026-05-24 14:58 - PLAN-M2-DARK-SHACKLES
+
+- Implemented native Dark Shackles combat behavior: the card now applies upgraded-aware temporary Strength loss to the target enemy, consumes Artifact as a debuff, exhausts, and restores Strength after that enemy turn.
+- Added C# regression coverage for temporary enemy Strength loss, enemy-turn restoration, exhaust handling, and Artifact prevention.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable temporary enemy Strength-down pattern.
+- Files changed: `src\Sts2Emulator\Core\BuffSystem.cs`, `src\Sts2Emulator\Core\EnemyAI.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Dark Shackles applies a negative `TemporaryStrengthPower`, so Artifact prevents the temporary power before any Strength change is applied.
+  - Enemy temporary Strength loss should restore at that enemy's side-turn end, including stunned turns, rather than using player end-turn cleanup.
+
+---
+
+## 2026-05-24 15:00 - PLAN-M2-NOSTALGIA
+
+- Implemented native Nostalgia combat behavior: the power now stacks a counter, routes the first Attack or Skill played each turn to the top of the draw pile instead of discard, and upgraded Nostalgia costs 0.
+- Added C# regression coverage for top-of-draw placement, limiting the effect to the first Attack/Skill each turn, per-turn reset behavior, and upgraded cost handling.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable destination-pile modification pattern.
+- Files changed: `src\Sts2Emulator\Core\BuffState.cs`, `src\Sts2Emulator\Core\CombatState.cs`, `src\Sts2Emulator\Core\CombatEngine.cs`, `src\Sts2Emulator\Core\Effects\CardEffects.cs`, `src\Sts2Emulator.Tests\CombatEngineTests.cs`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Decompiled Nostalgia applies a counter power and changes the result pile for player Attack/Skill cards that would otherwise go to discard.
+  - Destination-pile powers should be handled in `CombatEngine` after card effects resolve and after exhaust/corruption checks, but before adding the played card to discard.
+  - Track Nostalgia with a per-turn Attack-or-Skill play counter separate from `AttackCardsPlayedThisTurn` so Skill cards count and Attack-specific mechanics stay unchanged.
+
+---
+
+## 2026-05-24 15:04 - PLAN-M1-REWARD-REPLAY
+
+- Improved full-run replay to coalesce live reward/event substeps that the simplified `Sts2RunEnv` has already applied, including redundant reward claims, empty reward proceed actions, and delayed Neow proceed events.
+- Added Python regression coverage for coalesced reward/event replay steps and card-reward claim translation.
+- Updated `plan.md`, `AGENTS.md`, and the consolidated codebase patterns with the reusable replay coalescing pattern.
+- Files changed: `scripts\replay_full_run_trace.py`, `tests\python\test_sts2_gym.py`, `plan.md`, `AGENTS.md`, `scripts\ralph\progress.txt`
+- **Learnings for future iterations:**
+  - Live full-run traces expose granular `rewards` and post-Neow proceed states that `Sts2RunEnv` may model as immediate state changes; replay should skip those no-op live substeps rather than spending an emulator action.
+  - `translate_action` can return `None` for trace-only no-ops, and `replay_trace` should append the unchanged emulator snapshot so reference and emulator step numbers remain aligned for diagnostics.
+
 ---

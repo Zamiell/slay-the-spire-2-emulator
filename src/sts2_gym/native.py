@@ -11,7 +11,7 @@ _LIB_NAMES = {
     "darwin": "Sts2Emulator.dylib",
 }
 _ALLOW_STALE_ENV = "STS2_ALLOW_STALE_NATIVE"
-_REQUIRED_NATIVE_API_VERSION = 2
+_REQUIRED_NATIVE_API_VERSION = 6
 
 
 def _repo_root() -> Path:
@@ -149,18 +149,39 @@ _lib.Sts2_ResetWithDeckEncounterAndRelics.argtypes = [
 
 _lib.Sts2_ResetRunCombat.restype = None
 _lib.Sts2_ResetRunCombat.argtypes = [
-    ctypes.c_int,
-    ctypes.POINTER(ctypes.c_int),
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.POINTER(ctypes.c_int),
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.POINTER(ctypes.c_int),
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,  # handle
+    ctypes.POINTER(ctypes.c_int),  # deckIds
+    ctypes.c_int,  # deckLen
+    ctypes.c_int,  # encounterId
+    ctypes.POINTER(ctypes.c_int),  # relicIds
+    ctypes.c_int,  # relicLen
+    ctypes.c_int,  # playerHp
+    ctypes.c_int,  # playerMaxHp
+    ctypes.POINTER(ctypes.c_int),  # potionIds
+    ctypes.c_int,  # potionLen
+    ctypes.c_int,  # playerGold
+    ctypes.c_int,  # encounterRngSeed
+    ctypes.POINTER(ctypes.c_int),  # obsBuf
+]
+
+_lib.Sts2_ResetRunCombatPreShuffled.restype = None
+_lib.Sts2_ResetRunCombatPreShuffled.argtypes = [
+    ctypes.c_int,  # handle
+    ctypes.POINTER(ctypes.c_int),  # deckIds
+    ctypes.c_int,  # deckLen
+    ctypes.c_int,  # encounterId
+    ctypes.POINTER(ctypes.c_int),  # relicIds
+    ctypes.c_int,  # relicLen
+    ctypes.c_int,  # playerHp
+    ctypes.c_int,  # playerMaxHp
+    ctypes.POINTER(ctypes.c_int),  # potionIds
+    ctypes.c_int,  # potionLen
+    ctypes.c_int,  # playerGold
+    ctypes.c_int,  # shuffleRngSeed
+    ctypes.c_int,  # nicheSkipCount
+    ctypes.c_int,  # encounterRngSeed
+    ctypes.c_int,  # monsterAiRngSeed
+    ctypes.POINTER(ctypes.c_int),  # obsBuf
 ]
 
 _lib.Sts2_Step.restype = ctypes.c_int
@@ -254,6 +275,7 @@ def reset_run_combat(
     player_max_hp: int,
     potion_ids: list[int],
     player_gold: int,
+    encounter_rng_seed: int,
     obs_buf: ctypes.Array,
 ) -> None:
     deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
@@ -271,6 +293,45 @@ def reset_run_combat(
         potion_buf,
         len(potion_ids),
         player_gold,
+        encounter_rng_seed,
+        obs_buf,
+    )
+
+
+def reset_run_combat_pre_shuffled(
+    handle: int,
+    deck_ids: list[int],
+    encounter_id: int,
+    relic_ids: list[int],
+    player_hp: int,
+    player_max_hp: int,
+    potion_ids: list[int],
+    player_gold: int,
+    shuffle_rng_seed: int,
+    niche_skip_count: int,
+    encounter_rng_seed: int,
+    monster_ai_rng_seed: int,
+    obs_buf: ctypes.Array,
+) -> None:
+    deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
+    relic_buf = (ctypes.c_int * len(relic_ids))(*relic_ids)
+    potion_buf = (ctypes.c_int * len(potion_ids))(*potion_ids)
+    _lib.Sts2_ResetRunCombatPreShuffled(
+        handle,
+        deck_buf,
+        len(deck_ids),
+        encounter_id,
+        relic_buf,
+        len(relic_ids),
+        player_hp,
+        player_max_hp,
+        potion_buf,
+        len(potion_ids),
+        player_gold,
+        shuffle_rng_seed,
+        niche_skip_count,
+        encounter_rng_seed,
+        monster_ai_rng_seed,
         obs_buf,
     )
 

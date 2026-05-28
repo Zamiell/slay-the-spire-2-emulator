@@ -103,6 +103,7 @@ public static class CombatFactory
         Vantom,
         WaterfallGiant,
         Architect,
+        SkulkingColony,
     }
 
     private static readonly ActOneEncounter[] OvergrowthWeakEncounters =
@@ -203,7 +204,12 @@ public static class CombatFactory
         int playerHp,
         int playerMaxHp,
         ReadOnlySpan<int> potionIds,
-        int playerGold)
+        int playerGold,
+        bool deckPreShuffled = false,
+        Random? shuffleRng = null,
+        int? encounterRngSeed = null,
+        int nicheSkipCount = 0,
+        Random? aiRng = null)
     {
         state.PlayerMaxHp  = Math.Max(1, playerMaxHp);
         state.PlayerHp     = Math.Clamp(playerHp, 0, state.PlayerMaxHp);
@@ -215,6 +221,7 @@ public static class CombatFactory
         state.Hand         = [];
         state.DiscardPile  = [];
         state.ExhaustPile  = [];
+        state.ReturnToHandBeforeDraw = [];
         state.PotionSlots  = new int[3];
         for (int i = 0; i < Math.Min(state.PotionSlots.Length, potionIds.Length); i++)
             state.PotionSlots[i] = potionIds[i];
@@ -222,6 +229,11 @@ public static class CombatFactory
         state.Turn         = 0;
         state.PlayerTurn   = true;
         state.SkillPlayedWhileSmoggy = false;
+        state.AttackCardsPlayedThisTurn = 0;
+        state.PlayerHpLostThisTurn = 0;
+        state.CardsExhaustedThisTurn = 0;
+        state.ShuffleRng   = shuffleRng;
+        state.AiRng        = aiRng;
 
         state.DrawPile = deckIds
             .ToArray()
@@ -233,11 +245,16 @@ public static class CombatFactory
             : SelectFirstCombatEncounter(rng);
         state.EncounterId = (int)encounter;
         state.IsEliteCombat = IsEliteEncounter(encounter);
-        state.Enemies = CreateEncounter(encounter, rng);
+        // Advance niche RNG past HP calls from previous combats in the run.
+        for (int i = 0; i < nicheSkipCount; i++)
+            rng.Next();
+        state.Enemies = CreateEncounter(encounter, rng, encounterRngSeed);
+        EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng, state.AiRng);
         EnemyAI.UpdateSecondaryIntents(state.Enemies);
 
-        // Shuffle draw pile and deal opening hand of 5.
-        CardEffects.ShufflePile(state.DrawPile, rng);
+        // Shuffle draw pile (skip if caller pre-shuffled it) and deal opening hand of 5.
+        if (!deckPreShuffled)
+            CardEffects.ShufflePile(state.DrawPile, rng);
         for (int i = 0; i < 5 && state.DrawPile.Count > 0; i++)
         {
             state.Hand.Add(state.DrawPile[0]);
@@ -257,7 +274,7 @@ public static class CombatFactory
         AscendersBaneId,
     ];
 
-    private static List<EnemyState> CreateEncounter(ActOneEncounter encounter, Random rng) =>
+    private static List<EnemyState> CreateEncounter(ActOneEncounter encounter, Random rng, int? encounterRngSeed = null) =>
         encounter switch
         {
             ActOneEncounter.Cultists =>
@@ -277,7 +294,7 @@ public static class CombatFactory
                 CreateEnemy(KE.Nibbit, rng, new Intent(IntentType.Attack, 13)),
             ],
 
-            ActOneEncounter.Slimes => CreateSlimeEncounter(rng),
+            ActOneEncounter.Slimes => CreateSlimeEncounter(rng, encounterRngSeed),
 
             ActOneEncounter.Exoskeletons =>
             [
@@ -401,6 +418,11 @@ public static class CombatFactory
                 CreateSlitheringStranglerEncounter(rng),
 
             ActOneEncounter.RubyRaiders => CreateRubyRaiders(rng),
+
+            ActOneEncounter.SkulkingColony =>
+            [
+                CreateSkulkingColony(rng),
+            ],
 
             ActOneEncounter.Fogmog =>
             [
@@ -704,17 +726,30 @@ public static class CombatFactory
     private static bool IsEliteEncounter(ActOneEncounter encounter) =>
         encounter is >= ActOneEncounter.BygoneEffigy and <= ActOneEncounter.WaterfallGiant;
 
-    private static List<EnemyState> CreateSlimeEncounter(Random rng)
+    private static List<EnemyState> CreateSlimeEncounter(Random rng, int? encounterRngSeed = null)
     {
-        int firstSmall = rng.Next(2) == 0 ? KE.LeafSlimeS : KE.TwigSlimeS;
-        int middle = rng.Next(2) == 0 ? KE.LeafSlimeM : KE.TwigSlimeM;
+        // Type selection uses the encounter-specific RNG (seeded from run_seed + floor + hash("slimes_weak")),
+        // matching SlimesWeak.GenerateMonsters() which uses base.Rng separate from the niche RNG.
+        var typeRng = encounterRngSeed.HasValue ? new Random(encounterRngSeed.Value) : rng;
+        int firstSmall = typeRng.Next(2) == 0 ? KE.LeafSlimeS : KE.TwigSlimeS;
+        int middle = typeRng.Next(2) == 0 ? KE.LeafSlimeM : KE.TwigSlimeM;
         int secondSmall = firstSmall == KE.LeafSlimeS ? KE.TwigSlimeS : KE.LeafSlimeS;
+
+        // LeafSlimeS starting intent depends on slot: firstSmall=Attack(0), secondSmall=Debuff(1).
+        // TwigSlimeS always starts with Attack(5). These are slot-deterministic, not niche-RNG-based.
+        var firstIntent = firstSmall == KE.LeafSlimeS
+            ? new Intent(IntentType.Attack, 4)
+            : new Intent(IntentType.Attack, 5);
+        var secondIntent = secondSmall == KE.LeafSlimeS
+            ? new Intent(IntentType.Debuff, 1)
+            : new Intent(IntentType.Attack, 5);
+        int secondMoveIndex = secondSmall == KE.LeafSlimeS ? 1 : 0;
 
         return
         [
-            CreateSlime(firstSmall, rng),
+            CreateEnemy(firstSmall, rng, firstIntent),
             CreateSlime(middle, rng),
-            CreateSlime(secondSmall, rng),
+            CreateEnemy(secondSmall, rng, secondIntent, secondMoveIndex),
         ];
     }
 
@@ -918,9 +953,7 @@ public static class CombatFactory
     {
         return defId switch
         {
-            KE.LeafSlimeS => rng.Next(2) == 0
-                ? CreateEnemy(defId, rng, new Intent(IntentType.Attack, 4))
-                : CreateEnemy(defId, rng, new Intent(IntentType.Debuff, 1), moveIndex: 1),
+            KE.LeafSlimeS => CreateEnemy(defId, rng, new Intent(IntentType.Debuff, 1), moveIndex: 1),
 
             KE.TwigSlimeS => CreateEnemy(defId, rng, new Intent(IntentType.Attack, 5)),
 
@@ -1039,7 +1072,7 @@ public static class CombatFactory
             _ => new Intent(IntentType.Debuff, 2),
         };
 
-    private static EnemyState CreateEnemy(
+    public static EnemyState CreateEnemy(
         int defId, Random rng, Intent startingIntent, int moveIndex = 0)
     {
         var def = GeneratedData.Enemies.Get(defId);
@@ -1110,6 +1143,13 @@ public static class CombatFactory
     {
         var enemy = CreateEnemy(KE.Exoskeleton, rng, startingIntent, moveIndex);
         BuffSystem.Apply(enemy.Buffs, BuffId.HardToKill, 9);
+        return enemy;
+    }
+
+    private static EnemyState CreateSkulkingColony(Random rng)
+    {
+        var enemy = CreateEnemy(KE.SkulkingColony, rng, new Intent(IntentType.Attack, 16));
+        BuffSystem.Apply(enemy.Buffs, BuffId.HardenedShell, 20);
         return enemy;
     }
 }

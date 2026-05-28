@@ -22,6 +22,7 @@ public sealed class EnemyState
     public Intent? SecondaryIntent;
     public List<BuffState> Buffs = [];
     public int MoveIndex;
+    public int LastMove = -1; // ID of the last move chosen (to avoid repetition)
     public int StolenGold;
     public int HeistGold;
 }

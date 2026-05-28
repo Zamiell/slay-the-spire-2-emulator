@@ -8,21 +8,17 @@ public static class BuffSystem
 
         if (magnitude > 0 && IsDebuff(id))
         {
-            int artifact = Get(buffs, BuffId.Artifact);
-            if (artifact > 0)
-            {
-                int artifactIdx = buffs.FindIndex(b => b.Id == BuffId.Artifact);
-                if (artifact == 1)
-                    buffs.RemoveAt(artifactIdx);
-                else
-                    buffs[artifactIdx] = buffs[artifactIdx] with { Magnitude = artifact - 1 };
+            if (TryConsumeArtifact(buffs))
                 return;
-            }
         }
 
         int idx = buffs.FindIndex(b => b.Id == id);
         if (idx >= 0)
-            buffs[idx] = buffs[idx] with { Magnitude = buffs[idx].Magnitude + magnitude };
+        {
+            int newVal = buffs[idx].Magnitude + magnitude;
+            if (newVal == 0) buffs.RemoveAt(idx);
+            else buffs[idx] = buffs[idx] with { Magnitude = newVal };
+        }
         else
             buffs.Add(new BuffState(id, magnitude));
     }
@@ -33,8 +29,25 @@ public static class BuffSystem
         return idx >= 0 ? buffs[idx].Magnitude : 0;
     }
 
+    public static bool Has(List<BuffState> buffs, BuffId id)
+        => Get(buffs, id) > 0;
+
     public static void Remove(List<BuffState> buffs, BuffId id)
         => buffs.RemoveAll(b => b.Id == id);
+
+     public static bool TryConsumeArtifact(List<BuffState> buffs)
+    {
+        int artifact = Get(buffs, BuffId.Artifact);
+        if (artifact <= 0)
+            return false;
+
+        int artifactIdx = buffs.FindIndex(b => b.Id == BuffId.Artifact);
+        if (artifact == 1)
+            buffs.RemoveAt(artifactIdx);
+        else
+            buffs[artifactIdx] = buffs[artifactIdx] with { Magnitude = artifact - 1 };
+        return true;
+    }
 
     // Called at end of turn for the owning side (tick debuffs down by 1).
     public static void TickEndOfTurn(List<BuffState> buffs)
@@ -44,7 +57,6 @@ public static class BuffSystem
             var b = buffs[i];
             switch (b.Id)
             {
-                case BuffId.Poison:
                 case BuffId.Vulnerable:
                 case BuffId.Weak:
                 case BuffId.Frail:
@@ -62,17 +74,23 @@ public static class BuffSystem
         dmg += Get(attackerBuffs, BuffId.Strength);
         if (Get(attackerBuffs, BuffId.Weak) > 0) dmg *= 0.75f;
         if (Get(attackerBuffs, BuffId.Shrink) > 0) dmg *= 0.70f;
-        if (Get(defenderBuffs, BuffId.Vulnerable) > 0) dmg *= 1.5f;
+        if (Get(defenderBuffs, BuffId.Vulnerable) > 0)
+        {
+            float mult = 1.5f + Get(attackerBuffs, BuffId.CrueltyPower) / 100f;
+            dmg *= mult;
+        }
         return Math.Max(0, (int)dmg);
     }
 
-    public static int IncomingBlock(int baseBlock, List<BuffState> buffs)
+    public static int IncomingBlock(int baseBlock, List<BuffState> buffs, bool isDefend = false)
     {
-        float block = baseBlock;
-        block += Get(buffs, BuffId.Dexterity);
-        if (Get(buffs, BuffId.Frail) > 0) block *= 0.75f;
-        return Math.Max(0, (int)block);
+        float blk = baseBlock;
+        blk += Get(buffs, BuffId.Dexterity);
+        if (Get(buffs, BuffId.Frail) > 0) blk *= 0.75f;
+        if (isDefend) blk += Get(buffs, BuffId.FastenPower);
+        return Math.Max(0, (int)blk);
     }
+
 
     private static bool IsDebuff(BuffId id) =>
         id is BuffId.Vulnerable
