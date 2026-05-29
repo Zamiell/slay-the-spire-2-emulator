@@ -138,9 +138,10 @@ Native combat currently supports the starter deck plus a growing subset of trace
 
 Current status of cards from the supported character and generic pools (Ironclad, Colorless, Status, Curse).
 
-**Total Progress (Supported Pools): 89/157 (56.7%)**
+Total Progress (Supported Pools): 89/157 (56.7%)
 
 ### Ironclad (77/87)
+
 - [x] Aggression (ID: 9)
 - [x] Anger (ID: 13)
 - [x] Armaments (ID: 18)
@@ -230,6 +231,7 @@ Current status of cards from the supported character and generic pools (Ironclad
 - [x] Whirlwind (ID: 538)
 
 ### Colorless (11/64)
+
 - [x] Alchemize (ID: 10)
 - [x] Anointed (ID: 14)
 - [ ] Automation (ID: 23)
@@ -296,6 +298,7 @@ Current status of cards from the supported character and generic pools (Ironclad
 - [x] Volley (ID: 535)
 
 ### Status/Curse (1/6)
+
 - [x] Beckon (ID: 36)
 - [x] Dazed (ID: 10002)
 - [x] Debris (ID: 128)
