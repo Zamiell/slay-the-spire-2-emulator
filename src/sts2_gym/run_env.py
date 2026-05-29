@@ -758,6 +758,9 @@ class Sts2RunEnv(gym.Env):
         self._boss_encounter_id: int = 0
         self._weak_encounters_used = 0
         self._normal_encounters: list[int] = []
+        self._encounter_seq: list[int] = []
+        self._normal_encounters_visited: int = 0
+        self._elite_encounters_visited: int = 0
         self._transform_selected_deck_idx: int | None = None
         self._map_nodes: dict[tuple[int, int], RunMapNode] = {}
         self._current_map_coord = MAP_START_COORD
@@ -820,6 +823,9 @@ class Sts2RunEnv(gym.Env):
         self._normal_encounters = []
         self._elite_encounters_seq = []
         self._boss_encounter_id = 0
+        self._encounter_seq = []
+        self._normal_encounters_visited = 0
+        self._elite_encounters_visited = 0
         self._transform_selected_deck_idx = None
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
@@ -1009,6 +1015,11 @@ class Sts2RunEnv(gym.Env):
         self._floor += 1
 
         if self._current_node_type in (NODE_NORMAL, NODE_ELITE, NODE_BOSS):
+            # Advance encounter counters matching RoomSet.MarkVisited.
+            if self._current_node_type == NODE_NORMAL:
+                self._normal_encounters_visited += 1
+            elif self._current_node_type == NODE_ELITE:
+                self._elite_encounters_visited += 1
             self._phase = PHASE_COMBAT
             self._reset_combat(self._combat_seed(), encounter_id)
             return self._obs(), 0.0, False, False, self._info()
@@ -1600,11 +1611,26 @@ class Sts2RunEnv(gym.Env):
             node = self._map_nodes[coord]
             node_type = MAP_NODE_TO_OBS[node.node_type]
             self._map_node_types[i] = node_type
-            self._map_choices[i] = (
-                node.encounter_id
-                if node.encounter_id
-                else self._encounter_for_node(node_type)
-            )
+            if node_type == NODE_NORMAL and self._encounter_seq:
+                # Use the next encounter in sequence (matching RoomSet.NextNormalEncounter),
+                # but don't advance the counter until the player actually enters the room.
+                enc = self._encounter_seq[
+                    self._normal_encounters_visited % len(self._encounter_seq)
+                ]
+                self._map_choices[i] = int(enc)
+            elif node_type == NODE_ELITE and self._elite_encounters_seq:
+                enc = self._elite_encounters_seq[
+                    self._elite_encounters_visited % len(self._elite_encounters_seq)
+                ]
+                self._map_choices[i] = int(enc)
+            elif node_type == NODE_BOSS:
+                self._map_choices[i] = self._boss_encounter_id
+            else:
+                self._map_choices[i] = (
+                    node.encounter_id
+                    if node.encounter_id
+                    else self._encounter_for_node(node_type)
+                )
             self._map_option_coords[i] = coord
 
     def _enter_shop_phase(self):
@@ -1734,6 +1760,12 @@ class Sts2RunEnv(gym.Env):
         )
         d = up_front.next_double()
         self._boss_encounter_id = boss_pool[int(d * len(boss_pool))]
+
+        # Build the unified normal-encounter sequence matching RoomSet.normalEncounters:
+        # first 3 are weak encounters, remaining 12 are regular encounters. The counter
+        # _normal_encounters_visited advances only when the player enters a Monster room,
+        # matching RoomSet.MarkVisited(RoomType.Monster).
+        self._encounter_seq = list(self._weak_encounters) + self._normal_encounters
 
     def _generate_act_map(self) -> None:
         self._map_nodes = {}
