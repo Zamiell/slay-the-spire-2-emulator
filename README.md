@@ -32,6 +32,16 @@ src\Sts2Emulator
 
 The Python environment calls the native library in-process, avoiding sockets or serialization overhead.
 
+### What belongs where
+
+The emulator has two layers with distinct responsibilities, mirroring the split in STS2 itself between the combat engine and the run manager.
+
+**C# (`src\Sts2Emulator`)** handles **in-combat simulation** — everything that happens inside a single fight: card effects, enemy AI, buff/debuff resolution, draw and discard, damage calculation, and reward shaping. This layer is performance-critical (called thousands of times per episode) and is compiled to native code.
+
+**Python (`src\sts2_gym`)** handles **run-level state** — everything outside individual combats: map generation, encounter selection, card rewards, events, shops, relics, Neow options, rest sites, gold, and floor progression. This layer also wraps the C# engine as a Gymnasium environment.
+
+When adding new mechanics, ask: *does this happen inside a fight?* If yes, it belongs in C#. If it happens between fights or governs the structure of a run, it belongs in Python. Putting combat logic in Python would be a layering violation; putting run-manager logic in C# would unnecessarily complicate the native interop.
+
 ## Current emulator scope
 
 The current combat factory starts an Ironclad-style combat with:
