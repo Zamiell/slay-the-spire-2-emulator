@@ -573,7 +573,24 @@ SHOP_RELIC_BASE_COSTS = {
     RELIC_VAJRA: 175,
     RELIC_WAR_HAMMER: 999999999,
 }
-UPGRADABLE_STARTER_CARDS = {30, 131, 472}
+# Cards with MaxUpgradeLevel = 0 (cannot be upgraded) from decompiled CardModel subclasses.
+NON_UPGRADABLE_CARD_IDS = {
+    36,  # Beckon (status)
+    128,  # Debris (status)
+    166,  # Enthralled (status)
+    206,  # FranticEscape (status)
+    440,  # Slimed (status)
+    457,  # SporeMind (status)
+    512,  # Toxic (status)
+    10001,  # AscendersBane (curse)
+    10002,  # Dazed (status)
+    10008,  # Infection (status)
+    10009,  # Burn (status)
+    10010,  # Disintegration (status)
+    10011,  # Wound (status)
+    10012,  # Wither (status)
+}
+UPGRADABLE_STARTER_CARDS = {30, 131, 472}  # kept for backwards compat
 # Decompiled GrabBag pool order for weak encounters (equal weight 1 each).
 # Overgrowth: [FuzzyWurmCrawler=8, Nibbit=2, ShrinkerBeetle=11, Slimes=3]
 # Underdocks:  [CorpseSlugs=9, Seapunk=12, SludgeSpinner=10, Toadpoles=13]
@@ -2320,7 +2337,10 @@ class Sts2RunEnv(gym.Env):
         self._neow_options[:] = [positive[0], positive[1], cursed]
 
     def _is_upgradable(self, encoded_card: int) -> bool:
-        return encoded_card > 0 and encoded_card in UPGRADABLE_STARTER_CARDS
+        # A card is upgradable if it's positive (not already upgraded) and not
+        # in the set of cards with MaxUpgradeLevel=0 (status/curse cards).
+        # Matches CardModel.IsUpgradable: CurrentUpgradeLevel < MaxUpgradeLevel.
+        return encoded_card > 0 and encoded_card not in NON_UPGRADABLE_CARD_IDS
 
     def _upgrade_first_card(self) -> bool:
         for index, encoded_card in enumerate(self._deck):
