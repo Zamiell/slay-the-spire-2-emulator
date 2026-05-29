@@ -781,11 +781,12 @@ class Sts2GymTests(unittest.TestCase):
             env._obtain_relic(RELIC_PHIAL_HOLSTER)
             self.assertEqual(sum(1 for potion in env._potions if potion != 0), 2)
 
+            # Lost Coffer now works via _step_neow: generates a 3-card reward
+            # screen (rewards RNG) and adds the potion, so _obtain_relic alone
+            # does not change deck or potions.
             deck_size = len(env._deck)
-            env._potions = [0, 0, 0]
             env._obtain_relic(RELIC_LOST_COFFER)
-            self.assertEqual(len(env._deck), deck_size + 1)
-            self.assertTrue(any(potion != 0 for potion in env._potions))
+            self.assertEqual(len(env._deck), deck_size)
 
             deck_size = len(env._deck)
             env._obtain_relic(RELIC_KALEIDOSCOPE)

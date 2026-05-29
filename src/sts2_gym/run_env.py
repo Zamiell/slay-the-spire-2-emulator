@@ -234,7 +234,7 @@ NEOW_POSITIVE_OPTIONS = [
 # Potion: PotionFactory.CreateRandomPotionOutOfCombat = 2 calls (NextFloat + NextItem).
 _NEOW_REWARDS_RNG_ADVANCES = {
     RELIC_ARCANE_SCROLL: 1,  # 1 rare card: Uniform + NoUpgradeRoll → 1 selection
-    RELIC_LOST_COFFER: 11,  # 3 cards × 3 (RegularEncounter + upgrade) + potion × 2
+    # RELIC_LOST_COFFER handled inline in _step_neow (card reward phase + potion)
     RELIC_PHIAL_HOLSTER: 4,  # 2 potions × 2 (rarity + selection)
     RELIC_HEFTY_TABLET: 3,  # 3 cards shown × 1 (Uniform + NoUpgradeRoll)
     RELIC_LEAD_PAPERWEIGHT: 6,  # 2 colorless cards × 3 (RegularEncounter + upgrade)
@@ -1084,6 +1084,17 @@ class Sts2RunEnv(gym.Env):
             return self._invalid_action()
 
         self._obtain_relic(relic_id)
+        if relic_id == RELIC_LOST_COFFER:
+            # Lost Coffer: generate 3 card choices (3 calls each) + potion (2 calls),
+            # show as a card reward before entering map.
+            self._reward_cards[:] = self._generate_card_rewards()
+            self._reward_upgraded[:] = False
+            # 2 calls for PotionReward.Populate() — potion type selection uses numpy
+            self._player_rng.rewards.next_double()
+            self._player_rng.rewards.next_double()
+            self._add_potion(self._next_potion())
+            self._phase = PHASE_CARD_REWARD
+            return self._obs(), 0.0, False, False, self._info()
         advance = _NEOW_REWARDS_RNG_ADVANCES.get(relic_id, 0)
         for _ in range(advance):
             self._player_rng.rewards.next_double()
@@ -1145,8 +1156,7 @@ class Sts2RunEnv(gym.Env):
         elif relic_id == RELIC_LEAD_PAPERWEIGHT:
             self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
         elif relic_id == RELIC_LOST_COFFER:
-            self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
-            self._add_potion(self._next_potion())
+            pass  # card reward + potion handled in _step_neow via rewards RNG
         elif relic_id == RELIC_NEW_LEAF:
             self._transform_first_card()
         elif relic_id == RELIC_PHIAL_HOLSTER:
