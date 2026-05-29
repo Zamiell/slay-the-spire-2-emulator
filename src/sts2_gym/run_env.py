@@ -622,6 +622,13 @@ EVENT_JUNGLE_MAZE_ADVENTURE = 4
 EVENT_MORPHIC_GROVE = 5
 EVENT_BRAIN_LEECH = 6
 EVENT_THE_LEGENDS_WERE_TRUE = 7
+EVENT_DOORS_OF_LIGHT_AND_DARK = 8  # Light: upgrade 2 cards; Dark: remove 1 card
+EVENT_SUNKEN_TREASURY = (
+    9  # FirstChest: gain gold; SecondChest: gain more gold + Greed curse
+)
+EVENT_RESULT_PENDING = (
+    -1
+)  # Sentinel: event resolved, waiting for player to confirm/exit
 POOR_SLEEP_CARD = 10001
 SPOILS_MAP_CARD = 10002
 
@@ -867,6 +874,14 @@ class Sts2RunEnv(gym.Env):
                 mask[1] = self._player_hp > 8 and any(
                     potion == 0 for potion in self._potions
                 )
+            elif self._event_id == EVENT_DOORS_OF_LIGHT_AND_DARK:
+                mask[0] = any(self._is_upgradable(c) for c in self._deck)
+                mask[1] = len(self._deck) > 0
+            elif self._event_id == EVENT_SUNKEN_TREASURY:
+                mask[0] = True
+                mask[1] = True
+            elif self._event_id == EVENT_RESULT_PENDING:
+                mask[0] = True  # confirm/proceed action
             else:
                 mask[: EVENT_SKIP_ACTION + 1] = True
             return mask
@@ -1022,6 +1037,10 @@ class Sts2RunEnv(gym.Env):
         return self._advance_after_node()
 
     def _step_event(self, action: int):
+        if self._event_id == EVENT_RESULT_PENDING:
+            # Any action confirms the result page and exits the event.
+            self._event_id = 0
+            return self._advance_after_node()
         if self._event_id == EVENT_UNREST_SITE:
             if action == 0:
                 self._player_hp = self._player_max_hp
@@ -1056,6 +1075,42 @@ class Sts2RunEnv(gym.Env):
                 self._transform_first_card()
             elif action == 1:
                 self._gain_max_hp(5)
+            elif action != EVENT_SKIP_ACTION:
+                return self._invalid_action()
+        elif self._event_id == EVENT_DOORS_OF_LIGHT_AND_DARK:
+            # Light option (0): upgrade 2 upgradable cards (Niche RNG), then show result page.
+            # Dark option (1): remove 1 card from deck (complex, treated as skip to result).
+            if action == 0:
+                upgradable = [
+                    i for i, c in enumerate(self._deck) if self._is_upgradable(c)
+                ]
+                if upgradable:
+                    sorted_idxs = sorted(upgradable, key=lambda i: abs(self._deck[i]))
+                    from sts2_gym.game_rng import DotNetRandom, _int32, _uint32
+
+                    niche_seed = _int32(_uint32(self._run_rng_set.seed + _NICHE_HASH))
+                    niche_rng_impl = DotNetRandom(niche_seed)
+                    for _ in range(self._niche_calls_consumed):
+                        niche_rng_impl._sample()
+                    n = len(sorted_idxs)
+                    for i in range(n - 1, 0, -1):
+                        j = niche_rng_impl.next_int(i + 1)
+                        sorted_idxs[i], sorted_idxs[j] = sorted_idxs[j], sorted_idxs[i]
+                        self._niche_calls_consumed += 1
+                    for k in range(min(2, len(sorted_idxs))):
+                        deck_idx = sorted_idxs[k]
+                        if self._deck[deck_idx] > 0:
+                            self._deck[deck_idx] = -self._deck[deck_idx]
+                # Transition to result-pending state: player must confirm before leaving.
+                self._event_id = EVENT_RESULT_PENDING
+                return self._obs(), 0.0, False, False, self._info()
+            elif action != EVENT_SKIP_ACTION:
+                return self._invalid_action()
+        elif self._event_id == EVENT_SUNKEN_TREASURY:
+            if action == 0:
+                self._gold += 60 + int(self._rng.integers(-8, 9))
+            elif action == 1:
+                self._gold += 333 + int(self._rng.integers(-30, 31))
             elif action != EVENT_SKIP_ACTION:
                 return self._invalid_action()
         elif self._event_id == EVENT_BRAIN_LEECH:
@@ -1388,7 +1443,12 @@ class Sts2RunEnv(gym.Env):
 
     def _enter_event_phase(self):
         self._phase = PHASE_EVENT
-        event_pool = [EVENT_JUNGLE_MAZE_ADVENTURE, EVENT_BRAIN_LEECH]
+        event_pool = [
+            EVENT_JUNGLE_MAZE_ADVENTURE,
+            EVENT_BRAIN_LEECH,
+            EVENT_DOORS_OF_LIGHT_AND_DARK,
+            EVENT_SUNKEN_TREASURY,
+        ]
         if self._player_hp >= 10 and len(self._combat_deck()) > 0:
             event_pool.append(EVENT_THE_LEGENDS_WERE_TRUE)
         if self._gold >= 100 and len(self._deck) >= 2:
