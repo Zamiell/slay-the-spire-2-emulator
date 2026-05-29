@@ -596,6 +596,7 @@ _UNDERDOCKS_EVENT_SHUFFLE_CALLS = 57
 _TOTAL_ENCOUNTER_SLOTS = 15
 _WEAK_ENCOUNTER_SLOTS = 3
 _NORMAL_ENCOUNTER_SLOTS = _TOTAL_ENCOUNTER_SLOTS - _WEAK_ENCOUNTER_SLOTS  # = 12
+_ELITE_ENCOUNTER_SLOTS = 15  # ActModel: maxElites = 15 elite slots per act
 # Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
 _NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
 _SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
@@ -695,11 +696,14 @@ class Sts2RunEnv(gym.Env):
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
         self._niche_calls_consumed = 0
+        self._rest_pending_action: int | None = None
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
         self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
         self._act = "overgrowth"
         self._weak_encounters = np.zeros(3, dtype=np.int32)
+        self._elite_encounters_seq: list[int] = []
+        self._boss_encounter_id: int = 0
         self._weak_encounters_used = 0
         self._normal_encounters: list[int] = []
         self._transform_selected_deck_idx: int | None = None
@@ -753,11 +757,14 @@ class Sts2RunEnv(gym.Env):
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
         self._niche_calls_consumed = 0
+        self._rest_pending_action = None
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
         self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
         self._weak_encounters_used = 0
         self._normal_encounters = []
+        self._elite_encounters_seq = []
+        self._boss_encounter_id = 0
         self._transform_selected_deck_idx = None
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
@@ -825,6 +832,7 @@ class Sts2RunEnv(gym.Env):
             mask[REST_UPGRADE_ACTION] = any(
                 self._is_upgradable(card) for card in self._deck
             )
+            mask[REWARD_SKIP_ACTION] = True  # proceed / skip
             return mask
 
         if self._phase == PHASE_SHOP:
@@ -974,6 +982,24 @@ class Sts2RunEnv(gym.Env):
         raise ValueError(f"Unsupported map node type: {self._current_node_type}")
 
     def _step_rest(self, action: int):
+        # STS2 rest site uses a two-click confirmation flow:
+        #   1st click (choose_rest_option X): select option → show confirmation, no effect
+        #   2nd click (choose_rest_option X again): apply effect → show result (can_proceed)
+        #   proceed (REST_SKIP_ACTION=3): exit rest site to map
+        if action == REWARD_SKIP_ACTION:
+            # Proceed / skip action: exit rest site.
+            self._rest_pending_action = None
+            if RELIC_VENERABLE_TEA_SET in self._relics:
+                self._venerable_tea_set_active = True
+            return self._advance_after_node()
+        if action not in (REST_HEAL_ACTION, REST_UPGRADE_ACTION):
+            return self._invalid_action()
+        if self._rest_pending_action is None:
+            # First click: select option but don't apply yet (stay in rest site).
+            self._rest_pending_action = action
+            return self._obs(), 0.0, False, False, self._info()
+        # Second click (confirmation): apply the effect and show result.
+        self._rest_pending_action = None
         if action == REST_HEAL_ACTION:
             heal = max(1, int(self._player_max_hp * 0.3))
             self._player_hp = min(self._player_max_hp, self._player_hp + heal)
@@ -983,11 +1009,8 @@ class Sts2RunEnv(gym.Env):
             upgraded = self._upgrade_first_card()
             if not upgraded:
                 return self._invalid_action()
-        else:
-            return self._invalid_action()
-        if RELIC_VENERABLE_TEA_SET in self._relics:
-            self._venerable_tea_set_active = True
-        return self._advance_after_node()
+        # Stay in PHASE_REST (showing result) until proceed exits.
+        return self._obs(), 0.0, False, False, self._info()
 
     def _step_shop(self, action: int):
         if action in SHOP_CARD_ACTIONS:
@@ -1515,6 +1538,32 @@ class Sts2RunEnv(gym.Env):
             normal_list.append(enc)
         self._normal_encounters = normal_list
 
+        # GrabBag.GrabAndRemove for _ELITE_ENCOUNTER_SLOTS (=15) elite encounter slots,
+        # matching ActModel.GenerateRooms' grabBag3 loop.
+        elite_pool = list(
+            UNDERDOCKS_ELITE_ENCOUNTERS
+            if use_underdocks
+            else OVERGROWTH_ELITE_ENCOUNTERS
+        )
+        elite_bag: list[int] = []
+        elite_list: list[int] = []
+        for _ in range(_ELITE_ENCOUNTER_SLOTS):
+            if not elite_bag:
+                elite_bag = list(elite_pool)
+            d = up_front.next_double()
+            idx = int(d * len(elite_bag))
+            enc = elite_bag[idx]
+            elite_bag.pop(idx)
+            elite_list.append(enc)
+        self._elite_encounters_seq = elite_list
+
+        # Boss: rng.NextItem(AllBossEncounters) = 1 up_front call.
+        boss_pool = list(
+            UNDERDOCKS_BOSS_ENCOUNTERS if use_underdocks else OVERGROWTH_BOSS_ENCOUNTERS
+        )
+        d = up_front.next_double()
+        self._boss_encounter_id = boss_pool[int(d * len(boss_pool))]
+
     def _generate_act_map(self) -> None:
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
@@ -1614,13 +1663,34 @@ class Sts2RunEnv(gym.Env):
                 row_encounters[row] = int(
                     self._rng.choice(self._normal_encounter_pool())
                 )
+        # Assign elite encounters from the pre-computed sequence (up_front GrabBag).
+        elite_rows = sorted(
+            {n.row for n in self._map_nodes.values() if n.node_type == "Elite"}
+        )
+        elite_row_encounters: dict[int, int] = {}
+        elite_seq_idx = 0
+        for row in elite_rows:
+            if elite_seq_idx < len(self._elite_encounters_seq):
+                elite_row_encounters[row] = self._elite_encounters_seq[elite_seq_idx]
+                elite_seq_idx += 1
+            else:
+                elite_row_encounters[row] = int(
+                    self._rng.choice(self._elite_encounter_pool())
+                )
+
         for node in self._map_nodes.values():
             if node.node_type == "Monster":
                 node.encounter_id = row_encounters[node.row]
             elif node.node_type == "Elite":
-                node.encounter_id = int(self._rng.choice(self._elite_encounter_pool()))
+                node.encounter_id = elite_row_encounters.get(
+                    node.row, int(self._rng.choice(self._elite_encounter_pool()))
+                )
             elif node.node_type == "Boss":
-                node.encounter_id = int(self._rng.choice(self._boss_encounter_pool()))
+                node.encounter_id = (
+                    self._boss_encounter_id
+                    if self._boss_encounter_id
+                    else int(self._rng.choice(self._boss_encounter_pool()))
+                )
 
     def _assign_map_point_types(self, rest_count: int, unknown_count: int) -> None:
         for node in self._map_nodes.values():

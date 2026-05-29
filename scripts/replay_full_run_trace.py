@@ -301,6 +301,8 @@ def proceed_action(phase: int) -> int | None:
         return EVENT_SKIP_ACTION
     if phase == PHASE_RELIC_REWARD:
         return 0
+    if phase == PHASE_REST:
+        return REWARD_SKIP_ACTION  # proceed exits rest site (same as skip action = 3)
     raise UnsupportedTraceActionError(f"cannot proceed while emulator phase is {phase}")
 
 

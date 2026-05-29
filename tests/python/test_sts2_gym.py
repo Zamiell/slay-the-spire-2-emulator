@@ -280,20 +280,33 @@ class Sts2GymTests(unittest.TestCase):
             env.close()
 
     def test_run_env_rest_site_heals_or_upgrades(self):
+        # STS2 rest site uses two-click confirmation: 1st click selects, 2nd applies.
         env = Sts2RunEnv(seed=0)
         try:
             env.reset()
             env._phase = PHASE_REST
             env._player_hp = 10
 
+            # First click: selects HEAL (no effect yet).
             _, _, terminated, _, info = env.step(0)
+            self.assertFalse(terminated)
+            self.assertEqual(info["player_hp"], 10)  # no change yet
+            self.assertEqual(info["phase"], PHASE_REST)
 
+            # Second click: confirms HEAL (effect applied).
+            _, _, terminated, _, info = env.step(0)
             self.assertFalse(terminated)
             self.assertGreater(info["player_hp"], 10)
+            self.assertEqual(info["phase"], PHASE_REST)
+
+            # Proceed to exit rest site.
+            env.step(3)  # REWARD_SKIP_ACTION = proceed
 
             env._phase = PHASE_REST
+            env._rest_pending_action = None
             positive_upgrades_before = sum(1 for card in env._deck if card > 0)
-            env.step(1)
+            env.step(1)  # first click UPGRADE
+            env.step(1)  # second click confirms UPGRADE
 
             self.assertEqual(sum(1 for card in env._deck if card < 0), 1)
             self.assertEqual(
@@ -943,7 +956,8 @@ class Sts2GymTests(unittest.TestCase):
             env._phase = PHASE_REST
             env._player_hp = 20
 
-            _, _, terminated, _, info = env.step(0)
+            env.step(0)  # 1st click: select HEAL
+            _, _, terminated, _, info = env.step(3)  # proceed/exit activates tea set
 
             self.assertFalse(terminated)
             self.assertTrue(info["venerable_tea_set_active"])
