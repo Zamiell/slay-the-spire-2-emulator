@@ -11,7 +11,7 @@ _LIB_NAMES = {
     "darwin": "Sts2Emulator.dylib",
 }
 _ALLOW_STALE_ENV = "STS2_ALLOW_STALE_NATIVE"
-_REQUIRED_NATIVE_API_VERSION = 7
+_REQUIRED_NATIVE_API_VERSION = 8
 
 
 def _repo_root() -> Path:
@@ -202,6 +202,9 @@ _lib.Sts2_EncounterId.argtypes = [ctypes.c_int]
 _lib.Sts2_GetShuffleRngCallCount.restype = ctypes.c_int
 _lib.Sts2_GetShuffleRngCallCount.argtypes = [ctypes.c_int]
 
+_lib.Sts2_GetNicheRngCallCount.restype = ctypes.c_int
+_lib.Sts2_GetNicheRngCallCount.argtypes = [ctypes.c_int]
+
 _lib.Sts2_ActionCount.restype = ctypes.c_int
 _lib.Sts2_ActionCount.argtypes = [ctypes.c_int]
 
@@ -364,6 +367,16 @@ def player_won(handle: int) -> bool:
 
 def encounter_id(handle: int) -> int:
     return int(_lib.Sts2_EncounterId(handle))
+
+
+def get_niche_rng_call_count(handle: int) -> int:
+    """Return the total Next() calls on the niche (main combat) RNG during this combat.
+
+    The caller should accumulate this across combats to compute nicheSkipCount
+    for the next combat, so each combat's HP and intent rolls use the correct
+    position in the shared niche RNG stream.
+    """
+    return int(_lib.Sts2_GetNicheRngCallCount(handle))
 
 
 def get_shuffle_rng_call_count(handle: int) -> int:

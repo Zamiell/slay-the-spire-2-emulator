@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Sts2Emulator.Core;
 using Sts2Emulator.Core.Effects;
 
@@ -5,6 +7,13 @@ namespace Sts2Emulator.Interop;
 
 public static class CombatFactory
 {
+    // Set before CreateEncounter; CreateEnemy uses this for HP instead of the main rng.
+    // Matches RunState.Rng.Niche which is used exclusively by SetUniqueMonsterHpValue.
+    private static CountingRandom? _currentNicheHpRng;
+    // Tracks HP values already assigned in the current encounter to prevent duplicates,
+    // matching Creature.SetUniqueMonsterHpValue which excludes already-used MaxHp values.
+    private static HashSet<int>? _usedNicheHps;
+
     private const int StartingPlayerHp = 64;
     private const int StartingPlayerMaxHp = 80;
     private const int StartingEnergy = 3;
@@ -245,10 +254,13 @@ public static class CombatFactory
             : SelectFirstCombatEncounter(rng);
         state.EncounterId = (int)encounter;
         state.IsEliteCombat = IsEliteEncounter(encounter);
-        // Advance niche RNG past HP calls from previous combats in the run.
-        for (int i = 0; i < nicheSkipCount; i++)
-            rng.Next();
+        // Use state.NicheHpRng (set by caller) as the dedicated HP RNG matching
+        // RunState.Rng.Niche.  Null falls back to the main combat rng.
+        _currentNicheHpRng = state.NicheHpRng;
+        _usedNicheHps = _currentNicheHpRng != null ? new HashSet<int>() : null;
         state.Enemies = CreateEncounter(encounter, rng, encounterRngSeed);
+        _currentNicheHpRng = null;
+        _usedNicheHps = null;
         EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng, state.AiRng);
         EnemyAI.UpdateSecondaryIntents(state.Enemies);
 
@@ -1076,7 +1088,32 @@ public static class CombatFactory
         int defId, Random rng, Intent startingIntent, int moveIndex = 0)
     {
         var def = GeneratedData.Enemies.Get(defId);
-        int hp = rng.Next(def.MinHp, def.MaxHp + 1);
+        // Use the dedicated niche HP RNG when available, matching SetUniqueMonsterHpValue
+        // which calls rng.NextItem(remaining_set) to avoid duplicate HP values across
+        // creatures on the same side.
+        int hp;
+        if (_currentNicheHpRng != null)
+        {
+            // Build remaining set = [minHp..maxHp] minus already-used HP values.
+            var range = Enumerable.Range(def.MinHp, def.MaxHp - def.MinHp + 1).ToHashSet();
+            if (_usedNicheHps != null) range.ExceptWith(_usedNicheHps);
+            if (range.Count == 0)
+            {
+                // Fallback: full range (matches game behaviour when all values are taken).
+                hp = _currentNicheHpRng.Next(def.MinHp, def.MaxHp + 1);
+            }
+            else
+            {
+                // NextItem equivalent: NextInt(0, count) → ElementAt(index).
+                int index = _currentNicheHpRng.Next(0, range.Count);
+                hp = range.ElementAt(index);
+            }
+            _usedNicheHps?.Add(hp);
+        }
+        else
+        {
+            hp = rng.Next(def.MinHp, def.MaxHp + 1);
+        }
         return new EnemyState
         {
             DefId         = defId,

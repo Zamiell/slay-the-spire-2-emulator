@@ -681,6 +681,7 @@ class Sts2RunEnv(gym.Env):
         self._venerable_tea_set_active = False
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
+        self._niche_calls_consumed = 0
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
         self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
@@ -736,6 +737,7 @@ class Sts2RunEnv(gym.Env):
         self._venerable_tea_set_active = False
         self._winged_boots_times_used = 0
         self._shop_removals_used = 0
+        self._niche_calls_consumed = 0
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
         self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
@@ -1193,6 +1195,8 @@ class Sts2RunEnv(gym.Env):
             extra_calls = total_native_calls - self._run_rng_set.shuffle._rng.call_count
             for _ in range(extra_calls):
                 self._run_rng_set.shuffle.next_double()
+            # NicheHpRng.CallCount = nicheSkipCount + new_hp_calls, so assign directly.
+            self._niche_calls_consumed = native.get_niche_rng_call_count(self._handle)
 
         # Real game order in GenerateRewardsFor + GenerateWithoutOffering:
         #   1. RollForPotionAndAddTo → PotionRewardOdds.Roll() → 1 Rewards RNG call
@@ -1598,7 +1602,7 @@ class Sts2RunEnv(gym.Env):
                     self._gold,
                     shuffle_rng_seed,
                     shuffle_pre_skip,
-                    0,  # nicheSkipCount (handled separately)
+                    self._niche_calls_consumed,
                     encounter_rng_seed,
                     monster_ai_rng_seed,
                     self._combat_obs_buf,

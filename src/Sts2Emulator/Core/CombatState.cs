@@ -42,6 +42,11 @@ public sealed class CombatState
     // Null falls back to the combat RNG (used in single-combat tests).
     public Random? AiRng;
 
+    // Niche HP RNG — used ONLY for SetUniqueMonsterHpValue (CreateEnemy HP calls).
+    // When non-null, CreateEnemy uses this instead of the main combat RNG for HP.
+    // CountingRandom.CallCount tracks how many HP values were drawn (= enemy count).
+    public CountingRandom? NicheHpRng;
+
     // Turn tracking
     public int Turn;
     public bool PlayerTurn = true;

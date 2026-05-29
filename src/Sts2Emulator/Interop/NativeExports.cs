@@ -35,7 +35,7 @@ public static class NativeExports
     public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
-    public const int NATIVE_API_VERSION = 7;
+    public const int NATIVE_API_VERSION = 8;
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         472, 472, 472, 472, 472,
@@ -48,40 +48,44 @@ public static class NativeExports
     {
         public readonly int Seed;
         public readonly CombatState State = new();
-        public Random Rng { get; private set; }
+        public CountingRandom Rng { get; private set; }
         public bool LastPlayerWon { get; set; }
 
         public NativeCombat(int seed)
         {
             Seed = seed;
-            Rng = new Random(seed);
+            Rng = new CountingRandom(seed);
             CombatFactory.Reset(State, Rng);
         }
 
         public void Reset()
         {
-            Rng = new Random(Seed);
+            Rng = new CountingRandom(Seed);
+            State.NicheHpRng = null;
             LastPlayerWon = false;
             CombatFactory.Reset(State, Rng);
         }
 
         public void Reset(ReadOnlySpan<int> deckIds)
         {
-            Rng = new Random(Seed);
+            Rng = new CountingRandom(Seed);
+            State.NicheHpRng = null;
             LastPlayerWon = false;
             CombatFactory.Reset(State, Rng, deckIds);
         }
 
         public void Reset(ReadOnlySpan<int> deckIds, int encounterId)
         {
-            Rng = new Random(Seed);
+            Rng = new CountingRandom(Seed);
+            State.NicheHpRng = null;
             LastPlayerWon = false;
             CombatFactory.Reset(State, Rng, deckIds, encounterId);
         }
 
         public void Reset(ReadOnlySpan<int> deckIds, int encounterId, ReadOnlySpan<int> relicIds)
         {
-            Rng = new Random(Seed);
+            Rng = new CountingRandom(Seed);
+            State.NicheHpRng = null;
             LastPlayerWon = false;
             CombatFactory.Reset(State, Rng, deckIds, encounterId, relicIds);
         }
@@ -121,7 +125,13 @@ public static class NativeExports
             int nicheSkipCount = 0,
             Random? aiRng = null)
         {
-            Rng = new Random(Seed);
+            Rng = new CountingRandom(Seed);
+            // NicheHpRng: separate CountingRandom for HP-only calls matching RunState.Rng.Niche.
+            // Pre-advance by nicheSkipCount to skip HP calls from previous combats in the run.
+            var nicheHpRng = new CountingRandom(Seed);
+            for (int i = 0; i < nicheSkipCount; i++)
+                nicheHpRng.Next();
+            State.NicheHpRng = nicheHpRng;
             LastPlayerWon = false;
             CombatFactory.Reset(
                 State,
@@ -136,7 +146,7 @@ public static class NativeExports
                 deckPreShuffled,
                 shuffleRng,
                 encounterRngSeed,
-                nicheSkipCount,
+                0,  // nicheSkipCount handled via State.NicheHpRng above
                 aiRng
             );
         }
@@ -332,6 +342,20 @@ public static class NativeExports
     public static int Sts2_GetShuffleRngCallCount(int handle)
     {
         return _pool[handle]!.State.ShuffleRng?.CallCount ?? 0;
+    }
+
+    /// <summary>
+    /// Returns the total Next() calls on the niche (main combat) RNG during this combat.
+    /// The Python side uses this to compute the nicheSkipCount for the next combat.
+    /// </summary>
+    /// <summary>
+    /// Returns the total Next() calls on NicheHpRng (HP-only, matching RunState.Rng.Niche).
+    /// The Python side accumulates this across combats to produce nicheSkipCount.
+    /// </summary>
+    [UnmanagedCallersOnly]
+    public static int Sts2_GetNicheRngCallCount(int handle)
+    {
+        return _pool[handle]!.State.NicheHpRng?.CallCount ?? 0;
     }
 
     [UnmanagedCallersOnly]

@@ -31,6 +31,7 @@
     <LinkerArg Include="/EXPORT:Sts2_PlayerWon=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_PlayerWon" />
     <LinkerArg Include="/EXPORT:Sts2_EncounterId=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_EncounterId" />
     <LinkerArg Include="/EXPORT:Sts2_GetShuffleRngCallCount=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_GetShuffleRngCallCount" />
+    <LinkerArg Include="/EXPORT:Sts2_GetNicheRngCallCount=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_GetNicheRngCallCount" />
     <LinkerArg Include="/EXPORT:Sts2_ActionCount=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ActionCount" />
     <LinkerArg Include="/EXPORT:Sts2_ValidActions=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ValidActions" />
     <LinkerArg Include="/EXPORT:Sts2_Destroy=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Destroy" />
