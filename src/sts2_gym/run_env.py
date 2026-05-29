@@ -1263,13 +1263,16 @@ class Sts2RunEnv(gym.Env):
             return self._obs(), 0.0, False, False, self._info()
         if relic_id == RELIC_LOST_COFFER:
             # Lost Coffer: generate 3 card choices (3 calls each) + potion (2 calls),
-            # show as a card reward before entering map.
+            # show as a card reward before entering map. The guaranteed potion also
+            # decrements _potion_reward_odds as if PotionRewardOdds.Roll() returned True
+            # (matching reference traces where floor-3 roll is skipped because odds = 0.2).
             self._reward_cards[:] = self._generate_card_rewards()
             self._reward_upgraded[:] = False
             # 2 calls for PotionReward.Populate() — potion type selection uses numpy
             self._player_rng.rewards.next_double()
             self._player_rng.rewards.next_double()
             self._add_potion(self._next_potion())
+            self._potion_reward_odds -= POTION_REWARD_STEP
             self._phase = PHASE_CARD_REWARD
             return self._obs(), 0.0, False, False, self._info()
 
