@@ -1184,6 +1184,19 @@ class Sts2RunEnv(gym.Env):
             self._gold = 0
 
     def _after_combat_win(self) -> None:
+        # Sync the Python-side shuffle RNG with the native's CountingRandom.
+        # The native shuffle RNG was seeded identically to _run_rng_set.shuffle and
+        # pre-advanced by (deckLen-1) calls to match the Python pre-shuffle.
+        # Any additional calls come from mid-combat discard reshuffles.  We advance
+        # the Python RNG by those extra calls so the next combat's initial shuffle
+        # uses the correct position in the shared shuffle RNG stream.
+        if self._run_rng_set is not None and self._handle is not None:
+            deck_len = len(self._combat_deck())
+            total_native_calls = native.get_shuffle_rng_call_count(self._handle)
+            extra_calls = total_native_calls - max(0, deck_len - 1)
+            for _ in range(extra_calls):
+                self._run_rng_set.shuffle.next_double()
+
         # Real game order in GenerateRewardsFor + GenerateWithoutOffering:
         #   1. RollForPotionAndAddTo → PotionRewardOdds.Roll() → 1 Rewards RNG call
         #   2. GoldReward.Populate() → 1 Rewards RNG call

@@ -35,7 +35,7 @@ public static class NativeExports
     public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
-    public const int NATIVE_API_VERSION = 6;
+    public const int NATIVE_API_VERSION = 7;
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         472, 472, 472, 472, 472,
@@ -116,7 +116,7 @@ public static class NativeExports
             ReadOnlySpan<int> potionIds,
             int playerGold,
             bool deckPreShuffled = false,
-            Random? shuffleRng = null,
+            CountingRandom? shuffleRng = null,
             int? encounterRngSeed = null,
             int nicheSkipCount = 0,
             Random? aiRng = null)
@@ -273,8 +273,9 @@ public static class NativeExports
     {
         var combat = _pool[handle]!;
         // Reconstruct the shuffle RNG at the state it would be after the caller's
-        // Fisher-Yates pre-shuffle (deckLen-1 calls consumed).
-        var shuffleRng = new Random(shuffleRngSeed);
+        // Fisher-Yates pre-shuffle (deckLen-1 calls consumed).  CountingRandom tracks
+        // total Next() calls so Sts2_GetShuffleRngCallCount can report mid-combat advances.
+        var shuffleRng = new CountingRandom(shuffleRngSeed);
         for (int i = 0; i < deckLen - 1; i++)
             shuffleRng.Next();
         var aiRng = new Random(monsterAiRngSeed);
@@ -316,6 +317,18 @@ public static class NativeExports
     public static int Sts2_EncounterId(int handle)
     {
         return _pool[handle]!.State.EncounterId;
+    }
+
+    /// <summary>
+    /// Returns the total number of Next() calls made on the shuffle RNG during this combat,
+    /// including the deckLen-1 initial skip applied in ResetRunCombatPreShuffled.
+    /// The Python side can compute mid-combat extra calls as: returned_count - (deck_len - 1).
+    /// Returns 0 if no counting shuffle RNG was set (non-run-combat resets).
+    /// </summary>
+    [UnmanagedCallersOnly]
+    public static int Sts2_GetShuffleRngCallCount(int handle)
+    {
+        return _pool[handle]!.State.ShuffleRng?.CallCount ?? 0;
     }
 
     [UnmanagedCallersOnly]

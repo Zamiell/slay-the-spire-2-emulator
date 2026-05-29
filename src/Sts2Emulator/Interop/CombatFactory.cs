@@ -206,7 +206,7 @@ public static class CombatFactory
         ReadOnlySpan<int> potionIds,
         int playerGold,
         bool deckPreShuffled = false,
-        Random? shuffleRng = null,
+        CountingRandom? shuffleRng = null,
         int? encounterRngSeed = null,
         int nicheSkipCount = 0,
         Random? aiRng = null)

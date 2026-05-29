@@ -11,7 +11,7 @@ _LIB_NAMES = {
     "darwin": "Sts2Emulator.dylib",
 }
 _ALLOW_STALE_ENV = "STS2_ALLOW_STALE_NATIVE"
-_REQUIRED_NATIVE_API_VERSION = 6
+_REQUIRED_NATIVE_API_VERSION = 7
 
 
 def _repo_root() -> Path:
@@ -198,6 +198,9 @@ _lib.Sts2_PlayerWon.argtypes = [ctypes.c_int]
 _lib.Sts2_EncounterId.restype = ctypes.c_int
 _lib.Sts2_EncounterId.argtypes = [ctypes.c_int]
 
+_lib.Sts2_GetShuffleRngCallCount.restype = ctypes.c_int
+_lib.Sts2_GetShuffleRngCallCount.argtypes = [ctypes.c_int]
+
 _lib.Sts2_ActionCount.restype = ctypes.c_int
 _lib.Sts2_ActionCount.argtypes = [ctypes.c_int]
 
@@ -358,6 +361,17 @@ def player_won(handle: int) -> bool:
 
 def encounter_id(handle: int) -> int:
     return int(_lib.Sts2_EncounterId(handle))
+
+
+def get_shuffle_rng_call_count(handle: int) -> int:
+    """Return the total Next() calls on the shuffle RNG since combat started.
+
+    This includes the deckLen-1 initial skip consumed during pre-shuffle setup.
+    The caller should subtract (deck_len - 1) to get only the mid-combat extra
+    advances, then advance the Python-side _run_rng_set.shuffle GameRng by that
+    amount so subsequent combats start from the correct shuffle RNG position.
+    """
+    return int(_lib.Sts2_GetShuffleRngCallCount(handle))
 
 
 def destroy(handle: int) -> None:
