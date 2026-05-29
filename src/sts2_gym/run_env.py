@@ -1594,6 +1594,108 @@ class Sts2RunEnv(gym.Env):
 
         self._assign_map_point_types(rest_count, unknown_count)
 
+    def _prune_duplicate_path_segments(self) -> None:
+        """Simplified MapPathPruning.PruneDuplicateSegments.
+
+        Finds path segments that appear on multiple paths from start to boss,
+        and removes nodes that are on duplicate linear segments while keeping
+        at least one path through each merge point.  Uses mapRng for shuffling
+        the duplicate lists (matching PrunePaths.UnstableShuffle(rng)).
+        """
+        for _ in range(3):  # at most 3 pruning iterations
+            if not self._prune_one_pass():
+                break
+
+    def _prune_one_pass(self) -> bool:
+        """Single iteration of duplicate segment pruning.  Returns True if any
+        nodes were removed (indicating further iterations may be needed)."""
+        # Find all paths from MAP_START_COORD to MAP_BOSS_COORD.
+        paths = self._find_all_paths(MAP_START_COORD)
+
+        # Collect consecutive node pairs (segments of length 2) per path.
+        # A segment is valid if the START has >1 children OR is Ancient,
+        # and the END has >1 parents.
+        segment_paths: dict[tuple, list[int]] = {}
+        for pi, path in enumerate(paths):
+            for i in range(len(path) - 1):
+                start = path[i]
+                end = path[i + 1]
+                start_node = self._map_nodes.get(start)
+                end_node = self._map_nodes.get(end)
+                if start_node is None or end_node is None:
+                    continue
+                is_valid_start = (
+                    start == MAP_START_COORD or len(start_node.children or set()) > 1
+                )
+                is_valid_end = len(end_node.parents or set()) >= 2
+                if not is_valid_start or not is_valid_end:
+                    continue
+                seg = (start, end)
+                if seg not in segment_paths:
+                    segment_paths[seg] = []
+                if pi not in segment_paths[seg]:
+                    segment_paths[seg].append(pi)
+
+        # Find segments that appear on 2+ paths.
+        duplicate_groups = [pis for pis in segment_paths.values() if len(pis) >= 2]
+        if not duplicate_groups:
+            return False
+
+        pruned = False
+        for group in duplicate_groups:
+            # Shuffle the path index list using mapRng (matches UnstableShuffle).
+            shuffled = list(group)
+            self._map_rng.shuffle(shuffled)
+            # Keep the last path; prune all others.
+            to_prune = shuffled[:-1]
+            for pi in to_prune:
+                path = paths[pi]
+                # Try to remove linear nodes from this path.
+                for ci in range(1, len(path) - 1):
+                    coord = path[ci]
+                    node = self._map_nodes.get(coord)
+                    if node is None:
+                        continue
+                    parents = node.parents or set()
+                    children = node.children or set()
+                    # Only remove nodes with exactly 1 parent and 1 child
+                    # (linear segment nodes) to avoid breaking connectivity.
+                    if len(parents) != 1 or len(children) != 1:
+                        continue
+                    parent_coord = next(iter(parents))
+                    child_coord = next(iter(children))
+                    parent_node = self._map_nodes.get(parent_coord)
+                    child_node = self._map_nodes.get(child_coord)
+                    if parent_node is None or child_node is None:
+                        continue
+                    # Remove from parent's children and child's parents.
+                    (parent_node.children or set()).discard(coord)
+                    (child_node.parents or set()).discard(coord)
+                    del self._map_nodes[coord]
+                    # Update MAP_START_COORD children.
+                    start_node = self._map_nodes.get(MAP_START_COORD)
+                    if start_node and coord in (start_node.children or set()):
+                        start_node.children.discard(coord)
+                    pruned = True
+                    break  # one node per path per iteration
+
+        return pruned
+
+    def _find_all_paths(self, start: tuple[int, int]) -> list[list[tuple[int, int]]]:
+        """Find all paths from start to MAP_BOSS_COORD."""
+        if start == MAP_BOSS_COORD:
+            return [[start]]
+        node = self._map_nodes.get(start)
+        if node is None:
+            return []
+        result: list[list[tuple[int, int]]] = []
+        for child in node.children or set():
+            for path in self._find_all_paths(child):
+                result.append([start] + path)
+        if not result:
+            result = [[start]]
+        return result
+
     def _get_or_create_map_node(self, col: int, row: int) -> RunMapNode:
         coord = (col, row)
         node = self._map_nodes.get(coord)
