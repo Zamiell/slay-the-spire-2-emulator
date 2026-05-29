@@ -26,7 +26,7 @@ from sts2_gym.run_env import (
     PHASE_COMPLETE,
     PHASE_EVENT,
     PHASE_MAP,
-    PHASE_NEOW,
+    PHASE_ANCIENT,
     PHASE_RELIC_REWARD,
     PHASE_REST,
     PHASE_SHOP,
@@ -48,7 +48,7 @@ PHASE_STATE_TYPES = {
     PHASE_COMPLETE: "game_over",
     PHASE_EVENT: "event",
     PHASE_MAP: "map",
-    PHASE_NEOW: "event",
+    PHASE_ANCIENT: "event",
     PHASE_RELIC_REWARD: "rewards",
     PHASE_REST: "rest_site",
     PHASE_SHOP: "shop",
@@ -297,7 +297,7 @@ def proceed_action(phase: int) -> int | None:
         return REWARD_SKIP_ACTION
     if phase == PHASE_SHOP:
         return SHOP_SKIP_ACTION
-    if phase in {PHASE_EVENT, PHASE_NEOW}:
+    if phase in {PHASE_EVENT, PHASE_ANCIENT}:
         return EVENT_SKIP_ACTION
     if phase == PHASE_RELIC_REWARD:
         return 0
@@ -355,7 +355,7 @@ def summarize_env(obs: np.ndarray, info: dict[str, Any]) -> dict[str, Any]:
         "card_reward": (
             summarize_card_reward(info) if phase == PHASE_CARD_REWARD else {}
         ),
-        "event": summarize_event(info) if phase in {PHASE_EVENT, PHASE_NEOW} else {},
+        "event": summarize_event(info) if phase in {PHASE_EVENT, PHASE_ANCIENT} else {},
         "map": summarize_map(info) if phase == PHASE_MAP else {},
         "rewards": summarize_relic_reward(info) if phase == PHASE_RELIC_REWARD else {},
         "rest_site": {} if phase != PHASE_REST else {"can_proceed": False},
@@ -424,7 +424,7 @@ def summarize_card_reward(info: dict[str, Any]) -> dict[str, Any]:
 
 
 def summarize_event(info: dict[str, Any]) -> dict[str, Any]:
-    if int(info["phase"]) == PHASE_NEOW:
+    if int(info["phase"]) == PHASE_ANCIENT:
         return {
             "event_id": "NEOW",
             "options": [

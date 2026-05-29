@@ -32,7 +32,7 @@ from sts2_gym.run_env import (
     PHASE_COMPLETE,
     PHASE_EVENT,
     PHASE_MAP,
-    PHASE_NEOW,
+    PHASE_ANCIENT,
     PHASE_RELIC_REWARD,
     PHASE_REST,
     NEOW_CURSE_RELICS,
@@ -228,7 +228,7 @@ class Sts2GymTests(unittest.TestCase):
         env = Sts2RunEnv(seed=0, max_floors=3)
         try:
             _, info = env.reset()
-            self.assertEqual(info["phase"], PHASE_NEOW)
+            self.assertEqual(info["phase"], PHASE_ANCIENT)
             self.assertEqual(info["deck_size"], 11)
 
             _, _, terminated, truncated, info = env.step(0)
@@ -575,6 +575,14 @@ class Sts2GymTests(unittest.TestCase):
             env._enter_relic_reward_phase()
             _, _, terminated, _, info = env.step(0)
 
+            self.assertFalse(terminated)
+            self.assertEqual(info["phase"], PHASE_ANCIENT)
+
+            env._current_node_type = NODE_BOSS
+            env._act_index = 2
+            env._enter_relic_reward_phase()
+            _, _, terminated, _, info = env.step(0)
+
             self.assertTrue(terminated)
             self.assertEqual(info["phase"], PHASE_COMPLETE)
         finally:
@@ -680,7 +688,7 @@ class Sts2GymTests(unittest.TestCase):
         env = Sts2RunEnv(seed=0)
         try:
             _, info = env.reset()
-            self.assertEqual(info["phase"], PHASE_NEOW)
+            self.assertEqual(info["phase"], PHASE_ANCIENT)
 
             neow_options = info["neow_options"]
             self.assertEqual(len(neow_options), 3)
@@ -786,7 +794,7 @@ class Sts2GymTests(unittest.TestCase):
             env._obtain_relic(RELIC_PRECISE_SCISSORS)
             self.assertEqual(len(env._deck), deck_size + 1)
 
-            # New Leaf now works via _step_neow: shows card selection screen
+            # New Leaf now works via _step_ancient: shows card selection screen
             # so _obtain_relic alone does not transform any card.
             deck_size_before = len(env._deck)
             env._obtain_relic(RELIC_NEW_LEAF)
@@ -796,7 +804,7 @@ class Sts2GymTests(unittest.TestCase):
             env._obtain_relic(RELIC_PHIAL_HOLSTER)
             self.assertEqual(sum(1 for potion in env._potions if potion != 0), 2)
 
-            # Lost Coffer now works via _step_neow: generates a 3-card reward
+            # Lost Coffer now works via _step_ancient: generates a 3-card reward
             # screen (rewards RNG) and adds the potion, so _obtain_relic alone
             # does not change deck or potions.
             deck_size = len(env._deck)
@@ -820,7 +828,7 @@ class Sts2GymTests(unittest.TestCase):
             env._relics.append(RELIC_WINGED_BOOTS)
             env._phase = PHASE_MAP
             start = env._map_nodes[env._current_map_coord]
-            start.children = {(1, 1)}
+            start.children = [(1, 1)]
             child = env._get_or_create_map_node(1, 1)
             child.node_type = "Monster"
             winged_only = env._get_or_create_map_node(2, 1)
@@ -974,7 +982,7 @@ class Sts2GymTests(unittest.TestCase):
         env = Sts2RunEnv(seed=0)
         try:
             env.reset()
-            env._step_neow(0)
+            env._step_ancient(0)
             env._reset_combat(seed=0, encounter_id=7)
 
             self.assertIn(env._gold_reward_for_node(), range(7, 16))
@@ -1028,7 +1036,7 @@ class Sts2GymTests(unittest.TestCase):
         env = Sts2RunEnv(seed=0)
         try:
             env.reset()
-            env._step_neow(0)
+            env._step_ancient(0)
             env._potions = [1, 0, 2]
             env._reset_combat(seed=0, encounter_id=1)
             obs = env._obs()

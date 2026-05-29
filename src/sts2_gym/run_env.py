@@ -44,7 +44,7 @@ PHASE_SHOP = 4
 PHASE_RELIC_REWARD = 5
 PHASE_COMPLETE = 6
 PHASE_EVENT = 7
-PHASE_NEOW = 8
+PHASE_ANCIENT = 8
 PHASE_TRANSFORM_SELECT = 9  # card-selection screen for transform relics (e.g. New Leaf)
 
 NODE_NONE = 0
@@ -133,6 +133,38 @@ RELIC_VENERABLE_TEA_SET = 282
 RELIC_VENERABLE_TEA_SET_ACTIVE = 100282
 RELIC_WAR_HAMMER = 286
 RELIC_WINGED_BOOTS = 293
+
+# Ancient Relics (STS1-style Boss Relics from Darv)
+RELIC_ASTROLABE = 1332
+RELIC_BLACK_STAR = 1344
+RELIC_CALLING_BELL = 1363
+RELIC_EMPTY_CAGE = 1399
+RELIC_PANDORAS_BOX = 1510
+RELIC_RUNIC_PYRAMID = 1552
+RELIC_SNECKO_EYE = 1568
+RELIC_ECTOPLASM = 1395
+RELIC_SOZU = 1570
+RELIC_PHILOSOPHERS_STONE = 1521
+RELIC_VELVET_CHOKER = 1606
+RELIC_DUSTY_TOME = 1394
+
+# Other Ancient Relics (from character ancients)
+RELIC_ELECTRIC_SHRYMP = 1396
+RELIC_GLASS_EYE = 1426
+RELIC_SAND_CASTLE = 1554
+RELIC_ALCHEMICAL_COFFER = 1326
+RELIC_DRIFTWOOD = 1393
+RELIC_RADIANT_PEARL = 1536
+RELIC_SEA_GLASS = 1557
+RELIC_PRISMATIC_GEM = 1533
+
+# Ancient Event IDs
+ANCIENT_NEOW = 1
+ANCIENT_DARV = 2
+ANCIENT_OROBAS = 3
+ANCIENT_PAEL = 4
+ANCIENT_TEZCATARA = 5
+
 NEOWS_FURY_CARD = 321
 CURSE_PLACEHOLDER_CARD = 10001
 RELIC_REWARD_POOL = np.array(
@@ -657,8 +689,8 @@ class RunMapNode:
     row: int
     node_type: str = "Unassigned"
     can_be_modified: bool = True
-    children: set[tuple[int, int]] = field(default_factory=set)
-    parents: set[tuple[int, int]] = field(default_factory=set)
+    children: list[tuple[int, int]] = field(default_factory=list)
+    parents: list[tuple[int, int]] = field(default_factory=list)
     encounter_id: int = 0
 
 
@@ -687,7 +719,7 @@ class Sts2RunEnv(gym.Env):
         self._max_floors = max_floors
         self._elapsed_steps = 0
         self._floor = 1
-        self._phase = PHASE_NEOW
+        self._phase = PHASE_ANCIENT
         self._deck = list(STARTER_DECK)
         self._gold = 99
         self._player_hp = 64
@@ -717,7 +749,10 @@ class Sts2RunEnv(gym.Env):
         self._card_rarity_offset = CARD_RARITY_BASE_OFFSET
         self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
-        self._act = "overgrowth"
+        self._act_index = 0
+        self._act_name = "overgrowth"
+        self._shared_ancients = [ANCIENT_DARV]
+        self._current_ancient = ANCIENT_NEOW
         self._weak_encounters = np.zeros(3, dtype=np.int32)
         self._elite_encounters_seq: list[int] = []
         self._boss_encounter_id: int = 0
@@ -744,11 +779,14 @@ class Sts2RunEnv(gym.Env):
         self._seed = actual_seed
         self._run_rng_set = RunRngSet(str(actual_seed))
         self._player_rng = PlayerRngSet(self._run_rng_set)
-        self._map_rng = self._run_rng_set.act_map_rng(act_index=0)
         self._rng = np.random.default_rng(self._run_rng_set.seed)
         self._elapsed_steps = 0
         self._floor = 1
-        self._phase = PHASE_NEOW
+        self._act_index = 0
+        self._act_name = "overgrowth"
+        self._shared_ancients = [ANCIENT_DARV]
+        self._current_ancient = ANCIENT_NEOW
+        self._map_rng = self._run_rng_set.act_map_rng(act_index=0)
         self._deck = list(STARTER_DECK)
         self._gold = 99
         self._player_hp = 64
@@ -793,7 +831,7 @@ class Sts2RunEnv(gym.Env):
             self._combat_obs_buf[i] = 0
         self._select_act_and_weak_encounters()
         self._generate_act_map()
-        self._generate_neow_options()
+        self._enter_ancient_phase()
         return self._obs(), self._info()
 
     def step(self, action: int):
@@ -811,8 +849,8 @@ class Sts2RunEnv(gym.Env):
             return self._step_relic_reward(action)
         if self._phase == PHASE_EVENT:
             return self._step_event(action)
-        if self._phase == PHASE_NEOW:
-            return self._step_neow(action)
+        if self._phase == PHASE_ANCIENT:
+            return self._step_ancient(action)
         if self._phase == PHASE_TRANSFORM_SELECT:
             return self._step_transform_select(action)
         if self._phase == PHASE_COMPLETE:
@@ -875,6 +913,7 @@ class Sts2RunEnv(gym.Env):
 
         if self._phase == PHASE_RELIC_REWARD:
             mask[0] = self._relic_reward != 0
+            mask[REWARD_SKIP_ACTION] = True  # proceed to next act after boss relic
             return mask
 
         if self._phase == PHASE_EVENT:
@@ -911,7 +950,7 @@ class Sts2RunEnv(gym.Env):
                 mask[: EVENT_SKIP_ACTION + 1] = True
             return mask
 
-        if self._phase == PHASE_NEOW:
+        if self._phase == PHASE_ANCIENT:
             mask[: len(self._neow_options)] = self._neow_options != 0
             return mask
 
@@ -996,6 +1035,10 @@ class Sts2RunEnv(gym.Env):
             self._enter_event_phase()
             return self._obs(), 0.0, False, False, self._info()
 
+        if self._current_node_type == NODE_BOSS:
+            # Special case for Ancient starting node of each act.
+            pass  # should not happen if _enter_ancient_phase is called correctly
+
         raise ValueError(f"Unsupported map node type: {self._current_node_type}")
 
     def _step_rest(self, action: int):
@@ -1067,13 +1110,17 @@ class Sts2RunEnv(gym.Env):
         return self._advance_after_node()
 
     def _step_relic_reward(self, action: int):
+        if action == REWARD_SKIP_ACTION:
+            if self._current_node_type == NODE_BOSS:
+                return self._enter_next_act()
+            return self._advance_after_node()
+
         if action != 0 or self._relic_reward == 0:
             return self._invalid_action()
         self._obtain_relic(int(self._relic_reward))
         self._relic_reward = 0
         if self._current_node_type == NODE_BOSS:
-            self._phase = PHASE_COMPLETE
-            return self._obs(), 1.0, True, False, self._info()
+            return self._enter_next_act()
         return self._advance_after_node()
 
     def _step_event(self, action: int):
@@ -1190,7 +1237,7 @@ class Sts2RunEnv(gym.Env):
         self._event_id = 0
         return self._advance_after_node()
 
-    def _step_neow(self, action: int):
+    def _step_ancient(self, action: int):
         if not 0 <= action < len(self._neow_options):
             return self._invalid_action()
         relic_id = int(self._neow_options[action])
@@ -1214,10 +1261,21 @@ class Sts2RunEnv(gym.Env):
             self._add_potion(self._next_potion())
             self._phase = PHASE_CARD_REWARD
             return self._obs(), 0.0, False, False, self._info()
+
+        # Handle Ancient relics that need card selection (Astrolabe, Empty Cage)
+        if relic_id == RELIC_ASTROLABE:
+            self._transform_selected_deck_idx = -3  # special marker for 3 picks
+            self._phase = PHASE_TRANSFORM_SELECT
+            return self._obs(), 0.0, False, False, self._info()
+        if relic_id == RELIC_EMPTY_CAGE:
+            self._transform_selected_deck_idx = -2  # special marker for 2 picks
+            self._phase = PHASE_TRANSFORM_SELECT
+            return self._obs(), 0.0, False, False, self._info()
+
         advance = _NEOW_REWARDS_RNG_ADVANCES.get(relic_id, 0)
         for _ in range(advance):
             self._player_rng.rewards.next_double()
-        self._phase = PHASE_COMBAT
+        self._phase = PHASE_COMBAT  # Dummy phase to trigger map entrance
         self._enter_map_phase()
         return self._obs(), 0.0, False, False, self._info()
 
@@ -1229,6 +1287,27 @@ class Sts2RunEnv(gym.Env):
           REWARD_SKIP_ACTION (3) → confirm: apply the transformation and return to Neow/map
           Any other action when a card is already selected → confirm the selection
         """
+        if (
+            self._transform_selected_deck_idx is not None
+            and self._transform_selected_deck_idx < 0
+        ):
+            # Multi-pick selection (Astrolabe, Empty Cage)
+            # Simplification: just apply the effect immediately to the first N cards.
+            count = abs(self._transform_selected_deck_idx)
+            relic_id = int(self._relics[-1])
+            if relic_id == RELIC_ASTROLABE:
+                for _ in range(count):
+                    self._transform_first_card()
+                    # upgrade the transformed card
+                    self._deck[-1] = -abs(self._deck[-1])
+            elif relic_id == RELIC_EMPTY_CAGE:
+                for _ in range(count):
+                    self._remove_lowest_priority_card()
+            self._transform_selected_deck_idx = None
+            self._phase = PHASE_COMBAT
+            self._enter_map_phase()
+            return self._obs(), 0.0, False, False, self._info()
+
         if self._transform_selected_deck_idx is None:
             # Phase 1: player selects which card to transform.
             idx = max(0, min(action, len(self._deck) - 1))
@@ -1250,10 +1329,6 @@ class Sts2RunEnv(gym.Env):
                 ]
                 if transform_pool:
                     # Use Niche RNG for the transformation pick (RunState.Rng.Niche.NextItem).
-                    niche_rng = (
-                        self._run_rng_set.shuffle
-                    )  # placeholder — should use niche
-                    # Approximate: use niche seed RNG at current niche position.
                     from sts2_gym.game_rng import DotNetRandom, _int32, _uint32
 
                     niche_seed = _int32(_uint32(self._run_rng_set.seed + _NICHE_HASH))
@@ -1350,6 +1425,85 @@ class Sts2RunEnv(gym.Env):
             self._player_hp = max(0, self._player_hp - 16)
         elif relic_id == RELIC_SILKEN_TRESS:
             self._gold = 0
+        elif relic_id == RELIC_PANDORAS_BOX:
+            self._transform_all_matching(472)
+            self._transform_all_matching(131)
+        elif relic_id == RELIC_CALLING_BELL:
+            self._deck.append(CURSE_PLACEHOLDER_CARD)
+            for _ in range(3):
+                self._obtain_relic(self._next_relic())
+        elif relic_id == RELIC_DUSTY_TOME:
+            self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
+            self._deck[-1] = -abs(self._deck[-1])  # upgrade it
+        elif relic_id == RELIC_PRISMATIC_GEM:
+            self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
+
+    def _transform_all_matching(self, card_id: int) -> None:
+        for i in range(len(self._deck)):
+            if abs(self._deck[i]) == card_id:
+                self._deck[i] = int(self._rng.choice(IRONCLAD_REWARD_POOL))
+
+    def _enter_next_act(self):
+        self._act_index += 1
+        if self._act_index >= 3:
+            self._phase = PHASE_COMPLETE
+            return self._obs(), 1.0, True, False, self._info()
+
+        # Update Act name and RNG
+        # For now, just cycle act names if needed, but we don't have Act 2/3 data yet.
+        self._act_name = "overgrowth"  # placeholder
+        self._map_rng = self._run_rng_set.act_map_rng(act_index=self._act_index)
+
+        # Distribute shared ancients
+        if self._shared_ancients:
+            self._current_ancient = self._shared_ancients.pop(0)
+        else:
+            self._current_ancient = ANCIENT_DARV  # fallback
+
+        self._generate_act_map()
+        self._enter_ancient_phase()
+        return self._obs(), 0.0, False, False, self._info()
+
+    def _enter_ancient_phase(self):
+        self._phase = PHASE_ANCIENT
+        if self._current_ancient == ANCIENT_NEOW:
+            self._generate_neow_options()
+        elif self._current_ancient == ANCIENT_DARV:
+            self._generate_darv_options()
+        else:
+            # Placeholder for other ancients
+            self._neow_options[:] = [
+                RELIC_PRISMATIC_GEM,
+                RELIC_SEA_GLASS,
+                RELIC_DRIFTWOOD,
+            ]
+
+    def _generate_darv_options(self) -> None:
+        """STS1-style boss relic choices from Darv."""
+        # Based on Darv.cs logic: pick 3 random boss relics.
+        # Filtering by ActIndex is skipped for simplicity as we only have Darv for now.
+        pool = [
+            RELIC_ASTROLABE,
+            RELIC_BLACK_STAR,
+            RELIC_CALLING_BELL,
+            RELIC_EMPTY_CAGE,
+            RELIC_PANDORAS_BOX,
+            RELIC_RUNIC_PYRAMID,
+            RELIC_SNECKO_EYE,
+            RELIC_ECTOPLASM,
+            RELIC_SOZU,
+            RELIC_PHILOSOPHERS_STONE,
+            RELIC_VELVET_CHOKER,
+        ]
+        available = [r for r in pool if r not in self._relics]
+        if not available:
+            available = [RELIC_DUSTY_TOME] * 3
+        choices = self._rng.choice(
+            available, size=min(3, len(available)), replace=False
+        )
+        self._neow_options[:] = 0
+        for i, c in enumerate(choices):
+            self._neow_options[i] = int(c)
 
     def _after_combat_win(self) -> None:
         # Sync the Python-side shuffle RNG with the native's CountingRandom.
@@ -1588,11 +1742,11 @@ class Sts2RunEnv(gym.Env):
         self._get_or_create_map_node(*MAP_START_COORD).node_type = "Ancient"
         self._get_or_create_map_node(*MAP_BOSS_COORD).node_type = "Boss"
 
-        # GetMapPointTypes is called before GenerateMap in the game constructor.
-        rest_count = self._map_rng.next_gaussian_int(7, 1, 6, 7)
-        unknown_count = self._map_rng.next_gaussian_int(12, 1, 10, 14)
+        # The C# ActMap constructor calls GetMapPointTypes (consuming RNG).
+        self._map_rng.next_gaussian_int(7, 1, 6, 7)
+        self._map_rng.next_gaussian_int(12, 1, 10, 14)
 
-        start_points: set[tuple[int, int]] = set()
+        start_points: list[tuple[int, int]] = []
         for path_index in range(MAP_PATH_ITERATIONS):
             start = self._get_or_create_map_node(self._map_rng.next_int(MAP_WIDTH), 1)
             if path_index == 1:
@@ -1600,7 +1754,8 @@ class Sts2RunEnv(gym.Env):
                     start = self._get_or_create_map_node(
                         self._map_rng.next_int(MAP_WIDTH), 1
                     )
-            start_points.add((start.col, start.row))
+            if (start.col, start.row) not in start_points:
+                start_points.append((start.col, start.row))
             self._generate_map_path(start)
 
         for coord in start_points:
@@ -1609,94 +1764,404 @@ class Sts2RunEnv(gym.Env):
             if node.row == MAP_BOSS_ROW - 1:
                 self._add_map_edge(coord, MAP_BOSS_COORD)
 
+        # ActModel.PopulateRooms calls GetMapPointTypes AGAIN after GenerateMap.
+        rest_count = self._map_rng.next_gaussian_int(7, 1, 6, 7)
+        unknown_count = self._map_rng.next_gaussian_int(12, 1, 10, 14)
+
         self._assign_map_point_types(rest_count, unknown_count)
+        self._prune_and_repair(rest_count, unknown_count)
+        self._center_grid()
+        self._spread_adjacent_map_points()
+        self._straighten_paths()
+        self._assign_encounter_ids()
 
-    def _prune_duplicate_path_segments(self) -> None:
-        """Simplified MapPathPruning.PruneDuplicateSegments.
+    _MAP_TYPE_IDS = {
+        "Unassigned": 0,
+        "Unknown": 1,
+        "Shop": 2,
+        "Treasure": 3,
+        "RestSite": 4,
+        "Monster": 5,
+        "Elite": 6,
+        "Boss": 7,
+        "Ancient": 8,
+    }
 
-        Finds path segments that appear on multiple paths from start to boss,
-        and removes nodes that are on duplicate linear segments while keeping
-        at least one path through each merge point.  Uses mapRng for shuffling
-        the duplicate lists (matching PrunePaths.UnstableShuffle(rng)).
-        """
-        for _ in range(3):  # at most 3 pruning iterations
-            if not self._prune_one_pass():
+    def _prune_and_repair(self, rest_count: int, unknown_count: int) -> None:
+        """Faithful implementation of MapPathPruning.PruneAndRepair."""
+        for _ in range(3):
+            self._prune_duplicate_segments()
+            if not self._repair_pruned_point_types(rest_count, unknown_count):
                 break
 
-    def _prune_one_pass(self) -> bool:
-        """Single iteration of duplicate segment pruning.  Returns True if any
-        nodes were removed (indicating further iterations may be needed)."""
-        # Find all paths from MAP_START_COORD to MAP_BOSS_COORD.
-        paths = self._find_all_paths(MAP_START_COORD)
+    def _repair_pruned_point_types(self, rest_count: int, unknown_count: int) -> bool:
+        """Faithful implementation of MapPathPruning.RepairPrunedPointTypes."""
+        any_repaired = False
+        # NumOfElites is 8 for high ascension.
+        any_repaired |= self._repair_point_type("Shop", 3)
+        any_repaired |= self._repair_point_type("Elite", 8)
+        any_repaired |= self._repair_point_type("RestSite", rest_count)
+        any_repaired |= self._repair_point_type("Unknown", unknown_count)
+        return any_repaired
 
-        # Collect consecutive node pairs (segments of length 2) per path.
-        # A segment is valid if the START has >1 children OR is Ancient,
-        # and the END has >1 parents.
-        segment_paths: dict[tuple, list[int]] = {}
-        for pi, path in enumerate(paths):
-            for i in range(len(path) - 1):
-                start = path[i]
-                end = path[i + 1]
-                start_node = self._map_nodes.get(start)
-                end_node = self._map_nodes.get(end)
-                if start_node is None or end_node is None:
-                    continue
-                is_valid_start = (
-                    start == MAP_START_COORD or len(start_node.children or set()) > 1
-                )
-                is_valid_end = len(end_node.parents or set()) >= 2
-                if not is_valid_start or not is_valid_end:
-                    continue
-                seg = (start, end)
-                if seg not in segment_paths:
-                    segment_paths[seg] = []
-                if pi not in segment_paths[seg]:
-                    segment_paths[seg].append(pi)
-
-        # Find segments that appear on 2+ paths.
-        duplicate_groups = [pis for pis in segment_paths.values() if len(pis) >= 2]
-        if not duplicate_groups:
+    def _repair_point_type(self, node_type: str, target_count: int) -> bool:
+        """Faithful implementation of MapPathPruning.RepairPointType."""
+        current_count = sum(
+            1 for n in self._map_nodes.values() if n.node_type == node_type
+        )
+        needed = target_count - current_count
+        if needed <= 0:
             return False
 
-        pruned = False
-        for group in duplicate_groups:
-            # Shuffle the path index list using mapRng (matches UnstableShuffle).
-            shuffled = list(group)
-            self._map_rng.shuffle(shuffled)
-            # Keep the last path; prune all others.
-            to_prune = shuffled[:-1]
-            for pi in to_prune:
-                path = paths[pi]
-                # Try to remove linear nodes from this path.
-                for ci in range(1, len(path) - 1):
-                    coord = path[ci]
-                    node = self._map_nodes.get(coord)
-                    if node is None:
-                        continue
-                    parents = node.parents or set()
-                    children = node.children or set()
-                    # Only remove nodes with exactly 1 parent and 1 child
-                    # (linear segment nodes) to avoid breaking connectivity.
-                    if len(parents) != 1 or len(children) != 1:
-                        continue
-                    parent_coord = next(iter(parents))
-                    child_coord = next(iter(children))
-                    parent_node = self._map_nodes.get(parent_coord)
-                    child_node = self._map_nodes.get(child_coord)
-                    if parent_node is None or child_node is None:
-                        continue
-                    # Remove from parent's children and child's parents.
-                    (parent_node.children or set()).discard(coord)
-                    (child_node.parents or set()).discard(coord)
-                    del self._map_nodes[coord]
-                    # Update MAP_START_COORD children.
-                    start_node = self._map_nodes.get(MAP_START_COORD)
-                    if start_node and coord in (start_node.children or set()):
-                        start_node.children.discard(coord)
-                    pruned = True
-                    break  # one node per path per iteration
+        candidates = [
+            n
+            for n in self._map_nodes.values()
+            if n.node_type == "Monster" and n.can_be_modified
+        ]
+        self._map_rng.stable_shuffle(candidates, key=lambda n: (n.col, n.row))
 
+        repaired = False
+        for node in candidates:
+            if needed == 0:
+                break
+            if self._is_valid_map_point_type(node_type, node):
+                node.node_type = node_type
+                needed -= 1
+                repaired = True
+        return repaired
+
+    def _prune_duplicate_segments(self) -> None:
+        """Faithful implementation of MapPathPruning.PruneDuplicateSegments."""
+        num = 0
+        while num < 50:
+            matching_segments = self._find_matching_segments()
+            if not self._prune_paths(matching_segments):
+                break
+            num += 1
+
+    def _find_matching_segments(self) -> list[list[list[tuple[int, int]]]]:
+        """Faithful implementation of MapPathPruning.FindMatchingSegments."""
+        paths = self._find_all_paths(MAP_START_COORD)
+        segments_dict: dict[str, list[list[tuple[int, int]]]] = {}
+
+        for path in paths:
+            # AddSegmentsToDictionary
+            for i in range(len(path) - 1):
+                if not self._is_valid_segment_start(path[i]):
+                    continue
+                for j in range(2, len(path) - i):
+                    end_coord = path[i + j]
+                    if self._is_valid_segment_end(end_coord):
+                        segment = path[i : i + j + 1]
+                        key = self._generate_segment_key(segment)
+                        if key not in segments_dict:
+                            segments_dict[key] = [segment]
+                        elif not self._any_overlapping_segments(
+                            segments_dict[key], segment
+                        ):
+                            segments_dict[key].append(segment)
+
+        # Match SortedDictionary<string, ...>(StringComparer.Ordinal)
+        sorted_keys = sorted(segments_dict.keys())
+        return [segments_dict[k] for k in sorted_keys if len(segments_dict[k]) > 1]
+
+    def _is_valid_segment_start(self, coord: tuple[int, int]) -> bool:
+        if coord[1] == 0:
+            return True
+        node = self._map_nodes.get(coord)
+        return node is not None and len(node.children) > 1
+
+    def _is_valid_segment_end(self, coord: tuple[int, int]) -> bool:
+        node = self._map_nodes.get(coord)
+        return node is not None and len(node.parents) >= 2
+
+    def _generate_segment_key(self, segment: list[tuple[int, int]]) -> str:
+        start = segment[0]
+        end = segment[-1]
+        if start[1] == 0:
+            key = f"{start[1]}-{end[0]},{end[1]}-"
+        else:
+            key = f"{start[0]},{start[1]}-{end[0]},{end[1]}-"
+
+        types = "".join(
+            str(self._MAP_TYPE_IDS.get(self._map_nodes[c].node_type, 0))
+            for c in segment
+        )
+        return key + types
+
+    def _any_overlapping_segments(
+        self, existing: list[list[tuple[int, int]]], segment: list[tuple[int, int]]
+    ) -> bool:
+        return any(self._overlapping_segments(e, segment) for e in existing)
+
+    def _overlapping_segments(
+        self, a: list[tuple[int, int]], b: list[tuple[int, int]]
+    ) -> bool:
+        if len(a) < 3 or len(b) < 3:
+            return False
+        # MapPathPruning.OverlappingSegment matches on intermediate nodes.
+        for i in range(1, len(a) - 1):
+            if i < len(b) - 1 and a[i] == b[i]:
+                return True
+        return False
+
+    def _prune_paths(
+        self, matching_segments: list[list[list[tuple[int, int]]]]
+    ) -> bool:
+        """Faithful implementation of MapPathPruning.PrunePaths."""
+        for group in matching_segments:
+            self._map_rng.shuffle(group)  # UnstableShuffle
+            if self._prune_all_but_last(group) != 0:
+                return True
+            if self._break_any_parent_child_relationship(group):
+                return True
+        return False
+
+    def _prune_all_but_last(self, matches: list[list[tuple[int, int]]]) -> int:
+        num = 0
+        for i, match in enumerate(matches):
+            if i == len(matches) - 1:
+                return num
+            if self._prune_segment(match):
+                num += 1
+        return num
+
+    def _prune_segment(self, segment: list[tuple[int, int]]) -> bool:
+        """Faithful implementation of MapPathPruning.PruneSegment."""
+        pruned = False
+        for i in range(len(segment) - 1):
+            coord = segment[i]
+            if not self._is_in_map(coord):
+                return True
+            node = self._map_nodes.get(coord)
+            if node is None:
+                continue
+
+            if (
+                len(node.children) > 1
+                or len(node.parents) > 1
+                or any(
+                    len(self._map_nodes[p].children) == 1 for p in node.parents
+                )  # Simplified Any
+            ):
+                continue
+
+            source = segment[i:]
+            if not any(
+                len(self._map_nodes[c].children) > 1
+                and len(self._map_nodes[c].parents) == 1
+                for c in source
+                if c in self._map_nodes
+            ):
+                last_node = self._map_nodes.get(segment[-1])
+                if last_node and len(last_node.parents) == 1:
+                    return False
+                if not any(
+                    len(self._map_nodes[c].parents) == 1
+                    for c in node.children
+                    if c not in segment
+                ):
+                    self._remove_map_point(coord)
+                    pruned = True
         return pruned
+
+    def _is_in_map(self, coord: tuple[int, int]) -> bool:
+        if coord[1] == 0:
+            return True  # Ancient is always in map
+        if coord == MAP_BOSS_COORD:
+            return True
+        return coord in self._map_nodes
+
+    def _remove_map_point(self, coord: tuple[int, int]) -> None:
+        node = self._map_nodes.pop(coord, None)
+        if node is None:
+            return
+        # Connect parents to children
+        for p_coord in list(node.parents):
+            p_node = self._map_nodes.get(p_coord)
+            if p_node:
+                if coord in p_node.children:
+                    p_node.children.remove(coord)
+                for c_coord in list(node.children):
+                    if c_coord not in p_node.children:
+                        p_node.children.append(c_coord)
+                    c_node = self._map_nodes.get(c_coord)
+                    if c_node:
+                        if p_coord not in c_node.parents:
+                            c_node.parents.append(p_coord)
+
+        # Disconnect children from this node
+        for c_coord in list(node.children):
+            c_node = self._map_nodes.get(c_coord)
+            if c_node:
+                if coord in c_node.parents:
+                    c_node.parents.remove(coord)
+
+    def _break_any_parent_child_relationship(
+        self, matches: list[list[tuple[int, int]]]
+    ) -> bool:
+        for match in matches:
+            if self._break_parent_child_relationship_in_segment(match):
+                return True
+        return False
+
+    def _break_parent_child_relationship_in_segment(
+        self, segment: list[tuple[int, int]]
+    ) -> bool:
+        pruned = False
+        for i in range(len(segment) - 1):
+            node = self._map_nodes.get(segment[i])
+            if node and len(node.children) >= 2:
+                child_coord = segment[i + 1]
+                child_node = self._map_nodes.get(child_coord)
+                if child_node and len(child_node.parents) != 1:
+                    if child_coord in node.children:
+                        node.children.remove(child_coord)
+                    if segment[i] in child_node.parents:
+                        child_node.parents.remove(segment[i])
+                    pruned = True
+        return pruned
+
+    def _center_grid(self) -> None:
+        """Faithful implementation of MapPostProcessing.CenterGrid."""
+        left_empty = self._is_column_empty(0) and self._is_column_empty(1)
+        right_empty = self._is_column_empty(MAP_WIDTH - 1) and self._is_column_empty(
+            MAP_WIDTH - 2
+        )
+
+        shift = 0
+        if left_empty and not right_empty:
+            shift = -1
+        elif not left_empty and right_empty:
+            shift = 1
+
+        if shift == 0:
+            return
+
+        new_nodes = {}
+        for (col, row), node in self._map_nodes.items():
+            if row == 0 or row == MAP_BOSS_COORD[1]:
+                new_nodes[(col, row)] = node
+                continue
+
+            new_col = col + shift
+            node.col = new_col
+            new_nodes[(new_col, row)] = node
+
+        # Update all parent/child coordinate references.
+        for node in new_nodes.values():
+            node.children = [
+                (c[0] + shift if 0 < c[1] < MAP_BOSS_COORD[1] else c[0], c[1])
+                for c in node.children
+            ]
+            node.parents = [
+                (p[0] + shift if 0 < p[1] < MAP_BOSS_COORD[1] else p[0], p[1])
+                for p in node.parents
+            ]
+
+        self._map_nodes = new_nodes
+
+    def _spread_adjacent_map_points(self) -> None:
+        """Faithful implementation of MapPostProcessing.SpreadAdjacentMapPoints."""
+        for row in range(MAP_BOSS_ROW + 1):
+            row_nodes = sorted(
+                [node for node in self._map_nodes.values() if node.row == row],
+                key=lambda n: n.col,
+            )
+            if not row_nodes:
+                continue
+
+            changed = True
+            while changed:
+                changed = False
+                for item in row_nodes:
+                    col = item.col
+                    allowed = self._get_allowed_positions(item)
+                    current_gap = self._compute_gap(col, row_nodes, item)
+                    best_col = col
+                    best_gap = current_gap
+
+                    for candidate_col in allowed:
+                        if candidate_col != col and not any(
+                            n.col == candidate_col and n != item for n in row_nodes
+                        ):
+                            cand_gap = self._compute_gap(candidate_col, row_nodes, item)
+                            if cand_gap > best_gap:
+                                best_col = candidate_col
+                                best_gap = cand_gap
+
+                    if best_col != col:
+                        self._move_node(item, best_col, row)
+                        changed = True
+
+    def _get_allowed_positions(self, node: RunMapNode) -> set[int]:
+        allowed = set(range(MAP_WIDTH))
+        for p_coord in node.parents:
+            p_allowed = {p_coord[0] - 1, p_coord[0], p_coord[0] + 1}
+            allowed &= {c for c in p_allowed if 0 <= c < MAP_WIDTH}
+        for c_coord in node.children:
+            c_allowed = {c_coord[0] - 1, c_coord[0], c_coord[0] + 1}
+            allowed &= {c for c in c_allowed if 0 <= c < MAP_WIDTH}
+        return allowed
+
+    def _compute_gap(
+        self, candidate_col: int, row_nodes: list[RunMapNode], current_node: RunMapNode
+    ) -> int:
+        gap = 999999
+        for n in row_nodes:
+            if n != current_node:
+                gap = min(gap, abs(candidate_col - n.col))
+        return gap
+
+    def _straighten_paths(self) -> None:
+        """Faithful implementation of MapPostProcessing.StraightenPaths."""
+        for row in range(MAP_BOSS_ROW + 1):
+            for col in range(MAP_WIDTH):
+                node = self._map_nodes.get((col, row))
+                if not node or len(node.parents) != 1 or len(node.children) != 1:
+                    continue
+                p_coord = next(iter(node.parents))
+                c_coord = next(iter(node.children))
+                flag = node.col < c_coord[0] and node.col < p_coord[0]
+                flag2 = node.col > c_coord[0] and node.col > p_coord[0]
+
+                if flag and col < MAP_WIDTH - 1:
+                    new_col = col + 1
+                    if (new_col, row) not in self._map_nodes:
+                        self._move_node(node, new_col, row)
+                        continue
+                if flag2 and col > 0:
+                    new_col = col - 1
+                    if (new_col, row) not in self._map_nodes:
+                        self._move_node(node, new_col, row)
+
+    def _move_node(self, node: RunMapNode, new_col: int, row: int) -> None:
+        old_coord = (node.col, row)
+        new_coord = (new_col, row)
+        node.col = new_col
+        del self._map_nodes[old_coord]
+        self._map_nodes[new_coord] = node
+
+        for p_coord in node.parents:
+            p_node = self._map_nodes.get(p_coord)
+            if p_node:
+                if old_coord in p_node.children:
+                    p_node.children.remove(old_coord)
+                if new_coord not in p_node.children:
+                    p_node.children.append(new_coord)
+        for c_coord in node.children:
+            c_node = self._map_nodes.get(c_coord)
+            if c_node:
+                if old_coord in c_node.parents:
+                    c_node.parents.remove(old_coord)
+                if new_coord not in c_node.parents:
+                    c_node.parents.append(new_coord)
+
+    def _is_column_empty(self, col: int) -> bool:
+        for row in range(1, MAP_BOSS_ROW):
+            if (col, row) in self._map_nodes:
+                return False
+        return True
 
     def _find_all_paths(self, start: tuple[int, int]) -> list[list[tuple[int, int]]]:
         """Find all paths from start to MAP_BOSS_COORD."""
@@ -1706,7 +2171,7 @@ class Sts2RunEnv(gym.Env):
         if node is None:
             return []
         result: list[list[tuple[int, int]]] = []
-        for child in node.children or set():
+        for child in node.children:
             for path in self._find_all_paths(child):
                 result.append([start] + path)
         if not result:
@@ -1726,8 +2191,10 @@ class Sts2RunEnv(gym.Env):
     ):
         parent = self._get_or_create_map_node(*parent_coord)
         child = self._get_or_create_map_node(*child_coord)
-        parent.children.add(child_coord)
-        child.parents.add(parent_coord)
+        if child_coord not in parent.children:
+            parent.children.append(child_coord)
+        if parent_coord not in child.parents:
+            child.parents.append(parent_coord)
 
     def _generate_map_path(self, start: RunMapNode) -> None:
         current = start
@@ -1754,7 +2221,7 @@ class Sts2RunEnv(gym.Env):
         sibling = self._map_nodes.get((target_col, current.row))
         if sibling is None:
             return False
-        for child_col, _ in sibling.children or set():
+        for child_col, _ in sibling.children:
             if child_col - sibling.col == -delta:
                 return True
         return False
@@ -1849,7 +2316,6 @@ class Sts2RunEnv(gym.Env):
 
         self._map_nodes[MAP_START_COORD].node_type = "Ancient"
         self._map_nodes[MAP_BOSS_COORD].node_type = "Boss"
-        self._assign_encounter_ids()
 
     def _next_valid_map_point_type(
         self, type_queue: list[str], node: RunMapNode
@@ -1867,13 +2333,13 @@ class Sts2RunEnv(gym.Env):
         if node.row >= MAP_BOSS_ROW - 2 and node_type in MAP_UPPER_RESTRICTED:
             return False
         if node_type in MAP_ADJACENCY_RESTRICTED:
-            adjacent = (node.parents or set()) | (node.children or set())
+            adjacent = set(node.parents) | set(node.children)
             if any(self._map_nodes[coord].node_type == node_type for coord in adjacent):
                 return False
         if node_type in MAP_SIBLING_RESTRICTED:
             siblings = set()
-            for parent_coord in node.parents or set():
-                siblings.update(self._map_nodes[parent_coord].children or set())
+            for parent_coord in node.parents:
+                siblings.update(self._map_nodes[parent_coord].children)
             siblings.discard((node.col, node.row))
             if any(self._map_nodes[coord].node_type == node_type for coord in siblings):
                 return False
