@@ -76,8 +76,10 @@ class DotNetRandom:
         self._inext = 0
         self._inextp = 21
         self._arr = _init_seed_array(seed)
+        self.call_count: int = 0
 
     def _sample(self) -> int:
+        self.call_count += 1
         inext = self._inext + 1
         if inext >= 56:
             inext = 1

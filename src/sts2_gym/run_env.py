@@ -1185,15 +1185,12 @@ class Sts2RunEnv(gym.Env):
 
     def _after_combat_win(self) -> None:
         # Sync the Python-side shuffle RNG with the native's CountingRandom.
-        # The native shuffle RNG was seeded identically to _run_rng_set.shuffle and
-        # pre-advanced by (deckLen-1) calls to match the Python pre-shuffle.
-        # Any additional calls come from mid-combat discard reshuffles.  We advance
-        # the Python RNG by those extra calls so the next combat's initial shuffle
-        # uses the correct position in the shared shuffle RNG stream.
+        # The native RNG was advanced by (shufflePreSkip + deckLen-1 + reshuffle_calls).
+        # The Python is at (shufflePreSkip + deckLen-1).  Advance it by reshuffle_calls.
+        # reshuffle_calls = CountingRandom.CallCount - _run_rng_set.shuffle._rng.call_count.
         if self._run_rng_set is not None and self._handle is not None:
-            deck_len = len(self._combat_deck())
             total_native_calls = native.get_shuffle_rng_call_count(self._handle)
-            extra_calls = total_native_calls - max(0, deck_len - 1)
+            extra_calls = total_native_calls - self._run_rng_set.shuffle._rng.call_count
             for _ in range(extra_calls):
                 self._run_rng_set.shuffle.next_double()
 
@@ -1581,6 +1578,8 @@ class Sts2RunEnv(gym.Env):
             deck = self._combat_deck()
             encounter_rng_seed = self._encounter_rng_seed(encounter_id)
             if self._run_rng_set is not None:
+                # Read call_count before the pre-shuffle to compute the skip.
+                shuffle_pre_skip = self._run_rng_set.shuffle._rng.call_count
                 self._run_rng_set.shuffle.shuffle(deck)
                 shuffle_rng_seed = _int32(
                     _uint32(self._run_rng_set.seed + _SHUFFLE_HASH)
@@ -1598,7 +1597,8 @@ class Sts2RunEnv(gym.Env):
                     self._potions,
                     self._gold,
                     shuffle_rng_seed,
-                    0,
+                    shuffle_pre_skip,
+                    0,  # nicheSkipCount (handled separately)
                     encounter_rng_seed,
                     monster_ai_rng_seed,
                     self._combat_obs_buf,

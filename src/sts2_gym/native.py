@@ -178,6 +178,7 @@ _lib.Sts2_ResetRunCombatPreShuffled.argtypes = [
     ctypes.c_int,  # potionLen
     ctypes.c_int,  # playerGold
     ctypes.c_int,  # shuffleRngSeed
+    ctypes.c_int,  # shufflePreSkip
     ctypes.c_int,  # nicheSkipCount
     ctypes.c_int,  # encounterRngSeed
     ctypes.c_int,  # monsterAiRngSeed
@@ -311,6 +312,7 @@ def reset_run_combat_pre_shuffled(
     potion_ids: list[int],
     player_gold: int,
     shuffle_rng_seed: int,
+    shuffle_pre_skip: int,
     niche_skip_count: int,
     encounter_rng_seed: int,
     monster_ai_rng_seed: int,
@@ -332,6 +334,7 @@ def reset_run_combat_pre_shuffled(
         len(potion_ids),
         player_gold,
         shuffle_rng_seed,
+        shuffle_pre_skip,
         niche_skip_count,
         encounter_rng_seed,
         monster_ai_rng_seed,

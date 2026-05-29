@@ -266,6 +266,7 @@ public static class NativeExports
         int potionLen,
         int playerGold,
         int shuffleRngSeed,
+        int shufflePreSkip,
         int nicheSkipCount,
         int encounterRngSeed,
         int monsterAiRngSeed,
@@ -273,10 +274,12 @@ public static class NativeExports
     {
         var combat = _pool[handle]!;
         // Reconstruct the shuffle RNG at the state it would be after the caller's
-        // Fisher-Yates pre-shuffle (deckLen-1 calls consumed).  CountingRandom tracks
-        // total Next() calls so Sts2_GetShuffleRngCallCount can report mid-combat advances.
+        // Fisher-Yates pre-shuffle (deckLen-1 calls consumed) PLUS any previous-combat
+        // advances (shufflePreSkip = caller's _run_rng_set.shuffle call count before
+        // this combat's pre-shuffle).  CountingRandom tracks total Next() calls so
+        // Sts2_GetShuffleRngCallCount can report mid-combat extra advances.
         var shuffleRng = new CountingRandom(shuffleRngSeed);
-        for (int i = 0; i < deckLen - 1; i++)
+        for (int i = 0; i < shufflePreSkip + deckLen - 1; i++)
             shuffleRng.Next();
         var aiRng = new Random(monsterAiRngSeed);
         combat.Reset(
