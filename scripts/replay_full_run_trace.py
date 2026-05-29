@@ -30,6 +30,7 @@ from sts2_gym.run_env import (
     PHASE_RELIC_REWARD,
     PHASE_REST,
     PHASE_SHOP,
+    PHASE_TRANSFORM_SELECT,
     REWARD_SKIP_ACTION,
     SHOP_SKIP_ACTION,
 )
@@ -51,6 +52,7 @@ PHASE_STATE_TYPES = {
     PHASE_RELIC_REWARD: "rewards",
     PHASE_REST: "rest_site",
     PHASE_SHOP: "shop",
+    PHASE_TRANSFORM_SELECT: "card_select",
 }
 COMBAT_NODE_STATE_TYPES = {
     NODE_NORMAL: "monster",
@@ -276,6 +278,12 @@ def translate_action(
         return proceed_action(phase)
     if action_name == "shop_option":
         return SHOP_SKIP_ACTION
+    if action_name == "select_card" and phase == PHASE_TRANSFORM_SELECT:
+        return int(payload.get("index", 0))
+    if action_name == "confirm_selection":
+        if phase == PHASE_TRANSFORM_SELECT:
+            return REWARD_SKIP_ACTION  # any action triggers confirmation
+        return None
 
     raise UnsupportedTraceActionError(
         f"unsupported action {action_name!r} while emulator phase is {phase}"

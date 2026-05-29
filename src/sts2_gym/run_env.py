@@ -45,6 +45,7 @@ PHASE_RELIC_REWARD = 5
 PHASE_COMPLETE = 6
 PHASE_EVENT = 7
 PHASE_NEOW = 8
+PHASE_TRANSFORM_SELECT = 9  # card-selection screen for transform relics (e.g. New Leaf)
 
 NODE_NONE = 0
 NODE_NORMAL = 1
@@ -694,6 +695,7 @@ class Sts2RunEnv(gym.Env):
         self._weak_encounters = np.zeros(3, dtype=np.int32)
         self._weak_encounters_used = 0
         self._normal_encounters: list[int] = []
+        self._transform_selected_deck_idx: int | None = None
         self._map_nodes: dict[tuple[int, int], RunMapNode] = {}
         self._current_map_coord = MAP_START_COORD
         self._map_option_coords: list[tuple[int, int] | None] = [None] * MAP_CHOICES
@@ -749,6 +751,7 @@ class Sts2RunEnv(gym.Env):
         self._event_id = 0
         self._weak_encounters_used = 0
         self._normal_encounters = []
+        self._transform_selected_deck_idx = None
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
         self._map_option_coords = [None] * MAP_CHOICES
@@ -779,6 +782,8 @@ class Sts2RunEnv(gym.Env):
             return self._step_event(action)
         if self._phase == PHASE_NEOW:
             return self._step_neow(action)
+        if self._phase == PHASE_TRANSFORM_SELECT:
+            return self._step_transform_select(action)
         if self._phase == PHASE_COMPLETE:
             return self._obs(), 0.0, True, False, self._info()
 
@@ -868,6 +873,11 @@ class Sts2RunEnv(gym.Env):
 
         if self._phase == PHASE_NEOW:
             mask[: len(self._neow_options)] = self._neow_options != 0
+            return mask
+
+        if self._phase == PHASE_TRANSFORM_SELECT:
+            # All deck card indices are valid selection targets.
+            mask[: len(self._deck)] = True
             return mask
 
         if self._phase == PHASE_COMPLETE:
@@ -1093,6 +1103,11 @@ class Sts2RunEnv(gym.Env):
             return self._invalid_action()
 
         self._obtain_relic(relic_id)
+        if relic_id == RELIC_NEW_LEAF:
+            # New Leaf: show card-selection screen so player can pick which deck card to transform.
+            self._transform_selected_deck_idx = None
+            self._phase = PHASE_TRANSFORM_SELECT
+            return self._obs(), 0.0, False, False, self._info()
         if relic_id == RELIC_LOST_COFFER:
             # Lost Coffer: generate 3 card choices (3 calls each) + potion (2 calls),
             # show as a card reward before entering map.
@@ -1110,6 +1125,55 @@ class Sts2RunEnv(gym.Env):
         self._phase = PHASE_COMBAT
         self._enter_map_phase()
         return self._obs(), 0.0, False, False, self._info()
+
+    def _step_transform_select(self, action: int):
+        """Handle card selection and confirmation for transform-on-pickup relics (e.g. New Leaf).
+
+        Action encoding:
+          0 .. len(deck)-1  → select the card at that deck index for transformation
+          REWARD_SKIP_ACTION (3) → confirm: apply the transformation and return to Neow/map
+          Any other action when a card is already selected → confirm the selection
+        """
+        if self._transform_selected_deck_idx is None:
+            # Phase 1: player selects which card to transform.
+            idx = max(0, min(action, len(self._deck) - 1))
+            self._transform_selected_deck_idx = idx
+            return self._obs(), 0.0, False, False, self._info()
+        else:
+            # Phase 2: player confirms — transform the selected card using Niche RNG.
+            deck_idx = self._transform_selected_deck_idx
+            if 0 <= deck_idx < len(self._deck):
+                original_id = abs(self._deck[deck_idx])
+                # Build transformation pool: same character pool cards, different ID,
+                # no Basic/Curse/Status/Ancient rarities.
+                transform_pool = [
+                    int(c)
+                    for c in IRONCLAD_REWARD_POOL
+                    if int(c) != original_id
+                    and CARD_RARITY_BY_ID.get(int(c), CARD_RARITY_COMMON)
+                    in (CARD_RARITY_COMMON, CARD_RARITY_UNCOMMON, CARD_RARITY_RARE)
+                ]
+                if transform_pool:
+                    # Use Niche RNG for the transformation pick (RunState.Rng.Niche.NextItem).
+                    niche_rng = (
+                        self._run_rng_set.shuffle
+                    )  # placeholder — should use niche
+                    # Approximate: use niche seed RNG at current niche position.
+                    from sts2_gym.game_rng import DotNetRandom, _int32, _uint32
+
+                    niche_seed = _int32(_uint32(self._run_rng_set.seed + _NICHE_HASH))
+                    niche_rng_impl = DotNetRandom(niche_seed)
+                    for _ in range(self._niche_calls_consumed):
+                        niche_rng_impl._sample()
+                    pick_idx = niche_rng_impl.next_int(len(transform_pool))
+                    new_card = transform_pool[pick_idx]
+                    self._niche_calls_consumed += 1
+                    self._deck[deck_idx] = new_card
+            self._transform_selected_deck_idx = None
+            # Return to Neow phase to handle the second option, or map if no second option.
+            self._phase = PHASE_COMBAT
+            self._enter_map_phase()
+            return self._obs(), 0.0, False, False, self._info()
 
     def _obtain_relic(self, relic_id: int) -> None:
         self._relics.append(relic_id)
@@ -1167,7 +1231,7 @@ class Sts2RunEnv(gym.Env):
         elif relic_id == RELIC_LOST_COFFER:
             pass  # card reward + potion handled in _step_neow via rewards RNG
         elif relic_id == RELIC_NEW_LEAF:
-            self._transform_first_card()
+            pass  # card transform handled in _step_neow via PHASE_TRANSFORM_SELECT
         elif relic_id == RELIC_PHIAL_HOLSTER:
             self._add_potion(self._next_potion())
             self._add_potion(self._next_potion())

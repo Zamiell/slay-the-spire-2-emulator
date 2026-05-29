@@ -773,9 +773,11 @@ class Sts2GymTests(unittest.TestCase):
             env._obtain_relic(RELIC_PRECISE_SCISSORS)
             self.assertEqual(len(env._deck), deck_size + 1)
 
-            first_card = env._deck[0]
+            # New Leaf now works via _step_neow: shows card selection screen
+            # so _obtain_relic alone does not transform any card.
+            deck_size_before = len(env._deck)
             env._obtain_relic(RELIC_NEW_LEAF)
-            self.assertNotEqual(env._deck[0], first_card)
+            self.assertEqual(len(env._deck), deck_size_before)
 
             env._potions = [0, 0, 0]
             env._obtain_relic(RELIC_PHIAL_HOLSTER)
