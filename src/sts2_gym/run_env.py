@@ -590,6 +590,11 @@ _UPFRONT_PRE_CALLS = 202
 # Empirical event shuffle call counts (= N-1 for N events) before first weak grab.
 _OVERGROWTH_EVENT_SHUFFLE_CALLS = 60
 _UNDERDOCKS_EVENT_SHUFFLE_CALLS = 57
+# Total encounter slots per act (BaseNumberOfRooms = 15 for both acts, singleplayer).
+# 3 are weak encounters; the remaining are normal encounters filled by GrabBag.
+_TOTAL_ENCOUNTER_SLOTS = 15
+_WEAK_ENCOUNTER_SLOTS = 3
+_NORMAL_ENCOUNTER_SLOTS = _TOTAL_ENCOUNTER_SLOTS - _WEAK_ENCOUNTER_SLOTS  # = 12
 # Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
 _NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
 _SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
@@ -688,6 +693,7 @@ class Sts2RunEnv(gym.Env):
         self._act = "overgrowth"
         self._weak_encounters = np.zeros(3, dtype=np.int32)
         self._weak_encounters_used = 0
+        self._normal_encounters: list[int] = []
         self._map_nodes: dict[tuple[int, int], RunMapNode] = {}
         self._current_map_coord = MAP_START_COORD
         self._map_option_coords: list[tuple[int, int] | None] = [None] * MAP_CHOICES
@@ -742,6 +748,7 @@ class Sts2RunEnv(gym.Env):
         self._potion_reward_odds = POTION_REWARD_BASE_ODDS
         self._event_id = 0
         self._weak_encounters_used = 0
+        self._normal_encounters = []
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
         self._map_option_coords = [None] * MAP_CHOICES
@@ -1364,6 +1371,26 @@ class Sts2RunEnv(gym.Env):
             remaining.pop(idx)
         self._weak_encounters[:] = encounters
 
+        # GrabBag.GrabAndRemove for NORMAL_ENCOUNTER_SLOTS (=12) regular encounter slots,
+        # matching ActModel.GenerateRooms' grabBag2 loop (AddWithoutRepeatingTags, 1 rng
+        # call each for the typical case where the predicate is satisfied on the first try).
+        normal_pool = list(
+            UNDERDOCKS_NORMAL_ENCOUNTERS
+            if use_underdocks
+            else OVERGROWTH_NORMAL_ENCOUNTERS
+        )
+        bag: list[int] = []
+        normal_list: list[int] = []
+        for _ in range(_NORMAL_ENCOUNTER_SLOTS):
+            if not bag:
+                bag = list(normal_pool)
+            d = up_front.next_double()
+            idx = int(d * len(bag))
+            enc = bag[idx]
+            bag.pop(idx)
+            normal_list.append(enc)
+        self._normal_encounters = normal_list
+
     def _generate_act_map(self) -> None:
         self._map_nodes = {}
         self._current_map_coord = MAP_START_COORD
@@ -1450,11 +1477,15 @@ class Sts2RunEnv(gym.Env):
             {n.row for n in self._map_nodes.values() if n.node_type == "Monster"}
         )
         weak_idx = 0
+        normal_idx = 0
         row_encounters: dict[int, int] = {}
         for row in monster_rows:
             if weak_idx < len(self._weak_encounters):
                 row_encounters[row] = int(self._weak_encounters[weak_idx])
                 weak_idx += 1
+            elif normal_idx < len(self._normal_encounters):
+                row_encounters[row] = self._normal_encounters[normal_idx]
+                normal_idx += 1
             else:
                 row_encounters[row] = int(
                     self._rng.choice(self._normal_encounter_pool())
