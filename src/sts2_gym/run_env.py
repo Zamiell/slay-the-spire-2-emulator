@@ -1742,9 +1742,10 @@ class Sts2RunEnv(gym.Env):
         self._get_or_create_map_node(*MAP_START_COORD).node_type = "Ancient"
         self._get_or_create_map_node(*MAP_BOSS_COORD).node_type = "Boss"
 
-        # The C# ActMap constructor calls GetMapPointTypes (consuming RNG).
-        self._map_rng.next_gaussian_int(7, 1, 6, 7)
-        self._map_rng.next_gaussian_int(12, 1, 10, 14)
+        # C# StandardActMap constructor calls actModel.GetMapPointTypes(mapRng) once,
+        # before GenerateMap. Store results here for type assignment after paths.
+        rest_count = self._map_rng.next_gaussian_int(7, 1, 6, 7)
+        unknown_count = self._map_rng.next_gaussian_int(12, 1, 10, 14)
 
         start_points: list[tuple[int, int]] = []
         for path_index in range(MAP_PATH_ITERATIONS):
@@ -1763,10 +1764,6 @@ class Sts2RunEnv(gym.Env):
         for coord, node in list(self._map_nodes.items()):
             if node.row == MAP_BOSS_ROW - 1:
                 self._add_map_edge(coord, MAP_BOSS_COORD)
-
-        # ActModel.PopulateRooms calls GetMapPointTypes AGAIN after GenerateMap.
-        rest_count = self._map_rng.next_gaussian_int(7, 1, 6, 7)
-        unknown_count = self._map_rng.next_gaussian_int(12, 1, 10, 14)
 
         self._assign_map_point_types(rest_count, unknown_count)
         self._prune_and_repair(rest_count, unknown_count)
@@ -1973,29 +1970,25 @@ class Sts2RunEnv(gym.Env):
         return coord in self._map_nodes
 
     def _remove_map_point(self, coord: tuple[int, int]) -> None:
+        """Remove a map point, severing all edges without reconnecting parents to children.
+
+        Matches C# MapPathPruning.RemovePoint: removes grid cell, severs child edges FROM
+        the node, and removes it FROM its parents. Does NOT reconnect parents to children —
+        the duplicate segment keeps the map connected.
+        """
         node = self._map_nodes.pop(coord, None)
         if node is None:
             return
-        # Connect parents to children
-        for p_coord in list(node.parents):
-            p_node = self._map_nodes.get(p_coord)
-            if p_node:
-                if coord in p_node.children:
-                    p_node.children.remove(coord)
-                for c_coord in list(node.children):
-                    if c_coord not in p_node.children:
-                        p_node.children.append(c_coord)
-                    c_node = self._map_nodes.get(c_coord)
-                    if c_node:
-                        if p_coord not in c_node.parents:
-                            c_node.parents.append(p_coord)
-
-        # Disconnect children from this node
+        # Sever edges from node to its children (and remove node as parent of each child).
         for c_coord in list(node.children):
             c_node = self._map_nodes.get(c_coord)
-            if c_node:
-                if coord in c_node.parents:
-                    c_node.parents.remove(coord)
+            if c_node and coord in c_node.parents:
+                c_node.parents.remove(coord)
+        # Remove this node from each parent's children list.
+        for p_coord in list(node.parents):
+            p_node = self._map_nodes.get(p_coord)
+            if p_node and coord in p_node.children:
+                p_node.children.remove(coord)
 
     def _break_any_parent_child_relationship(
         self, matches: list[list[tuple[int, int]]]
