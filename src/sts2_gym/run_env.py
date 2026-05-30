@@ -1162,12 +1162,29 @@ _SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
 _MONSTER_AI_HASH = _uint32(get_deterministic_hash_code("monster_ai"))
 _SLIMES_WEAK_ENCOUNTER_ID = 3
 _SLIMES_WEAK_ENTRY_HASH = get_deterministic_hash_code("SLIMES_WEAK")
+# Encounter pool order matches GenerateAllEncounters() filtered to Monster && !IsWeak,
+# preserving the decompiled declaration order from Overgrowth.cs / Underdocks.cs.
 OVERGROWTH_NORMAL_ENCOUNTERS = np.array(
-    [5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32
+    [19, 17, 29, 5, 14, 15, 21, 28, 16, 27, 18, 20], dtype=np.int32
 )
 UNDERDOCKS_NORMAL_ENCOUNTERS = np.array(
-    [9, 0, 7, 6, 22, 23, 24, 25, 26, 30], dtype=np.int32
+    [9, 0, 23, 7, 26, 30, 24, 12, 25, 6], dtype=np.int32
 )
+# Encounter tags matching EncounterModel.Tags from decompiled encounter files.
+# Used for AddWithoutRepeatingTags predicate: don't pick if enc shares tag with last.
+_ENCOUNTER_TAGS: dict[int, frozenset[str]] = {
+    2: frozenset({"Nibbit"}),  # NibbitsWeak
+    3: frozenset({"Slimes"}),  # SlimesWeak
+    8: frozenset({"Crawler"}),  # FuzzyWurmCrawlerWeak
+    9: frozenset({"Slugs"}),  # CorpseSlugsNormal/Weak
+    11: frozenset({"Shrinker"}),  # ShrinkerBeetleWeak
+    12: frozenset({"Seapunk"}),  # SeapunkNormal/Weak
+    15: frozenset({"Nibbit"}),  # NibbitsNormal
+    16: frozenset({"Slimes"}),  # SlimesNormal
+    17: frozenset({"Mushroom", "Slimes"}),  # FlyconidNormal
+    18: frozenset({"Mushroom"}),  # SnappingJaxfruitNormal
+    21: frozenset({"Shrinker", "Crawler"}),  # OvergrowthCrawlers
+}
 OVERGROWTH_ELITE_ENCOUNTERS = np.array([68, 65], dtype=np.int32)
 UNDERDOCKS_ELITE_ENCOUNTERS = np.array([72, 67], dtype=np.int32)
 OVERGROWTH_BOSS_ENCOUNTERS = np.array([83, 74, 82], dtype=np.int32)
@@ -2260,19 +2277,48 @@ class Sts2RunEnv(gym.Env):
         # Event list UnstableShuffle: event_shuffle_calls = N-1 for N events.
         for _ in range(event_shuffle_calls):
             up_front.next_int(event_shuffle_calls + 1)
-        # GrabBag.GrabAndRemove for 3 weak encounter slots.
-        encounters = []
+
+        def _grab_without_repeating_tags(bag: list[int], last_enc: int | None) -> int:
+            """Matches AddWithoutRepeatingTags: retry while picked enc shares tags with last."""
+            last_tags = (
+                _ENCOUNTER_TAGS.get(last_enc, frozenset())
+                if last_enc is not None
+                else frozenset()
+            )
+            any_valid = any(
+                not _ENCOUNTER_TAGS.get(e, frozenset()) & last_tags and e != last_enc
+                for e in bag
+            )
+            if any_valid:
+                while True:
+                    d = up_front.next_double()
+                    idx = int(d * len(bag))
+                    enc = bag[idx]
+                    if (
+                        not _ENCOUNTER_TAGS.get(enc, frozenset()) & last_tags
+                        and enc != last_enc
+                    ):
+                        bag.pop(idx)
+                        return enc
+            else:
+                # Fallback: unconstrained pick (AddWithoutRepeatingTags second GrabAndRemove).
+                d = up_front.next_double()
+                idx = int(d * len(bag))
+                enc = bag.pop(idx)
+                return enc
+
+        # GrabBag.GrabAndRemove for 3 weak encounter slots (AddWithoutRepeatingTags).
+        encounters: list[int] = []
         remaining = list(weak_pool)
         for _ in range(3):
-            d = up_front.next_double()
-            idx = int(d * len(remaining))
-            encounters.append(remaining[idx])
-            remaining.pop(idx)
+            enc = _grab_without_repeating_tags(
+                remaining, encounters[-1] if encounters else None
+            )
+            encounters.append(enc)
         self._weak_encounters[:] = encounters
 
-        # GrabBag.GrabAndRemove for NORMAL_ENCOUNTER_SLOTS (=12) regular encounter slots,
-        # matching ActModel.GenerateRooms' grabBag2 loop (AddWithoutRepeatingTags, 1 rng
-        # call each for the typical case where the predicate is satisfied on the first try).
+        # GrabBag.GrabAndRemove for NORMAL_ENCOUNTER_SLOTS (=12) regular encounter slots
+        # (AddWithoutRepeatingTags, pool order matches decompiled GenerateAllEncounters).
         normal_pool = list(
             UNDERDOCKS_NORMAL_ENCOUNTERS
             if use_underdocks
@@ -2280,14 +2326,13 @@ class Sts2RunEnv(gym.Env):
         )
         bag: list[int] = []
         normal_list: list[int] = []
+        last_in_seq: int | None = encounters[-1] if encounters else None
         for _ in range(_NORMAL_ENCOUNTER_SLOTS):
             if not bag:
                 bag = list(normal_pool)
-            d = up_front.next_double()
-            idx = int(d * len(bag))
-            enc = bag[idx]
-            bag.pop(idx)
+            enc = _grab_without_repeating_tags(bag, last_in_seq)
             normal_list.append(enc)
+            last_in_seq = enc
         self._normal_encounters = normal_list
 
         # GrabBag.GrabAndRemove for _ELITE_ENCOUNTER_SLOTS (=15) elite encounter slots,
