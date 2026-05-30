@@ -1,11 +1,13 @@
 import re
 
-with open('decompiled/MegaCrit.Sts2.Core.Models.CardPools/ColorlessCardPool.cs', 'r') as f:
+with open(
+    "decompiled/MegaCrit.Sts2.Core.Models.CardPools/ColorlessCardPool.cs", "r"
+) as f:
     content = f.read()
 
-ordered_names = re.findall(r'ModelDb\.Card<([^>]+)>\(\)', content)
+ordered_names = re.findall(r"ModelDb\.Card<([^>]+)>\(\)", content)
 
-with open('src/Sts2Emulator/Generated/Cards.g.cs', 'r') as f:
+with open("src/Sts2Emulator/Generated/Cards.g.cs", "r") as f:
     g_content = f.read()
 
 pattern_g = r'new CardDef\(Id: (\d+), Name: "([^"]+)"'
@@ -24,7 +26,7 @@ if not missing:
     print("COLORLESS_REWARD_POOL = np.array(")
     print("    [")
     for i in range(0, len(ordered_ids), 10):
-        print("        " + ", ".join(map(str, ordered_ids[i:i+10])) + ",")
+        print("        " + ", ".join(map(str, ordered_ids[i : i + 10])) + ",")
     print("    ],")
     print("    dtype=np.int32,")
     print(")")

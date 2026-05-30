@@ -1,14 +1,16 @@
 import re
 
-with open('decompiled/MegaCrit.Sts2.Core.Models.CardPools/IroncladCardPool.cs', 'r') as f:
+with open(
+    "decompiled/MegaCrit.Sts2.Core.Models.CardPools/IroncladCardPool.cs", "r"
+) as f:
     content = f.read()
 
-pattern = r'ModelDb\.Card<([^>]+)>\(\)'
+pattern = r"ModelDb\.Card<([^>]+)>\(\)"
 matches = re.findall(pattern, content)
 
 ordered_names = matches
 
-with open('src/Sts2Emulator/Generated/Cards.g.cs', 'r') as f:
+with open("src/Sts2Emulator/Generated/Cards.g.cs", "r") as f:
     g_content = f.read()
 
 pattern_g = r'new CardDef\(Id: (\d+), Name: "([^"]+)"'
@@ -29,7 +31,7 @@ for name in ordered_names:
 print("IRONCLAD_REWARD_POOL = np.array(")
 print("    [")
 for i in range(0, len(ordered_ids), 10):
-    print("        " + ", ".join(map(str, ordered_ids[i:i+10])) + ",")
+    print("        " + ", ".join(map(str, ordered_ids[i : i + 10])) + ",")
 print("    ],")
 print("    dtype=np.int32,")
 print(")")

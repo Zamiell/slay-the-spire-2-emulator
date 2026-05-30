@@ -1,9 +1,9 @@
 import os
 
-with open('new_rarity_map.txt', 'r') as f:
+with open("new_rarity_map.txt", "r") as f:
     rarity_map = f.read()
 
-with open('run_env_class.txt', 'r') as f:
+with open("run_env_class.txt", "r") as f:
     class_def = f.read()
 
 header = """\"\"\"Run-level Gymnasium wrapper for simplified full-run training.\"\"\"
@@ -398,7 +398,7 @@ class RunMapNode:
     encounter_id: int = 0
 """
 
-with open('src/sts2_gym/run_env.py', 'w') as f:
+with open("src/sts2_gym/run_env.py", "w") as f:
     f.write(header)
     f.write(rarity_map)
     f.write(pools)

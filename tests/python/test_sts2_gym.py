@@ -1071,16 +1071,14 @@ class Sts2GymTests(unittest.TestCase):
                 env._potion_reward_odds, POTION_REWARD_BASE_ODDS - 0.3
             )
 
+            # Elite bonus: check_potion_roll with a high roll fails even with elite bonus.
             env._current_node_type = NODE_ELITE
             env._potion_reward_odds = 0.0
-            env._rng = np.random.default_rng(0)
-
-            self.assertFalse(env._roll_potion_reward())
+            self.assertFalse(env._check_potion_roll(1.0))
             self.assertAlmostEqual(env._potion_reward_odds, POTION_REWARD_STEP)
 
-            env._rng = np.random.default_rng(3)
-
-            self.assertTrue(env._roll_potion_reward())
+            # A roll lower than odds+elite_bonus succeeds.
+            self.assertTrue(env._check_potion_roll(0.0))
             self.assertAlmostEqual(env._potion_reward_odds, 0.0)
         finally:
             env.close()

@@ -50,7 +50,7 @@ card_defs = {
     254: "Headbutt",
     261: "Hellraiser",
     262: "Hemokinesis",
-    263: "HowlFromBeyond", # Wait, 263 is HowlFromBeyond? No, grep said 263 is Inferno.
+    263: "HowlFromBeyond",  # Wait, 263 is HowlFromBeyond? No, grep said 263 is Inferno.
     # I'll use grep to get the REAL mapping from Cards.g.cs
 }
 

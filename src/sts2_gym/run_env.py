@@ -748,32 +748,210 @@ CARD_RARITY_BY_ID = {
 
 IRONCLAD_REWARD_POOL = np.array(
     [
-        9, 13, 18, 20, 29, 30, 31, 46, 45, 47,
-        50, 58, 59, 60, 66, 69, 546, 87, 95, 99,
-        107, 113, 114, 119, 131, 141, 142, 147, 150, 155,
-        174, 175, 183, 185, 188, 189, 195, 205, 238, 240,
-        246, 247, 254, 261, 262, 263, 265, 268, 272, 273,
-        295, 313, 328, 332, 334, 339, 349, 353, 358, 364,
-        374, 378, 381, 404, 414, 421, 433, 454, 462, 464,
-        465, 466, 472, 486, 492, 493, 494, 505, 508, 516,
-        517, 519, 525, 526, 529, 533, 538,
+        9,
+        13,
+        18,
+        20,
+        29,
+        31,
+        45,
+        46,
+        47,
+        50,
+        58,
+        60,
+        66,
+        69,
+        87,
+        95,
+        99,
+        113,
+        114,
+        119,
+        141,
+        142,
+        147,
+        150,
+        155,
+        174,
+        175,
+        183,
+        185,
+        188,
+        189,
+        195,
+        205,
+        238,
+        240,
+        246,
+        247,
+        254,
+        261,
+        262,
+        263,
+        265,
+        268,
+        272,
+        273,
+        295,
+        313,
+        328,
+        332,
+        334,
+        339,
+        349,
+        353,
+        358,
+        364,
+        374,
+        378,
+        381,
+        396,
+        404,
+        414,
+        421,
+        433,
+        454,
+        455,
+        462,
+        464,
+        465,
+        466,
+        486,
+        492,
+        493,
+        494,
+        505,
+        508,
+        516,
+        517,
+        519,
+        521,
+        525,
+        526,
+        529,
+        533,
+        538,
     ],
     dtype=np.int32,
 )
 COLORLESS_REWARD_POOL = np.array(
     [
-        10, 14, 23, 32, 34, 38, 51, 73, 80, 121,
-        146, 153, 168, 170, 173, 181, 191, 193, 197, 213,
-        225, 234, 250, 255, 260, 266, 270, 271, 277, 286,
-        297, 300, 306, 307, 327, 333, 342, 343, 363, 365,
-        366, 369, 372, 380, 394, 396, 401, 406, 411, 415,
-        416, 417, 431, 455, 470, 491, 498, 499, 504, 506,
-        521, 522, 535,
+        10,
+        14,
+        23,
+        32,
+        34,
+        38,
+        51,
+        73,
+        80,
+        121,
+        146,
+        153,
+        168,
+        170,
+        173,
+        181,
+        191,
+        193,
+        197,
+        213,
+        225,
+        234,
+        250,
+        255,
+        260,
+        266,
+        270,
+        271,
+        277,
+        286,
+        297,
+        300,
+        306,
+        307,
+        327,
+        333,
+        342,
+        343,
+        363,
+        365,
+        366,
+        369,
+        372,
+        380,
+        394,
+        396,
+        401,
+        406,
+        411,
+        415,
+        416,
+        417,
+        431,
+        455,
+        470,
+        491,
+        498,
+        499,
+        504,
+        506,
+        521,
+        522,
+        535,
     ],
     dtype=np.int32,
 )
-SHOP_ATTACK_CARDS = np.array([13, 20, 50, 60, 69, 87, 147, 189, 240, 247, 254, 268, 349, 358, 421, 454, 465, 486, 508, 519, 538], dtype=np.int32)
-SHOP_SKILL_CARDS = np.array([18, 31, 46, 45, 150, 155, 174, 175, 205, 238, 396, 414, 433, 455, 493, 516, 517, 521], dtype=np.int32)
+SHOP_ATTACK_CARDS = np.array(
+    [
+        13,
+        20,
+        50,
+        60,
+        69,
+        87,
+        147,
+        189,
+        240,
+        247,
+        254,
+        268,
+        349,
+        358,
+        421,
+        454,
+        465,
+        486,
+        508,
+        519,
+        538,
+    ],
+    dtype=np.int32,
+)
+SHOP_SKILL_CARDS = np.array(
+    [
+        18,
+        31,
+        46,
+        45,
+        150,
+        155,
+        174,
+        175,
+        205,
+        238,
+        396,
+        414,
+        433,
+        455,
+        493,
+        516,
+        517,
+        521,
+    ],
+    dtype=np.int32,
+)
 SHOP_POWER_CARDS = np.array([185, 265, 273, 462, 533], dtype=np.int32)
 SHOP_COLORLESS_CARDS = COLORLESS_REWARD_POOL
 SHOP_COLORLESS_CARD_RARITIES = (CARD_RARITY_UNCOMMON, CARD_RARITY_RARE)
@@ -845,11 +1023,54 @@ POTION_RARITY_BY_ID = {
 }
 POTION_REWARD_POOL = np.array(
     [
-        1, 2, 3, 4, 5, 6, 8, 9, 10, 13,
-        14, 15, 16, 17, 18, 19, 21, 22, 23, 24,
-        26, 28, 29, 30, 32, 34, 36, 37, 38, 39,
-        40, 42, 47, 48, 49, 50, 51, 52, 53, 54,
-        56, 57, 58, 59, 60, 61, 62, 63,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22,
+        23,
+        24,
+        26,
+        28,
+        29,
+        30,
+        32,
+        34,
+        36,
+        37,
+        38,
+        39,
+        40,
+        42,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
     ],
     dtype=np.int32,
 )
@@ -880,15 +1101,49 @@ SHOP_RELIC_BASE_COSTS = {
 }
 RELIC_REWARD_POOL = np.array(
     [
-        3, 4, 9, 10, 19, 23, 41, 110, 114, 128,
-        135, 144, 149, 169, 170, 172, 186, 190, 215, 250,
-        252, 279, 282, 286,
+        3,
+        4,
+        9,
+        10,
+        19,
+        23,
+        41,
+        110,
+        114,
+        128,
+        135,
+        144,
+        149,
+        169,
+        170,
+        172,
+        186,
+        190,
+        215,
+        250,
+        252,
+        279,
+        282,
+        286,
     ],
     dtype=np.int32,
 )
 
 NON_UPGRADABLE_CARD_IDS = {
-    36, 128, 166, 206, 440, 457, 512, 10001, 10002, 10008, 10009, 10010, 10011, 10012,
+    36,
+    128,
+    166,
+    206,
+    440,
+    457,
+    512,
+    10001,
+    10002,
+    10008,
+    10009,
+    10010,
+    10011,
+    10012,
 }
 UPGRADABLE_STARTER_CARDS = {30, 131, 472}
 OVERGROWTH_WEAK_ENCOUNTERS = np.array([2, 3, 11, 8], dtype=np.int32)
@@ -907,8 +1162,12 @@ _SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
 _MONSTER_AI_HASH = _uint32(get_deterministic_hash_code("monster_ai"))
 _SLIMES_WEAK_ENCOUNTER_ID = 3
 _SLIMES_WEAK_ENTRY_HASH = get_deterministic_hash_code("SLIMES_WEAK")
-OVERGROWTH_NORMAL_ENCOUNTERS = np.array([5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32)
-UNDERDOCKS_NORMAL_ENCOUNTERS = np.array([9, 0, 7, 6, 22, 23, 24, 25, 26, 30], dtype=np.int32)
+OVERGROWTH_NORMAL_ENCOUNTERS = np.array(
+    [5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32
+)
+UNDERDOCKS_NORMAL_ENCOUNTERS = np.array(
+    [9, 0, 7, 6, 22, 23, 24, 25, 26, 30], dtype=np.int32
+)
 OVERGROWTH_ELITE_ENCOUNTERS = np.array([68, 65], dtype=np.int32)
 UNDERDOCKS_ELITE_ENCOUNTERS = np.array([72, 67], dtype=np.int32)
 OVERGROWTH_BOSS_ENCOUNTERS = np.array([83, 74, 82], dtype=np.int32)
@@ -928,9 +1187,26 @@ POOR_SLEEP_CARD = 10001
 SPOILS_MAP_CARD = 10002
 
 NEOW_CURSE_OPTIONS = [54, 111, 129, 134, 161, 205, 239, 240]
-NEOW_POSITIVE_OPTIONS = [5, 29, 89, 105, 124, 133, 140, 145, 163, 164, 195, 206, 231, 293]
+NEOW_POSITIVE_OPTIONS = [
+    5,
+    29,
+    89,
+    105,
+    124,
+    133,
+    140,
+    163,
+    164,
+    195,
+    206,
+    231,
+    293,
+]  # 145=MassiveScroll excluded (IsAllowedAtNeow=false for Ironclad)
 _NEOW_REWARDS_RNG_ADVANCES = {5: 1, 195: 4, 111: 3, 133: 6, 124: 18}
+NEOW_CURSE_RELICS = NEOW_CURSE_OPTIONS
+NEOW_POSITIVE_RELICS = NEOW_POSITIVE_OPTIONS
 STARTER_DECK = [472, 472, 472, 472, 472, 131, 131, 131, 131, 30, 10001]
+
 
 @dataclass
 class RunMapNode:
@@ -941,6 +1217,8 @@ class RunMapNode:
     children: list[tuple[int, int]] = field(default_factory=list)
     parents: list[tuple[int, int]] = field(default_factory=list)
     encounter_id: int = 0
+
+
 class Sts2RunEnv(gym.Env):
     """Deterministic simplified full-run environment.
 
@@ -1615,7 +1893,9 @@ class Sts2RunEnv(gym.Env):
             self._deck.append(NEOWS_FURY_CARD)
         elif relic_id == RELIC_NEOWS_BONES:
             for _ in range(2):
-                bonus = int(NEOW_POSITIVE_RELICS[up_front.next_int(len(NEOW_POSITIVE_RELICS))])
+                bonus = int(
+                    NEOW_POSITIVE_RELICS[up_front.next_int(len(NEOW_POSITIVE_RELICS))]
+                )
                 if bonus not in self._relics:
                     self._relics.append(bonus)
             self._deck.append(CURSE_PLACEHOLDER_CARD)
@@ -1647,16 +1927,28 @@ class Sts2RunEnv(gym.Env):
             self._deck.append(CURSE_PLACEHOLDER_CARD)
             self._gold += 333
         elif relic_id == RELIC_HEFTY_TABLET:
-            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
+            self._deck.append(
+                int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))])
+            )
             self._deck.append(CURSE_PLACEHOLDER_CARD)
         elif relic_id == RELIC_KALEIDOSCOPE:
             # Simplified: just pick 2 random cards from pool using up_front.
             for _ in range(2):
-                self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
+                self._deck.append(
+                    int(
+                        IRONCLAD_REWARD_POOL[
+                            up_front.next_int(len(IRONCLAD_REWARD_POOL))
+                        ]
+                    )
+                )
         elif relic_id == RELIC_ARCANE_SCROLL:
-            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
+            self._deck.append(
+                int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))])
+            )
         elif relic_id == RELIC_LEAD_PAPERWEIGHT:
-            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
+            self._deck.append(
+                int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))])
+            )
         elif relic_id == RELIC_LOST_COFFER:
             pass  # card reward + potion handled in _step_neow via rewards RNG
         elif relic_id == RELIC_NEW_LEAF:
@@ -1668,7 +1960,13 @@ class Sts2RunEnv(gym.Env):
             self._remove_lowest_priority_card()
         elif relic_id == RELIC_SCROLL_BOXES:
             for _ in range(3):
-                self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
+                self._deck.append(
+                    int(
+                        IRONCLAD_REWARD_POOL[
+                            up_front.next_int(len(IRONCLAD_REWARD_POOL))
+                        ]
+                    )
+                )
         elif relic_id == RELIC_LEAFY_POULTICE:
             self._player_max_hp = max(1, self._player_max_hp - 12)
             self._player_hp = min(self._player_hp, self._player_max_hp)
@@ -1688,16 +1986,26 @@ class Sts2RunEnv(gym.Env):
             for _ in range(3):
                 self._obtain_relic(self._next_relic())
         elif relic_id == RELIC_DUSTY_TOME:
-            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
+            self._deck.append(
+                int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))])
+            )
             self._deck[-1] = -abs(self._deck[-1])  # upgrade it
         elif relic_id == RELIC_PRISMATIC_GEM:
-            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
+            self._deck.append(
+                int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))])
+            )
 
     def _transform_all_matching(self, card_id: int) -> None:
         for i in range(len(self._deck)):
             if abs(self._deck[i]) == card_id:
                 # Transformation uses transformations RNG.
-                self._deck[i] = int(IRONCLAD_REWARD_POOL[self._player_rng.transformations.next_int(len(IRONCLAD_REWARD_POOL))])
+                self._deck[i] = int(
+                    IRONCLAD_REWARD_POOL[
+                        self._player_rng.transformations.next_int(
+                            len(IRONCLAD_REWARD_POOL)
+                        )
+                    ]
+                )
 
     def _enter_next_act(self):
         self._act_index += 1
@@ -1924,7 +2232,9 @@ class Sts2RunEnv(gym.Env):
         else:
             event_pool.extend([EVENT_AROMA_OF_CHAOS, EVENT_SIMPLE_REWARD])
         # Use UpFront RNG for event selection.
-        self._event_id = int(event_pool[self._run_rng_set.up_front.next_int(len(event_pool))])
+        self._event_id = int(
+            event_pool[self._run_rng_set.up_front.next_int(len(event_pool))]
+        )
 
     def _select_act_and_weak_encounters(self):
         # Act selection: separate Rng seeded from uint(run_seed), matches
@@ -2987,7 +3297,7 @@ class Sts2RunEnv(gym.Env):
         self._player_max_hp += amount
         self._player_hp = min(self._player_max_hp, self._player_hp + amount)
 
-    def _next_potion(self, rng: GameRng) -> int:
+    def _next_potion(self, rng: GameRng | None = None) -> int:
         return self._next_potions(1, rng)[0]
 
     def _next_potions(self, count: int, rng: GameRng | None = None) -> list[int]:

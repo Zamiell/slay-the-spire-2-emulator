@@ -194,7 +194,7 @@ CARD_RARITY_ODDS_SHOP = (0.045, 0.37)
 CARD_RARITY_ODDS_UNIFORM = (0.33, 0.33)
 """
 
-with open('new_rarity_map.txt', 'r') as f:
+with open("new_rarity_map.txt", "r") as f:
     rarity_map = f.read()
 
 pools = """
@@ -444,13 +444,13 @@ class RunMapNode:
 class Sts2RunEnv(gym.Env):
 """
 
-with open('run_env_class.txt', 'r') as f:
+with open("run_env_class.txt", "r") as f:
     class_def = f.read()
 
 # remove first line of class_def as it is duplicate of class Sts2RunEnv(gym.Env):
 class_def = "\\n".join(class_def.split("\\n")[1:])
 
-with open('src/sts2_gym/run_env.py', 'w') as f:
+with open("src/sts2_gym/run_env.py", "w") as f:
     f.write(header)
     f.write(rarity_map)
     f.write(pools)
