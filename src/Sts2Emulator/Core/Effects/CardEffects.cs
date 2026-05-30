@@ -892,8 +892,13 @@ case IC.TrueGrit: // 1-cost, gain 7/9 block; exhaust a random card
     private static int Blk(CardDef def, bool upgraded) =>
         upgraded ? def.BaseBlock + def.UpgradeBlock : def.BaseBlock;
 
-    private static EnemyState? FirstEnemy(CombatState state) =>
-        state.Enemies.FirstOrDefault(e => e.Hp > 0);
+    private static EnemyState? FirstEnemy(CombatState state)
+    {
+        int idx = state.TargetEnemyIndex;
+        if (idx >= 0 && idx < state.Enemies.Count && state.Enemies[idx].Hp > 0)
+            return state.Enemies[idx];
+        return state.Enemies.FirstOrDefault(e => e.Hp > 0);
+    }
 
     private static void ExhaustRandomCardFromHand(CombatState state, Random rng)
     {

@@ -190,15 +190,28 @@ def replay_trace(
         if max_steps is not None:
             replay_steps = replay_steps[:max_steps]
 
+        current_target_map: dict[str, int] = {}
+        prev_ref_state: str | None = None
+
         for reference_step in replay_steps:
             payload = reference_step.get("action")
+            ref_summary = compare_traces.summary(reference_step)
+            ref_state = ref_summary.get("state_type")
+
+            # Build target map when entering a new combat from a reference battle enemy list.
+            if ref_state in COMBAT_STATES and prev_ref_state not in COMBAT_STATES:
+                ref_enemies = (
+                    compare_traces.get_path(ref_summary, "battle.enemies") or []
+                )
+                current_target_map = build_target_map(ref_enemies)
+            elif ref_state not in COMBAT_STATES:
+                current_target_map = {}
+            prev_ref_state = ref_state
+
             try:
                 action = translate_action(payload, obs, info)
             except UnsupportedTraceActionError as exc:
-                reference_summary = compare_traces.summary(reference_step)
-                reference_floor = compare_traces.get_path(
-                    reference_summary, "run.floor"
-                )
+                reference_floor = compare_traces.get_path(ref_summary, "run.floor")
                 return ReplayResult(
                     {
                         "source": "emulator",
@@ -208,7 +221,7 @@ def replay_trace(
                     (
                         f"step {reference_step.get('step', len(emulator_trace))}: "
                         f"{exc}; reference state_type="
-                        f"{reference_summary.get('state_type')!r} "
+                        f"{ref_summary.get('state_type')!r} "
                         f"floor={reference_floor!r}"
                     ),
                 )
@@ -218,7 +231,13 @@ def replay_trace(
                 terminated = False
                 truncated = False
             else:
-                obs, reward, terminated, truncated, info = env.step(action)
+                if int(info["phase"]) == PHASE_COMBAT:
+                    target = translate_target(payload, current_target_map)
+                else:
+                    target = -1
+                obs, reward, terminated, truncated, info = env.step(
+                    action, target=target
+                )
             emulator_trace.append(
                 make_step(
                     int(reference_step.get("step") or len(emulator_trace)),
@@ -239,6 +258,45 @@ def replay_trace(
         )
     finally:
         env.close()
+
+
+def _normalize_enemy_name(name: str) -> str:
+    """Convert 'Twig Slime (M)' → 'TWIG_SLIME_M' to match trace target prefixes."""
+    import re
+
+    name = re.sub(r"[()]", "", name)
+    name = name.strip().upper()
+    return re.sub(r"\s+", "_", name)
+
+
+def build_target_map(enemies: list[dict[str, Any]]) -> dict[str, int]:
+    """Build {target_id: absolute_enemy_index} from a combat's initial enemy list."""
+    type_counters: dict[str, int] = {}
+    result: dict[str, int] = {}
+    for i, enemy in enumerate(enemies):
+        normalized = _normalize_enemy_name(enemy.get("name", ""))
+        count = type_counters.get(normalized, 0)
+        result[f"{normalized}_{count}"] = i
+        type_counters[normalized] = count + 1
+    return result
+
+
+def translate_target(
+    payload: dict[str, Any] | None, target_map: dict[str, int] | None = None
+) -> int:
+    """Resolve trace target string to absolute enemy index, or -1."""
+    if payload is None:
+        return -1
+    target = payload.get("target")
+    if not isinstance(target, str):
+        return -1
+    if target_map is not None and target in target_map:
+        return target_map[target]
+    # Fallback: extract trailing integer suffix (works for single-type encounters).
+    parts = target.rsplit("_", 1)
+    if len(parts) == 2 and parts[1].isdigit():
+        return int(parts[1])
+    return -1
 
 
 def translate_action(

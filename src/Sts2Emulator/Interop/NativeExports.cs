@@ -35,7 +35,7 @@ public static class NativeExports
     public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
-    public const int NATIVE_API_VERSION = 8;
+    public const int NATIVE_API_VERSION = 9;
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         472, 472, 472, 472, 472,
@@ -314,6 +314,17 @@ public static class NativeExports
     {
         var combat = _pool[handle]!;
         var result = CombatEngine.Step(combat.State, action, combat.Rng);
+        combat.LastPlayerWon = result.Terminal && result.PlayerWon;
+        WriteObs(combat.State, obsBuf);
+        *rewardOut = result.Reward;
+        return result.Terminal ? 1 : 0;
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe int Sts2_StepTargeted(int handle, int action, int targetEnemyIdx, int* obsBuf, float* rewardOut)
+    {
+        var combat = _pool[handle]!;
+        var result = CombatEngine.Step(combat.State, action, combat.Rng, targetEnemyIdx);
         combat.LastPlayerWon = result.Terminal && result.PlayerWon;
         WriteObs(combat.State, obsBuf);
         *rewardOut = result.Reward;

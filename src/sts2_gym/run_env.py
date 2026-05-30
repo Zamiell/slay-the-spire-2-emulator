@@ -1365,7 +1365,7 @@ class Sts2RunEnv(gym.Env):
         self._enter_ancient_phase()
         return self._obs(), self._info()
 
-    def step(self, action: int):
+    def step(self, action: int, target: int = -1):
         self._elapsed_steps += 1
 
         if self._phase == PHASE_CARD_REWARD:
@@ -1389,7 +1389,7 @@ class Sts2RunEnv(gym.Env):
 
         assert self._handle is not None, "Call reset() before step()"
         terminal = native.step(
-            self._handle, action, self._combat_obs_buf, self._rew_buf
+            self._handle, action, self._combat_obs_buf, self._rew_buf, target
         )
         reward = float(self._rew_buf[0])
         self._sync_run_state_from_combat_obs()

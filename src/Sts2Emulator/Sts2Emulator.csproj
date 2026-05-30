@@ -28,6 +28,7 @@
     <LinkerArg Include="/EXPORT:Sts2_ResetRunCombat=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetRunCombat" />
     <LinkerArg Include="/EXPORT:Sts2_ResetRunCombatPreShuffled=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_ResetRunCombatPreShuffled" />
     <LinkerArg Include="/EXPORT:Sts2_Step=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_Step" />
+    <LinkerArg Include="/EXPORT:Sts2_StepTargeted=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_StepTargeted" />
     <LinkerArg Include="/EXPORT:Sts2_PlayerWon=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_PlayerWon" />
     <LinkerArg Include="/EXPORT:Sts2_EncounterId=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_EncounterId" />
     <LinkerArg Include="/EXPORT:Sts2_GetShuffleRngCallCount=Sts2Emulator_Sts2Emulator_Interop_NativeExports__Sts2_GetShuffleRngCallCount" />

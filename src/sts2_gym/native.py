@@ -11,7 +11,7 @@ _LIB_NAMES = {
     "darwin": "Sts2Emulator.dylib",
 }
 _ALLOW_STALE_ENV = "STS2_ALLOW_STALE_NATIVE"
-_REQUIRED_NATIVE_API_VERSION = 8
+_REQUIRED_NATIVE_API_VERSION = 9
 
 
 def _repo_root() -> Path:
@@ -193,6 +193,15 @@ _lib.Sts2_Step.argtypes = [
     ctypes.POINTER(ctypes.c_float),
 ]
 
+_lib.Sts2_StepTargeted.restype = ctypes.c_int
+_lib.Sts2_StepTargeted.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_float),
+]
+
 _lib.Sts2_PlayerWon.restype = ctypes.c_int
 _lib.Sts2_PlayerWon.argtypes = [ctypes.c_int]
 
@@ -350,8 +359,14 @@ def step(
     action: int,
     obs_buf: ctypes.Array,
     reward_buf: ctypes.Array,
+    target_enemy_index: int = -1,
 ) -> bool:
-    terminal = _lib.Sts2_Step(handle, action, obs_buf, reward_buf)
+    if target_enemy_index >= 0:
+        terminal = _lib.Sts2_StepTargeted(
+            handle, action, target_enemy_index, obs_buf, reward_buf
+        )
+    else:
+        terminal = _lib.Sts2_Step(handle, action, obs_buf, reward_buf)
     return bool(terminal)
 
 

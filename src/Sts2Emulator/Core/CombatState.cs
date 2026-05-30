@@ -58,4 +58,5 @@ public sealed class CombatState
     public int CardsExhaustedThisTurn;
     public int EtherealExhaustCount; // number of cards exhausted by Ethereal this turn (Dark Embrace)
     public int UnblockedDamageHitCount; // times player took unblocked damage this combat (TearAsunder)
+    public int TargetEnemyIndex = -1; // -1 = auto (first living enemy), >=0 = specific index
 }

@@ -1,14 +1,15 @@
 namespace Sts2Emulator.Core;
 
 // Action encoding:
-//   0..hand.Count-1  → play card at that hand index (targeting first enemy)
+//   0..hand.Count-1  → play card at that hand index (targeting first enemy, or TargetEnemyIndex)
 //   hand.Count       → end turn
 //   hand.Count+1..   → use potion at slot (index - hand.Count - 1)
 
 public static class CombatEngine
 {
-    public static StepResult Step(CombatState state, int action, Random rng)
+    public static StepResult Step(CombatState state, int action, Random rng, int targetEnemyIndex = -1)
     {
+        state.TargetEnemyIndex = targetEnemyIndex;
         int endTurnAction = state.Hand.Count;
         StepResult result;
 
@@ -22,13 +23,16 @@ public static class CombatEngine
             result = UsePotion(state, potionSlot);
         }
 
+        // Auto-plays use first-living enemy, not the explicit target.
+        state.TargetEnemyIndex = -1;
+
         // Process auto-plays (e.g. from Hellraiser).
         while (state.AutoPlayQueue.Count > 0 && !result.Terminal)
         {
             var next = state.AutoPlayQueue[0];
             state.AutoPlayQueue.RemoveAt(0);
             AutoPlay(state, next, rng);
-            
+
             // Re-check terminality after auto-play.
             bool playerDead = state.PlayerHp <= 0;
             bool allDead = state.Enemies.All(e => e.Hp <= 0);
