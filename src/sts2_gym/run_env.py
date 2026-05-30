@@ -3174,11 +3174,15 @@ class Sts2RunEnv(gym.Env):
     def _encounter_rng_seed(self, encounter_id: int) -> int:
         # Matches EncounterModel.GenerateMonstersWithSlots:
         #   uint seed = (uint)((int)runState.Rng.Seed + runState.TotalFloor + hash(entry))
-        # The reference game's TotalFloor is 0-indexed from the first combat; the emulator's
-        # self._floor starts at 1 and is incremented before _reset_combat, so the offset is -2.
+        # TotalFloor = number of Monster/Elite combat rooms COMPLETED before this one
+        # (MapPointHistory only tracks combat rooms, not shops/events/rests).
+        # _normal_encounters_visited is incremented before _reset_combat, so subtract 1;
+        # add _elite_encounters_visited for any elite combats already done.
         # Only SlimesWeak uses this for type selection; pass 0 for others (ignored by C#).
         if encounter_id == _SLIMES_WEAK_ENCOUNTER_ID and self._run_rng_set is not None:
-            total_floor = self._floor - 2
+            total_floor = (
+                self._normal_encounters_visited - 1 + self._elite_encounters_visited
+            )
             return _int32(
                 _uint32(
                     _int32(self._run_rng_set.seed)
