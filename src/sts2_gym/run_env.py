@@ -1219,7 +1219,42 @@ NEOW_POSITIVE_OPTIONS = [
     231,
     293,
 ]  # 145=MassiveScroll excluded (IsAllowedAtNeow=false for Ironclad)
-_NEOW_REWARDS_RNG_ADVANCES = {5: 1, 195: 4, 111: 3, 133: 6, 124: 18}
+# Rare Ironclad cards in IroncladCardPool.GenerateAllCards() order, singleplayer filter.
+# Excludes Tank (492, MultiplayerOnly). Cascade (546) is included as it's in the pool.
+# Used by ArcaneScroll.AfterObtained (Uniform + Rare predicate → Rewards.NextItem).
+_IRONCLAD_RARE_SINGLEPLAYER_POOL: list[int] = [
+    9,
+    29,
+    58,
+    546,
+    99,
+    113,
+    114,
+    119,
+    141,
+    183,
+    188,
+    246,
+    261,
+    272,
+    295,
+    328,
+    332,
+    334,
+    339,
+    364,
+    374,
+    464,
+    494,
+    505,
+    525,
+]
+_NEOW_REWARDS_RNG_ADVANCES = {
+    195: 4,
+    111: 3,
+    133: 6,
+    124: 18,
+}  # ArcaneScroll(5) handled inline
 NEOW_CURSE_RELICS = NEOW_CURSE_OPTIONS
 NEOW_POSITIVE_RELICS = NEOW_POSITIVE_OPTIONS
 STARTER_DECK = [472, 472, 472, 472, 472, 131, 131, 131, 131, 30, 10001]
@@ -1959,9 +1994,12 @@ class Sts2RunEnv(gym.Env):
                     )
                 )
         elif relic_id == RELIC_ARCANE_SCROLL:
-            self._deck.append(
-                int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))])
+            # CardFactory.CreateForReward uses player.PlayerRng.Rewards.NextItem(rareCards)
+            # where rareCards = IroncladCardPool.GetUnlockedCards(singleplayer) filtered to Rare.
+            idx = self._player_rng.rewards.next_int(
+                len(_IRONCLAD_RARE_SINGLEPLAYER_POOL)
             )
+            self._deck.append(_IRONCLAD_RARE_SINGLEPLAYER_POOL[idx])
         elif relic_id == RELIC_LEAD_PAPERWEIGHT:
             self._deck.append(
                 int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))])
