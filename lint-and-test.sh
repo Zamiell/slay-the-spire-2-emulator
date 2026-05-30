@@ -10,6 +10,9 @@ uv run black . --check --target-version py314
 # Type-check Python
 uv run ty check .
 
+# Check C# formatting
+dotnet csharpier . --check
+
 # Build C#
 dotnet build src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj --configuration Release
 dotnet publish "src/Sts2Emulator/Sts2Emulator.csproj" -c Release -r win-x64 --self-contained -o "out" --nologo

@@ -19,6 +19,12 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Check formatting
+        run: dotnet csharpier . --check
+
       - name: Restore
         run: dotnet restore src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj
 
