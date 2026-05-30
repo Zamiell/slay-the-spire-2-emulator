@@ -11,7 +11,8 @@ _LIB_NAMES = {
     "darwin": "Sts2Emulator.dylib",
 }
 _ALLOW_STALE_ENV = "STS2_ALLOW_STALE_NATIVE"
-_REQUIRED_NATIVE_API_VERSION = 9
+_REQUIRED_NATIVE_API_VERSION = 10
+_REQUIRED_RUN_NATIVE_API_VERSION = 7
 
 
 def _repo_root() -> Path:
@@ -70,6 +71,29 @@ def _assert_native_api_version(lib: ctypes.CDLL, path: Path) -> None:
             f"{path} exports native API version {actual_version}, but "
             f"sts2_gym requires {_REQUIRED_NATIVE_API_VERSION}. Rebuild the "
             "native library with `bash scripts/build.sh win-x64` or "
+            '`dotnet publish "src\\Sts2Emulator\\Sts2Emulator.csproj" '
+            '-c Release -r win-x64 --self-contained -o "out"`.'
+        )
+
+    try:
+        run_version_func = lib.Sts2Run_NativeApiVersion
+    except AttributeError as exc:
+        raise RuntimeError(
+            f"{path} does not export Sts2Run_NativeApiVersion and is too old "
+            "for these Python bindings. Rebuild the native library with "
+            "`bash scripts/build.sh win-x64` or `dotnet publish "
+            '"src\\Sts2Emulator\\Sts2Emulator.csproj" -c Release -r win-x64 '
+            '--self-contained -o "out"`.'
+        ) from exc
+
+    run_version_func.restype = ctypes.c_int
+    run_version_func.argtypes = []
+    actual_run_version = int(run_version_func())
+    if actual_run_version != _REQUIRED_RUN_NATIVE_API_VERSION:
+        raise RuntimeError(
+            f"{path} exports run native API version {actual_run_version}, but "
+            f"sts2_gym requires {_REQUIRED_RUN_NATIVE_API_VERSION}. Rebuild "
+            "the native library with `bash scripts/build.sh win-x64` or "
             '`dotnet publish "src\\Sts2Emulator\\Sts2Emulator.csproj" '
             '-c Release -r win-x64 --self-contained -o "out"`.'
         )
@@ -147,44 +171,6 @@ _lib.Sts2_ResetWithDeckEncounterAndRelics.argtypes = [
     ctypes.POINTER(ctypes.c_int),
 ]
 
-_lib.Sts2_ResetRunCombat.restype = None
-_lib.Sts2_ResetRunCombat.argtypes = [
-    ctypes.c_int,  # handle
-    ctypes.POINTER(ctypes.c_int),  # deckIds
-    ctypes.c_int,  # deckLen
-    ctypes.c_int,  # encounterId
-    ctypes.POINTER(ctypes.c_int),  # relicIds
-    ctypes.c_int,  # relicLen
-    ctypes.c_int,  # playerHp
-    ctypes.c_int,  # playerMaxHp
-    ctypes.POINTER(ctypes.c_int),  # potionIds
-    ctypes.c_int,  # potionLen
-    ctypes.c_int,  # playerGold
-    ctypes.c_int,  # encounterRngSeed
-    ctypes.POINTER(ctypes.c_int),  # obsBuf
-]
-
-_lib.Sts2_ResetRunCombatPreShuffled.restype = None
-_lib.Sts2_ResetRunCombatPreShuffled.argtypes = [
-    ctypes.c_int,  # handle
-    ctypes.POINTER(ctypes.c_int),  # deckIds
-    ctypes.c_int,  # deckLen
-    ctypes.c_int,  # encounterId
-    ctypes.POINTER(ctypes.c_int),  # relicIds
-    ctypes.c_int,  # relicLen
-    ctypes.c_int,  # playerHp
-    ctypes.c_int,  # playerMaxHp
-    ctypes.POINTER(ctypes.c_int),  # potionIds
-    ctypes.c_int,  # potionLen
-    ctypes.c_int,  # playerGold
-    ctypes.c_int,  # shuffleRngSeed
-    ctypes.c_int,  # shufflePreSkip
-    ctypes.c_int,  # nicheSkipCount
-    ctypes.c_int,  # encounterRngSeed
-    ctypes.c_int,  # monsterAiRngSeed
-    ctypes.POINTER(ctypes.c_int),  # obsBuf
-]
-
 _lib.Sts2_Step.restype = ctypes.c_int
 _lib.Sts2_Step.argtypes = [
     ctypes.c_int,
@@ -208,12 +194,6 @@ _lib.Sts2_PlayerWon.argtypes = [ctypes.c_int]
 _lib.Sts2_EncounterId.restype = ctypes.c_int
 _lib.Sts2_EncounterId.argtypes = [ctypes.c_int]
 
-_lib.Sts2_GetShuffleRngCallCount.restype = ctypes.c_int
-_lib.Sts2_GetShuffleRngCallCount.argtypes = [ctypes.c_int]
-
-_lib.Sts2_GetNicheRngCallCount.restype = ctypes.c_int
-_lib.Sts2_GetNicheRngCallCount.argtypes = [ctypes.c_int]
-
 _lib.Sts2_ActionCount.restype = ctypes.c_int
 _lib.Sts2_ActionCount.argtypes = [ctypes.c_int]
 
@@ -227,10 +207,101 @@ _lib.Sts2_ValidActions.argtypes = [
 _lib.Sts2_Destroy.restype = None
 _lib.Sts2_Destroy.argtypes = [ctypes.c_int]
 
+_lib.Sts2Run_ObsSize.restype = ctypes.c_int
+_lib.Sts2Run_ObsSize.argtypes = []
+
+_lib.Sts2Run_MaxActions.restype = ctypes.c_int
+_lib.Sts2Run_MaxActions.argtypes = []
+
+_lib.Sts2Run_InfoSize.restype = ctypes.c_int
+_lib.Sts2Run_InfoSize.argtypes = []
+
+_lib.Sts2Run_Create.restype = ctypes.c_int
+_lib.Sts2Run_Create.argtypes = []
+
+_lib.Sts2Run_Reset.restype = ctypes.c_int
+_lib.Sts2Run_Reset.argtypes = [
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_ubyte),
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+]
+
+_lib.Sts2Run_Step.restype = ctypes.c_int
+_lib.Sts2Run_Step.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_float),
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_int),
+]
+
+_lib.Sts2Run_StartCombat.restype = ctypes.c_int
+_lib.Sts2Run_StartCombat.argtypes = [
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+]
+
+_lib.Sts2Run_ActionMask.restype = ctypes.c_int
+_lib.Sts2Run_ActionMask.argtypes = [
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+]
+
+_lib.Sts2Run_GetInfo.restype = ctypes.c_int
+_lib.Sts2Run_GetInfo.argtypes = [
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+]
+
+_lib.Sts2Run_GetStateList.restype = ctypes.c_int
+_lib.Sts2Run_GetStateList.argtypes = [
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.c_int,
+]
+
+_lib.Sts2Run_GetPhase.restype = ctypes.c_int
+_lib.Sts2Run_GetPhase.argtypes = [ctypes.c_int]
+
+_lib.Sts2Run_PlayerWon.restype = ctypes.c_int
+_lib.Sts2Run_PlayerWon.argtypes = [ctypes.c_int]
+
+_lib.Sts2Run_EncounterId.restype = ctypes.c_int
+_lib.Sts2Run_EncounterId.argtypes = [ctypes.c_int]
+
+_lib.Sts2Run_GetShuffleRngCallCount.restype = ctypes.c_int
+_lib.Sts2Run_GetShuffleRngCallCount.argtypes = [ctypes.c_int]
+
+_lib.Sts2Run_GetNicheRngCallCount.restype = ctypes.c_int
+_lib.Sts2Run_GetNicheRngCallCount.argtypes = [ctypes.c_int]
+
+_lib.Sts2Run_Destroy.restype = None
+_lib.Sts2Run_Destroy.argtypes = [ctypes.c_int]
+
 # ── public wrappers ───────────────────────────────────────────────────────────
 
 OBS_SIZE: int = _lib.Sts2_ObsSize()
 MAX_ENEMIES: int = _lib.Sts2_MaxEnemies()
+RUN_OBS_SIZE: int = _lib.Sts2Run_ObsSize()
+RUN_MAX_ACTIONS: int = _lib.Sts2Run_MaxActions()
+RUN_INFO_SIZE: int = _lib.Sts2Run_InfoSize()
 
 
 def create(seed: int) -> int:
@@ -282,78 +353,6 @@ def reset_with_deck_encounter_and_relics(
     )
 
 
-def reset_run_combat(
-    handle: int,
-    deck_ids: list[int],
-    encounter_id: int,
-    relic_ids: list[int],
-    player_hp: int,
-    player_max_hp: int,
-    potion_ids: list[int],
-    player_gold: int,
-    encounter_rng_seed: int,
-    obs_buf: ctypes.Array,
-) -> None:
-    deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
-    relic_buf = (ctypes.c_int * len(relic_ids))(*relic_ids)
-    potion_buf = (ctypes.c_int * len(potion_ids))(*potion_ids)
-    _lib.Sts2_ResetRunCombat(
-        handle,
-        deck_buf,
-        len(deck_ids),
-        encounter_id,
-        relic_buf,
-        len(relic_ids),
-        player_hp,
-        player_max_hp,
-        potion_buf,
-        len(potion_ids),
-        player_gold,
-        encounter_rng_seed,
-        obs_buf,
-    )
-
-
-def reset_run_combat_pre_shuffled(
-    handle: int,
-    deck_ids: list[int],
-    encounter_id: int,
-    relic_ids: list[int],
-    player_hp: int,
-    player_max_hp: int,
-    potion_ids: list[int],
-    player_gold: int,
-    shuffle_rng_seed: int,
-    shuffle_pre_skip: int,
-    niche_skip_count: int,
-    encounter_rng_seed: int,
-    monster_ai_rng_seed: int,
-    obs_buf: ctypes.Array,
-) -> None:
-    deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
-    relic_buf = (ctypes.c_int * len(relic_ids))(*relic_ids)
-    potion_buf = (ctypes.c_int * len(potion_ids))(*potion_ids)
-    _lib.Sts2_ResetRunCombatPreShuffled(
-        handle,
-        deck_buf,
-        len(deck_ids),
-        encounter_id,
-        relic_buf,
-        len(relic_ids),
-        player_hp,
-        player_max_hp,
-        potion_buf,
-        len(potion_ids),
-        player_gold,
-        shuffle_rng_seed,
-        shuffle_pre_skip,
-        niche_skip_count,
-        encounter_rng_seed,
-        monster_ai_rng_seed,
-        obs_buf,
-    )
-
-
 def step(
     handle: int,
     action: int,
@@ -384,26 +383,121 @@ def encounter_id(handle: int) -> int:
     return int(_lib.Sts2_EncounterId(handle))
 
 
-def get_niche_rng_call_count(handle: int) -> int:
-    """Return the total Next() calls on the niche (main combat) RNG during this combat.
-
-    The caller should accumulate this across combats to compute nicheSkipCount
-    for the next combat, so each combat's HP and intent rolls use the correct
-    position in the shared niche RNG stream.
-    """
-    return int(_lib.Sts2_GetNicheRngCallCount(handle))
-
-
-def get_shuffle_rng_call_count(handle: int) -> int:
-    """Return the total Next() calls on the shuffle RNG since combat started.
-
-    This includes the deckLen-1 initial skip consumed during pre-shuffle setup.
-    The caller should subtract (deck_len - 1) to get only the mid-combat extra
-    advances, then advance the Python-side _run_rng_set.shuffle GameRng by that
-    amount so subsequent combats start from the correct shuffle RNG position.
-    """
-    return int(_lib.Sts2_GetShuffleRngCallCount(handle))
-
-
 def destroy(handle: int) -> None:
     _lib.Sts2_Destroy(handle)
+
+
+def run_create() -> int:
+    return int(_lib.Sts2Run_Create())
+
+
+def run_reset(handle: int, seed: str, obs_buf: ctypes.Array) -> int:
+    seed_bytes = seed.encode("utf-8")
+    seed_buf = (ctypes.c_ubyte * len(seed_bytes))(*seed_bytes)
+    return int(_lib.Sts2Run_Reset(handle, seed_buf, len(seed_bytes), obs_buf))
+
+
+def run_step(
+    handle: int,
+    action: int,
+    target_enemy_index: int,
+    obs_buf: ctypes.Array,
+    reward_buf: ctypes.Array,
+    terminal_buf: ctypes.Array,
+    truncated_buf: ctypes.Array,
+) -> int:
+    return int(
+        _lib.Sts2Run_Step(
+            handle,
+            action,
+            target_enemy_index,
+            obs_buf,
+            reward_buf,
+            terminal_buf,
+            truncated_buf,
+        )
+    )
+
+
+def run_start_combat(
+    handle: int,
+    deck_ids: list[int],
+    encounter_id: int,
+    relic_ids: list[int],
+    player_hp: int,
+    player_max_hp: int,
+    potion_ids: list[int],
+    player_gold: int,
+    completed_combat_rooms_before_current: int,
+    obs_buf: ctypes.Array,
+) -> int:
+    deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
+    relic_buf = (ctypes.c_int * len(relic_ids))(*relic_ids)
+    potion_buf = (ctypes.c_int * len(potion_ids))(*potion_ids)
+    return int(
+        _lib.Sts2Run_StartCombat(
+            handle,
+            deck_buf,
+            len(deck_ids),
+            encounter_id,
+            relic_buf,
+            len(relic_ids),
+            player_hp,
+            player_max_hp,
+            potion_buf,
+            len(potion_ids),
+            player_gold,
+            completed_combat_rooms_before_current,
+            obs_buf,
+        )
+    )
+
+
+def run_action_mask(handle: int, max_actions: int) -> ctypes.Array:
+    buf = (ctypes.c_int * max_actions)()
+    status = int(_lib.Sts2Run_ActionMask(handle, buf, max_actions))
+    if status != 0:
+        raise RuntimeError(f"Sts2Run_ActionMask failed with status {status}.")
+    return buf
+
+
+def run_info(handle: int) -> ctypes.Array:
+    buf = (ctypes.c_int * RUN_INFO_SIZE)()
+    status = int(_lib.Sts2Run_GetInfo(handle, buf, RUN_INFO_SIZE))
+    if status != 0:
+        raise RuntimeError(f"Sts2Run_GetInfo failed with status {status}.")
+    return buf
+
+
+def run_state_list(handle: int, list_id: int, capacity: int = 256) -> tuple[int, ...]:
+    buf = (ctypes.c_int * capacity)()
+    count = int(_lib.Sts2Run_GetStateList(handle, list_id, buf, capacity))
+    if count < 0:
+        raise RuntimeError(
+            f"Sts2Run_GetStateList failed with status {count} for list {list_id}."
+        )
+    return tuple(int(buf[i]) for i in range(min(count, capacity)))
+
+
+def run_phase(handle: int) -> int:
+    return int(_lib.Sts2Run_GetPhase(handle))
+
+
+def run_player_won(handle: int) -> bool:
+    return bool(_lib.Sts2Run_PlayerWon(handle))
+
+
+def run_encounter_id(handle: int) -> int:
+    return int(_lib.Sts2Run_EncounterId(handle))
+
+
+def run_get_shuffle_rng_call_count(handle: int) -> int:
+    return int(_lib.Sts2Run_GetShuffleRngCallCount(handle))
+
+
+def run_get_niche_rng_call_count(handle: int) -> int:
+    return int(_lib.Sts2Run_GetNicheRngCallCount(handle))
+
+
+def run_destroy(handle: int) -> None:
+    _lib.Sts2Run_Destroy(handle)

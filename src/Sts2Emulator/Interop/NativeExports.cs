@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sts2Emulator.Core;
 
@@ -35,7 +34,7 @@ public static class NativeExports
     public const int MAX_ENEMIES = 6;
     public const int MAX_PLAYER_BUFFS = 10;
     public const int MAX_ENEMY_BUFFS = 5;
-    public const int NATIVE_API_VERSION = 9;
+    public const int NATIVE_API_VERSION = 10;
     private static ReadOnlySpan<int> StarterDeckIds =>
     [
         472, 472, 472, 472, 472,
@@ -90,66 +89,6 @@ public static class NativeExports
             CombatFactory.Reset(State, Rng, deckIds, encounterId, relicIds);
         }
 
-        public void Reset(
-            ReadOnlySpan<int> deckIds,
-            int encounterId,
-            ReadOnlySpan<int> relicIds,
-            int playerHp,
-            int playerMaxHp)
-        {
-            Reset(deckIds, encounterId, relicIds, playerHp, playerMaxHp, []);
-        }
-
-        public void Reset(
-            ReadOnlySpan<int> deckIds,
-            int encounterId,
-            ReadOnlySpan<int> relicIds,
-            int playerHp,
-            int playerMaxHp,
-            ReadOnlySpan<int> potionIds)
-        {
-            Reset(deckIds, encounterId, relicIds, playerHp, playerMaxHp, potionIds, playerGold: 0);
-        }
-
-        public void Reset(
-            ReadOnlySpan<int> deckIds,
-            int encounterId,
-            ReadOnlySpan<int> relicIds,
-            int playerHp,
-            int playerMaxHp,
-            ReadOnlySpan<int> potionIds,
-            int playerGold,
-            bool deckPreShuffled = false,
-            CountingRandom? shuffleRng = null,
-            int? encounterRngSeed = null,
-            int nicheSkipCount = 0,
-            Random? aiRng = null)
-        {
-            Rng = new CountingRandom(Seed);
-            // NicheHpRng: separate CountingRandom for HP-only calls matching RunState.Rng.Niche.
-            // Pre-advance by nicheSkipCount to skip HP calls from previous combats in the run.
-            var nicheHpRng = new CountingRandom(Seed);
-            for (int i = 0; i < nicheSkipCount; i++)
-                nicheHpRng.Next();
-            State.NicheHpRng = nicheHpRng;
-            LastPlayerWon = false;
-            CombatFactory.Reset(
-                State,
-                Rng,
-                deckIds,
-                encounterId,
-                relicIds,
-                playerHp,
-                playerMaxHp,
-                potionIds,
-                playerGold,
-                deckPreShuffled,
-                shuffleRng,
-                encounterRngSeed,
-                0,  // nicheSkipCount handled via State.NicheHpRng above
-                aiRng
-            );
-        }
     }
 
     private static readonly NativeCombat?[] _pool = new NativeCombat?[256];
@@ -231,85 +170,6 @@ public static class NativeExports
     }
 
     [UnmanagedCallersOnly]
-    public static unsafe void Sts2_ResetRunCombat(
-        int handle,
-        int* deckIds,
-        int deckLen,
-        int encounterId,
-        int* relicIds,
-        int relicLen,
-        int playerHp,
-        int playerMaxHp,
-        int* potionIds,
-        int potionLen,
-        int playerGold,
-        int encounterRngSeed,
-        int* obsBuf)
-    {
-        var combat = _pool[handle]!;
-        combat.Reset(
-            new ReadOnlySpan<int>(deckIds, deckLen),
-            encounterId,
-            new ReadOnlySpan<int>(relicIds, relicLen),
-            playerHp,
-            playerMaxHp,
-            new ReadOnlySpan<int>(potionIds, potionLen),
-            playerGold,
-            deckPreShuffled: false,
-            shuffleRng: null,
-            encounterRngSeed
-        );
-        WriteObs(combat.State, obsBuf);
-    }
-
-    [UnmanagedCallersOnly]
-    public static unsafe void Sts2_ResetRunCombatPreShuffled(
-        int handle,
-        int* deckIds,
-        int deckLen,
-        int encounterId,
-        int* relicIds,
-        int relicLen,
-        int playerHp,
-        int playerMaxHp,
-        int* potionIds,
-        int potionLen,
-        int playerGold,
-        int shuffleRngSeed,
-        int shufflePreSkip,
-        int nicheSkipCount,
-        int encounterRngSeed,
-        int monsterAiRngSeed,
-        int* obsBuf)
-    {
-        var combat = _pool[handle]!;
-        // Reconstruct the shuffle RNG at the state it would be after the caller's
-        // Fisher-Yates pre-shuffle (deckLen-1 calls consumed) PLUS any previous-combat
-        // advances (shufflePreSkip = caller's _run_rng_set.shuffle call count before
-        // this combat's pre-shuffle).  CountingRandom tracks total Next() calls so
-        // Sts2_GetShuffleRngCallCount can report mid-combat extra advances.
-        var shuffleRng = new CountingRandom(shuffleRngSeed);
-        for (int i = 0; i < shufflePreSkip + deckLen - 1; i++)
-            shuffleRng.Next();
-        var aiRng = new Random(monsterAiRngSeed);
-        combat.Reset(
-            new ReadOnlySpan<int>(deckIds, deckLen),
-            encounterId,
-            new ReadOnlySpan<int>(relicIds, relicLen),
-            playerHp,
-            playerMaxHp,
-            new ReadOnlySpan<int>(potionIds, potionLen),
-            playerGold,
-            deckPreShuffled: true,
-            shuffleRng,
-            encounterRngSeed,
-            nicheSkipCount,
-            aiRng
-        );
-        WriteObs(combat.State, obsBuf);
-    }
-
-    [UnmanagedCallersOnly]
     public static unsafe int Sts2_Step(int handle, int action, int* obsBuf, float* rewardOut)
     {
         var combat = _pool[handle]!;
@@ -343,32 +203,6 @@ public static class NativeExports
         return _pool[handle]!.State.EncounterId;
     }
 
-    /// <summary>
-    /// Returns the total number of Next() calls made on the shuffle RNG during this combat,
-    /// including the deckLen-1 initial skip applied in ResetRunCombatPreShuffled.
-    /// The Python side can compute mid-combat extra calls as: returned_count - (deck_len - 1).
-    /// Returns 0 if no counting shuffle RNG was set (non-run-combat resets).
-    /// </summary>
-    [UnmanagedCallersOnly]
-    public static int Sts2_GetShuffleRngCallCount(int handle)
-    {
-        return _pool[handle]!.State.ShuffleRng?.CallCount ?? 0;
-    }
-
-    /// <summary>
-    /// Returns the total Next() calls on the niche (main combat) RNG during this combat.
-    /// The Python side uses this to compute the nicheSkipCount for the next combat.
-    /// </summary>
-    /// <summary>
-    /// Returns the total Next() calls on NicheHpRng (HP-only, matching RunState.Rng.Niche).
-    /// The Python side accumulates this across combats to produce nicheSkipCount.
-    /// </summary>
-    [UnmanagedCallersOnly]
-    public static int Sts2_GetNicheRngCallCount(int handle)
-    {
-        return _pool[handle]!.State.NicheHpRng?.CallCount ?? 0;
-    }
-
     [UnmanagedCallersOnly]
     public static int Sts2_ActionCount(int handle)
     {
@@ -391,109 +225,128 @@ public static class NativeExports
         _pool[handle] = null;
     }
 
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_NativeApiVersion() => RunNativeExports.Sts2Run_NativeApiVersion();
+
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_ObsSize() => RunNativeExports.Sts2Run_ObsSize();
+
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_MaxActions() => RunNativeExports.Sts2Run_MaxActions();
+
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_InfoSize() => RunNativeExports.Sts2Run_InfoSize();
+
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_Create() => RunNativeExports.Sts2Run_Create();
+
+    [UnmanagedCallersOnly]
+    public static unsafe int Sts2Run_Reset(int handle, byte* seedPtr, int seedLen, int* obsBuf)
+    {
+        return RunNativeExports.Sts2Run_Reset(handle, seedPtr, seedLen, obsBuf);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe int Sts2Run_Step(
+        int handle,
+        int action,
+        int targetEnemyIndex,
+        int* obsBuf,
+        float* rewardOut,
+        int* terminalOut,
+        int* truncatedOut)
+    {
+        return RunNativeExports.Sts2Run_Step(
+            handle,
+            action,
+            targetEnemyIndex,
+            obsBuf,
+            rewardOut,
+            terminalOut,
+            truncatedOut);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe int Sts2Run_StartCombat(
+        int handle,
+        int* deckIds,
+        int deckLen,
+        int encounterId,
+        int* relicIds,
+        int relicLen,
+        int playerHp,
+        int playerMaxHp,
+        int* potionIds,
+        int potionLen,
+        int playerGold,
+        int completedCombatRoomsBeforeCurrent,
+        int* obsBuf)
+    {
+        return RunNativeExports.Sts2Run_StartCombat(
+            handle,
+            deckIds,
+            deckLen,
+            encounterId,
+            relicIds,
+            relicLen,
+            playerHp,
+            playerMaxHp,
+            potionIds,
+            potionLen,
+            playerGold,
+            completedCombatRoomsBeforeCurrent,
+            obsBuf);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe int Sts2Run_ActionMask(int handle, int* maskBuf, int maskLen)
+    {
+        return RunNativeExports.Sts2Run_ActionMask(handle, maskBuf, maskLen);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe int Sts2Run_GetInfo(int handle, int* infoBuf, int infoLen)
+    {
+        return RunNativeExports.Sts2Run_GetInfo(handle, infoBuf, infoLen);
+    }
+
+    [UnmanagedCallersOnly]
+    public static unsafe int Sts2Run_GetStateList(int handle, int listId, int* outBuf, int outLen)
+    {
+        return RunNativeExports.Sts2Run_GetStateList(handle, listId, outBuf, outLen);
+    }
+
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_GetPhase(int handle) => RunNativeExports.Sts2Run_GetPhase(handle);
+
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_PlayerWon(int handle) => RunNativeExports.Sts2Run_PlayerWon(handle);
+
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_EncounterId(int handle) => RunNativeExports.Sts2Run_EncounterId(handle);
+
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_GetShuffleRngCallCount(int handle)
+    {
+        return RunNativeExports.Sts2Run_GetShuffleRngCallCount(handle);
+    }
+
+    [UnmanagedCallersOnly]
+    public static int Sts2Run_GetNicheRngCallCount(int handle)
+    {
+        return RunNativeExports.Sts2Run_GetNicheRngCallCount(handle);
+    }
+
+    [UnmanagedCallersOnly]
+    public static void Sts2Run_Destroy(int handle)
+    {
+        RunNativeExports.Sts2Run_Destroy(handle);
+    }
+
     // ── observation serialisation ─────────────────────────────────────────────
 
     private static unsafe void WriteObs(CombatState s, int* o)
     {
-        o[0] = s.PlayerHp;
-        o[1] = s.PlayerMaxHp;
-        o[2] = s.PlayerBlock;
-        o[3] = s.Energy;
-        o[4] = s.MaxEnergy;
-        o[5] = s.DrawPile.Count;
-        o[6] = s.DiscardPile.Count;
-        o[7] = s.ExhaustPile.Count;
-
-        // Hand (up to MAX_HAND cards, each 2 ints)
-        int base_ = 8;
-        for (int i = 0; i < MAX_HAND; i++)
-        {
-            if (i < s.Hand.Count)
-            {
-                o[base_ + i * 2]     = s.Hand[i].DefId;
-                o[base_ + i * 2 + 1] = s.Hand[i].Upgraded ? 1 : 0;
-            }
-            else
-            {
-                o[base_ + i * 2]     = 0;
-                o[base_ + i * 2 + 1] = 0;
-            }
-        }
-
-        // Potions (3 slots, each 2 ints: id, has_potion)
-        base_ = 8 + MAX_HAND * 2;
-        for (int i = 0; i < 3; i++)
-        {
-            o[base_ + i * 2]     = s.PotionSlots[i];
-            o[base_ + i * 2 + 1] = s.PotionSlots[i] != 0 ? 1 : 0;
-        }
-
-        // Player buffs (MAX_PLAYER_BUFFS slots, each 2 ints: buff_id, magnitude)
-        base_ = 8 + MAX_HAND * 2 + 6;
-        for (int i = 0; i < MAX_PLAYER_BUFFS; i++)
-        {
-            if (i < s.PlayerBuffs.Count)
-            {
-                o[base_ + i * 2]     = (int)s.PlayerBuffs[i].Id;
-                o[base_ + i * 2 + 1] = s.PlayerBuffs[i].Magnitude;
-            }
-            else
-            {
-                o[base_ + i * 2]     = 0;
-                o[base_ + i * 2 + 1] = 0;
-            }
-        }
-
-        // Enemies
-        base_ = 8 + MAX_HAND * 2 + 6 + MAX_PLAYER_BUFFS * 2;
-        int slotSize = 5 + MAX_ENEMY_BUFFS * 2;
-        for (int e = 0; e < MAX_ENEMIES; e++)
-        {
-            int b = base_ + e * slotSize;
-            if (e < s.Enemies.Count)
-            {
-                var en = s.Enemies[e];
-                o[b]     = en.Hp;
-                o[b + 1] = en.MaxHp;
-                o[b + 2] = en.Block;
-                o[b + 3] = (int)en.CurrentIntent.Type;
-                o[b + 4] = en.CurrentIntent.Magnitude;
-                for (int bi = 0; bi < MAX_ENEMY_BUFFS; bi++)
-                {
-                    if (bi < en.Buffs.Count)
-                    {
-                        o[b + 5 + bi * 2]     = (int)en.Buffs[bi].Id;
-                        o[b + 5 + bi * 2 + 1] = en.Buffs[bi].Magnitude;
-                    }
-                    else
-                    {
-                        o[b + 5 + bi * 2]     = 0;
-                        o[b + 5 + bi * 2 + 1] = 0;
-                    }
-                }
-            }
-            else
-            {
-                for (int j = 0; j < slotSize; j++) o[b + j] = 0;
-            }
-        }
-
-        // Secondary/mixed intent metadata.
-        base_ = 8 + MAX_HAND * 2 + 6 + MAX_PLAYER_BUFFS * 2 + MAX_ENEMIES * slotSize;
-        for (int e = 0; e < MAX_ENEMIES; e++)
-        {
-            if (e < s.Enemies.Count && s.Enemies[e].SecondaryIntent is { } secondary)
-            {
-                o[base_ + e * 2] = (int)secondary.Type + 1;
-                o[base_ + e * 2 + 1] = secondary.Magnitude;
-            }
-            else
-            {
-                o[base_ + e * 2] = 0;
-                o[base_ + e * 2 + 1] = 0;
-            }
-        }
-
-        o[156] = s.PlayerGold;
+        CombatObservation.Write(s, new Span<int>(o, OBS_SIZE));
     }
 }

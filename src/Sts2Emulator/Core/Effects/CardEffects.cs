@@ -22,9 +22,15 @@ public static class CardEffects
             // ── Ironclad Attacks ─────────────────────────────────────────────────
 
             case IC.Break: // 1-cost, 20/30 dmg + Vulnerable 5/7
-                DealDamage(state, Dmg(def, upgraded));
-                ApplyEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 7 : 5, rng);
+            {
+                var target = FirstEnemy(state);
+                if (target != null)
+                {
+                    DealDamageToEnemy(state, target, Dmg(def, upgraded));
+                    ApplyEnemyDebuffToTarget(state, target, BuffId.Vulnerable, upgraded ? 7 : 5, rng);
+                }
                 break;
+            }
 
             case IC.Bludgeon: // 3-cost, 32/42 dmg
                 DealDamage(state, Dmg(def, upgraded));
@@ -36,9 +42,15 @@ public static class CardEffects
                 break;
 
             case IC.Bash: // 2-cost, 8/10 dmg + Vulnerable 2/3
-                DealDamage(state, Dmg(def, upgraded));
-                ApplyEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 3 : 2, rng);
+            {
+                var target = FirstEnemy(state);
+                if (target != null)
+                {
+                    DealDamageToEnemy(state, target, Dmg(def, upgraded));
+                    ApplyEnemyDebuffToTarget(state, target, BuffId.Vulnerable, upgraded ? 3 : 2, rng);
+                }
                 break;
+            }
 
             case IC.BodySlam: // 1/0-cost, dmg = player's current block
                 DealDamage(state, state.PlayerBlock);
@@ -833,7 +845,16 @@ case IC.TrueGrit: // 1-cost, gain 7/9 block; exhaust a random card
             BuffSystem.Apply(target.Buffs, BuffId.Slippery, -1);
         }
         target.Hp = Math.Max(0, target.Hp - hpLoss);
+        if (target.Hp == 0)
+            OnEnemyDeath(state, target);
         return hpLoss;
+    }
+
+    private static void OnEnemyDeath(CombatState state, EnemyState enemy)
+    {
+        // ShrinkerBeetle: permanent Shrink (ShrinkPower) is removed when its applier dies.
+        if (enemy.DefId == KE.ShrinkerBeetle)
+            BuffSystem.Remove(state.PlayerBuffs, BuffId.Shrink);
     }
 
     public static void GainBlock(CombatState state, int amount)
@@ -1066,6 +1087,13 @@ case IC.TrueGrit: // 1-cost, gain 7/9 block; exhaust a random card
     {
         var target = FirstEnemy(state);
         if (target == null) return;
+
+        ApplyEnemyDebuffToTarget(state, target, id, magnitude, rng);
+    }
+
+    private static void ApplyEnemyDebuffToTarget(CombatState state, EnemyState target, BuffId id, int magnitude, Random rng)
+    {
+        if (target.Hp <= 0) return;
 
         int before = BuffSystem.Get(target.Buffs, id);
         BuffSystem.Apply(target.Buffs, id, magnitude);

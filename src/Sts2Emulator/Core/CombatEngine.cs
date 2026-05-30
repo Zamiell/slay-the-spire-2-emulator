@@ -468,8 +468,9 @@ public static class CombatEngine
 
             if (BuffSystem.Get(state.Enemies[i].Buffs, BuffId.Surprise) > 0)
                 SpawnGremlinMercReinforcements(state, rng, state.Enemies[i].StolenGold);
-
-            if (state.Enemies[i].HeistGold > 0)
+            else if (state.Enemies[i].DefId == KE.FatGremlin
+                && state.EncounterId != Run.RunConstants.GremlinMercEncounterId
+                && state.Enemies[i].HeistGold > 0)
             {
                 state.PlayerGold += state.Enemies[i].HeistGold;
                 state.Enemies[i].HeistGold = 0;

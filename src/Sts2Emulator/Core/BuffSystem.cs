@@ -61,6 +61,7 @@ public static class BuffSystem
                 case BuffId.Weak:
                 case BuffId.Frail:
                 case BuffId.Shrink:
+                    if (b.Magnitude < 0) break; // negative = permanent (e.g. ShrinkerBeetle Shrink)
                     buffs[i] = b with { Magnitude = b.Magnitude - 1 };
                     if (buffs[i].Magnitude <= 0) buffs.RemoveAt(i);
                     break;
@@ -73,7 +74,7 @@ public static class BuffSystem
         float dmg = baseDamage;
         dmg += Get(attackerBuffs, BuffId.Strength);
         if (Get(attackerBuffs, BuffId.Weak) > 0) dmg *= 0.75f;
-        if (Get(attackerBuffs, BuffId.Shrink) > 0) dmg *= 0.70f;
+        if (Get(attackerBuffs, BuffId.Shrink) != 0) dmg *= 0.70f; // negative = permanent
         if (Get(defenderBuffs, BuffId.Vulnerable) > 0)
         {
             float mult = 1.5f + Get(attackerBuffs, BuffId.CrueltyPower) / 100f;

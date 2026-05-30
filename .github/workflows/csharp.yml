@@ -24,3 +24,6 @@ jobs:
 
       - name: Build
         run: dotnet build src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj --configuration Release --no-restore --no-build

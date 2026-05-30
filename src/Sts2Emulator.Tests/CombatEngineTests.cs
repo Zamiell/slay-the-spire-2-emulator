@@ -49,6 +49,30 @@ public class CombatEngineTests
     }
 
     [Fact]
+    public void Bash_DoesNotApplyVulnerableToNextEnemyWhenTargetDies()
+    {
+        var state = new CombatState
+        {
+            PlayerHp = 64,
+            PlayerMaxHp = 80,
+            Energy = 3,
+            MaxEnergy = 3,
+            Hand = [new CardInstance(IC.Bash, Upgraded: false)],
+            Enemies =
+            [
+                new EnemyState { DefId = KE.LeafSlimeS, Hp = 8, MaxHp = 8 },
+                new EnemyState { DefId = KE.TwigSlimeM, Hp = 29, MaxHp = 29 },
+            ],
+        };
+
+        CombatEngine.Step(state, 0, new Random(0), targetEnemyIndex: 0);
+
+        Assert.Equal(0, state.Enemies[0].Hp);
+        Assert.Empty(state.Enemies[0].Buffs);
+        Assert.Empty(state.Enemies[1].Buffs);
+    }
+
+    [Fact]
     public void NewCombat_IsDeterministicForSameSeed()
     {
         var first = CombatFactory.NewCombat(seed: 123);
@@ -3107,8 +3131,8 @@ public class CombatEngineTests
 
         CombatEngine.Step(state, 0, rng);
         Assert.Equal(30, state.PlayerBlock);
-        Assert.Equal(1, state.ExhaustPile.Count);
-        Assert.Equal(IC.Impervious, state.ExhaustPile[0].DefId);
+        var exhaustedCard = Assert.Single(state.ExhaustPile);
+        Assert.Equal(IC.Impervious, exhaustedCard.DefId);
     }
 
     [Fact]

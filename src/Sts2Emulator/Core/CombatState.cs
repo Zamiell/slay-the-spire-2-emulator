@@ -35,7 +35,7 @@ public sealed class CombatState
 
     // Shuffle RNG (RunRngSet.shuffle subsystem) — used for mid-combat discard reshuffles.
     // Null falls back to the combat RNG (only valid when no pre-shuffle was done).
-    // CountingRandom tracks total Next() calls so the Python side can sync its shuffle RNG.
+    // CountingRandom tracks total Next() calls so RunEngine can sync its shuffle RNG.
     public CountingRandom? ShuffleRng;
 
     // AI RNG (RunRngSet.monster_ai subsystem) — used for enemy intent selection.

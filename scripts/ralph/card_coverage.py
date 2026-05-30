@@ -20,7 +20,9 @@ GENERATED_CARDS = REPO_ROOT / "src" / "Sts2Emulator" / "Generated" / "Cards.g.cs
 CARD_EFFECTS = (
     REPO_ROOT / "src" / "Sts2Emulator" / "Core" / "Effects" / "CardEffects.cs"
 )
-RUN_ENV = REPO_ROOT / "src" / "sts2_gym" / "run_env.py"
+RUN_REWARD_GENERATOR = (
+    REPO_ROOT / "src" / "Sts2Emulator" / "Core" / "Run" / "RunRewardGenerator.cs"
+)
 TRACE_DIR = REPO_ROOT / "traces" / "full-run"
 
 CARD_DEF_RE = re.compile(
@@ -32,8 +34,9 @@ CARD_DEF_RE = re.compile(
 )
 CONST_RE = re.compile(r"public const int (?P<name>\w+)\s*=\s*(?P<id>-?\d+);")
 CASE_RE = re.compile(r"^\s*case (?P<ref>[A-Z][A-Z0-9]*\.\w+|-?\d+)\s*:", re.MULTILINE)
-ARRAY_RE = re.compile(
-    r"(?P<name>[A-Z0-9_]*CARD[A-Z0-9_]*)\s*=\s*np\.array\((?P<body>.*?)\)", re.S
+CS_ARRAY_RE = re.compile(
+    r"public static ReadOnlySpan<int> (?P<name>\w+)\s*=>\s*\[(?P<body>.*?)\];",
+    re.S,
 )
 CARD_RARITY_RE = re.compile(r"^\s*(?P<id>\d+):\s*CARD_RARITY_", re.MULTILINE)
 CARD_CONSTANT_RE = re.compile(
@@ -64,6 +67,13 @@ SCALAR_CARD_LIST_KEYS = {
     "exhaust_pile",
     "hand",
     "master_deck",
+}
+RUN_CARD_POOL_NAMES = {
+    "IroncladRewardPool",
+    "ColorlessRewardPool",
+    "ShopAttackCards",
+    "ShopSkillCards",
+    "ShopPowerCards",
 }
 
 
@@ -135,9 +145,8 @@ def parse_native_case_ids(path: Path) -> set[int]:
 def parse_run_pool_card_ids(path: Path, generated_ids: set[int]) -> set[int]:
     source = path.read_text()
     ids: set[int] = set()
-    for match in ARRAY_RE.finditer(source):
-        name = match.group("name")
-        if any(token in name for token in ("ACTIONS", "COST", "RARITY")):
+    for match in CS_ARRAY_RE.finditer(source):
+        if match.group("name") not in RUN_CARD_POOL_NAMES:
             continue
         ids.update(int(value) for value in re.findall(r"\b\d+\b", match.group("body")))
     ids.update(int(match.group("id")) for match in CARD_RARITY_RE.finditer(source))
@@ -374,7 +383,7 @@ def main() -> int:
 
     cards = parse_generated_cards(GENERATED_CARDS)
     native_case_ids = parse_native_case_ids(CARD_EFFECTS)
-    run_pool_ids = parse_run_pool_card_ids(RUN_ENV, set(cards))
+    run_pool_ids = parse_run_pool_card_ids(RUN_REWARD_GENERATOR, set(cards))
     trace_counts = trace_card_counts(TRACE_DIR, cards)
     candidates = build_candidates(cards, native_case_ids, run_pool_ids, trace_counts)
 

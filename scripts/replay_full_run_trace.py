@@ -30,6 +30,7 @@ from sts2_gym.run_env import (
     PHASE_RELIC_REWARD,
     PHASE_REST,
     PHASE_SHOP,
+    PHASE_TREASURE,
     PHASE_TRANSFORM_SELECT,
     REWARD_SKIP_ACTION,
     SHOP_SKIP_ACTION,
@@ -52,6 +53,7 @@ PHASE_STATE_TYPES = {
     PHASE_RELIC_REWARD: "rewards",
     PHASE_REST: "rest_site",
     PHASE_SHOP: "shop",
+    PHASE_TREASURE: "treasure",
     PHASE_TRANSFORM_SELECT: "card_select",
 }
 COMBAT_NODE_STATE_TYPES = {
@@ -112,6 +114,8 @@ def compare_boundary_snapshots(
     diffs: list[str] = []
     for index in boundary_indices(reference):
         if index >= len(emulator):
+            if reference_boundary_matches_terminal_emulator(reference[index], emulator):
+                break
             diffs.append(
                 f"step {index}: emulator trace ended before reference boundary"
             )
@@ -143,6 +147,30 @@ def compare_boundary_snapshots(
                 compare_combat_boundary(index, reference_summary, emulator_summary)
             )
     return diffs
+
+
+def reference_boundary_matches_terminal_emulator(
+    reference_step: dict[str, Any], emulator: list[dict[str, Any]]
+) -> bool:
+    if not emulator:
+        return False
+
+    reference_summary = compare_traces.summary(reference_step)
+    emulator_summary = compare_traces.summary(emulator[-1])
+    if reference_summary.get("state_type") != "game_over":
+        return False
+    if emulator_summary.get("state_type") != "game_over":
+        return False
+
+    return compare_traces.get_path(
+        reference_summary, "run.floor"
+    ) == compare_traces.get_path(
+        emulator_summary, "run.floor"
+    ) and compare_traces.get_path(
+        reference_summary, "player.hp"
+    ) == compare_traces.get_path(
+        emulator_summary, "player.hp"
+    )
 
 
 def compare_combat_boundary(
@@ -361,6 +389,8 @@ def proceed_action(phase: int) -> int | None:
         return 0
     if phase == PHASE_REST:
         return REWARD_SKIP_ACTION  # proceed exits rest site (same as skip action = 3)
+    if phase == PHASE_TREASURE:
+        return REWARD_SKIP_ACTION
     raise UnsupportedTraceActionError(f"cannot proceed while emulator phase is {phase}")
 
 
@@ -499,12 +529,19 @@ def summarize_map(info: dict[str, Any]) -> dict[str, Any]:
 
 
 def summarize_relic_reward(info: dict[str, Any]) -> dict[str, Any]:
-    relic_id = int(info["relic_reward"])
-    return {
-        "items": (
-            [] if relic_id == 0 else [{"index": 0, "type": "relic", "id": relic_id}]
-        )
-    }
+    gold, potion_id, relic_id, card_pending = [
+        int(value) for value in info["pending_rewards"]
+    ]
+    items = []
+    if gold != 0:
+        items.append({"index": len(items), "type": "gold", "gold_amount": gold})
+    if potion_id != 0:
+        items.append({"index": len(items), "type": "potion", "potion_id": potion_id})
+    if relic_id != 0:
+        items.append({"index": len(items), "type": "relic", "id": relic_id})
+    if card_pending:
+        items.append({"index": len(items), "type": "card"})
+    return {"items": items}
 
 
 def summarize_shop(info: dict[str, Any]) -> dict[str, Any]:

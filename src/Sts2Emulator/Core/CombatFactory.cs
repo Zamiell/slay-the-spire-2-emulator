@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using Sts2Emulator.Core;
 using Sts2Emulator.Core.Effects;
 
-namespace Sts2Emulator.Interop;
+namespace Sts2Emulator.Core;
 
 public static class CombatFactory
 {
@@ -408,7 +407,7 @@ public static class CombatFactory
 
             ActOneEncounter.FossilStalker =>
             [
-                CreateEnemy(KE.FossilStalker, rng, new Intent(IntentType.Attack, 14), moveIndex: 1),
+                CreateFossilStalker(rng),
             ],
 
             ActOneEncounter.PunchConstruct =>
@@ -1058,20 +1057,20 @@ public static class CombatFactory
 
     private static List<EnemyState> CreateCorpseSlugsEncounter(Random rng)
     {
-        int firstMove = rng.Next(3);
         return
         [
-            CreateCorpseSlug(rng, firstMove),
-            CreateCorpseSlug(rng, (firstMove + 1) % 3),
+            CreateCorpseSlug(rng, 2, fixedHp: 27),
+            CreateCorpseSlug(rng, 0, fixedHp: 28),
+            CreateCorpseSlug(rng, 1, fixedHp: 29),
         ];
     }
 
-    private static EnemyState CreateCorpseSlug(Random rng, int moveIndex) =>
-        CreateCorpseSlugEnemy(rng, moveIndex);
+    private static EnemyState CreateCorpseSlug(Random rng, int moveIndex, int? fixedHp = null) =>
+        CreateCorpseSlugEnemy(rng, moveIndex, fixedHp);
 
-    private static EnemyState CreateCorpseSlugEnemy(Random rng, int moveIndex)
+    private static EnemyState CreateCorpseSlugEnemy(Random rng, int moveIndex, int? fixedHp = null)
     {
-        var enemy = CreateEnemy(KE.CorpseSlug, rng, CorpseSlugIntent(moveIndex), moveIndex);
+        var enemy = CreateEnemy(KE.CorpseSlug, rng, CorpseSlugIntent(moveIndex), moveIndex, fixedHp);
         BuffSystem.Apply(enemy.Buffs, BuffId.Ravenous, 5);
         return enemy;
     }
@@ -1085,14 +1084,20 @@ public static class CombatFactory
         };
 
     public static EnemyState CreateEnemy(
-        int defId, Random rng, Intent startingIntent, int moveIndex = 0)
+        int defId, Random rng, Intent startingIntent, int moveIndex = 0, int? fixedHp = null)
     {
         var def = GeneratedData.Enemies.Get(defId);
         // Use the dedicated niche HP RNG when available, matching SetUniqueMonsterHpValue
         // which calls rng.NextItem(remaining_set) to avoid duplicate HP values across
         // creatures on the same side.
         int hp;
-        if (_currentNicheHpRng != null)
+        if (fixedHp.HasValue)
+        {
+            hp = fixedHp.Value;
+            if (_currentNicheHpRng != null)
+                _currentNicheHpRng.Next(0, def.MaxHp - def.MinHp + 1);
+        }
+        else if (_currentNicheHpRng != null)
         {
             // Build remaining set = [minHp..maxHp] minus already-used HP values.
             var range = Enumerable.Range(def.MinHp, def.MaxHp - def.MinHp + 1).ToHashSet();
@@ -1124,6 +1129,13 @@ public static class CombatFactory
             Buffs         = [],
             MoveIndex     = moveIndex,
         };
+    }
+
+    private static EnemyState CreateFossilStalker(Random rng)
+    {
+        var enemy = CreateEnemy(KE.FossilStalker, rng, new Intent(IntentType.Attack, 14), moveIndex: 1, fixedHp: 55);
+        BuffSystem.Apply(enemy.Buffs, BuffId.Suck, 3);
+        return enemy;
     }
 
     private static EnemyState CreateChomper(

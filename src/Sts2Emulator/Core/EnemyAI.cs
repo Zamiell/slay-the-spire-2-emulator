@@ -54,6 +54,24 @@ public static class EnemyAI
                     break;
                 }
 
+                if (enemy.DefId == KE.FossilStalker && enemy.MoveIndex == 2)
+                {
+                    int unblockedHits = 0;
+                    if (DealAttackDamage(enemy, state, 4, triggerSuck: false))
+                        unblockedHits++;
+                    if (DealAttackDamage(enemy, state, 4, triggerSuck: false))
+                        unblockedHits++;
+                    TriggerSuck(enemy, unblockedHits);
+                    break;
+                }
+
+                if (enemy.DefId == KE.CorpseSlug && enemy.MoveIndex % 3 == 0)
+                {
+                    DealAttackDamage(enemy, state, 3);
+                    DealAttackDamage(enemy, state, 3);
+                    break;
+                }
+
                 int baseDamage = enemy.CurrentIntent.Magnitude;
                 if (enemy.DefId == KE.FlailKnight)
                     baseDamage = Math.Max(0, baseDamage - BuffSystem.Get(enemy.Buffs, BuffId.Strength));
@@ -779,9 +797,31 @@ public static class EnemyAI
                 };
 
             case KE.LeafSlimeS:
-                return enemy.MoveIndex % 2 == 0
-                    ? new Intent(IntentType.Attack, 4)
-                    : new Intent(IntentType.Debuff, 1);
+            {
+                // Both branches CannotRepeat → strictly alternating, but RandomBranchState
+                // always consumes 1 RNG call (even on initialization and forced transitions).
+                double pick = rng.NextDouble();
+                if (enemy.LastMove == -1)
+                {
+                    // Initialization: 50/50 (both available in empty StateLog).
+                    if (pick < 0.5)
+                    {
+                        enemy.LastMove = 0;
+                        return new Intent(IntentType.Attack, 4);
+                    }
+                    enemy.LastMove = 1;
+                    return new Intent(IntentType.Debuff, 1);
+                }
+                if (enemy.LastMove == 0)
+                {
+                    // Last was Attack (CannotRepeat) → forced Debuff.
+                    enemy.LastMove = 1;
+                    return new Intent(IntentType.Debuff, 1);
+                }
+                // Last was Debuff (CannotRepeat) → forced Attack.
+                enemy.LastMove = 0;
+                return new Intent(IntentType.Attack, 4);
+            }
 
             case KE.TwigSlimeS:
                 return new Intent(IntentType.Attack, 5);
@@ -792,9 +832,36 @@ public static class EnemyAI
                     : new Intent(IntentType.Debuff, 2);
 
             case KE.TwigSlimeM:
-                return enemy.MoveIndex % 2 == 0
-                    ? new Intent(IntentType.Attack, 12)
-                    : new Intent(IntentType.Debuff, 1);
+            {
+                // Initialization call (MoveIndex=1, LastMove=-1): initial state is STICKY_SHOT,
+                // no RNG consumed (the state machine starts at the pre-set initial state).
+                if (enemy.MoveIndex == 1 && enemy.LastMove == -1)
+                    return new Intent(IntentType.Debuff, 1);
+
+                // RandomBranchState always consumes 1 RNG call.
+                double pick = rng.NextDouble();
+                // LastMove -1: round-2 call after initial Sticky Shot (CannotRepeat) → force Attack.
+                // LastMove  1: last chosen move was Sticky Shot (CannotRepeat) → force Attack.
+                if (enemy.LastMove is -1 or 1)
+                {
+                    enemy.LastMove = 0;
+                    return new Intent(IntentType.Attack, 12);
+                }
+                // LastMove 2: two consecutive attacks (CanRepeatXTimes=2 exhausted) → force Sticky.
+                if (enemy.LastMove == 2)
+                {
+                    enemy.LastMove = 1;
+                    return new Intent(IntentType.Debuff, 1);
+                }
+                // LastMove 0: one consecutive attack → 50/50.
+                if (pick < 0.5)
+                {
+                    enemy.LastMove = 2;
+                    return new Intent(IntentType.Attack, 12);
+                }
+                enemy.LastMove = 1;
+                return new Intent(IntentType.Debuff, 1);
+            }
 
             case KE.TwoTailedRat:
                 if (CanRatSummon(enemy, rng))
@@ -846,11 +913,17 @@ public static class EnemyAI
                 };
 
             case KE.FossilStalker:
-                return rng.Next(3) switch
+                return enemy.MoveIndex switch
                 {
-                    0 => new Intent(IntentType.Debuff, 11),
                     1 => new Intent(IntentType.Attack, 14),
-                    _ => new Intent(IntentType.Attack, 8),
+                    2 => new Intent(IntentType.Attack, 8),
+                    3 => new Intent(IntentType.Attack, 14),
+                    _ => rng.Next(3) switch
+                    {
+                        0 => new Intent(IntentType.Debuff, 11),
+                        1 => new Intent(IntentType.Attack, 14),
+                        _ => new Intent(IntentType.Attack, 8),
+                    },
                 };
 
             case KE.PunchConstruct:
@@ -1183,7 +1256,8 @@ public static class EnemyAI
                 break;
 
             case KE.ShrinkerBeetle:
-                BuffSystem.Apply(state.PlayerBuffs, BuffId.Shrink, 1);
+                // Applies permanent Shrink (–1 = infinite; tied to ShrinkerBeetle's life).
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Shrink, -1);
                 break;
 
             case KE.Mawler:
@@ -1332,7 +1406,7 @@ public static class EnemyAI
         }
     }
 
-    private static void DealAttackDamage(EnemyState enemy, CombatState state, int baseDamage)
+    private static bool DealAttackDamage(EnemyState enemy, CombatState state, int baseDamage, bool triggerSuck = true)
     {
         int damage = BuffSystem.IncomingDamage(baseDamage, enemy.Buffs, state.PlayerBuffs);
         if (BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus) > 0
@@ -1345,7 +1419,17 @@ public static class EnemyAI
         int unblocked = damage - absorbed;
         if (unblocked > 0) state.UnblockedDamageHitCount++;
         state.PlayerHp = Math.Max(0, state.PlayerHp - unblocked);
+        if (unblocked > 0 && triggerSuck)
+            TriggerSuck(enemy);
         ApplyPlayerThorns(enemy, state);
+        return unblocked > 0;
+    }
+
+    private static void TriggerSuck(EnemyState enemy, int hitCount = 1)
+    {
+        int suck = BuffSystem.Get(enemy.Buffs, BuffId.Suck);
+        if (suck > 0 && hitCount > 0)
+            BuffSystem.Apply(enemy.Buffs, BuffId.Strength, suck * hitCount);
     }
 
     private static void ApplyPlayerThorns(EnemyState enemy, CombatState state)

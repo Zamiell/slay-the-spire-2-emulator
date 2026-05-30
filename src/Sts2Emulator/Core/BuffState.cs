@@ -53,6 +53,7 @@ public enum BuffId
     SummonCooldown, // Two-Tailed Rat: turns until Call for Backup is available
     BackupCount,    // Two-Tailed Rat: number of successful backup calls
     Plating,      // Sewer Clam: recurring block that decays each turn
+    Suck,         // Fossil Stalker: gain Strength after each unblocked attack command
     HardenedShell, // Skulking Colony: cannot lose more than N HP each turn
     Tangled,      // Vine Shambler card debuff, currently tracked as a player debuff
     Constrict,    // Slithering Strangler pressure debuff, currently tracked

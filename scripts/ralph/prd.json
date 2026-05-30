@@ -55,7 +55,7 @@
       "description": "As a user, I want more run-level systems modeled so training and evaluation better approximate real Slay the Spire 2 runs.",
       "acceptanceCriteria": [
         "Select the next highest-priority run-level system from plan.md",
-        "Implement the behavior in Python and native code as appropriate",
+        "Implement deterministic game behavior in the C# emulator and touch Python only for bindings or wrappers",
         "Keep observations/actions backward-compatible unless plan.md explicitly justifies a change",
         "Add or update tests",
         "Run bash lint-and-test.sh successfully",

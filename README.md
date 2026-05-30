@@ -1,16 +1,16 @@
 # Slay the Spire 2 Emulator
 
-This repository contains a high-performance emulator for a subset of Slay the Spire 2 combat logic. The core simulator is written in C# and published as a NativeAOT shared library, then loaded from Python through `ctypes` and exposed as a Gymnasium environment for reinforcement learning experiments.
+This repository contains a high-performance emulator for a subset of Slay the Spire 2 combat and full-run logic. The core simulator is written in C# and published as a NativeAOT shared library, then loaded from Python through `ctypes` and exposed as Gymnasium environments for reinforcement learning experiments.
 
 ## What is included
 
-- `src\Sts2Emulator`: C# combat simulator targeting .NET 9 NativeAOT.
-- `src\Sts2Emulator\Core`: combat state, turn flow, card effects, buffs, enemy AI, potions, an initial set of relic effects, and reward calculation.
+- `src\Sts2Emulator`: C# combat and run simulator targeting .NET 9 NativeAOT.
+- `src\Sts2Emulator\Core`: combat state, turn flow, card effects, buffs, enemy AI, potions, relic effects, run state, RNG streams, map routing, rewards, shops, events, rests, and reward calculation.
 - `src\Sts2Emulator\Generated`: generated card, enemy, potion, power, and relic definitions.
 - `src\Sts2Emulator\Interop`: native exports used by Python.
-- `src\sts2_gym`: Python `ctypes` bindings, the single-combat Gymnasium environment, and an experimental run wrapper.
+- `src\sts2_gym`: Python `ctypes` bindings plus Gymnasium wrappers for single-combat and full-run training.
 - `scripts`: build, data extraction, patch update, trace validation, full-run trace capture, and MaskablePPO training scripts.
-- `src\Sts2Emulator.Tests`: xUnit tests for combat behavior.
+- `src\Sts2Emulator.Tests`: xUnit tests for combat and run behavior.
 
 ## Architecture
 
@@ -25,7 +25,7 @@ src\sts2_gym
     v
 out\Sts2Emulator.dll
     |
-    | NativeAOT C# combat engine
+    | NativeAOT C# combat + run engine
     v
 src\Sts2Emulator
 ```
@@ -34,13 +34,13 @@ The Python environment calls the native library in-process, avoiding sockets or 
 
 ### What belongs where
 
-The emulator has two layers with distinct responsibilities, mirroring the split in STS2 itself between the combat engine and the run manager.
+The emulator has two layers with distinct responsibilities: C# owns canonical deterministic game state and Python owns reinforcement-learning integration.
 
-**C# (`src\Sts2Emulator`)** handles **in-combat simulation** — everything that happens inside a single fight: card effects, enemy AI, buff/debuff resolution, draw and discard, damage calculation, and reward shaping. This layer is performance-critical (called thousands of times per episode) and is compiled to native code.
+**C# (`src\Sts2Emulator`)** handles **combat and full-run simulation**: card effects, enemy AI, buff/debuff resolution, draw and discard, damage calculation, RNG streams, map routing, encounter selection, rewards, shops, events, rests, relic pickup effects, gold, deck/relic/potion state, and floor progression. This layer is parity-critical and is compiled to native code.
 
-**Python (`src\sts2_gym`)** handles **run-level state** — everything outside individual combats: map generation, encounter selection, card rewards, events, shops, relics, Neow options, rest sites, gold, and floor progression. This layer also wraps the C# engine as a Gymnasium environment.
+**Python (`src\sts2_gym`)** handles **bindings and Gymnasium wrappers**. It loads the NativeAOT library with `ctypes`, exposes observations/action masks/info dictionaries, and runs training/evaluation scripts without mutating canonical full-run state.
 
-When adding new mechanics, ask: *does this happen inside a fight?* If yes, it belongs in C#. If it happens between fights or governs the structure of a run, it belongs in Python. Putting combat logic in Python would be a layering violation; putting run-manager logic in C# would unnecessarily complicate the native interop.
+When adding new mechanics, put deterministic game behavior in C# and keep Python as an interop/training layer. Full-run parity should be implemented against decompiled C# semantics rather than re-created in Python.
 
 ## Current emulator scope
 
@@ -58,14 +58,14 @@ The current combat factory starts an Ironclad-style combat with:
 - Dense reward shaping based on enemy HP damage, player HP loss, and terminal win/loss bonus.
 - A default 50-step Gymnasium truncation cap.
 - Encounter identity in Python `info`, allowing evaluation by encounter type.
-- An experimental `Sts2RunEnv` wrapper for simplified full-run training: Neow rewards, act-specific first-three weak combats, deterministic map choices, normal/elite/boss combat nodes, card rewards, gold, shops, shop card removal, rest sites, modeled trace-observed events including The Legends Were True, relic rewards, potion slots, deterministic potion drops/purchases, run deck tracking, upgraded-card encoding, and decompilation-derived run-level relic pickup/heal effects.
+- A native `Sts2RunEnv` wrapper for full-run training: the C# run engine owns Neow rewards, act-specific first-three weak combats, deterministic map choices, normal/elite/boss combat nodes, card rewards, gold, shops, shop card removal, rest sites, modeled trace-observed events including The Legends Were True, relic rewards, potion slots, deterministic potion drops/purchases, run deck tracking, upgraded-card encoding, and decompilation-derived run-level relic pickup/heal effects.
 - `Sts2RunEnv` uses a run-scale default truncation cap of 1000 steps; single-combat `Sts2CombatEnv` keeps its 50-step cap.
 - Modeled enemy powers for supported fights include Artifact, Hard to Kill, Shrink, Thorns, Ravenous, Slippery, Surprise, Two-Tailed Rat backup calls, Plating, Tangled, Constrict, Smoggy, Illusion, and Gas Bomb minions.
 - Trace-observed Ironclad card effects now include Burning Pact, Expect a Fight, Havoc, Perfected Strike, Restlessness, Setup Strike, Splash, Stampede tracking, Sword Boomerang, True Grit, and Juggling in addition to the starter/common pool used by run rewards.
 - Initial native relic combat effects for Anchor, Bag of Marbles, Bag of Preparation, Blood Vial, Bronze Scales, Captain's Wheel, Happy Flower, Horn Cleat, Lantern, Oddly Smooth Stone, Orichalcum, Red Skull, Venerable Tea Set, and Vajra, with run-level HP, potions, and relics passed into native combat.
 - Secondary intent metadata for known mixed attack+buff/debuff enemy moves is exposed in the reserved observation area.
 
-This is not yet a full game emulator. Full live map generation, exact Neow/shop/reward/event odds and broad native relic coverage are still future work.
+This is not yet a full game emulator. Full decompiled map generation, exact Neow/shop/reward/event odds, broad native relic coverage, and expanded trace parity are still future work.
 
 ## Requirements
 
@@ -105,6 +105,12 @@ Run the C# test suite:
 dotnet test "src\Sts2Emulator.Tests\Sts2Emulator.Tests.csproj"
 ```
 
+Run the full repository validation suite:
+
+```bash
+bash lint-and-test.sh
+```
+
 Check the Gymnasium environment:
 
 ```powershell
@@ -117,7 +123,7 @@ Run a short training job:
 uv run python scripts\train.py --timesteps 5000 --n-envs 2
 ```
 
-Train against the simplified full-run wrapper:
+Train against the native full-run wrapper:
 
 ```powershell
 uv run python scripts\train.py --run-env --timesteps 5000 --n-envs 2
@@ -129,7 +135,7 @@ Evaluate a simple baseline policy over fixed seeds, including per-encounter win 
 uv run python scripts\evaluate.py --episodes 100 --policy first-valid
 ```
 
-Evaluate simplified full-run episodes:
+Evaluate native full-run episodes:
 
 ```powershell
 uv run python scripts\evaluate.py --run-env --episodes 10 --policy first-valid --max-episode-steps 200
