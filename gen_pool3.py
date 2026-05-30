@@ -1,39 +1,34 @@
 import re
 
-# Parse Cards.g.cs
-card_defs = {}
-with open("src/Sts2Emulator/Generated/Cards.g.cs", "r") as f:
-    for line in f:
-        m = re.search(r'Id: (\d+), Name: "([^"]+)", .*?Rarity: CardRarity\.(\w+)', line)
-        if m:
-            card_defs[m.group(2)] = (int(m.group(1)), m.group(3))
+with open('src/Sts2Emulator/Generated/Cards.g.cs', 'r') as f:
+    content = f.read()
 
-# Parse plan.md for all supported cards
-supported_cards = []
-with open("plan.md", "r") as f:
-    in_cards = False
-    for line in f:
-        if line.startswith("### Ironclad") or line.startswith("### Colorless"):
-            in_cards = True
-        elif line.startswith("### Status/Curse"):
-            in_cards = False
-        elif in_cards and line.startswith("- [x] "):
-            m = re.search(r"\[x\] (\w+) \(ID: (\d+)\)", line)
-            if m:
-                supported_cards.append((m.group(1), int(m.group(2))))
+pattern = r'new CardDef\(Id: (\d+), Name: "([^"]+)"'
+matches = re.findall(pattern, content)
+name_to_id = {m[1]: int(m[0]) for m in matches}
 
-print("IRONCLAD_REWARD_POOL = np.array([")
-for name, cid in sorted(supported_cards, key=lambda x: x[1]):
-    if name in card_defs:
-        rarity = card_defs[name][1].upper()
-        if rarity not in ["BASIC", "CURSE", "STATUS", "SPECIAL"]:
-            print(f"        {cid},")
-print("    ], dtype=np.int32)")
+ordered_names = [
+    "Aggression", "Anger", "Armaments", "AshenStrike", "Barricade", "Bash", "BattleTrance",
+    "BloodWall", "Bloodletting", "Bludgeon", "BodySlam", "Brand", "Break", "Breakthrough",
+    "Bully", "BurningPact", "Cascade", "Cinder", "Colossus", "Conflagration", "Corruption",
+    "CrimsonMantle", "Cruelty", "DarkEmbrace", "DefendIronclad", "DemonForm", "DemonicShield",
+    "Dismantle", "Dominate", "DrumOfBattle", "EvilEye", "ExpectAFight", "Feed", "FeelNoPain",
+    "FiendFire", "FightMe", "FlameBarrier", "ForgottenRitual", "Havoc", "Headbutt", "Hellraiser",
+    "Hemokinesis", "HowlFromBeyond", "Impervious", "InfernalBlade", "Inferno", "Inflame",
+    "IronWave", "Juggernaut", "Juggling", "Mangle", "MoltenFist", "NotYet", "Offering",
+    "OneTwoPunch", "PactsEnd", "PerfectedStrike", "Pillage", "PommelStrike", "PrimalForce",
+    "Pyre", "Rage", "Rampage", "Rupture", "SecondWind", "SetupStrike", "ShrugItOff", "Spite",
+    "Stampede", "Stoke", "Stomp", "StoneArmor", "StrikeIronclad", "SwordBoomerang", "Tank",
+    "Taunt", "TearAsunder", "Thrash", "Thunderclap", "Tremble", "TrueGrit", "TwinStrike",
+    "Unmovable", "Unrelenting", "Uppercut", "Vicious", "Whirlwind"
+]
 
-print("\nCARD_RARITY_BY_ID = {")
-for name, cid in sorted(supported_cards, key=lambda x: x[1]):
-    if name in card_defs:
-        rarity = card_defs[name][1].upper()
-        if rarity in ["COMMON", "UNCOMMON", "RARE"]:
-            print(f"    {cid}: CARD_RARITY_{rarity},")
-print("}")
+ordered_ids = [name_to_id[name] for name in ordered_names if name in name_to_id]
+
+print("IRONCLAD_REWARD_POOL = np.array(")
+print("    [")
+for i in range(0, len(ordered_ids), 10):
+    print("        " + ", ".join(map(str, ordered_ids[i:i+10])) + ",")
+print("    ],")
+print("    dtype=np.int32,")
+print(")")

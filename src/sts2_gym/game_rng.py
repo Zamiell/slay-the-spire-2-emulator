@@ -223,3 +223,5 @@ class PlayerRngSet:
     def __init__(self, run_rng_set: RunRngSet, net_id: int = 1) -> None:
         player_seed = _uint32(run_rng_set.seed + net_id)
         self.rewards = GameRng(player_seed, "rewards")
+        self.shops = GameRng(player_seed, "shops")
+        self.transformations = GameRng(player_seed, "transformations")

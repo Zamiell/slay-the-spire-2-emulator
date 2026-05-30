@@ -167,351 +167,615 @@ ANCIENT_TEZCATARA = 5
 
 NEOWS_FURY_CARD = 321
 CURSE_PLACEHOLDER_CARD = 10001
-RELIC_REWARD_POOL = np.array(
-    [
-        RELIC_AMETHYST_AUBERGINE,
-        RELIC_ANCHOR,
-        RELIC_BAG_OF_MARBLES,
-        RELIC_BLACK_BLOOD,
-        RELIC_BLOOD_VIAL,
-        RELIC_CAPTAINS_WHEEL,
-        RELIC_HAPPY_FLOWER,
-        RELIC_HORN_CLEAT,
-        RELIC_LANTERN,
-        RELIC_LEES_WAFFLE,
-        RELIC_MANGO,
-        RELIC_MEAT_ON_THE_BONE,
-        RELIC_VAJRA,
-        RELIC_VENERABLE_TEA_SET,
-        RELIC_OLD_COIN,
-        RELIC_ODDLY_SMOOTH_STONE,
-        RELIC_ORICHALCUM,
-        RELIC_BAG_OF_PREPARATION,
-        RELIC_PANTOGRAPH,
-        RELIC_PEAR,
-        RELIC_RED_SKULL,
-        RELIC_STONE_HUMIDIFIER,
-        RELIC_STRAWBERRY,
-        RELIC_WAR_HAMMER,
-    ],
-    dtype=np.int32,
-)
-NEOW_POSITIVE_RELICS = np.array(
-    [
-        RELIC_ARCANE_SCROLL,
-        RELIC_BOOMING_CONCH,
-        RELIC_FISHING_ROD,
-        RELIC_GOLDEN_PEARL,
-        RELIC_KALEIDOSCOPE,
-        RELIC_LEAD_PAPERWEIGHT,
-        RELIC_LOST_COFFER,
-        RELIC_NEOWS_TORMENT,
-        RELIC_NEW_LEAF,
-        RELIC_PHIAL_HOLSTER,
-        RELIC_PRECISE_SCISSORS,
-        RELIC_SCROLL_BOXES,
-        RELIC_WINGED_BOOTS,
-    ],
-    dtype=np.int32,
-)
-NEOW_CURSE_RELICS = np.array(
-    [
-        RELIC_CURSED_PEARL,
-        RELIC_HEFTY_TABLET,
-        RELIC_LARGE_CAPSULE,
-        RELIC_LEAFY_POULTICE,
-        RELIC_NEOWS_BONES,
-        RELIC_PRECARIOUS_SHEARS,
-        RELIC_SILKEN_TRESS,
-        RELIC_SILVER_CRUCIBLE,
-    ],
-    dtype=np.int32,
-)
 
-# Ordered to match Neow.cs CurseOptions and PositiveOptions exactly.
-# MassiveScroll is absent from NEOW_POSITIVE_OPTIONS because it is filtered
-# by IsAllowedAtNeow for the Ironclad in a fully-unlocked state.
-NEOW_CURSE_OPTIONS = [
-    RELIC_CURSED_PEARL,
-    RELIC_HEFTY_TABLET,
-    RELIC_LARGE_CAPSULE,
-    RELIC_LEAFY_POULTICE,
-    RELIC_NEOWS_BONES,
-    RELIC_PRECARIOUS_SHEARS,
-    RELIC_SILKEN_TRESS,
-    RELIC_SILVER_CRUCIBLE,
-]
-NEOW_POSITIVE_OPTIONS = [
-    RELIC_ARCANE_SCROLL,
-    RELIC_BOOMING_CONCH,
-    RELIC_FISHING_ROD,
-    RELIC_GOLDEN_PEARL,
-    RELIC_KALEIDOSCOPE,
-    RELIC_LEAD_PAPERWEIGHT,
-    RELIC_LOST_COFFER,
-    # MassiveScroll absent (not allowed at Neow for Ironclad / not yet unlocked)
-    RELIC_NEOWS_TORMENT,
-    RELIC_NEW_LEAF,
-    RELIC_PHIAL_HOLSTER,
-    RELIC_PRECISE_SCISSORS,
-    RELIC_SCROLL_BOXES,
-    RELIC_WINGED_BOOTS,
-]
-
-# Number of PlayerRng.Rewards calls made by each Neow relic's AfterObtained().
-# Advances the Rewards RNG counter to stay in sync with the game before first combat.
-# Formula per card created via CardFactory.CreateForReward:
-#   - Uniform rarity + NoUpgradeRoll: 1 call (NextItem only)
-#   - RegularEncounter rarity + NoUpgradeRoll: 2 calls (NextFloat rarity + NextItem)
-#   - RegularEncounter rarity (with upgrade roll): 3 calls (rarity + selection + upgrade)
-# Potion: PotionFactory.CreateRandomPotionOutOfCombat = 2 calls (NextFloat + NextItem).
-_NEOW_REWARDS_RNG_ADVANCES = {
-    RELIC_ARCANE_SCROLL: 1,  # 1 rare card: Uniform + NoUpgradeRoll → 1 selection
-    # RELIC_LOST_COFFER handled inline in _step_neow (card reward phase + potion)
-    RELIC_PHIAL_HOLSTER: 4,  # 2 potions × 2 (rarity + selection)
-    RELIC_HEFTY_TABLET: 3,  # 3 cards shown × 1 (Uniform + NoUpgradeRoll)
-    RELIC_LEAD_PAPERWEIGHT: 6,  # 2 colorless cards × 3 (RegularEncounter + upgrade)
-    RELIC_KALEIDOSCOPE: 18,  # 2 bundles × 3 cards × 3 (RegularEncounter + upgrade)
-}
-
-STARTER_DECK = [472] * 5 + [131] * 4 + [30, 10001]
+CARD_RARITY_BASIC = 0
 CARD_RARITY_COMMON = 1
 CARD_RARITY_UNCOMMON = 2
 CARD_RARITY_RARE = 3
+CARD_RARITY_ANCIENT = 4
+CARD_RARITY_EVENT = 5
+CARD_RARITY_STATUS = 6
+CARD_RARITY_TOKEN = 7
+CARD_RARITY_CURSE = 8
+
 CARD_RARITY_ORDER = (CARD_RARITY_COMMON, CARD_RARITY_UNCOMMON, CARD_RARITY_RARE)
+
+# Ascension 10+ (Scarcity) values from CardRarityOdds.cs
 CARD_RARITY_BASE_OFFSET = -0.05
 CARD_RARITY_MAX_OFFSET = 0.4
-CARD_RARITY_GROWTH = 0.01
-CARD_RARITY_ODDS_REGULAR = (0.03, 0.37)
-CARD_RARITY_ODDS_ELITE = (0.1, 0.4)
+CARD_RARITY_GROWTH = 0.005  # 0.005 if Scarcity, 0.01 otherwise
+
+CARD_RARITY_ODDS_REGULAR = (0.0149, 0.37)  # (Rare, Uncommon) base odds
+CARD_RARITY_ODDS_ELITE = (0.05, 0.4)
 CARD_RARITY_ODDS_BOSS = (1.0, 0.0)
-CARD_RARITY_ODDS_SHOP = (0.09, 0.37)
+CARD_RARITY_ODDS_SHOP = (0.045, 0.37)
+CARD_RARITY_ODDS_UNIFORM = (0.33, 0.33)
 CARD_RARITY_BY_ID = {
+    1: CARD_RARITY_RARE,
+    2: CARD_RARITY_RARE,
+    3: CARD_RARITY_UNCOMMON,
+    4: CARD_RARITY_UNCOMMON,
+    5: CARD_RARITY_RARE,
+    6: CARD_RARITY_RARE,
+    7: CARD_RARITY_RARE,
+    8: CARD_RARITY_COMMON,
     9: CARD_RARITY_RARE,
+    10: CARD_RARITY_RARE,
+    11: CARD_RARITY_UNCOMMON,
+    12: CARD_RARITY_RARE,
     13: CARD_RARITY_COMMON,
+    14: CARD_RARITY_RARE,
+    15: CARD_RARITY_COMMON,
+    16: CARD_RARITY_ANCIENT,
+    17: CARD_RARITY_ANCIENT,
     18: CARD_RARITY_COMMON,
+    19: CARD_RARITY_RARE,
+    10001: CARD_RARITY_CURSE,
     20: CARD_RARITY_UNCOMMON,
+    21: CARD_RARITY_RARE,
+    22: CARD_RARITY_COMMON,
+    23: CARD_RARITY_UNCOMMON,
+    24: CARD_RARITY_COMMON,
+    25: CARD_RARITY_UNCOMMON,
+    26: CARD_RARITY_COMMON,
+    27: CARD_RARITY_RARE,
+    28: CARD_RARITY_COMMON,
     29: CARD_RARITY_RARE,
+    30: CARD_RARITY_BASIC,
     31: CARD_RARITY_UNCOMMON,
+    32: CARD_RARITY_RARE,
+    33: CARD_RARITY_COMMON,
+    34: CARD_RARITY_RARE,
+    35: CARD_RARITY_RARE,
+    36: CARD_RARITY_STATUS,
+    37: CARD_RARITY_COMMON,
+    38: CARD_RARITY_UNCOMMON,
+    39: CARD_RARITY_ANCIENT,
+    40: CARD_RARITY_RARE,
+    41: CARD_RARITY_UNCOMMON,
+    42: CARD_RARITY_COMMON,
+    43: CARD_RARITY_RARE,
+    44: CARD_RARITY_COMMON,
     45: CARD_RARITY_COMMON,
     46: CARD_RARITY_COMMON,
     47: CARD_RARITY_UNCOMMON,
+    48: CARD_RARITY_UNCOMMON,
+    49: CARD_RARITY_BASIC,
     50: CARD_RARITY_COMMON,
+    51: CARD_RARITY_RARE,
+    52: CARD_RARITY_RARE,
+    53: CARD_RARITY_UNCOMMON,
+    54: CARD_RARITY_COMMON,
+    55: CARD_RARITY_UNCOMMON,
+    56: CARD_RARITY_UNCOMMON,
+    57: CARD_RARITY_UNCOMMON,
     58: CARD_RARITY_RARE,
+    59: CARD_RARITY_ANCIENT,
     60: CARD_RARITY_COMMON,
+    61: CARD_RARITY_ANCIENT,
+    62: CARD_RARITY_UNCOMMON,
+    63: CARD_RARITY_RARE,
+    64: CARD_RARITY_UNCOMMON,
+    65: CARD_RARITY_RARE,
     66: CARD_RARITY_UNCOMMON,
+    67: CARD_RARITY_UNCOMMON,
+    68: CARD_RARITY_RARE,
     69: CARD_RARITY_UNCOMMON,
+    70: CARD_RARITY_RARE,
+    71: CARD_RARITY_UNCOMMON,
+    72: CARD_RARITY_EVENT,
+    73: CARD_RARITY_RARE,
+    74: CARD_RARITY_UNCOMMON,
+    75: CARD_RARITY_UNCOMMON,
+    76: CARD_RARITY_RARE,
+    77: CARD_RARITY_EVENT,
+    78: CARD_RARITY_UNCOMMON,
+    79: CARD_RARITY_UNCOMMON,
+    80: CARD_RARITY_UNCOMMON,
+    81: CARD_RARITY_COMMON,
+    82: CARD_RARITY_UNCOMMON,
+    83: CARD_RARITY_UNCOMMON,
+    84: CARD_RARITY_COMMON,
+    85: CARD_RARITY_UNCOMMON,
+    86: CARD_RARITY_UNCOMMON,
     87: CARD_RARITY_COMMON,
+    88: CARD_RARITY_EVENT,
+    89: CARD_RARITY_COMMON,
+    90: CARD_RARITY_UNCOMMON,
+    91: CARD_RARITY_COMMON,
+    92: CARD_RARITY_COMMON,
+    93: CARD_RARITY_COMMON,
+    94: CARD_RARITY_COMMON,
     95: CARD_RARITY_UNCOMMON,
+    96: CARD_RARITY_RARE,
+    97: CARD_RARITY_UNCOMMON,
+    98: CARD_RARITY_COMMON,
     99: CARD_RARITY_RARE,
+    100: CARD_RARITY_UNCOMMON,
+    101: CARD_RARITY_RARE,
+    102: CARD_RARITY_UNCOMMON,
+    103: CARD_RARITY_RARE,
+    104: CARD_RARITY_COMMON,
+    105: CARD_RARITY_UNCOMMON,
+    106: CARD_RARITY_RARE,
+    107: CARD_RARITY_ANCIENT,
+    108: CARD_RARITY_COMMON,
+    109: CARD_RARITY_UNCOMMON,
+    110: CARD_RARITY_RARE,
+    111: CARD_RARITY_RARE,
+    112: CARD_RARITY_COMMON,
     113: CARD_RARITY_RARE,
     114: CARD_RARITY_RARE,
+    115: CARD_RARITY_COMMON,
+    116: CARD_RARITY_COMMON,
+    117: CARD_RARITY_COMMON,
+    118: CARD_RARITY_UNCOMMON,
     119: CARD_RARITY_RARE,
+    120: CARD_RARITY_UNCOMMON,
+    121: CARD_RARITY_UNCOMMON,
+    122: CARD_RARITY_UNCOMMON,
+    10002: CARD_RARITY_STATUS,
+    10008: CARD_RARITY_STATUS,
+    10009: CARD_RARITY_STATUS,
+    10010: CARD_RARITY_STATUS,
+    10011: CARD_RARITY_STATUS,
+    10012: CARD_RARITY_STATUS,
+    123: CARD_RARITY_COMMON,
+    124: CARD_RARITY_UNCOMMON,
+    125: CARD_RARITY_UNCOMMON,
+    126: CARD_RARITY_UNCOMMON,
+    127: CARD_RARITY_UNCOMMON,
+    128: CARD_RARITY_STATUS,
+    129: CARD_RARITY_RARE,
+    130: CARD_RARITY_BASIC,
+    131: CARD_RARITY_BASIC,
+    132: CARD_RARITY_BASIC,
+    133: CARD_RARITY_BASIC,
+    134: CARD_RARITY_BASIC,
+    135: CARD_RARITY_COMMON,
+    136: CARD_RARITY_COMMON,
+    137: CARD_RARITY_RARE,
+    138: CARD_RARITY_COMMON,
+    139: CARD_RARITY_UNCOMMON,
+    140: CARD_RARITY_RARE,
     141: CARD_RARITY_RARE,
     142: CARD_RARITY_UNCOMMON,
+    143: CARD_RARITY_UNCOMMON,
+    144: CARD_RARITY_RARE,
+    145: CARD_RARITY_UNCOMMON,
+    146: CARD_RARITY_UNCOMMON,
     147: CARD_RARITY_UNCOMMON,
+    148: CARD_RARITY_EVENT,
+    149: CARD_RARITY_COMMON,
     150: CARD_RARITY_UNCOMMON,
+    151: CARD_RARITY_UNCOMMON,
+    152: CARD_RARITY_COMMON,
+    153: CARD_RARITY_UNCOMMON,
+    154: CARD_RARITY_UNCOMMON,
     155: CARD_RARITY_UNCOMMON,
+    156: CARD_RARITY_BASIC,
+    157: CARD_RARITY_EVENT,
+    158: CARD_RARITY_RARE,
+    159: CARD_RARITY_RARE,
+    160: CARD_RARITY_RARE,
+    161: CARD_RARITY_RARE,
+    162: CARD_RARITY_RARE,
+    163: CARD_RARITY_UNCOMMON,
+    164: CARD_RARITY_UNCOMMON,
+    165: CARD_RARITY_EVENT,
+    166: CARD_RARITY_CURSE,
+    167: CARD_RARITY_EVENT,
+    168: CARD_RARITY_RARE,
+    169: CARD_RARITY_RARE,
+    170: CARD_RARITY_UNCOMMON,
+    171: CARD_RARITY_RARE,
+    172: CARD_RARITY_UNCOMMON,
+    173: CARD_RARITY_RARE,
     174: CARD_RARITY_UNCOMMON,
     175: CARD_RARITY_UNCOMMON,
+    176: CARD_RARITY_UNCOMMON,
+    177: CARD_RARITY_UNCOMMON,
+    178: CARD_RARITY_EVENT,
+    179: CARD_RARITY_BASIC,
+    180: CARD_RARITY_RARE,
+    181: CARD_RARITY_UNCOMMON,
+    182: CARD_RARITY_COMMON,
     183: CARD_RARITY_RARE,
+    184: CARD_RARITY_EVENT,
     185: CARD_RARITY_UNCOMMON,
+    186: CARD_RARITY_UNCOMMON,
+    187: CARD_RARITY_UNCOMMON,
     188: CARD_RARITY_RARE,
     189: CARD_RARITY_UNCOMMON,
+    190: CARD_RARITY_UNCOMMON,
+    191: CARD_RARITY_UNCOMMON,
+    192: CARD_RARITY_UNCOMMON,
+    193: CARD_RARITY_UNCOMMON,
+    194: CARD_RARITY_RARE,
     195: CARD_RARITY_UNCOMMON,
+    196: CARD_RARITY_UNCOMMON,
+    197: CARD_RARITY_UNCOMMON,
+    198: CARD_RARITY_COMMON,
+    199: CARD_RARITY_UNCOMMON,
+    200: CARD_RARITY_COMMON,
+    201: CARD_RARITY_COMMON,
+    202: CARD_RARITY_UNCOMMON,
+    203: CARD_RARITY_ANCIENT,
+    204: CARD_RARITY_RARE,
     205: CARD_RARITY_UNCOMMON,
+    206: CARD_RARITY_STATUS,
+    207: CARD_RARITY_UNCOMMON,
+    208: CARD_RARITY_UNCOMMON,
+    209: CARD_RARITY_TOKEN,
+    210: CARD_RARITY_UNCOMMON,
+    211: CARD_RARITY_UNCOMMON,
+    212: CARD_RARITY_UNCOMMON,
+    213: CARD_RARITY_UNCOMMON,
+    214: CARD_RARITY_COMMON,
+    215: CARD_RARITY_RARE,
+    216: CARD_RARITY_RARE,
+    217: CARD_RARITY_TOKEN,
+    218: CARD_RARITY_UNCOMMON,
+    219: CARD_RARITY_UNCOMMON,
+    220: CARD_RARITY_UNCOMMON,
+    221: CARD_RARITY_RARE,
+    222: CARD_RARITY_COMMON,
+    223: CARD_RARITY_COMMON,
+    224: CARD_RARITY_COMMON,
+    225: CARD_RARITY_RARE,
+    226: CARD_RARITY_RARE,
+    227: CARD_RARITY_COMMON,
+    228: CARD_RARITY_COMMON,
+    229: CARD_RARITY_RARE,
+    230: CARD_RARITY_COMMON,
+    231: CARD_RARITY_COMMON,
+    232: CARD_RARITY_UNCOMMON,
+    233: CARD_RARITY_RARE,
+    234: CARD_RARITY_RARE,
+    235: CARD_RARITY_UNCOMMON,
+    236: CARD_RARITY_RARE,
+    237: CARD_RARITY_UNCOMMON,
     238: CARD_RARITY_COMMON,
+    239: CARD_RARITY_UNCOMMON,
     240: CARD_RARITY_COMMON,
+    241: CARD_RARITY_RARE,
+    242: CARD_RARITY_UNCOMMON,
+    243: CARD_RARITY_RARE,
+    244: CARD_RARITY_RARE,
+    245: CARD_RARITY_EVENT,
     246: CARD_RARITY_RARE,
     247: CARD_RARITY_UNCOMMON,
+    248: CARD_RARITY_COMMON,
+    249: CARD_RARITY_UNCOMMON,
+    250: CARD_RARITY_RARE,
+    251: CARD_RARITY_UNCOMMON,
+    252: CARD_RARITY_COMMON,
+    253: CARD_RARITY_COMMON,
     254: CARD_RARITY_UNCOMMON,
+    255: CARD_RARITY_UNCOMMON,
+    256: CARD_RARITY_RARE,
+    257: CARD_RARITY_RARE,
+    258: CARD_RARITY_RARE,
+    259: CARD_RARITY_RARE,
+    260: CARD_RARITY_UNCOMMON,
     261: CARD_RARITY_RARE,
     262: CARD_RARITY_UNCOMMON,
     263: CARD_RARITY_UNCOMMON,
+    264: CARD_RARITY_UNCOMMON,
     265: CARD_RARITY_UNCOMMON,
+    266: CARD_RARITY_UNCOMMON,
+    267: CARD_RARITY_COMMON,
     268: CARD_RARITY_COMMON,
+    269: CARD_RARITY_UNCOMMON,
+    270: CARD_RARITY_UNCOMMON,
+    271: CARD_RARITY_RARE,
     272: CARD_RARITY_RARE,
     273: CARD_RARITY_UNCOMMON,
+    274: CARD_RARITY_UNCOMMON,
+    275: CARD_RARITY_UNCOMMON,
+    276: CARD_RARITY_RARE,
+    277: CARD_RARITY_RARE,
+    278: CARD_RARITY_UNCOMMON,
+    279: CARD_RARITY_COMMON,
+    280: CARD_RARITY_UNCOMMON,
+    281: CARD_RARITY_COMMON,
+    282: CARD_RARITY_COMMON,
+    283: CARD_RARITY_UNCOMMON,
+    284: CARD_RARITY_UNCOMMON,
+    285: CARD_RARITY_UNCOMMON,
+    286: CARD_RARITY_UNCOMMON,
+    287: CARD_RARITY_COMMON,
+    288: CARD_RARITY_UNCOMMON,
+    289: CARD_RARITY_TOKEN,
+    290: CARD_RARITY_UNCOMMON,
+    291: CARD_RARITY_RARE,
+    292: CARD_RARITY_EVENT,
+    293: CARD_RARITY_RARE,
+    294: CARD_RARITY_RARE,
     295: CARD_RARITY_RARE,
+    296: CARD_RARITY_UNCOMMON,
+    297: CARD_RARITY_RARE,
+    298: CARD_RARITY_RARE,
+    299: CARD_RARITY_ANCIENT,
+    300: CARD_RARITY_RARE,
+    301: CARD_RARITY_UNCOMMON,
+    302: CARD_RARITY_UNCOMMON,
+    303: CARD_RARITY_EVENT,
+    304: CARD_RARITY_ANCIENT,
+    305: CARD_RARITY_RARE,
+    306: CARD_RARITY_RARE,
+    307: CARD_RARITY_UNCOMMON,
+    308: CARD_RARITY_TOKEN,
+    309: CARD_RARITY_TOKEN,
+    310: CARD_RARITY_TOKEN,
+    311: CARD_RARITY_UNCOMMON,
+    312: CARD_RARITY_RARE,
     313: CARD_RARITY_COMMON,
+    314: CARD_RARITY_COMMON,
+    315: CARD_RARITY_RARE,
+    316: CARD_RARITY_UNCOMMON,
+    317: CARD_RARITY_RARE,
+    318: CARD_RARITY_RARE,
+    319: CARD_RARITY_RARE,
+    320: CARD_RARITY_COMMON,
+    321: CARD_RARITY_ANCIENT,
+    322: CARD_RARITY_RARE,
+    323: CARD_RARITY_BASIC,
+    324: CARD_RARITY_RARE,
+    325: CARD_RARITY_RARE,
+    326: CARD_RARITY_UNCOMMON,
+    327: CARD_RARITY_RARE,
     328: CARD_RARITY_RARE,
+    329: CARD_RARITY_UNCOMMON,
+    330: CARD_RARITY_UNCOMMON,
+    331: CARD_RARITY_RARE,
     332: CARD_RARITY_RARE,
+    333: CARD_RARITY_UNCOMMON,
     334: CARD_RARITY_RARE,
+    335: CARD_RARITY_UNCOMMON,
+    336: CARD_RARITY_UNCOMMON,
+    337: CARD_RARITY_EVENT,
+    338: CARD_RARITY_UNCOMMON,
     339: CARD_RARITY_RARE,
+    340: CARD_RARITY_UNCOMMON,
+    341: CARD_RARITY_UNCOMMON,
+    342: CARD_RARITY_UNCOMMON,
+    343: CARD_RARITY_UNCOMMON,
+    344: CARD_RARITY_UNCOMMON,
+    345: CARD_RARITY_UNCOMMON,
+    346: CARD_RARITY_UNCOMMON,
+    347: CARD_RARITY_COMMON,
+    348: CARD_RARITY_EVENT,
     349: CARD_RARITY_COMMON,
+    350: CARD_RARITY_UNCOMMON,
+    351: CARD_RARITY_COMMON,
+    352: CARD_RARITY_COMMON,
     353: CARD_RARITY_UNCOMMON,
+    354: CARD_RARITY_UNCOMMON,
+    355: CARD_RARITY_UNCOMMON,
+    356: CARD_RARITY_COMMON,
+    357: CARD_RARITY_COMMON,
     358: CARD_RARITY_COMMON,
+    359: CARD_RARITY_UNCOMMON,
+    360: CARD_RARITY_UNCOMMON,
+    361: CARD_RARITY_COMMON,
+    362: CARD_RARITY_COMMON,
+    363: CARD_RARITY_UNCOMMON,
     364: CARD_RARITY_RARE,
+    365: CARD_RARITY_UNCOMMON,
+    366: CARD_RARITY_UNCOMMON,
+    367: CARD_RARITY_UNCOMMON,
+    368: CARD_RARITY_ANCIENT,
+    369: CARD_RARITY_UNCOMMON,
+    370: CARD_RARITY_COMMON,
+    371: CARD_RARITY_UNCOMMON,
+    372: CARD_RARITY_UNCOMMON,
+    373: CARD_RARITY_UNCOMMON,
     374: CARD_RARITY_RARE,
+    375: CARD_RARITY_ANCIENT,
+    376: CARD_RARITY_UNCOMMON,
+    377: CARD_RARITY_UNCOMMON,
     378: CARD_RARITY_UNCOMMON,
+    379: CARD_RARITY_RARE,
+    380: CARD_RARITY_RARE,
     381: CARD_RARITY_UNCOMMON,
+    382: CARD_RARITY_UNCOMMON,
+    383: CARD_RARITY_RARE,
+    384: CARD_RARITY_COMMON,
+    385: CARD_RARITY_RARE,
+    386: CARD_RARITY_COMMON,
+    387: CARD_RARITY_RARE,
+    388: CARD_RARITY_EVENT,
+    389: CARD_RARITY_COMMON,
+    390: CARD_RARITY_UNCOMMON,
+    391: CARD_RARITY_UNCOMMON,
+    392: CARD_RARITY_UNCOMMON,
+    393: CARD_RARITY_ANCIENT,
+    394: CARD_RARITY_RARE,
+    395: CARD_RARITY_UNCOMMON,
     396: CARD_RARITY_UNCOMMON,
+    397: CARD_RARITY_COMMON,
+    398: CARD_RARITY_UNCOMMON,
+    399: CARD_RARITY_EVENT,
+    400: CARD_RARITY_UNCOMMON,
+    401: CARD_RARITY_RARE,
+    402: CARD_RARITY_UNCOMMON,
+    403: CARD_RARITY_RARE,
     404: CARD_RARITY_UNCOMMON,
+    405: CARD_RARITY_RARE,
+    406: CARD_RARITY_RARE,
+    407: CARD_RARITY_UNCOMMON,
+    408: CARD_RARITY_UNCOMMON,
+    409: CARD_RARITY_COMMON,
+    410: CARD_RARITY_UNCOMMON,
+    411: CARD_RARITY_RARE,
+    412: CARD_RARITY_COMMON,
+    413: CARD_RARITY_RARE,
     414: CARD_RARITY_UNCOMMON,
+    415: CARD_RARITY_RARE,
+    416: CARD_RARITY_RARE,
+    417: CARD_RARITY_UNCOMMON,
+    418: CARD_RARITY_RARE,
+    419: CARD_RARITY_RARE,
+    420: CARD_RARITY_RARE,
     421: CARD_RARITY_COMMON,
+    422: CARD_RARITY_RARE,
+    423: CARD_RARITY_UNCOMMON,
+    424: CARD_RARITY_RARE,
+    425: CARD_RARITY_UNCOMMON,
+    426: CARD_RARITY_RARE,
+    427: CARD_RARITY_RARE,
+    428: CARD_RARITY_RARE,
+    429: CARD_RARITY_UNCOMMON,
+    430: CARD_RARITY_TOKEN,
+    431: CARD_RARITY_UNCOMMON,
+    432: CARD_RARITY_UNCOMMON,
     433: CARD_RARITY_COMMON,
+    434: CARD_RARITY_UNCOMMON,
+    435: CARD_RARITY_RARE,
+    436: CARD_RARITY_UNCOMMON,
+    437: CARD_RARITY_UNCOMMON,
+    438: CARD_RARITY_UNCOMMON,
+    439: CARD_RARITY_COMMON,
+    440: CARD_RARITY_STATUS,
+    441: CARD_RARITY_UNCOMMON,
+    442: CARD_RARITY_COMMON,
+    443: CARD_RARITY_COMMON,
+    444: CARD_RARITY_RARE,
+    445: CARD_RARITY_COMMON,
+    446: CARD_RARITY_TOKEN,
+    447: CARD_RARITY_RARE,
+    448: CARD_RARITY_TOKEN,
+    449: CARD_RARITY_COMMON,
+    450: CARD_RARITY_UNCOMMON,
+    451: CARD_RARITY_UNCOMMON,
+    452: CARD_RARITY_RARE,
+    453: CARD_RARITY_RARE,
     454: CARD_RARITY_UNCOMMON,
     455: CARD_RARITY_UNCOMMON,
+    456: CARD_RARITY_COMMON,
+    457: CARD_RARITY_CURSE,
+    458: CARD_RARITY_UNCOMMON,
+    459: CARD_RARITY_EVENT,
+    460: CARD_RARITY_RARE,
+    461: CARD_RARITY_EVENT,
     462: CARD_RARITY_UNCOMMON,
+    463: CARD_RARITY_UNCOMMON,
     464: CARD_RARITY_RARE,
     465: CARD_RARITY_UNCOMMON,
     466: CARD_RARITY_UNCOMMON,
+    467: CARD_RARITY_UNCOMMON,
+    468: CARD_RARITY_RARE,
+    469: CARD_RARITY_UNCOMMON,
+    470: CARD_RARITY_UNCOMMON,
+    471: CARD_RARITY_BASIC,
+    472: CARD_RARITY_BASIC,
+    473: CARD_RARITY_BASIC,
+    474: CARD_RARITY_BASIC,
+    475: CARD_RARITY_BASIC,
+    476: CARD_RARITY_UNCOMMON,
+    477: CARD_RARITY_COMMON,
+    478: CARD_RARITY_UNCOMMON,
+    479: CARD_RARITY_UNCOMMON,
+    480: CARD_RARITY_RARE,
+    481: CARD_RARITY_UNCOMMON,
+    482: CARD_RARITY_ANCIENT,
+    483: CARD_RARITY_BASIC,
+    484: CARD_RARITY_COMMON,
+    485: CARD_RARITY_TOKEN,
     486: CARD_RARITY_COMMON,
+    487: CARD_RARITY_RARE,
+    488: CARD_RARITY_UNCOMMON,
+    489: CARD_RARITY_UNCOMMON,
+    490: CARD_RARITY_UNCOMMON,
+    491: CARD_RARITY_UNCOMMON,
     492: CARD_RARITY_RARE,
     493: CARD_RARITY_UNCOMMON,
     494: CARD_RARITY_RARE,
+    495: CARD_RARITY_UNCOMMON,
+    496: CARD_RARITY_UNCOMMON,
+    497: CARD_RARITY_UNCOMMON,
+    498: CARD_RARITY_UNCOMMON,
+    499: CARD_RARITY_RARE,
+    500: CARD_RARITY_RARE,
+    501: CARD_RARITY_RARE,
+    502: CARD_RARITY_ANCIENT,
+    503: CARD_RARITY_RARE,
+    504: CARD_RARITY_UNCOMMON,
     505: CARD_RARITY_RARE,
+    506: CARD_RARITY_UNCOMMON,
+    507: CARD_RARITY_UNCOMMON,
     508: CARD_RARITY_COMMON,
+    509: CARD_RARITY_RARE,
+    510: CARD_RARITY_RARE,
+    511: CARD_RARITY_EVENT,
+    512: CARD_RARITY_STATUS,
+    513: CARD_RARITY_RARE,
+    514: CARD_RARITY_RARE,
+    515: CARD_RARITY_RARE,
     516: CARD_RARITY_COMMON,
     517: CARD_RARITY_COMMON,
+    518: CARD_RARITY_COMMON,
     519: CARD_RARITY_COMMON,
+    520: CARD_RARITY_RARE,
     521: CARD_RARITY_UNCOMMON,
+    522: CARD_RARITY_UNCOMMON,
+    523: CARD_RARITY_RARE,
+    524: CARD_RARITY_BASIC,
     525: CARD_RARITY_RARE,
     526: CARD_RARITY_UNCOMMON,
+    527: CARD_RARITY_COMMON,
+    528: CARD_RARITY_UNCOMMON,
     529: CARD_RARITY_UNCOMMON,
+    530: CARD_RARITY_COMMON,
+    531: CARD_RARITY_UNCOMMON,
+    532: CARD_RARITY_BASIC,
     533: CARD_RARITY_UNCOMMON,
+    534: CARD_RARITY_RARE,
+    535: CARD_RARITY_UNCOMMON,
+    536: CARD_RARITY_RARE,
+    537: CARD_RARITY_UNCOMMON,
     538: CARD_RARITY_UNCOMMON,
+    539: CARD_RARITY_ANCIENT,
+    540: CARD_RARITY_UNCOMMON,
+    541: CARD_RARITY_ANCIENT,
+    542: CARD_RARITY_COMMON,
+    543: CARD_RARITY_ANCIENT,
+    544: CARD_RARITY_COMMON,
+    545: CARD_RARITY_BASIC,
+    546: CARD_RARITY_RARE,
 }
+
 IRONCLAD_REWARD_POOL = np.array(
     [
-        9,
-        13,
-        18,
-        20,
-        29,
-        31,
-        45,
-        46,
-        47,
-        50,
-        58,
-        60,
-        66,
-        69,
-        87,
-        95,
-        99,
-        113,
-        114,
-        119,
-        141,
-        142,
-        147,
-        150,
-        155,
-        174,
-        175,
-        183,
-        185,
-        188,
-        189,
-        195,
-        205,
-        238,
-        240,
-        246,
-        247,
-        254,
-        261,
-        262,
-        263,
-        265,
-        268,
-        272,
-        273,
-        295,
-        313,
-        328,
-        332,
-        334,
-        339,
-        349,
-        353,
-        358,
-        364,
-        374,
-        378,
-        381,
-        396,
-        404,
-        414,
-        421,
-        433,
-        454,
-        455,
-        462,
-        464,
-        465,
-        466,
-        486,
-        492,
-        493,
-        494,
-        505,
-        508,
-        516,
-        517,
-        519,
-        521,
-        525,
-        526,
-        529,
-        533,
-        538,
+        9, 13, 18, 20, 29, 30, 31, 46, 45, 47,
+        50, 58, 59, 60, 66, 69, 546, 87, 95, 99,
+        107, 113, 114, 119, 131, 141, 142, 147, 150, 155,
+        174, 175, 183, 185, 188, 189, 195, 205, 238, 240,
+        246, 247, 254, 261, 262, 263, 265, 268, 272, 273,
+        295, 313, 328, 332, 334, 339, 349, 353, 358, 364,
+        374, 378, 381, 404, 414, 421, 433, 454, 462, 464,
+        465, 466, 472, 486, 492, 493, 494, 505, 508, 516,
+        517, 519, 525, 526, 529, 533, 538,
     ],
     dtype=np.int32,
 )
-SHOP_ATTACK_CARDS = np.array(
+COLORLESS_REWARD_POOL = np.array(
     [
-        13,
-        20,
-        50,
-        60,
-        69,
-        87,
-        147,
-        189,
-        240,
-        247,
-        254,
-        268,
-        349,
-        358,
-        421,
-        454,
-        465,
-        486,
-        508,
-        519,
-        538,
+        10, 14, 23, 32, 34, 38, 51, 73, 80, 121,
+        146, 153, 168, 170, 173, 181, 191, 193, 197, 213,
+        225, 234, 250, 255, 260, 266, 270, 271, 277, 286,
+        297, 300, 306, 307, 327, 333, 342, 343, 363, 365,
+        366, 369, 372, 380, 394, 396, 401, 406, 411, 415,
+        416, 417, 431, 455, 470, 491, 498, 499, 504, 506,
+        521, 522, 535,
     ],
     dtype=np.int32,
 )
-SHOP_SKILL_CARDS = np.array(
-    [
-        18,
-        31,
-        45,
-        46,
-        150,
-        155,
-        174,
-        175,
-        205,
-        238,
-        396,
-        414,
-        433,
-        455,
-        493,
-        516,
-        517,
-        521,
-    ],
-    dtype=np.int32,
-)
+SHOP_ATTACK_CARDS = np.array([13, 20, 50, 60, 69, 87, 147, 189, 240, 247, 254, 268, 349, 358, 421, 454, 465, 486, 508, 519, 538], dtype=np.int32)
+SHOP_SKILL_CARDS = np.array([18, 31, 46, 45, 150, 155, 174, 175, 205, 238, 396, 414, 433, 455, 493, 516, 517, 521], dtype=np.int32)
 SHOP_POWER_CARDS = np.array([185, 265, 273, 462, 533], dtype=np.int32)
-SHOP_COLORLESS_CARDS = IRONCLAD_REWARD_POOL
+SHOP_COLORLESS_CARDS = COLORLESS_REWARD_POOL
 SHOP_COLORLESS_CARD_RARITIES = (CARD_RARITY_UNCOMMON, CARD_RARITY_RARE)
 SHOP_CARD_BASE_COSTS_BY_RARITY = {
     CARD_RARITY_COMMON: 50,
@@ -579,7 +843,16 @@ POTION_RARITY_BY_ID = {
     1: POTION_RARITY_UNCOMMON,
     58: POTION_RARITY_RARE,
 }
-POTION_REWARD_POOL = np.array(sorted(POTION_RARITY_BY_ID), dtype=np.int32)
+POTION_REWARD_POOL = np.array(
+    [
+        1, 2, 3, 4, 5, 6, 8, 9, 10, 13,
+        14, 15, 16, 17, 18, 19, 21, 22, 23, 24,
+        26, 28, 29, 30, 32, 34, 36, 37, 38, 39,
+        40, 42, 47, 48, 49, 50, 51, 52, 53, 54,
+        56, 57, 58, 59, 60, 61, 62, 63,
+    ],
+    dtype=np.int32,
+)
 SHOP_RELIC_BASE_COSTS = {
     RELIC_AMETHYST_AUBERGINE: 175,
     RELIC_ANCHOR: 175,
@@ -605,61 +878,37 @@ SHOP_RELIC_BASE_COSTS = {
     RELIC_VAJRA: 175,
     RELIC_WAR_HAMMER: 999999999,
 }
-# Cards with MaxUpgradeLevel = 0 (cannot be upgraded) from decompiled CardModel subclasses.
+RELIC_REWARD_POOL = np.array(
+    [
+        3, 4, 9, 10, 19, 23, 41, 110, 114, 128,
+        135, 144, 149, 169, 170, 172, 186, 190, 215, 250,
+        252, 279, 282, 286,
+    ],
+    dtype=np.int32,
+)
+
 NON_UPGRADABLE_CARD_IDS = {
-    36,  # Beckon (status)
-    128,  # Debris (status)
-    166,  # Enthralled (status)
-    206,  # FranticEscape (status)
-    440,  # Slimed (status)
-    457,  # SporeMind (status)
-    512,  # Toxic (status)
-    10001,  # AscendersBane (curse)
-    10002,  # Dazed (status)
-    10008,  # Infection (status)
-    10009,  # Burn (status)
-    10010,  # Disintegration (status)
-    10011,  # Wound (status)
-    10012,  # Wither (status)
+    36, 128, 166, 206, 440, 457, 512, 10001, 10002, 10008, 10009, 10010, 10011, 10012,
 }
-UPGRADABLE_STARTER_CARDS = {30, 131, 472}  # kept for backwards compat
-# Decompiled GrabBag pool order for weak encounters (equal weight 1 each).
-# Overgrowth: [FuzzyWurmCrawler=8, Nibbit=2, ShrinkerBeetle=11, Slimes=3]
-# Underdocks:  [CorpseSlugs=9, Seapunk=12, SludgeSpinner=10, Toadpoles=13]
+UPGRADABLE_STARTER_CARDS = {30, 131, 472}
 OVERGROWTH_WEAK_ENCOUNTERS = np.array([2, 3, 11, 8], dtype=np.int32)
 UNDERDOCKS_WEAK_ENCOUNTERS = np.array([9, 12, 10, 13], dtype=np.int32)
 _OVERGROWTH_WEAK_POOL = [8, 2, 11, 3]
 _UNDERDOCKS_WEAK_POOL = [9, 12, 10, 13]
-# Empirically determined UpFront RNG pre-call counts before act.GenerateRooms():
-# K=201 (SharedRelicPool shuffles + PlayerRelicPool shuffles + ancient distribution).
-# After K calls: 2 more for SharedAncients NextInt distribution, then N-1 event shuffle
-# calls (N_o=60 for Overgrowth, N_u=57 for Underdocks), then NextDouble for first weak.
-# N_u=57 calibrated against DRUM_1, TRACE_CARDS_1, INSTANT_10 (all three correct).
-# N_o=60 calibrated against INSTANT_5 and RARITY_1 (both first/second encounters correct).
 _UPFRONT_PRE_CALLS = 202
-# Empirical event shuffle call counts (= N-1 for N events) before first weak grab.
 _OVERGROWTH_EVENT_SHUFFLE_CALLS = 60
 _UNDERDOCKS_EVENT_SHUFFLE_CALLS = 57
-# Total encounter slots per act (BaseNumberOfRooms = 15 for both acts, singleplayer).
-# 3 are weak encounters; the remaining are normal encounters filled by GrabBag.
 _TOTAL_ENCOUNTER_SLOTS = 15
 _WEAK_ENCOUNTER_SLOTS = 3
-_NORMAL_ENCOUNTER_SLOTS = _TOTAL_ENCOUNTER_SLOTS - _WEAK_ENCOUNTER_SLOTS  # = 12
-_ELITE_ENCOUNTER_SLOTS = 15  # ActModel: maxElites = 15 elite slots per act
-# Act selection uses a separate Rng(uint seed) seeded from the same hash as RunRngSet.
+_NORMAL_ENCOUNTER_SLOTS = 12
+_ELITE_ENCOUNTER_SLOTS = 15
 _NICHE_HASH = _uint32(get_deterministic_hash_code("niche"))
 _SHUFFLE_HASH = _uint32(get_deterministic_hash_code("shuffle"))
 _MONSTER_AI_HASH = _uint32(get_deterministic_hash_code("monster_ai"))
-# Encounter-specific type-selection RNG: uint(int(run_seed) + total_floor + hash(entry)).
-# Only SlimesWeak (encounter ID 3) currently needs this; others use the niche RNG for HP only.
 _SLIMES_WEAK_ENCOUNTER_ID = 3
 _SLIMES_WEAK_ENTRY_HASH = get_deterministic_hash_code("SLIMES_WEAK")
-OVERGROWTH_NORMAL_ENCOUNTERS = np.array(
-    [5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32
-)
-UNDERDOCKS_NORMAL_ENCOUNTERS = np.array(
-    [9, 0, 7, 6, 22, 23, 24, 25, 26, 30], dtype=np.int32
-)
+OVERGROWTH_NORMAL_ENCOUNTERS = np.array([5, 14, 15, 16, 17, 18, 19, 20, 21, 27, 28, 29], dtype=np.int32)
+UNDERDOCKS_NORMAL_ENCOUNTERS = np.array([9, 0, 7, 6, 22, 23, 24, 25, 26, 30], dtype=np.int32)
 OVERGROWTH_ELITE_ENCOUNTERS = np.array([68, 65], dtype=np.int32)
 UNDERDOCKS_ELITE_ENCOUNTERS = np.array([72, 67], dtype=np.int32)
 OVERGROWTH_BOSS_ENCOUNTERS = np.array([83, 74, 82], dtype=np.int32)
@@ -672,16 +921,16 @@ EVENT_JUNGLE_MAZE_ADVENTURE = 4
 EVENT_MORPHIC_GROVE = 5
 EVENT_BRAIN_LEECH = 6
 EVENT_THE_LEGENDS_WERE_TRUE = 7
-EVENT_DOORS_OF_LIGHT_AND_DARK = 8  # Light: upgrade 2 cards; Dark: remove 1 card
-EVENT_SUNKEN_TREASURY = (
-    9  # FirstChest: gain gold; SecondChest: gain more gold + Greed curse
-)
-EVENT_RESULT_PENDING = (
-    -1
-)  # Sentinel: event resolved, waiting for player to confirm/exit
+EVENT_DOORS_OF_LIGHT_AND_DARK = 8
+EVENT_SUNKEN_TREASURY = 9
+EVENT_RESULT_PENDING = -1
 POOR_SLEEP_CARD = 10001
 SPOILS_MAP_CARD = 10002
 
+NEOW_CURSE_OPTIONS = [54, 111, 129, 134, 161, 205, 239, 240]
+NEOW_POSITIVE_OPTIONS = [5, 29, 89, 105, 124, 133, 140, 145, 163, 164, 195, 206, 231, 293]
+_NEOW_REWARDS_RNG_ADVANCES = {5: 1, 195: 4, 111: 3, 133: 6, 124: 18}
+STARTER_DECK = [472, 472, 472, 472, 472, 131, 131, 131, 131, 30, 10001]
 
 @dataclass
 class RunMapNode:
@@ -692,8 +941,6 @@ class RunMapNode:
     children: list[tuple[int, int]] = field(default_factory=list)
     parents: list[tuple[int, int]] = field(default_factory=list)
     encounter_id: int = 0
-
-
 class Sts2RunEnv(gym.Env):
     """Deterministic simplified full-run environment.
 
@@ -1268,10 +1515,10 @@ class Sts2RunEnv(gym.Env):
             # (matching reference traces where floor-3 roll is skipped because odds = 0.2).
             self._reward_cards[:] = self._generate_card_rewards()
             self._reward_upgraded[:] = False
-            # 2 calls for PotionReward.Populate() — potion type selection uses numpy
-            self._player_rng.rewards.next_double()
-            self._player_rng.rewards.next_double()
-            self._add_potion(self._next_potion())
+            # CardReward and PotionReward both use the Rewards RNG.
+            # CardReward consumes 9 calls (3 cards * 3 calls each).
+            # PotionReward consumes 2 calls (rarity, item).
+            self._add_potion(self._next_potion(self._player_rng.rewards))
             self._potion_reward_odds -= POTION_REWARD_STEP
             self._phase = PHASE_CARD_REWARD
             return self._obs(), 0.0, False, False, self._info()
@@ -1361,13 +1608,14 @@ class Sts2RunEnv(gym.Env):
 
     def _obtain_relic(self, relic_id: int) -> None:
         self._relics.append(relic_id)
+        up_front = self._run_rng_set.up_front
         if relic_id == RELIC_GOLDEN_PEARL:
             self._gold += 150
         elif relic_id == RELIC_NEOWS_TORMENT:
             self._deck.append(NEOWS_FURY_CARD)
         elif relic_id == RELIC_NEOWS_BONES:
             for _ in range(2):
-                bonus = int(self._rng.choice(NEOW_POSITIVE_RELICS))
+                bonus = int(NEOW_POSITIVE_RELICS[up_front.next_int(len(NEOW_POSITIVE_RELICS))])
                 if bonus not in self._relics:
                     self._relics.append(bonus)
             self._deck.append(CURSE_PLACEHOLDER_CARD)
@@ -1399,35 +1647,28 @@ class Sts2RunEnv(gym.Env):
             self._deck.append(CURSE_PLACEHOLDER_CARD)
             self._gold += 333
         elif relic_id == RELIC_HEFTY_TABLET:
-            self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
+            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
             self._deck.append(CURSE_PLACEHOLDER_CARD)
         elif relic_id == RELIC_KALEIDOSCOPE:
-            self._deck.extend(
-                int(card_id)
-                for card_id in self._rng.choice(
-                    IRONCLAD_REWARD_POOL, size=2, replace=False
-                )
-            )
+            # Simplified: just pick 2 random cards from pool using up_front.
+            for _ in range(2):
+                self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
         elif relic_id == RELIC_ARCANE_SCROLL:
-            self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
+            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
         elif relic_id == RELIC_LEAD_PAPERWEIGHT:
-            self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
+            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
         elif relic_id == RELIC_LOST_COFFER:
             pass  # card reward + potion handled in _step_neow via rewards RNG
         elif relic_id == RELIC_NEW_LEAF:
             pass  # card transform handled in _step_neow via PHASE_TRANSFORM_SELECT
         elif relic_id == RELIC_PHIAL_HOLSTER:
-            self._add_potion(self._next_potion())
-            self._add_potion(self._next_potion())
+            self._add_potion(self._next_potion(self._player_rng.rewards))
+            self._add_potion(self._next_potion(self._player_rng.rewards))
         elif relic_id == RELIC_PRECISE_SCISSORS:
             self._remove_lowest_priority_card()
         elif relic_id == RELIC_SCROLL_BOXES:
-            self._deck.extend(
-                int(card_id)
-                for card_id in self._rng.choice(
-                    IRONCLAD_REWARD_POOL, size=3, replace=False
-                )
-            )
+            for _ in range(3):
+                self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
         elif relic_id == RELIC_LEAFY_POULTICE:
             self._player_max_hp = max(1, self._player_max_hp - 12)
             self._player_hp = min(self._player_hp, self._player_max_hp)
@@ -1447,15 +1688,16 @@ class Sts2RunEnv(gym.Env):
             for _ in range(3):
                 self._obtain_relic(self._next_relic())
         elif relic_id == RELIC_DUSTY_TOME:
-            self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
+            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
             self._deck[-1] = -abs(self._deck[-1])  # upgrade it
         elif relic_id == RELIC_PRISMATIC_GEM:
-            self._deck.append(int(self._rng.choice(IRONCLAD_REWARD_POOL)))
+            self._deck.append(int(IRONCLAD_REWARD_POOL[up_front.next_int(len(IRONCLAD_REWARD_POOL))]))
 
     def _transform_all_matching(self, card_id: int) -> None:
         for i in range(len(self._deck)):
             if abs(self._deck[i]) == card_id:
-                self._deck[i] = int(self._rng.choice(IRONCLAD_REWARD_POOL))
+                # Transformation uses transformations RNG.
+                self._deck[i] = int(IRONCLAD_REWARD_POOL[self._player_rng.transformations.next_int(len(IRONCLAD_REWARD_POOL))])
 
     def _enter_next_act(self):
         self._act_index += 1
@@ -1546,10 +1788,7 @@ class Sts2RunEnv(gym.Env):
             self._gold += 15
         potion_won = self._check_potion_roll(potion_val)
         if potion_won:
-            # Advance 2 for PotionReward.Populate() (PotionFactory: NextFloat + NextItem)
-            self._player_rng.rewards.next_double()
-            self._player_rng.rewards.next_double()
-            self._add_potion(self._next_potion())
+            self._add_potion(self._next_potion(self._player_rng.rewards))
         if RELIC_BURNING_BLOOD in self._relics:
             self._player_hp = min(self._player_max_hp, self._player_hp + 6)
         if RELIC_BLACK_BLOOD in self._relics:
@@ -1638,10 +1877,12 @@ class Sts2RunEnv(gym.Env):
 
     def _enter_shop_phase(self):
         self._phase = PHASE_SHOP
-        sale_index = int(self._rng.integers(0, 5))
+        # MerchantInventory.cs: list.NextItem(Player.PlayerRng.Shops).SetOnSale()
+        # NextItem calls NextInt(count).
+        sale_index = self._player_rng.shops.next_int(5)
         self._shop_cards[:] = self._generate_shop_cards()
         self._shop_relics[:] = [self._next_relic() for _ in range(3)]
-        self._shop_potions[:] = self._next_potions(3)
+        self._shop_potions[:] = self._next_potions(3, self._player_rng.shops)
         self._shop_costs[:] = 0
         for action, card_id in enumerate(self._shop_cards):
             cost = self._shop_card_cost(int(card_id), colorless=action >= 5)
@@ -1682,7 +1923,8 @@ class Sts2RunEnv(gym.Env):
             )
         else:
             event_pool.extend([EVENT_AROMA_OF_CHAOS, EVENT_SIMPLE_REWARD])
-        self._event_id = int(self._rng.choice(event_pool))
+        # Use UpFront RNG for event selection.
+        self._event_id = int(event_pool[self._run_rng_set.up_front.next_int(len(event_pool))])
 
     def _select_act_and_weak_encounters(self):
         # Act selection: separate Rng seeded from uint(run_seed), matches
@@ -2745,14 +2987,16 @@ class Sts2RunEnv(gym.Env):
         self._player_max_hp += amount
         self._player_hp = min(self._player_max_hp, self._player_hp + amount)
 
-    def _next_potion(self) -> int:
-        return self._next_potions(1)[0]
+    def _next_potion(self, rng: GameRng) -> int:
+        return self._next_potions(1, rng)[0]
 
-    def _next_potions(self, count: int) -> list[int]:
+    def _next_potions(self, count: int, rng: GameRng | None = None) -> list[int]:
+        # Default to Rewards RNG if none provided (usual case for non-combat rewards).
+        actual_rng = rng if rng is not None else self._player_rng.rewards
         potions: list[int] = []
         for _ in range(count):
-            rarity = self._roll_potion_rarity()
-            potions.append(self._choose_potion_with_rarity(rarity, potions))
+            rarity = self._roll_potion_rarity(actual_rng)
+            potions.append(self._choose_potion_with_rarity(rarity, potions, actual_rng))
         return potions
 
     def _check_potion_roll(self, roll: float) -> bool:
@@ -2769,17 +3013,19 @@ class Sts2RunEnv(gym.Env):
         return False
 
     def _roll_potion_reward(self) -> bool:
-        return self._check_potion_roll(float(self._rng.random()))
+        return self._check_potion_roll(self._player_rng.rewards.next_double())
 
-    def _roll_potion_rarity(self) -> int:
-        roll = float(self._rng.random())
+    def _roll_potion_rarity(self, rng: GameRng) -> int:
+        roll = rng.next_double()
         if roll <= 0.1:
             return POTION_RARITY_RARE
         if roll <= 0.35:
             return POTION_RARITY_UNCOMMON
         return POTION_RARITY_COMMON
 
-    def _choose_potion_with_rarity(self, rarity: int, blacklist: list[int]) -> int:
+    def _choose_potion_with_rarity(
+        self, rarity: int, blacklist: list[int], rng: GameRng
+    ) -> int:
         available = [
             int(potion_id)
             for potion_id in POTION_REWARD_POOL
@@ -2787,8 +3033,8 @@ class Sts2RunEnv(gym.Env):
             and POTION_RARITY_BY_ID[int(potion_id)] == rarity
         ]
         if available:
-            return int(self._rng.choice(available))
-        return int(self._rng.choice(POTION_REWARD_POOL))
+            return available[rng.next_int(len(available))]
+        return int(POTION_REWARD_POOL[rng.next_int(len(POTION_REWARD_POOL))])
 
     def _combat_deck(self) -> list[int]:
         return [card for card in self._deck if abs(card) != SPOILS_MAP_CARD]
@@ -2802,12 +3048,15 @@ class Sts2RunEnv(gym.Env):
         self._deck.pop()
 
     def _next_relic(self) -> int:
+        # Relic GrabBag uses UpFront RNG in the game, but we use a simplified pool.
+        # To match RNG call count, we use UpFront RNG here.
+        rng = self._run_rng_set.up_front
         available = [
             int(relic) for relic in RELIC_REWARD_POOL if int(relic) not in self._relics
         ]
         if not available:
-            return int(self._rng.choice(RELIC_REWARD_POOL))
-        return int(self._rng.choice(available))
+            return int(RELIC_REWARD_POOL[rng.next_int(len(RELIC_REWARD_POOL))])
+        return available[rng.next_int(len(available))]
 
     def _generate_neow_options(self) -> None:
         rng = self._run_rng_set.neow_rng()
@@ -2858,18 +3107,31 @@ class Sts2RunEnv(gym.Env):
         ]
         if not indexes:
             return False
-        index = int(self._rng.choice(indexes))
+        # Upgrading random card (e.g. Fishing Rod) uses UpFront RNG in the game.
+        index = indexes[self._run_rng_set.up_front.next_int(len(indexes))]
         self._deck[index] = -self._deck[index]
         return True
 
     def _transform_first_card_matching(self, card_id: int) -> bool:
         for index, encoded_card in enumerate(self._deck):
             if abs(encoded_card) == card_id:
-                self._deck[index] = int(self._rng.choice(IRONCLAD_REWARD_POOL))
+                # Transformation uses transformations RNG.
+                self._deck[index] = int(
+                    IRONCLAD_REWARD_POOL[
+                        self._player_rng.transformations.next_int(
+                            len(IRONCLAD_REWARD_POOL)
+                        )
+                    ]
+                )
                 return True
         return False
 
     def _transform_first_card(self) -> None:
         if not self._deck:
             raise ValueError("No card available to transform.")
-        self._deck[0] = int(self._rng.choice(IRONCLAD_REWARD_POOL))
+        # Transformation uses transformations RNG.
+        self._deck[0] = int(
+            IRONCLAD_REWARD_POOL[
+                self._player_rng.transformations.next_int(len(IRONCLAD_REWARD_POOL))
+            ]
+        )

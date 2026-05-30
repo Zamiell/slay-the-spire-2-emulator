@@ -558,6 +558,7 @@ internal static class Cards
         new CardDef(Id: 543, Name: "WraithForm", Cost: 3, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Power, Rarity: CardRarity.Ancient),
         new CardDef(Id: 544, Name: "WroughtInWar", Cost: 1, BaseDamage: 7, BaseBlock: 0, UpgradeDamage: 2, UpgradeBlock: 0, Type: CardType.Attack, Rarity: CardRarity.Common),
         new CardDef(Id: 545, Name: "Zap", Cost: 1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Skill, Rarity: CardRarity.Basic),
+        new CardDef(Id: 546, Name: "Cascade", Cost: -1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Skill, Rarity: CardRarity.Rare),
     ];
 
     public static CardDef Get(int id) =>
