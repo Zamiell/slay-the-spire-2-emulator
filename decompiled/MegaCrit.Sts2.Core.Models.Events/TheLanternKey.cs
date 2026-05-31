@@ -12,43 +12,65 @@ namespace MegaCrit.Sts2.Core.Models.Events;
 
 public sealed class TheLanternKey : EventModel
 {
-	public override EventLayoutType LayoutType => EventLayoutType.Combat;
+    public override EventLayoutType LayoutType => EventLayoutType.Combat;
 
-	public override EncounterModel CanonicalEncounter => ModelDb.Encounter<MysteriousKnightEventEncounter>();
+    public override EncounterModel CanonicalEncounter =>
+        ModelDb.Encounter<MysteriousKnightEventEncounter>();
 
-	public override bool IsShared => true;
+    public override bool IsShared => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new GoldVar(100));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new GoldVar(100));
 
-	protected override IReadOnlyList<EventOption> GenerateInitialOptions()
-	{
-		return new global::_003C_003Ez__ReadOnlyArray<EventOption>(new EventOption[2]
-		{
-			new EventOption(this, ReturnTheKey, "THE_LANTERN_KEY.pages.INITIAL.options.RETURN_THE_KEY"),
-			new EventOption(this, KeepTheKey, "THE_LANTERN_KEY.pages.INITIAL.options.KEEP_THE_KEY")
-		});
-	}
+    protected override IReadOnlyList<EventOption> GenerateInitialOptions()
+    {
+        return new global::_003C_003Ez__ReadOnlyArray<EventOption>(
+            new EventOption[2]
+            {
+                new EventOption(
+                    this,
+                    ReturnTheKey,
+                    "THE_LANTERN_KEY.pages.INITIAL.options.RETURN_THE_KEY"
+                ),
+                new EventOption(
+                    this,
+                    KeepTheKey,
+                    "THE_LANTERN_KEY.pages.INITIAL.options.KEEP_THE_KEY"
+                ),
+            }
+        );
+    }
 
-	private async Task ReturnTheKey()
-	{
-		await PlayerCmd.GainGold(base.DynamicVars.Gold.BaseValue, base.Owner);
-		SetEventFinished(L10NLookup("THE_LANTERN_KEY.pages.DONE.options.RETURN_THE_KEY.description"));
-	}
+    private async Task ReturnTheKey()
+    {
+        await PlayerCmd.GainGold(base.DynamicVars.Gold.BaseValue, base.Owner);
+        SetEventFinished(
+            L10NLookup("THE_LANTERN_KEY.pages.DONE.options.RETURN_THE_KEY.description")
+        );
+    }
 
-	private Task KeepTheKey()
-	{
-		SetEventState(L10NLookup("THE_LANTERN_KEY.pages.KEEP_THE_KEY.description"), new global::_003C_003Ez__ReadOnlySingleElementList<EventOption>(new EventOption(this, Fight, "THE_LANTERN_KEY.pages.KEEP_THE_KEY.options.FIGHT")));
-		return Task.CompletedTask;
-	}
+    private Task KeepTheKey()
+    {
+        SetEventState(
+            L10NLookup("THE_LANTERN_KEY.pages.KEEP_THE_KEY.description"),
+            new global::_003C_003Ez__ReadOnlySingleElementList<EventOption>(
+                new EventOption(this, Fight, "THE_LANTERN_KEY.pages.KEEP_THE_KEY.options.FIGHT")
+            )
+        );
+        return Task.CompletedTask;
+    }
 
-	private Task Fight()
-	{
-		List<Reward> list = new List<Reward>();
-		foreach (Player player in base.Owner.RunState.Players)
-		{
-			list.Add(new SpecialCardReward(player.RunState.CreateCard<LanternKey>(player), player));
-		}
-		EnterCombatWithoutExitingEvent<MysteriousKnightEventEncounter>(list, shouldResumeAfterCombat: false);
-		return Task.CompletedTask;
-	}
+    private Task Fight()
+    {
+        List<Reward> list = new List<Reward>();
+        foreach (Player player in base.Owner.RunState.Players)
+        {
+            list.Add(new SpecialCardReward(player.RunState.CreateCard<LanternKey>(player), player));
+        }
+        EnterCombatWithoutExitingEvent<MysteriousKnightEventEncounter>(
+            list,
+            shouldResumeAfterCombat: false
+        );
+        return Task.CompletedTask;
+    }
 }

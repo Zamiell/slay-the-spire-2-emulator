@@ -15,27 +15,42 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class BiiigHug : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromCardWithCardHoverTips<Soot>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromCardWithCardHoverTips<Soot>();
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(4));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(4));
 
-	public override async Task AfterObtained()
-	{
-		List<CardModel> cards = (await CardSelectCmd.FromDeckForRemoval(prefs: new CardSelectorPrefs(CardSelectorPrefs.RemoveSelectionPrompt, base.DynamicVars.Cards.IntValue), player: base.Owner)).ToList();
-		await CardPileCmd.RemoveFromDeck(cards);
-	}
+    public override async Task AfterObtained()
+    {
+        List<CardModel> cards = (
+            await CardSelectCmd.FromDeckForRemoval(
+                prefs: new CardSelectorPrefs(
+                    CardSelectorPrefs.RemoveSelectionPrompt,
+                    base.DynamicVars.Cards.IntValue
+                ),
+                player: base.Owner
+            )
+        ).ToList();
+        await CardPileCmd.RemoveFromDeck(cards);
+    }
 
-	public override async Task AfterShuffle(PlayerChoiceContext choiceContext, Player shuffler)
-	{
-		if (shuffler == base.Owner)
-		{
-			CardModel soot = shuffler.Creature.CombatState.CreateCard<Soot>(base.Owner);
-			await CardPileCmd.AddGeneratedCardToCombat(soot, PileType.Draw, base.Owner, CardPilePosition.Random);
-			Flash();
-			CardCmd.Preview(soot, 0.75f);
-			await Cmd.Wait(1f);
-		}
-	}
+    public override async Task AfterShuffle(PlayerChoiceContext choiceContext, Player shuffler)
+    {
+        if (shuffler == base.Owner)
+        {
+            CardModel soot = shuffler.Creature.CombatState.CreateCard<Soot>(base.Owner);
+            await CardPileCmd.AddGeneratedCardToCombat(
+                soot,
+                PileType.Draw,
+                base.Owner,
+                CardPilePosition.Random
+            );
+            Flash();
+            CardCmd.Preview(soot, 0.75f);
+            await Cmd.Wait(1f);
+        }
+    }
 }

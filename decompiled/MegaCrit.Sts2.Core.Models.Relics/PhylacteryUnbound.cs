@@ -13,32 +13,52 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class PhylacteryUnbound : RelicModel
 {
-	private const string _startOfCombatKey = "StartOfCombat";
+    private const string _startOfCombatKey = "StartOfCombat";
 
-	private const string _startOfTurnKey = "StartOfTurn";
+    private const string _startOfTurnKey = "StartOfTurn";
 
-	public override RelicRarity Rarity => RelicRarity.Starter;
+    public override RelicRarity Rarity => RelicRarity.Starter;
 
-	public override bool SpawnsPets => true;
+    public override bool SpawnsPets => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new SummonVar("StartOfCombat", 5m),
-		new SummonVar("StartOfTurn", 2m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2]
+            {
+                new SummonVar("StartOfCombat", 5m),
+                new SummonVar("StartOfTurn", 2m),
+            }
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.SummonStatic));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.SummonStatic)
+        );
 
-	public override async Task BeforeCombatStart()
-	{
-		await OstyCmd.Summon(new ThrowingPlayerChoiceContext(), base.Owner, base.DynamicVars["StartOfCombat"].BaseValue, this);
-	}
+    public override async Task BeforeCombatStart()
+    {
+        await OstyCmd.Summon(
+            new ThrowingPlayerChoiceContext(),
+            base.Owner,
+            base.DynamicVars["StartOfCombat"].BaseValue,
+            this
+        );
+    }
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature))
-		{
-			await OstyCmd.Summon(new ThrowingPlayerChoiceContext(), base.Owner, base.DynamicVars["StartOfTurn"].BaseValue, this);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (participants.Contains(base.Owner.Creature))
+        {
+            await OstyCmd.Summon(
+                new ThrowingPlayerChoiceContext(),
+                base.Owner,
+                base.DynamicVars["StartOfTurn"].BaseValue,
+                this
+            );
+        }
+    }
 }

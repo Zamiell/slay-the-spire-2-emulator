@@ -14,12 +14,12 @@ namespace MegaCrit.Sts2.GameInfo.Objects;
 [JsonDerivedType(typeof(EnchantmentInfo))]
 public interface IGameInfo
 {
-	[JsonPropertyName("name")]
-	string Name { get; }
+    [JsonPropertyName("name")]
+    string Name { get; }
 
-	[JsonPropertyName("bot_keyword")]
-	string BotKeyword { get; }
+    [JsonPropertyName("bot_keyword")]
+    string BotKeyword { get; }
 
-	[JsonPropertyName("bot_text")]
-	string BotText { get; }
+    [JsonPropertyName("bot_text")]
+    string BotText { get; }
 }

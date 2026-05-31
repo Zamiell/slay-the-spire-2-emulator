@@ -7,65 +7,66 @@ namespace MegaCrit.Sts2.Core.TestSupport;
 
 public static class TestRngInjector
 {
-	private static RelicModel? _relicOverride;
+    private static RelicModel? _relicOverride;
 
-	private static RelicRarity? _relicRarityOverride;
+    private static RelicRarity? _relicRarityOverride;
 
-	private static Action<List<CardModel>>? _initialShuffleOverride;
+    private static Action<List<CardModel>>? _initialShuffleOverride;
 
-	private static List<CardModel>? _combatCardGenerationOverride;
+    private static List<CardModel>? _combatCardGenerationOverride;
 
-	public static void SetRelicOverride<T>() where T : RelicModel
-	{
-		_relicOverride = ModelDb.Relic<T>();
-	}
+    public static void SetRelicOverride<T>()
+        where T : RelicModel
+    {
+        _relicOverride = ModelDb.Relic<T>();
+    }
 
-	public static RelicModel? ConsumeRelicOverride()
-	{
-		RelicModel relicOverride = _relicOverride;
-		_relicOverride = null;
-		return relicOverride;
-	}
+    public static RelicModel? ConsumeRelicOverride()
+    {
+        RelicModel relicOverride = _relicOverride;
+        _relicOverride = null;
+        return relicOverride;
+    }
 
-	public static void SetRelicRarityOverride(RelicRarity relicRarity)
-	{
-		_relicRarityOverride = relicRarity;
-	}
+    public static void SetRelicRarityOverride(RelicRarity relicRarity)
+    {
+        _relicRarityOverride = relicRarity;
+    }
 
-	public static RelicRarity? GetRelicRarityOverride()
-	{
-		return _relicRarityOverride;
-	}
+    public static RelicRarity? GetRelicRarityOverride()
+    {
+        return _relicRarityOverride;
+    }
 
-	public static void SetCombatCardGenerationOverride(List<CardModel> cards)
-	{
-		_combatCardGenerationOverride = cards;
-	}
+    public static void SetCombatCardGenerationOverride(List<CardModel> cards)
+    {
+        _combatCardGenerationOverride = cards;
+    }
 
-	public static List<CardModel>? ConsumeCombatCardGenerationOverride()
-	{
-		List<CardModel> combatCardGenerationOverride = _combatCardGenerationOverride;
-		_combatCardGenerationOverride = null;
-		return combatCardGenerationOverride;
-	}
+    public static List<CardModel>? ConsumeCombatCardGenerationOverride()
+    {
+        List<CardModel> combatCardGenerationOverride = _combatCardGenerationOverride;
+        _combatCardGenerationOverride = null;
+        return combatCardGenerationOverride;
+    }
 
-	public static void SetInitialShuffleOverride(Action<List<CardModel>> reorder)
-	{
-		_initialShuffleOverride = reorder;
-	}
+    public static void SetInitialShuffleOverride(Action<List<CardModel>> reorder)
+    {
+        _initialShuffleOverride = reorder;
+    }
 
-	public static Action<List<CardModel>>? ConsumeInitialShuffleOverride()
-	{
-		Action<List<CardModel>> initialShuffleOverride = _initialShuffleOverride;
-		_initialShuffleOverride = null;
-		return initialShuffleOverride;
-	}
+    public static Action<List<CardModel>>? ConsumeInitialShuffleOverride()
+    {
+        Action<List<CardModel>> initialShuffleOverride = _initialShuffleOverride;
+        _initialShuffleOverride = null;
+        return initialShuffleOverride;
+    }
 
-	public static void Cleanup()
-	{
-		_relicOverride = null;
-		_relicRarityOverride = null;
-		_initialShuffleOverride = null;
-		_combatCardGenerationOverride = null;
-	}
+    public static void Cleanup()
+    {
+        _relicOverride = null;
+        _relicRarityOverride = null;
+        _initialShuffleOverride = null;
+        _combatCardGenerationOverride = null;
+    }
 }

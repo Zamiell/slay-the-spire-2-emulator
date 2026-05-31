@@ -9,15 +9,24 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class MayhemPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterAutoPrePlayPhaseEntered(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player == base.Owner.Player)
-		{
-			await CardPileCmd.AutoPlayFromDrawPile(choiceContext, base.Owner.Player, base.Amount, CardPilePosition.Top, forceExhaust: false);
-		}
-	}
+    public override async Task AfterAutoPrePlayPhaseEntered(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player == base.Owner.Player)
+        {
+            await CardPileCmd.AutoPlayFromDrawPile(
+                choiceContext,
+                base.Owner.Player,
+                base.Amount,
+                CardPilePosition.Top,
+                forceExhaust: false
+            );
+        }
+    }
 }

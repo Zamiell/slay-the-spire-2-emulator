@@ -14,37 +14,50 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class FanOfKnives : CardModel
 {
-	private const string _shivsKey = "Shivs";
+    private const string _shivsKey = "Shivs";
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar("Shivs", 4));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar("Shivs", 4));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromCard<Shiv>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromCard<Shiv>()
+        );
 
-	protected override IEnumerable<string> ExtraRunAssetPaths => NFanOfKnivesVfx.AssetPaths;
+    protected override IEnumerable<string> ExtraRunAssetPaths => NFanOfKnivesVfx.AssetPaths;
 
-	public FanOfKnives()
-		: base(2, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public FanOfKnives()
+        : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await PowerCmd.Apply<FanOfKnivesPower>(choiceContext, base.Owner.Creature, 1m, base.Owner.Creature, this);
-		for (int i = 0; i < base.DynamicVars["Shivs"].IntValue; i++)
-		{
-			await Shiv.CreateInHand(base.Owner, base.CombatState);
-			await Cmd.CustomScaledWait(0.1f, 0.2f);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await PowerCmd.Apply<FanOfKnivesPower>(
+            choiceContext,
+            base.Owner.Creature,
+            1m,
+            base.Owner.Creature,
+            this
+        );
+        for (int i = 0; i < base.DynamicVars["Shivs"].IntValue; i++)
+        {
+            await Shiv.CreateInHand(base.Owner, base.CombatState);
+            await Cmd.CustomScaledWait(0.1f, 0.2f);
+        }
+    }
 
-	public override async Task OnEnqueuePlayVfx(Creature? target)
-	{
-		base.Owner.Creature.GetBackVfxContainer()?.AddChildSafely(NFanOfKnivesVfx.Create(base.Owner.Creature));
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-	}
+    public override async Task OnEnqueuePlayVfx(Creature? target)
+    {
+        base.Owner.Creature.GetBackVfxContainer()
+            ?.AddChildSafely(NFanOfKnivesVfx.Create(base.Owner.Creature));
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars["Shivs"].UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars["Shivs"].UpgradeValueBy(1m);
+    }
 }

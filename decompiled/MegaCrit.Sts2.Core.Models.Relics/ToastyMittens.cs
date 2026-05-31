@@ -15,38 +15,56 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class ToastyMittens : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<StrengthPower>(1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<StrengthPower>(1m)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.FromKeyword(CardKeyword.Exhaust),
-		HoverTipFactory.FromPower<StrengthPower>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.FromKeyword(CardKeyword.Exhaust),
+                HoverTipFactory.FromPower<StrengthPower>(),
+            }
+        );
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player != base.Owner.Creature.Player)
-		{
-			return;
-		}
-		Flash();
-		await CardPileCmd.ShuffleIfNecessary(choiceContext, base.Owner);
-		IReadOnlyList<CardModel> cards = PileType.Draw.GetPile(player).Cards;
-		CardModel cardModel = null;
-		if (base.Owner.PlayerCombatState.TurnNumber == 1)
-		{
-			cardModel = cards.FirstOrDefault((CardModel c) => !c.Keywords.Contains(CardKeyword.Innate));
-		}
-		if (cardModel == null)
-		{
-			cardModel = cards.FirstOrDefault();
-		}
-		if (cardModel != null)
-		{
-			await CardCmd.Exhaust(choiceContext, cardModel);
-		}
-		await PowerCmd.Apply<StrengthPower>(choiceContext, player.Creature, base.DynamicVars.Strength.BaseValue, player.Creature, null);
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player != base.Owner.Creature.Player)
+        {
+            return;
+        }
+        Flash();
+        await CardPileCmd.ShuffleIfNecessary(choiceContext, base.Owner);
+        IReadOnlyList<CardModel> cards = PileType.Draw.GetPile(player).Cards;
+        CardModel cardModel = null;
+        if (base.Owner.PlayerCombatState.TurnNumber == 1)
+        {
+            cardModel = cards.FirstOrDefault(
+                (CardModel c) => !c.Keywords.Contains(CardKeyword.Innate)
+            );
+        }
+        if (cardModel == null)
+        {
+            cardModel = cards.FirstOrDefault();
+        }
+        if (cardModel != null)
+        {
+            await CardCmd.Exhaust(choiceContext, cardModel);
+        }
+        await PowerCmd.Apply<StrengthPower>(
+            choiceContext,
+            player.Creature,
+            base.DynamicVars.Strength.BaseValue,
+            player.Creature,
+            null
+        );
+    }
 }

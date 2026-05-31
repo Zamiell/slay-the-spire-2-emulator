@@ -12,17 +12,25 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class FencingManual : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Common;
+    public override RelicRarity Rarity => RelicRarity.Common;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new ForgeVar(10));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new ForgeVar(10));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromForge();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromForge();
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature) && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			await ForgeCmd.Forge(base.DynamicVars.Forge.BaseValue, base.Owner, this);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (
+            participants.Contains(base.Owner.Creature)
+            && base.Owner.PlayerCombatState.TurnNumber <= 1
+        )
+        {
+            await ForgeCmd.Forge(base.DynamicVars.Forge.BaseValue, base.Owner, this);
+        }
+    }
 }

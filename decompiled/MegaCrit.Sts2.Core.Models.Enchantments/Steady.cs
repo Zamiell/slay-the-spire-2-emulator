@@ -6,10 +6,13 @@ namespace MegaCrit.Sts2.Core.Models.Enchantments;
 
 public sealed class Steady : EnchantmentModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromKeyword(CardKeyword.Retain));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromKeyword(CardKeyword.Retain)
+        );
 
-	protected override void OnEnchant()
-	{
-		base.Card.AddKeyword(CardKeyword.Retain);
-	}
+    protected override void OnEnchant()
+    {
+        base.Card.AddKeyword(CardKeyword.Retain);
+    }
 }

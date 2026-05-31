@@ -10,25 +10,22 @@ namespace MegaCrit.Sts2.Core.Events.Custom.CrystalSphereEvent.CrystalSphereItems
 
 public class CrystalSphereCurse : CrystalSphereItem
 {
-	public override Vector2I Size => new Vector2I(2, 2);
+    public override Vector2I Size => new Vector2I(2, 2);
 
-	public override bool IsGood => false;
+    public override bool IsGood => false;
 
-	public override async Task RevealItem(Player owner)
-	{
-		await base.RevealItem(owner);
-		CardModel cardModel = await CardPileCmd.AddCurseToDeck<Doubt>(owner);
-		if (cardModel != null)
-		{
-			RunManager.Instance.RewardSynchronizer.SyncLocalObtainedCard(cardModel);
-		}
-	}
+    public override async Task RevealItem(Player owner)
+    {
+        await base.RevealItem(owner);
+        CardModel cardModel = await CardPileCmd.AddCurseToDeck<Doubt>(owner);
+        if (cardModel != null)
+        {
+            RunManager.Instance.RewardSynchronizer.SyncLocalObtainedCard(cardModel);
+        }
+    }
 
-	public override SerializableCrystalSphereItem ToSerializable()
-	{
-		return new SerializableCrystalSphereItem
-		{
-			type = CrystalSphereItemType.Curse
-		};
-	}
+    public override SerializableCrystalSphereItem ToSerializable()
+    {
+        return new SerializableCrystalSphereItem { type = CrystalSphereItemType.Curse };
+    }
 }

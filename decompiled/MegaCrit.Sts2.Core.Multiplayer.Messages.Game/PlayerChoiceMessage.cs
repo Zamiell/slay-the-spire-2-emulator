@@ -7,27 +7,27 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game;
 
 public struct PlayerChoiceMessage : INetMessage, IPacketSerializable
 {
-	public uint choiceId;
+    public uint choiceId;
 
-	public NetPlayerChoiceResult result;
+    public NetPlayerChoiceResult result;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteUInt(choiceId);
-		writer.Write(result);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteUInt(choiceId);
+        writer.Write(result);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		choiceId = reader.ReadUInt();
-		result = reader.Read<NetPlayerChoiceResult>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        choiceId = reader.ReadUInt();
+        result = reader.Read<NetPlayerChoiceResult>();
+    }
 }

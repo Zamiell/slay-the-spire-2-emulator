@@ -5,14 +5,14 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class RunicPyramid : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	public override bool ShouldFlush(Player player)
-	{
-		if (player != base.Owner)
-		{
-			return true;
-		}
-		return false;
-	}
+    public override bool ShouldFlush(Player player)
+    {
+        if (player != base.Owner)
+        {
+            return true;
+        }
+        return false;
+    }
 }

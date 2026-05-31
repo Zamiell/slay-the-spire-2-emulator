@@ -15,41 +15,53 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class DeathsDoor : CardModel
 {
-	public override bool GainsBlock => true;
+    public override bool GainsBlock => true;
 
-	protected override bool ShouldGlowGoldInternal => WasDoomAppliedThisTurn;
+    protected override bool ShouldGlowGoldInternal => WasDoomAppliedThisTurn;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new BlockVar(6m, ValueProp.Move),
-		new RepeatVar(2)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new BlockVar(6m, ValueProp.Move), new RepeatVar(2) }
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<DoomPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<DoomPower>()
+        );
 
-	private bool WasDoomAppliedThisTurn => CombatManager.Instance.History.Entries.OfType<PowerReceivedEntry>().Any((PowerReceivedEntry e) => e.HappenedThisTurn(base.CombatState) && e.Power is DoomPower && e.Applier == base.Owner.Creature);
+    private bool WasDoomAppliedThisTurn =>
+        CombatManager
+            .Instance.History.Entries.OfType<PowerReceivedEntry>()
+            .Any(
+                (PowerReceivedEntry e) =>
+                    e.HappenedThisTurn(base.CombatState)
+                    && e.Power is DoomPower
+                    && e.Applier == base.Owner.Creature
+            );
 
-	public DeathsDoor()
-		: base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public DeathsDoor()
+        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		int blockGains = 1;
-		if (WasDoomAppliedThisTurn)
-		{
-			blockGains += base.DynamicVars.Repeat.IntValue;
-		}
-		for (int i = 0; i < blockGains; i++)
-		{
-			await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        int blockGains = 1;
+        if (WasDoomAppliedThisTurn)
+        {
+            blockGains += base.DynamicVars.Repeat.IntValue;
+        }
+        for (int i = 0; i < blockGains; i++)
+        {
+            await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Block.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Block.UpgradeValueBy(1m);
+    }
 }

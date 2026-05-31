@@ -12,24 +12,39 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Quasar : CardModel
 {
-	public override int CanonicalStarCost => 2;
+    public override int CanonicalStarCost => 2;
 
-	public Quasar()
-		: base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Quasar()
+        : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		List<CardModel> cards = CardFactory.GetDistinctForCombat(base.Owner, ModelDb.CardPool<ColorlessCardPool>().GetUnlockedCards(base.Owner.UnlockState, base.Owner.RunState.CardMultiplayerConstraint), 3, base.Owner.RunState.Rng.CombatCardGeneration).ToList();
-		if (base.IsUpgraded)
-		{
-			CardCmd.Upgrade(cards, CardPreviewStyle.HorizontalLayout);
-		}
-		CardModel cardModel = await CardSelectCmd.FromChooseACardScreen(choiceContext, cards, base.Owner, canSkip: true);
-		if (cardModel != null)
-		{
-			await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        List<CardModel> cards = CardFactory
+            .GetDistinctForCombat(
+                base.Owner,
+                ModelDb
+                    .CardPool<ColorlessCardPool>()
+                    .GetUnlockedCards(
+                        base.Owner.UnlockState,
+                        base.Owner.RunState.CardMultiplayerConstraint
+                    ),
+                3,
+                base.Owner.RunState.Rng.CombatCardGeneration
+            )
+            .ToList();
+        if (base.IsUpgraded)
+        {
+            CardCmd.Upgrade(cards, CardPreviewStyle.HorizontalLayout);
+        }
+        CardModel cardModel = await CardSelectCmd.FromChooseACardScreen(
+            choiceContext,
+            cards,
+            base.Owner,
+            canSkip: true
+        );
+        if (cardModel != null)
+        {
+            await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
+        }
+    }
 }

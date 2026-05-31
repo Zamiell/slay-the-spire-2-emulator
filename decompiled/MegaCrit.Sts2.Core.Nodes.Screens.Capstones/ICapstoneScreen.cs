@@ -5,11 +5,11 @@ namespace MegaCrit.Sts2.Core.Nodes.Screens.Capstones;
 
 public interface ICapstoneScreen : IScreenContext
 {
-	NetScreenType ScreenType { get; }
+    NetScreenType ScreenType { get; }
 
-	bool UseSharedBackstop { get; }
+    bool UseSharedBackstop { get; }
 
-	void AfterCapstoneOpened();
+    void AfterCapstoneOpened();
 
-	void AfterCapstoneClosed();
+    void AfterCapstoneClosed();
 }

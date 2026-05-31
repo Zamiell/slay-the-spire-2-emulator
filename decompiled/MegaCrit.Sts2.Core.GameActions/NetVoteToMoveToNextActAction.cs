@@ -8,21 +8,17 @@ namespace MegaCrit.Sts2.Core.GameActions;
 [StructLayout(LayoutKind.Sequential, Size = 1)]
 public struct NetVoteToMoveToNextActAction : INetAction, IPacketSerializable
 {
-	public GameAction ToGameAction(Player player)
-	{
-		return new VoteToMoveToNextActAction(player);
-	}
+    public GameAction ToGameAction(Player player)
+    {
+        return new VoteToMoveToNextActAction(player);
+    }
 
-	public void Serialize(PacketWriter writer)
-	{
-	}
+    public void Serialize(PacketWriter writer) { }
 
-	public void Deserialize(PacketReader reader)
-	{
-	}
+    public void Deserialize(PacketReader reader) { }
 
-	public override string ToString()
-	{
-		return "NetVoteForMapCoordAction";
-	}
+    public override string ToString()
+    {
+        return "NetVoteForMapCoordAction";
+    }
 }

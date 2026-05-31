@@ -4,19 +4,19 @@ namespace MegaCrit.Sts2.Core.Nodes.Vfx.Utilities;
 
 public abstract class ShakeInstance
 {
-	protected float _strength;
+    protected float _strength;
 
-	protected double _startDuration;
+    protected double _startDuration;
 
-	protected double _duration;
+    protected double _duration;
 
-	protected float _ease;
+    protected float _ease;
 
-	protected float _angle;
+    protected float _angle;
 
-	protected static float WiggleSpeed => 60f;
+    protected static float WiggleSpeed => 60f;
 
-	public bool IsDone { get; protected set; }
+    public bool IsDone { get; protected set; }
 
-	public abstract Vector2 Update(double delta);
+    public abstract Vector2 Update(double delta);
 }

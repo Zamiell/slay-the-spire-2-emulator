@@ -14,17 +14,33 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class SpectrumShiftPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player == base.Owner.Player)
-		{
-			List<CardModel> cards = CardFactory.GetDistinctForCombat(player, ModelDb.CardPool<ColorlessCardPool>().GetUnlockedCards(player.UnlockState, player.RunState.CardMultiplayerConstraint), base.Amount, player.RunState.Rng.CombatCardGeneration).ToList();
-			await CardPileCmd.AddGeneratedCardsToCombat(cards, PileType.Hand, base.Owner.Player);
-			Flash();
-		}
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player == base.Owner.Player)
+        {
+            List<CardModel> cards = CardFactory
+                .GetDistinctForCombat(
+                    player,
+                    ModelDb
+                        .CardPool<ColorlessCardPool>()
+                        .GetUnlockedCards(
+                            player.UnlockState,
+                            player.RunState.CardMultiplayerConstraint
+                        ),
+                    base.Amount,
+                    player.RunState.Rng.CombatCardGeneration
+                )
+                .ToList();
+            await CardPileCmd.AddGeneratedCardsToCombat(cards, PileType.Hand, base.Owner.Player);
+            Flash();
+        }
+    }
 }

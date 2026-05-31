@@ -12,23 +12,46 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ReflectPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target, DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target == base.Owner && result.BlockedDamage > 0 && props.IsPoweredAttack() && dealer != null)
-		{
-			await CreatureCmd.Damage(choiceContext, dealer, result.BlockedDamage, ValueProp.Unpowered, base.Owner, null);
-		}
-	}
+    public override async Task AfterDamageReceived(
+        PlayerChoiceContext choiceContext,
+        Creature target,
+        DamageResult result,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (
+            target == base.Owner
+            && result.BlockedDamage > 0
+            && props.IsPoweredAttack()
+            && dealer != null
+        )
+        {
+            await CreatureCmd.Damage(
+                choiceContext,
+                dealer,
+                result.BlockedDamage,
+                ValueProp.Unpowered,
+                base.Owner,
+                null
+            );
+        }
+    }
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Decrement(this);
+        }
+    }
 }

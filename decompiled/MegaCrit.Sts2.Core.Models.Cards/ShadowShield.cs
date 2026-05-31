@@ -12,30 +12,38 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class ShadowShield : CardModel
 {
-	public override bool GainsBlock => true;
+    public override bool GainsBlock => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(11m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(11m, ValueProp.Move)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.Channeling),
-		HoverTipFactory.FromOrb<DarkOrb>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.Channeling),
+                HoverTipFactory.FromOrb<DarkOrb>(),
+            }
+        );
 
-	public ShadowShield()
-		: base(2, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public ShadowShield()
+        : base(2, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		await OrbCmd.Channel<DarkOrb>(choiceContext, base.Owner);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
+        await OrbCmd.Channel<DarkOrb>(choiceContext, base.Owner);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Block.UpgradeValueBy(4m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Block.UpgradeValueBy(4m);
+    }
 }

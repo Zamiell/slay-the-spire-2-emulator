@@ -10,35 +10,36 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class ParticleWall : CardModel
 {
-	public override int CanonicalStarCost => 2;
+    public override int CanonicalStarCost => 2;
 
-	public override bool GainsBlock => true;
+    public override bool GainsBlock => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(9m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(9m, ValueProp.Move)
+        );
 
-	public ParticleWall()
-		: base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public ParticleWall()
+        : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		await Cmd.Wait(0.25f);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
+        await Cmd.Wait(0.25f);
+    }
 
-	protected override PileType GetResultPileTypeForCardPlay()
-	{
-		PileType resultPileTypeForCardPlay = base.GetResultPileTypeForCardPlay();
-		if (resultPileTypeForCardPlay != PileType.Discard)
-		{
-			return resultPileTypeForCardPlay;
-		}
-		return PileType.Hand;
-	}
+    protected override PileType GetResultPileTypeForCardPlay()
+    {
+        PileType resultPileTypeForCardPlay = base.GetResultPileTypeForCardPlay();
+        if (resultPileTypeForCardPlay != PileType.Discard)
+        {
+            return resultPileTypeForCardPlay;
+        }
+        return PileType.Hand;
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Block.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Block.UpgradeValueBy(3m);
+    }
 }

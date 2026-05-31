@@ -11,28 +11,35 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class AdaptiveStrike : CardModel
 {
-	protected override HashSet<CardTag> CanonicalTags => new HashSet<CardTag> { CardTag.Strike };
+    protected override HashSet<CardTag> CanonicalTags => new HashSet<CardTag> { CardTag.Strike };
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(18m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(18m, ValueProp.Move)
+        );
 
-	public AdaptiveStrike()
-		: base(2, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy)
-	{
-	}
+    public AdaptiveStrike()
+        : base(2, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_attack_slash")
-			.Execute(choiceContext);
-		CardModel cardModel = CreateClone();
-		cardModel.EnergyCost.SetThisCombat(0);
-		CardCmd.PreviewCardPileAdd(await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Discard, base.Owner), 1.5f);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_attack_slash")
+            .Execute(choiceContext);
+        CardModel cardModel = CreateClone();
+        cardModel.EnergyCost.SetThisCombat(0);
+        CardCmd.PreviewCardPileAdd(
+            await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Discard, base.Owner),
+            1.5f
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(5m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(5m);
+    }
 }

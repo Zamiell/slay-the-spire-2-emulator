@@ -5,7 +5,7 @@ namespace MegaCrit.Sts2.Core.TestSupport;
 
 public struct CardRewardSelection
 {
-	public CardModel? card;
+    public CardModel? card;
 
-	public CardRewardAlternative? alternative;
+    public CardRewardAlternative? alternative;
 }

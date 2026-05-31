@@ -12,19 +12,28 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class PowderedDemise : PotionModel
 {
-	private const string _demiseKey = "Demise";
+    private const string _demiseKey = "Demise";
 
-	public override PotionRarity Rarity => PotionRarity.Uncommon;
+    public override PotionRarity Rarity => PotionRarity.Uncommon;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyEnemy;
+    public override TargetType TargetType => TargetType.AnyEnemy;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Demise", 9m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("Demise", 9m)
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		await PowerCmd.Apply<DemisePower>(choiceContext, target, base.DynamicVars["Demise"].BaseValue, base.Owner.Creature, null);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        await PowerCmd.Apply<DemisePower>(
+            choiceContext,
+            target,
+            base.DynamicVars["Demise"].BaseValue,
+            base.Owner.Creature,
+            null
+        );
+    }
 }

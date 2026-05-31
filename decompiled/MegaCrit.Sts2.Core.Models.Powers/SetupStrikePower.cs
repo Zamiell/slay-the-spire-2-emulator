@@ -4,5 +4,5 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class SetupStrikePower : TemporaryStrengthPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<SetupStrike>();
+    public override AbstractModel OriginModel => ModelDb.Card<SetupStrike>();
 }

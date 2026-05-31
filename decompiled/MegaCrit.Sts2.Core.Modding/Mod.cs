@@ -7,17 +7,17 @@ namespace MegaCrit.Sts2.Core.Modding;
 
 public class Mod
 {
-	public ModSource modSource;
+    public ModSource modSource;
 
-	public required string path;
+    public required string path;
 
-	public ModLoadState state;
+    public ModLoadState state;
 
-	public ModManifest? manifest;
+    public ModManifest? manifest;
 
-	public SemanticVersion? version;
+    public SemanticVersion? version;
 
-	public Assembly? assembly;
+    public Assembly? assembly;
 
-	public List<LocString>? errors;
+    public List<LocString>? errors;
 }

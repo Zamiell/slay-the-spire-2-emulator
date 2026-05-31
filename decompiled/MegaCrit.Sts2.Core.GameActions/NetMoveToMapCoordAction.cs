@@ -7,25 +7,25 @@ namespace MegaCrit.Sts2.Core.GameActions;
 
 public struct NetMoveToMapCoordAction : INetAction, IPacketSerializable
 {
-	public MapCoord destination;
+    public MapCoord destination;
 
-	public GameAction ToGameAction(Player player)
-	{
-		return new MoveToMapCoordAction(player, destination);
-	}
+    public GameAction ToGameAction(Player player)
+    {
+        return new MoveToMapCoordAction(player, destination);
+    }
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(destination);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(destination);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		destination = reader.Read<MapCoord>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        destination = reader.Read<MapCoord>();
+    }
 
-	public override string ToString()
-	{
-		return $"{"MoveToMapCoordAction"} to {destination}";
-	}
+    public override string ToString()
+    {
+        return $"{"MoveToMapCoordAction"} to {destination}";
+    }
 }

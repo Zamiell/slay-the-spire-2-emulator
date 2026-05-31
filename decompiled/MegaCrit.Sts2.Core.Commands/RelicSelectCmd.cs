@@ -15,39 +15,49 @@ namespace MegaCrit.Sts2.Core.Commands;
 
 public static class RelicSelectCmd
 {
-	private static bool ShouldSelectLocalRelic(Player player)
-	{
-		if (LocalContext.IsMe(player))
-		{
-			return RunManager.Instance.NetService.Type != NetGameType.Replay;
-		}
-		return false;
-	}
+    private static bool ShouldSelectLocalRelic(Player player)
+    {
+        if (LocalContext.IsMe(player))
+        {
+            return RunManager.Instance.NetService.Type != NetGameType.Replay;
+        }
+        return false;
+    }
 
-	public static async Task<RelicModel?> FromChooseARelicScreen(Player player, IReadOnlyList<RelicModel> relics)
-	{
-		uint choiceId = RunManager.Instance.PlayerChoiceSynchronizer.ReserveChoiceId(player);
-		RelicModel relicModel;
-		if (ShouldSelectLocalRelic(player))
-		{
-			NChooseARelicSelection nChooseARelicSelection = NChooseARelicSelection.ShowScreen(relics);
-			if (LocalContext.IsMe(player))
-			{
-				foreach (RelicModel relic in relics)
-				{
-					SaveManager.Instance.MarkRelicAsSeen(relic);
-				}
-			}
-			relicModel = (await nChooseARelicSelection.RelicsSelected()).FirstOrDefault();
-			int value = relics.IndexOf(relicModel);
-			PlayerChoiceResult result = PlayerChoiceResult.FromIndex(value);
-			RunManager.Instance.PlayerChoiceSynchronizer.SyncLocalChoice(player, choiceId, result);
-		}
-		else
-		{
-			int num = (await RunManager.Instance.PlayerChoiceSynchronizer.WaitForRemoteChoice(player, choiceId)).AsIndex();
-			relicModel = ((num < 0) ? null : relics[num]);
-		}
-		return relicModel;
-	}
+    public static async Task<RelicModel?> FromChooseARelicScreen(
+        Player player,
+        IReadOnlyList<RelicModel> relics
+    )
+    {
+        uint choiceId = RunManager.Instance.PlayerChoiceSynchronizer.ReserveChoiceId(player);
+        RelicModel relicModel;
+        if (ShouldSelectLocalRelic(player))
+        {
+            NChooseARelicSelection nChooseARelicSelection = NChooseARelicSelection.ShowScreen(
+                relics
+            );
+            if (LocalContext.IsMe(player))
+            {
+                foreach (RelicModel relic in relics)
+                {
+                    SaveManager.Instance.MarkRelicAsSeen(relic);
+                }
+            }
+            relicModel = (await nChooseARelicSelection.RelicsSelected()).FirstOrDefault();
+            int value = relics.IndexOf(relicModel);
+            PlayerChoiceResult result = PlayerChoiceResult.FromIndex(value);
+            RunManager.Instance.PlayerChoiceSynchronizer.SyncLocalChoice(player, choiceId, result);
+        }
+        else
+        {
+            int num = (
+                await RunManager.Instance.PlayerChoiceSynchronizer.WaitForRemoteChoice(
+                    player,
+                    choiceId
+                )
+            ).AsIndex();
+            relicModel = ((num < 0) ? null : relics[num]);
+        }
+        return relicModel;
+    }
 }

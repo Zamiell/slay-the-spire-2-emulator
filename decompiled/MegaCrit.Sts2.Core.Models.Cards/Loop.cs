@@ -10,23 +10,32 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Loop : CardModel
 {
-	private const string _loopKey = "Loop";
+    private const string _loopKey = "Loop";
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Loop", 1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Loop", 1m));
 
-	public Loop()
-		: base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Loop()
+        : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<LoopPower>(choiceContext, base.Owner.Creature, base.DynamicVars["Loop"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<LoopPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["Loop"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars["Loop"].UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars["Loop"].UpgradeValueBy(1m);
+    }
 }

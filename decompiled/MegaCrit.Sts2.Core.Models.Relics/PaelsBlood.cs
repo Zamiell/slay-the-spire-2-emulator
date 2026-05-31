@@ -7,16 +7,17 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class PaelsBlood : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(1));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(1));
 
-	public override decimal ModifyHandDraw(Player player, decimal count)
-	{
-		if (player != base.Owner)
-		{
-			return count;
-		}
-		return count + (decimal)base.DynamicVars.Cards.IntValue;
-	}
+    public override decimal ModifyHandDraw(Player player, decimal count)
+    {
+        if (player != base.Owner)
+        {
+            return count;
+        }
+        return count + (decimal)base.DynamicVars.Cards.IntValue;
+    }
 }

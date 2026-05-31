@@ -6,13 +6,13 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Game;
 
 public struct JoinResult
 {
-	public GameMode gameMode;
+    public GameMode gameMode;
 
-	public RunSessionState? sessionState;
+    public RunSessionState? sessionState;
 
-	public ClientRejoinResponseMessage? rejoinResponse;
+    public ClientRejoinResponseMessage? rejoinResponse;
 
-	public ClientLoadJoinResponseMessage? loadJoinResponse;
+    public ClientLoadJoinResponseMessage? loadJoinResponse;
 
-	public ClientLobbyJoinResponseMessage? joinResponse;
+    public ClientLobbyJoinResponseMessage? joinResponse;
 }

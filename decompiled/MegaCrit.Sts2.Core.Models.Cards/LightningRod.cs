@@ -13,34 +13,48 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class LightningRod : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.Channeling),
-		HoverTipFactory.FromOrb<LightningOrb>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.Channeling),
+                HoverTipFactory.FromOrb<LightningOrb>(),
+            }
+        );
 
-	public override bool GainsBlock => true;
+    public override bool GainsBlock => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new BlockVar(4m, ValueProp.Move),
-		new PowerVar<LightningRodPower>(2m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2]
+            {
+                new BlockVar(4m, ValueProp.Move),
+                new PowerVar<LightningRodPower>(2m),
+            }
+        );
 
-	public LightningRod()
-		: base(1, CardType.Skill, CardRarity.Common, TargetType.Self)
-	{
-	}
+    public LightningRod()
+        : base(1, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		await PowerCmd.Apply<LightningRodPower>(choiceContext, base.Owner.Creature, base.DynamicVars["LightningRodPower"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
+        await PowerCmd.Apply<LightningRodPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["LightningRodPower"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Block.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Block.UpgradeValueBy(3m);
+    }
 }

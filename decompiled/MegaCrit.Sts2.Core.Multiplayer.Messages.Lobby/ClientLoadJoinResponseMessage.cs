@@ -8,36 +8,36 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby;
 
 public struct ClientLoadJoinResponseMessage : INetMessage, IPacketSerializable
 {
-	public SerializableRun serializableRun;
+    public SerializableRun serializableRun;
 
-	public List<ulong> playersAlreadyConnected;
+    public List<ulong> playersAlreadyConnected;
 
-	public bool ShouldBroadcast => false;
+    public bool ShouldBroadcast => false;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.Info;
+    public LogLevel LogLevel => LogLevel.Info;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(serializableRun);
-		writer.WriteInt(playersAlreadyConnected.Count, 6);
-		foreach (ulong item in playersAlreadyConnected)
-		{
-			writer.WriteULong(item);
-		}
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(serializableRun);
+        writer.WriteInt(playersAlreadyConnected.Count, 6);
+        foreach (ulong item in playersAlreadyConnected)
+        {
+            writer.WriteULong(item);
+        }
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		serializableRun = reader.Read<SerializableRun>();
-		playersAlreadyConnected = new List<ulong>();
-		int num = reader.ReadInt(6);
-		for (int i = 0; i < num; i++)
-		{
-			playersAlreadyConnected.Add(reader.ReadULong());
-		}
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        serializableRun = reader.Read<SerializableRun>();
+        playersAlreadyConnected = new List<ulong>();
+        int num = reader.ReadInt(6);
+        for (int i = 0; i < num; i++)
+        {
+            playersAlreadyConnected.Add(reader.ReadULong());
+        }
+    }
 }

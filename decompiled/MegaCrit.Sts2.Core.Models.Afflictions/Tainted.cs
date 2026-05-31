@@ -7,14 +7,15 @@ namespace MegaCrit.Sts2.Core.Models.Afflictions;
 
 public sealed class Tainted : AfflictionModel
 {
-	public override bool IsStackable => true;
+    public override bool IsStackable => true;
 
-	public override bool HasExtraCardText => true;
+    public override bool HasExtraCardText => true;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromPowerWithPowerHoverTips<TaintedPower>(base.Amount);
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromPowerWithPowerHoverTips<TaintedPower>(base.Amount);
 
-	public override bool CanAfflictCardType(CardType cardType)
-	{
-		return cardType == CardType.Skill;
-	}
+    public override bool CanAfflictCardType(CardType cardType)
+    {
+        return cardType == CardType.Skill;
+    }
 }

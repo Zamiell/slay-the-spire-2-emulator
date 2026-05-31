@@ -62,10 +62,14 @@ public sealed class RunEngine
         int playerMaxHp,
         ReadOnlySpan<int> potionIds,
         int playerGold,
-        int completedCombatRoomsBeforeCurrent = 0)
+        int completedCombatRoomsBeforeCurrent = 0
+    )
     {
         int[] startingPotions = potionIds.ToArray();
-        State.Deck = deckIds.ToArray().Select(id => new CardInstance(Math.Abs(id), id < 0)).ToList();
+        State.Deck = deckIds
+            .ToArray()
+            .Select(id => new CardInstance(Math.Abs(id), id < 0))
+            .ToList();
         State.Relics = relicIds.ToArray().Select(id => new RelicInstance(id)).ToList();
         State.PlayerHp = Math.Clamp(playerHp, 0, Math.Max(1, playerMaxHp));
         State.PlayerMaxHp = Math.Max(1, playerMaxHp);
@@ -152,15 +156,27 @@ public sealed class RunEngine
                         SetMask(mask, action);
                 bool hasPotionSlot = State.PotionSlots.Any(potion => potion == 0);
                 for (int action = 10; action < 13; action++)
-                    if (State.ShopPotions[action - 10] != 0 && State.Gold >= State.ShopCosts[action] && hasPotionSlot)
+                    if (
+                        State.ShopPotions[action - 10] != 0
+                        && State.Gold >= State.ShopCosts[action]
+                        && hasPotionSlot
+                    )
                         SetMask(mask, action);
-                if (State.Gold >= State.ShopCosts[RunConstants.ShopRemoveAction] && State.Deck.Count > 1)
+                if (
+                    State.Gold >= State.ShopCosts[RunConstants.ShopRemoveAction]
+                    && State.Deck.Count > 1
+                )
                     SetMask(mask, RunConstants.ShopRemoveAction);
                 SetMask(mask, RunConstants.ShopSkipAction);
                 break;
 
             case RunPhase.RelicReward:
-                if (State.RewardGold != 0 || State.RewardPotion != 0 || State.RelicReward != 0 || State.RewardCardPending)
+                if (
+                    State.RewardGold != 0
+                    || State.RewardPotion != 0
+                    || State.RelicReward != 0
+                    || State.RewardCardPending
+                )
                     SetMask(mask, 0);
                 SetMask(mask, RunConstants.RewardSkipAction);
                 break;
@@ -261,7 +277,13 @@ public sealed class RunEngine
         info[10] = State.RelicReward;
     }
 
-    public int Step(int action, int targetEnemyIndex, out float reward, out bool terminal, out bool truncated)
+    public int Step(
+        int action,
+        int targetEnemyIndex,
+        out float reward,
+        out bool terminal,
+        out bool truncated
+    )
     {
         reward = 0.0f;
         terminal = false;
@@ -279,7 +301,9 @@ public sealed class RunEngine
 
         if (State.Phase == RunPhase.Map)
         {
-            if (!RunMapGenerator.ChooseMapNode(State, action, out int nodeType, out int encounterId))
+            if (
+                !RunMapGenerator.ChooseMapNode(State, action, out int nodeType, out int encounterId)
+            )
                 return -1;
 
             switch (nodeType)
@@ -288,16 +312,20 @@ public sealed class RunEngine
                 case RunConstants.NodeElite:
                 case RunConstants.NodeBoss:
                     State.Phase = RunPhase.Combat;
-                    int completedRooms = State.NormalEncountersVisited + State.EliteEncountersVisited - 1;
+                    int completedRooms =
+                        State.NormalEncountersVisited + State.EliteEncountersVisited - 1;
                     return StartCombat(
-                        State.Deck.Select(card => card.Upgraded ? -card.DefId : card.DefId).ToArray(),
+                        State
+                            .Deck.Select(card => card.Upgraded ? -card.DefId : card.DefId)
+                            .ToArray(),
                         encounterId,
                         State.Relics.Select(relic => relic.DefId).ToArray(),
                         State.PlayerHp,
                         State.PlayerMaxHp,
                         State.PotionSlots,
                         State.Gold,
-                        Math.Max(0, completedRooms));
+                        Math.Max(0, completedRooms)
+                    );
                 case RunConstants.NodeRest:
                     State.Phase = RunPhase.Rest;
                     break;
@@ -313,16 +341,20 @@ public sealed class RunEngine
                         State.CurrentNodeType = RunConstants.NodeNormal;
                         State.NormalEncountersVisited++;
                         State.Phase = RunPhase.Combat;
-                        int completedRoomsForEventCombat = State.NormalEncountersVisited + State.EliteEncountersVisited - 1;
+                        int completedRoomsForEventCombat =
+                            State.NormalEncountersVisited + State.EliteEncountersVisited - 1;
                         return StartCombat(
-                            State.Deck.Select(card => card.Upgraded ? -card.DefId : card.DefId).ToArray(),
+                            State
+                                .Deck.Select(card => card.Upgraded ? -card.DefId : card.DefId)
+                                .ToArray(),
                             9,
                             State.Relics.Select(relic => relic.DefId).ToArray(),
                             State.PlayerHp,
                             State.PlayerMaxHp,
                             State.PotionSlots,
                             State.Gold,
-                            Math.Max(0, completedRoomsForEventCombat));
+                            Math.Max(0, completedRoomsForEventCombat)
+                        );
                     }
                     RunNonCombatEffects.EnterEvent(State);
                     break;
@@ -338,9 +370,15 @@ public sealed class RunEngine
             if (State.ActiveCombat is null || State.ActiveCombatRng is null)
                 return -1;
 
-            var result = targetEnemyIndex >= 0
-                ? CombatEngine.Step(State.ActiveCombat, action, State.ActiveCombatRng, targetEnemyIndex)
-                : CombatEngine.Step(State.ActiveCombat, action, State.ActiveCombatRng);
+            var result =
+                targetEnemyIndex >= 0
+                    ? CombatEngine.Step(
+                        State.ActiveCombat,
+                        action,
+                        State.ActiveCombatRng,
+                        targetEnemyIndex
+                    )
+                    : CombatEngine.Step(State.ActiveCombat, action, State.ActiveCombatRng);
             reward = result.Reward;
             terminal = result.Terminal;
             State.LastPlayerWon = result.Terminal && result.PlayerWon;
@@ -417,8 +455,12 @@ public sealed class RunEngine
             positive.Remove(RunConstants.RelicPreciseScissors);
 
         if (cursed != RunConstants.RelicLargeCapsule)
-            positive.Add(rng.NextBool() ? RunConstants.RelicLavaRock : RunConstants.RelicSmallCapsule);
-        positive.Add(rng.NextBool() ? RunConstants.RelicNutritiousOyster : RunConstants.RelicStoneHumidifier);
+            positive.Add(
+                rng.NextBool() ? RunConstants.RelicLavaRock : RunConstants.RelicSmallCapsule
+            );
+        positive.Add(
+            rng.NextBool() ? RunConstants.RelicNutritiousOyster : RunConstants.RelicStoneHumidifier
+        );
         positive.Add(rng.NextBool() ? RunConstants.RelicNeowsTalisman : RunConstants.RelicPomander);
         rng.Shuffle(positive);
 
@@ -440,7 +482,10 @@ public sealed class RunEngine
         if (relicId == RunConstants.RelicLostCoffer)
         {
             RunRewardGenerator.EnterCardReward(State);
-            RunRewardGenerator.AddPotion(State, RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards));
+            RunRewardGenerator.AddPotion(
+                State,
+                RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)
+            );
             State.PotionRewardOdds -= 0.1;
             return;
         }
@@ -476,8 +521,13 @@ public sealed class RunEngine
         if (encounterId != RunConstants.SlimesWeakEncounterId)
             return 0;
 
-        return unchecked((int)(State.Rng.Seed + (uint)State.CompletedCombatRoomsBeforeCurrent
-            + (uint)DeterministicHash.GetDeterministicHashCode("SLIMES_WEAK")));
+        return unchecked(
+            (int)(
+                State.Rng.Seed
+                + (uint)State.CompletedCombatRoomsBeforeCurrent
+                + (uint)DeterministicHash.GetDeterministicHashCode("SLIMES_WEAK")
+            )
+        );
     }
 
     private void SyncAfterCombat()
@@ -577,7 +627,11 @@ public sealed class RunEngine
             int index = action - 10;
             int potionId = State.ShopPotions[index];
             int cost = State.ShopCosts[action];
-            if (potionId == 0 || State.Gold < cost || !RunRewardGenerator.AddPotion(State, potionId))
+            if (
+                potionId == 0
+                || State.Gold < cost
+                || !RunRewardGenerator.AddPotion(State, potionId)
+            )
                 return -1;
             State.Gold -= cost;
             State.ShopPotions[index] = 0;
@@ -665,13 +719,18 @@ public sealed class RunEngine
                 if (action == 0)
                 {
                     State.PlayerHp = State.PlayerMaxHp;
-                    State.Deck.Add(new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false));
+                    State.Deck.Add(
+                        new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false)
+                    );
                 }
                 else if (action == 1)
                 {
                     State.PlayerMaxHp = Math.Max(1, State.PlayerMaxHp - 8);
                     State.PlayerHp = Math.Min(State.PlayerHp, State.PlayerMaxHp);
-                    RunNonCombatEffects.ApplyRelicPickup(State, RunRewardGenerator.NextRelic(State));
+                    RunNonCombatEffects.ApplyRelicPickup(
+                        State,
+                        RunRewardGenerator.NextRelic(State)
+                    );
                 }
                 else if (action != RunConstants.EventSkipAction)
                 {
@@ -743,7 +802,14 @@ public sealed class RunEngine
             case RunConstants.EventBrainLeech:
                 if (action == 0)
                 {
-                    State.Deck.Add(new CardInstance(State.Rng.UpFront.NextItem(RunRewardGenerator.IroncladRewardPool.ToArray()), Upgraded: false));
+                    State.Deck.Add(
+                        new CardInstance(
+                            State.Rng.UpFront.NextItem(
+                                RunRewardGenerator.IroncladRewardPool.ToArray()
+                            ),
+                            Upgraded: false
+                        )
+                    );
                 }
                 else if (action == 1)
                 {
@@ -760,7 +826,13 @@ public sealed class RunEngine
                     State.Deck.Add(new CardInstance(RunConstants.SpoilsMapCard, Upgraded: false));
                 else if (action == 1)
                 {
-                    if (State.PlayerHp <= 8 || !RunRewardGenerator.AddPotion(State, RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)))
+                    if (
+                        State.PlayerHp <= 8
+                        || !RunRewardGenerator.AddPotion(
+                            State,
+                            RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)
+                        )
+                    )
                         return -1;
                     State.PlayerHp = Math.Max(0, State.PlayerHp - 8);
                 }
@@ -781,7 +853,14 @@ public sealed class RunEngine
                 }
                 else if (action == 2)
                 {
-                    State.Deck.Add(new CardInstance(State.Rng.UpFront.NextItem(RunRewardGenerator.IroncladRewardPool.ToArray()), Upgraded: false));
+                    State.Deck.Add(
+                        new CardInstance(
+                            State.Rng.UpFront.NextItem(
+                                RunRewardGenerator.IroncladRewardPool.ToArray()
+                            ),
+                            Upgraded: false
+                        )
+                    );
                 }
                 else if (action != RunConstants.EventSkipAction)
                     return -1;
@@ -824,14 +903,20 @@ public sealed class RunEngine
             return 0;
         }
 
-        RunNonCombatEffects.TransformCardAt(State, State.TransformSelectedDeckIndex.Value, State.Rng.Niche);
+        RunNonCombatEffects.TransformCardAt(
+            State,
+            State.TransformSelectedDeckIndex.Value,
+            State.Rng.Niche
+        );
         State.TransformSelectedDeckIndex = null;
         return AdvanceAfterNode(out terminal);
     }
 
-    private int RestHealAmount() => Math.Max(1, (int)Math.Round(State.PlayerMaxHp * 0.3, MidpointRounding.AwayFromZero));
+    private int RestHealAmount() =>
+        Math.Max(1, (int)Math.Round(State.PlayerMaxHp * 0.3, MidpointRounding.AwayFromZero));
 
-    private int EventGoldAmount(int baseAmount) => Math.Max(0, baseAmount + State.Rng.UpFront.NextInt(-15, 16));
+    private int EventGoldAmount(int baseAmount) =>
+        Math.Max(0, baseAmount + State.Rng.UpFront.NextInt(-15, 16));
 
     private static void SetMask(Span<int> mask, int action)
     {

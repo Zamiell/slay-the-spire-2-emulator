@@ -12,63 +12,64 @@ namespace MegaCrit.Sts2.Core.Models.Characters;
 
 public sealed class DeprecatedCharacter : CharacterModel
 {
-	private MockCardPool? _mockCardPool;
+    private MockCardPool? _mockCardPool;
 
-	public override bool IsPlayable => false;
+    public override bool IsPlayable => false;
 
-	public override Color NameColor => StsColors.gold;
+    public override Color NameColor => StsColors.gold;
 
-	public override CharacterGender Gender => CharacterGender.Neutral;
+    public override CharacterGender Gender => CharacterGender.Neutral;
 
-	protected override CharacterModel? UnlocksAfterRunAs => null;
+    protected override CharacterModel? UnlocksAfterRunAs => null;
 
-	protected override string IconPath => SceneHelper.GetScenePath("ui/character_icons/ironclad_icon");
+    protected override string IconPath =>
+        SceneHelper.GetScenePath("ui/character_icons/ironclad_icon");
 
-	public override int StartingHp => 1000;
+    public override int StartingHp => 1000;
 
-	public override int StartingGold => 99;
+    public override int StartingGold => 99;
 
-	public override int MaxEnergy => 100;
+    public override int MaxEnergy => 100;
 
-	public override CardPoolModel CardPool => _mockCardPool ?? ModelDb.CardPool<MockCardPool>();
+    public override CardPoolModel CardPool => _mockCardPool ?? ModelDb.CardPool<MockCardPool>();
 
-	public override RelicPoolModel RelicPool => ModelDb.RelicPool<IroncladRelicPool>();
+    public override RelicPoolModel RelicPool => ModelDb.RelicPool<IroncladRelicPool>();
 
-	public override PotionPoolModel PotionPool => ModelDb.PotionPool<IroncladPotionPool>();
+    public override PotionPoolModel PotionPool => ModelDb.PotionPool<IroncladPotionPool>();
 
-	public override IEnumerable<CardModel> StartingDeck => Array.Empty<CardModel>();
+    public override IEnumerable<CardModel> StartingDeck => Array.Empty<CardModel>();
 
-	public override IReadOnlyList<RelicModel> StartingRelics => Array.Empty<RelicModel>();
+    public override IReadOnlyList<RelicModel> StartingRelics => Array.Empty<RelicModel>();
 
-	public override float AttackAnimDelay => 0f;
+    public override float AttackAnimDelay => 0f;
 
-	public override float CastAnimDelay => 0f;
+    public override float CastAnimDelay => 0f;
 
-	public override Color MapDrawingColor => new Color("462996");
+    public override Color MapDrawingColor => new Color("462996");
 
-	public override List<string> GetArchitectAttackVfx()
-	{
-		int num = 1;
-		List<string> list = new List<string>(num);
-		CollectionsMarshal.SetCount(list, num);
-		Span<string> span = CollectionsMarshal.AsSpan(list);
-		int index = 0;
-		span[index] = "vfx/vfx_attack_blunt";
-		return list;
-	}
+    public override List<string> GetArchitectAttackVfx()
+    {
+        int num = 1;
+        List<string> list = new List<string>(num);
+        CollectionsMarshal.SetCount(list, num);
+        Span<string> span = CollectionsMarshal.AsSpan(list);
+        int index = 0;
+        span[index] = "vfx/vfx_attack_blunt";
+        return list;
+    }
 
-	public void ResetMockCardPool()
-	{
-		_mockCardPool = null;
-	}
+    public void ResetMockCardPool()
+    {
+        _mockCardPool = null;
+    }
 
-	public void AddToPool(CardModel card)
-	{
-		card.AssertCanonical();
-		if (_mockCardPool == null)
-		{
-			_mockCardPool = (MockCardPool)ModelDb.CardPool<MockCardPool>().ToMutable();
-		}
-		_mockCardPool.Add(card);
-	}
+    public void AddToPool(CardModel card)
+    {
+        card.AssertCanonical();
+        if (_mockCardPool == null)
+        {
+            _mockCardPool = (MockCardPool)ModelDb.CardPool<MockCardPool>().ToMutable();
+        }
+        _mockCardPool.Add(card);
+    }
 }

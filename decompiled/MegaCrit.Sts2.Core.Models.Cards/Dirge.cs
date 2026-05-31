@@ -11,44 +11,63 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Dirge : CardModel
 {
-	protected override bool HasEnergyCostX => true;
+    protected override bool HasEnergyCostX => true;
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new SummonVar(3m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new SummonVar(3m));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.SummonDynamic, base.DynamicVars.Summon),
-		HoverTipFactory.FromCard<Soul>(base.IsUpgraded)
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.SummonDynamic, base.DynamicVars.Summon),
+                HoverTipFactory.FromCard<Soul>(base.IsUpgraded),
+            }
+        );
 
-	public Dirge()
-		: base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Dirge()
+        : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		int xValue = ResolveEnergyXValue();
-		for (int i = 0; i < xValue; i++)
-		{
-			await OstyCmd.Summon(choiceContext, base.Owner, base.DynamicVars.Summon.BaseValue, this);
-		}
-		List<Soul> list = Soul.Create(base.Owner, xValue, base.CombatState).ToList();
-		if (base.IsUpgraded)
-		{
-			foreach (Soul item in list)
-			{
-				CardCmd.Upgrade(item);
-			}
-		}
-		CardCmd.PreviewCardPileAdd(await CardPileCmd.AddGeneratedCardsToCombat(list, PileType.Draw, base.Owner, CardPilePosition.Random));
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        int xValue = ResolveEnergyXValue();
+        for (int i = 0; i < xValue; i++)
+        {
+            await OstyCmd.Summon(
+                choiceContext,
+                base.Owner,
+                base.DynamicVars.Summon.BaseValue,
+                this
+            );
+        }
+        List<Soul> list = Soul.Create(base.Owner, xValue, base.CombatState).ToList();
+        if (base.IsUpgraded)
+        {
+            foreach (Soul item in list)
+            {
+                CardCmd.Upgrade(item);
+            }
+        }
+        CardCmd.PreviewCardPileAdd(
+            await CardPileCmd.AddGeneratedCardsToCombat(
+                list,
+                PileType.Draw,
+                base.Owner,
+                CardPilePosition.Random
+            )
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Summon.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Summon.UpgradeValueBy(1m);
+    }
 }

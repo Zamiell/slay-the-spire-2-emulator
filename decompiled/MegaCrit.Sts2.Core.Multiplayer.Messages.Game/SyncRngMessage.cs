@@ -7,27 +7,27 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game;
 
 public struct SyncRngMessage : INetMessage, IPacketSerializable
 {
-	public SerializableRunRngSet rng;
+    public SerializableRunRngSet rng;
 
-	public SerializableRelicGrabBag sharedRelicGrabBag;
+    public SerializableRelicGrabBag sharedRelicGrabBag;
 
-	public bool ShouldBroadcast => false;
+    public bool ShouldBroadcast => false;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(rng);
-		writer.Write(sharedRelicGrabBag);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(rng);
+        writer.Write(sharedRelicGrabBag);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		rng = reader.Read<SerializableRunRngSet>();
-		sharedRelicGrabBag = reader.Read<SerializableRelicGrabBag>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        rng = reader.Read<SerializableRunRngSet>();
+        sharedRelicGrabBag = reader.Read<SerializableRelicGrabBag>();
+    }
 }

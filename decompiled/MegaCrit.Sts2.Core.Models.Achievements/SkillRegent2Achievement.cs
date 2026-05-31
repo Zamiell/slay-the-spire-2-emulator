@@ -8,20 +8,20 @@ namespace MegaCrit.Sts2.Core.Models.Achievements;
 
 public class SkillRegent2Achievement : AchievementModel
 {
-	private const int _starThreshold = 20;
+    private const int _starThreshold = 20;
 
-	public override Task AfterStarsGained(int amount, Player gainer)
-	{
-		if (!LocalContext.IsMe(gainer))
-		{
-			return Task.CompletedTask;
-		}
-		PlayerCombatState? playerCombatState = gainer.PlayerCombatState;
-		if (playerCombatState != null && playerCombatState.Stars < 20)
-		{
-			return Task.CompletedTask;
-		}
-		AchievementsUtil.Unlock(Achievement.CharacterSkillRegent2, gainer);
-		return Task.CompletedTask;
-	}
+    public override Task AfterStarsGained(int amount, Player gainer)
+    {
+        if (!LocalContext.IsMe(gainer))
+        {
+            return Task.CompletedTask;
+        }
+        PlayerCombatState? playerCombatState = gainer.PlayerCombatState;
+        if (playerCombatState != null && playerCombatState.Stars < 20)
+        {
+            return Task.CompletedTask;
+        }
+        AchievementsUtil.Unlock(Achievement.CharacterSkillRegent2, gainer);
+        return Task.CompletedTask;
+    }
 }

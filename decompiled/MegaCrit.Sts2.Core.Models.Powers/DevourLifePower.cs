@@ -11,21 +11,24 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class DevourLifePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.FromCard<Soul>(),
-		HoverTipFactory.Static(StaticHoverTip.SummonStatic)
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.FromCard<Soul>(),
+                HoverTipFactory.Static(StaticHoverTip.SummonStatic),
+            }
+        );
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Card is Soul && cardPlay.Card.Owner.Creature == base.Owner)
-		{
-			await OstyCmd.Summon(choiceContext, cardPlay.Card.Owner, base.Amount, this);
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (cardPlay.Card is Soul && cardPlay.Card.Owner.Creature == base.Owner)
+        {
+            await OstyCmd.Summon(choiceContext, cardPlay.Card.Owner, base.Amount, this);
+        }
+    }
 }

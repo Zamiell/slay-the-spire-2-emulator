@@ -11,56 +11,63 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class MoltenEgg : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override bool IsAllowed(IRunState runState)
-	{
-		return RelicModel.IsBeforeAct3TreasureChest(runState);
-	}
+    public override bool IsAllowed(IRunState runState)
+    {
+        return RelicModel.IsBeforeAct3TreasureChest(runState);
+    }
 
-	public override bool TryModifyCardRewardOptionsLate(Player player, List<CardCreationResult> cardRewards, CardCreationOptions options)
-	{
-		if (player != base.Owner)
-		{
-			return false;
-		}
-		if (options.Flags.HasFlag(CardCreationFlags.NoHookUpgrades))
-		{
-			return false;
-		}
-		EggRelicHelper.UpgradeValidCards(cardRewards, CardType.Attack, this);
-		return true;
-	}
+    public override bool TryModifyCardRewardOptionsLate(
+        Player player,
+        List<CardCreationResult> cardRewards,
+        CardCreationOptions options
+    )
+    {
+        if (player != base.Owner)
+        {
+            return false;
+        }
+        if (options.Flags.HasFlag(CardCreationFlags.NoHookUpgrades))
+        {
+            return false;
+        }
+        EggRelicHelper.UpgradeValidCards(cardRewards, CardType.Attack, this);
+        return true;
+    }
 
-	public override void ModifyMerchantCardCreationResults(Player player, List<CardCreationResult> cards)
-	{
-		if (player == base.Owner)
-		{
-			EggRelicHelper.UpgradeValidCards(cards, CardType.Attack, this);
-		}
-	}
+    public override void ModifyMerchantCardCreationResults(
+        Player player,
+        List<CardCreationResult> cards
+    )
+    {
+        if (player == base.Owner)
+        {
+            EggRelicHelper.UpgradeValidCards(cards, CardType.Attack, this);
+        }
+    }
 
-	public override bool TryModifyCardBeingAddedToDeck(CardModel card, out CardModel? newCard)
-	{
-		newCard = null;
-		if (card.Owner != base.Owner)
-		{
-			return false;
-		}
-		if (card.Type != CardType.Attack)
-		{
-			return false;
-		}
-		if (!card.IsUpgradable)
-		{
-			return false;
-		}
-		if (card.CurrentUpgradeLevel >= 1)
-		{
-			return false;
-		}
-		newCard = base.Owner.RunState.CloneCard(card);
-		CardCmd.Upgrade(newCard, CardPreviewStyle.None);
-		return true;
-	}
+    public override bool TryModifyCardBeingAddedToDeck(CardModel card, out CardModel? newCard)
+    {
+        newCard = null;
+        if (card.Owner != base.Owner)
+        {
+            return false;
+        }
+        if (card.Type != CardType.Attack)
+        {
+            return false;
+        }
+        if (!card.IsUpgradable)
+        {
+            return false;
+        }
+        if (card.CurrentUpgradeLevel >= 1)
+        {
+            return false;
+        }
+        newCard = base.Owner.RunState.CloneCard(card);
+        CardCmd.Upgrade(newCard, CardPreviewStyle.None);
+        return true;
+    }
 }

@@ -4,7 +4,7 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class EnfeeblingTouchPower : TemporaryStrengthPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<EnfeeblingTouch>();
+    public override AbstractModel OriginModel => ModelDb.Card<EnfeeblingTouch>();
 
-	protected override bool IsPositive => false;
+    protected override bool IsPositive => false;
 }

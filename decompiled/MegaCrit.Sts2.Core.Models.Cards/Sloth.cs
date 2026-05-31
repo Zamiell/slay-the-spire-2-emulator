@@ -11,19 +11,26 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Sloth : CardModel, KnowledgeDemon.IChoosable
 {
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	public override bool CanBeGeneratedInCombat => false;
+    public override bool CanBeGeneratedInCombat => false;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<SlothPower>(3m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<SlothPower>(3m)
+        );
 
-	public Sloth()
-		: base(-1, CardType.Status, CardRarity.Status, TargetType.None)
-	{
-	}
+    public Sloth()
+        : base(-1, CardType.Status, CardRarity.Status, TargetType.None) { }
 
-	public async Task OnChosen()
-	{
-		await PowerCmd.Apply<SlothPower>(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars["SlothPower"].IntValue, base.Owner.Creature, this);
-	}
+    public async Task OnChosen()
+    {
+        await PowerCmd.Apply<SlothPower>(
+            new ThrowingPlayerChoiceContext(),
+            base.Owner.Creature,
+            base.DynamicVars["SlothPower"].IntValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 }

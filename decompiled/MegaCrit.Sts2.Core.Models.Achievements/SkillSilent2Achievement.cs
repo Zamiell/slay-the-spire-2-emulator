@@ -10,18 +10,24 @@ namespace MegaCrit.Sts2.Core.Models.Achievements;
 
 public class SkillSilent2Achievement : AchievementModel
 {
-	private const int _poisonThreshold = 99;
+    private const int _poisonThreshold = 99;
 
-	public override Task AfterPowerAmountChanged(PlayerChoiceContext choiceContext, PowerModel power, decimal amount, Creature? applier, CardModel? cardSource)
-	{
-		if (!LocalContext.IsMe(applier))
-		{
-			return Task.CompletedTask;
-		}
-		if (power is PoisonPower && power.Amount >= 99)
-		{
-			AchievementsUtil.Unlock(Achievement.CharacterSkillSilent2, applier.Player);
-		}
-		return Task.CompletedTask;
-	}
+    public override Task AfterPowerAmountChanged(
+        PlayerChoiceContext choiceContext,
+        PowerModel power,
+        decimal amount,
+        Creature? applier,
+        CardModel? cardSource
+    )
+    {
+        if (!LocalContext.IsMe(applier))
+        {
+            return Task.CompletedTask;
+        }
+        if (power is PoisonPower && power.Amount >= 99)
+        {
+            AchievementsUtil.Unlock(Achievement.CharacterSkillSilent2, applier.Player);
+        }
+        return Task.CompletedTask;
+    }
 }

@@ -12,29 +12,33 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class NoDrawPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	public override bool ShouldDraw(Player player, bool fromHandDraw)
-	{
-		if (fromHandDraw)
-		{
-			return true;
-		}
-		if (player != base.Owner.Player)
-		{
-			return true;
-		}
-		Flash();
-		return false;
-	}
+    public override bool ShouldDraw(Player player, bool fromHandDraw)
+    {
+        if (fromHandDraw)
+        {
+            return true;
+        }
+        if (player != base.Owner.Player)
+        {
+            return true;
+        }
+        Flash();
+        return false;
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
 }

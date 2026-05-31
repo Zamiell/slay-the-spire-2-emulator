@@ -14,32 +14,43 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class FlameBarrier : CardModel
 {
-	private const string _damageBackKey = "DamageBack";
+    private const string _damageBackKey = "DamageBack";
 
-	public override bool GainsBlock => true;
+    public override bool GainsBlock => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new BlockVar(12m, ValueProp.Move),
-		new DynamicVar("DamageBack", 4m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2]
+            {
+                new BlockVar(12m, ValueProp.Move),
+                new DynamicVar("DamageBack", 4m),
+            }
+        );
 
-	public FlameBarrier()
-		: base(2, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public FlameBarrier()
+        : base(2, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		NFireBurningVfx child = NFireBurningVfx.Create(base.Owner.Creature, 0.75f, goingRight: false);
-		NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(child);
-		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		await PowerCmd.Apply<FlameBarrierPower>(choiceContext, base.Owner.Creature, base.DynamicVars["DamageBack"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        NFireBurningVfx child = NFireBurningVfx.Create(
+            base.Owner.Creature,
+            0.75f,
+            goingRight: false
+        );
+        NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(child);
+        await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
+        await PowerCmd.Apply<FlameBarrierPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["DamageBack"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Block.UpgradeValueBy(4m);
-		base.DynamicVars["DamageBack"].UpgradeValueBy(2m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Block.UpgradeValueBy(4m);
+        base.DynamicVars["DamageBack"].UpgradeValueBy(2m);
+    }
 }

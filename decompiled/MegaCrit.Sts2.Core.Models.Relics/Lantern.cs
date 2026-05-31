@@ -12,18 +12,29 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Lantern : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Common;
+    public override RelicRarity Rarity => RelicRarity.Common;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(1));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(1));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature) && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			Flash();
-			await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, base.Owner);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (
+            participants.Contains(base.Owner.Creature)
+            && base.Owner.PlayerCombatState.TurnNumber <= 1
+        )
+        {
+            Flash();
+            await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, base.Owner);
+        }
+    }
 }

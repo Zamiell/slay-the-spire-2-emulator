@@ -13,24 +13,41 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class ParryingShield : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Uncommon;
+    public override RelicRarity Rarity => RelicRarity.Uncommon;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new BlockVar(10m, ValueProp.Unpowered),
-		new DamageVar(6m, ValueProp.Unpowered)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2]
+            {
+                new BlockVar(10m, ValueProp.Unpowered),
+                new DamageVar(6m, ValueProp.Unpowered),
+            }
+        );
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner.Creature) && !((decimal)base.Owner.Creature.Block < base.DynamicVars.Block.BaseValue))
-		{
-			Creature creature = base.Owner.RunState.Rng.CombatTargets.NextItem(base.Owner.Creature.CombatState.HittableEnemies);
-			if (creature != null)
-			{
-				VfxCmd.PlayOnCreatureCenter(creature, "vfx/vfx_attack_blunt");
-				await CreatureCmd.Damage(choiceContext, creature, base.DynamicVars.Damage, base.Owner.Creature);
-			}
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (
+            participants.Contains(base.Owner.Creature)
+            && !((decimal)base.Owner.Creature.Block < base.DynamicVars.Block.BaseValue)
+        )
+        {
+            Creature creature = base.Owner.RunState.Rng.CombatTargets.NextItem(
+                base.Owner.Creature.CombatState.HittableEnemies
+            );
+            if (creature != null)
+            {
+                VfxCmd.PlayOnCreatureCenter(creature, "vfx/vfx_attack_blunt");
+                await CreatureCmd.Damage(
+                    choiceContext,
+                    creature,
+                    base.DynamicVars.Damage,
+                    base.Owner.Creature
+                );
+            }
+        }
+    }
 }

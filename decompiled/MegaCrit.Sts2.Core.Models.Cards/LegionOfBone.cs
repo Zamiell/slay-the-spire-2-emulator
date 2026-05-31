@@ -13,31 +13,46 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class LegionOfBone : CardModel
 {
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new SummonVar(6m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new SummonVar(6m));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.SummonDynamic, base.DynamicVars.Summon));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.SummonDynamic, base.DynamicVars.Summon)
+        );
 
-	public override CardMultiplayerConstraint MultiplayerConstraint => CardMultiplayerConstraint.MultiplayerOnly;
+    public override CardMultiplayerConstraint MultiplayerConstraint =>
+        CardMultiplayerConstraint.MultiplayerOnly;
 
-	public LegionOfBone()
-		: base(2, CardType.Skill, CardRarity.Uncommon, TargetType.AllAllies)
-	{
-	}
+    public LegionOfBone()
+        : base(2, CardType.Skill, CardRarity.Uncommon, TargetType.AllAllies) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, Necrobinder.GetSummonAnimIfApplicable(base.Owner.Character), Necrobinder.GetSummonDelayIfApplicable(base.Owner.Character));
-		IEnumerable<Creature> enumerable = base.CombatState.PlayerCreatures.Where((Creature c) => c?.IsAlive ?? false).ToList();
-		foreach (Creature item in enumerable)
-		{
-			await OstyCmd.Summon(choiceContext, item.Player, base.DynamicVars.Summon.BaseValue, this);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            Necrobinder.GetSummonAnimIfApplicable(base.Owner.Character),
+            Necrobinder.GetSummonDelayIfApplicable(base.Owner.Character)
+        );
+        IEnumerable<Creature> enumerable = base
+            .CombatState.PlayerCreatures.Where((Creature c) => c?.IsAlive ?? false)
+            .ToList();
+        foreach (Creature item in enumerable)
+        {
+            await OstyCmd.Summon(
+                choiceContext,
+                item.Player,
+                base.DynamicVars.Summon.BaseValue,
+                this
+            );
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Summon.UpgradeValueBy(2m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Summon.UpgradeValueBy(2m);
+    }
 }

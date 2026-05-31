@@ -5,9 +5,9 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class DeprecatedPotion : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.None;
+    public override PotionRarity Rarity => PotionRarity.None;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyEnemy;
+    public override TargetType TargetType => TargetType.AnyEnemy;
 }

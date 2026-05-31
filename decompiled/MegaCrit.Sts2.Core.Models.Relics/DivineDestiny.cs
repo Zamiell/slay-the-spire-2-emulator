@@ -11,15 +11,23 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class DivineDestiny : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Starter;
+    public override RelicRarity Rarity => RelicRarity.Starter;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new StarsVar(6));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new StarsVar(6));
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature) && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			await PlayerCmd.GainStars(base.DynamicVars.Stars.BaseValue, base.Owner);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (
+            participants.Contains(base.Owner.Creature)
+            && base.Owner.PlayerCombatState.TurnNumber <= 1
+        )
+        {
+            await PlayerCmd.GainStars(base.DynamicVars.Stars.BaseValue, base.Owner);
+        }
+    }
 }

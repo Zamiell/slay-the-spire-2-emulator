@@ -12,25 +12,35 @@ namespace MegaCrit.Sts2.Core.Models.Monsters.Mocks;
 
 public sealed class MockAttackAndSummonMinionMonster : MonsterModel
 {
-	protected override string VisualsPath => SceneHelper.GetScenePath("creature_visuals/defect");
+    protected override string VisualsPath => SceneHelper.GetScenePath("creature_visuals/defect");
 
-	public override int MinInitialHp => 10;
+    public override int MinInitialHp => 10;
 
-	public override int MaxInitialHp => 10;
+    public override int MaxInitialHp => 10;
 
-	protected override MonsterMoveStateMachine GenerateMoveStateMachine()
-	{
-		List<MonsterState> list = new List<MonsterState>();
-		MoveState moveState = new MoveState("ATTACK_AND_SUMMON_MINION", AttackAndSummonMinionMove, new SingleAttackIntent(1));
-		moveState.FollowUpState = moveState;
-		list.Add(moveState);
-		return new MonsterMoveStateMachine(list, moveState);
-	}
+    protected override MonsterMoveStateMachine GenerateMoveStateMachine()
+    {
+        List<MonsterState> list = new List<MonsterState>();
+        MoveState moveState = new MoveState(
+            "ATTACK_AND_SUMMON_MINION",
+            AttackAndSummonMinionMove,
+            new SingleAttackIntent(1)
+        );
+        moveState.FollowUpState = moveState;
+        list.Add(moveState);
+        return new MonsterMoveStateMachine(list, moveState);
+    }
 
-	private async Task AttackAndSummonMinionMove(IReadOnlyList<Creature> targets)
-	{
-		await DamageCmd.Attack(1m).FromMonster(this).Execute(null);
-		Creature target = await CreatureCmd.Add<BigDummy>(base.CombatState);
-		await PowerCmd.Apply<MinionPower>(new ThrowingPlayerChoiceContext(), target, 1m, base.Creature, null);
-	}
+    private async Task AttackAndSummonMinionMove(IReadOnlyList<Creature> targets)
+    {
+        await DamageCmd.Attack(1m).FromMonster(this).Execute(null);
+        Creature target = await CreatureCmd.Add<BigDummy>(base.CombatState);
+        await PowerCmd.Apply<MinionPower>(
+            new ThrowingPlayerChoiceContext(),
+            target,
+            1m,
+            base.Creature,
+            null
+        );
+    }
 }

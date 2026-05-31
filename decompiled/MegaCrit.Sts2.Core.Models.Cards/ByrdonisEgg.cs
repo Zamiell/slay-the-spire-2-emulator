@@ -7,22 +7,24 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class ByrdonisEgg : CardModel
 {
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Unplayable);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Unplayable);
 
-	public ByrdonisEgg()
-		: base(-1, CardType.Quest, CardRarity.Quest, TargetType.None)
-	{
-	}
+    public ByrdonisEgg()
+        : base(-1, CardType.Quest, CardRarity.Quest, TargetType.None) { }
 
-	public override bool TryModifyRestSiteOptions(Player player, ICollection<RestSiteOption> options)
-	{
-		if (player != base.Owner)
-		{
-			return false;
-		}
-		options.Add(new HatchRestSiteOption(player));
-		return true;
-	}
+    public override bool TryModifyRestSiteOptions(
+        Player player,
+        ICollection<RestSiteOption> options
+    )
+    {
+        if (player != base.Owner)
+        {
+            return false;
+        }
+        options.Add(new HatchRestSiteOption(player));
+        return true;
+    }
 }

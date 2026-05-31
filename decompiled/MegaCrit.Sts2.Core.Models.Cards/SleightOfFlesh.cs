@@ -10,21 +10,32 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class SleightOfFlesh : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<SleightOfFleshPower>(9m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<SleightOfFleshPower>(9m)
+        );
 
-	public SleightOfFlesh()
-		: base(2, CardType.Power, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public SleightOfFlesh()
+        : base(2, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<SleightOfFleshPower>(choiceContext, base.Owner.Creature, base.DynamicVars["SleightOfFleshPower"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<SleightOfFleshPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["SleightOfFleshPower"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars["SleightOfFleshPower"].UpgradeValueBy(4m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars["SleightOfFleshPower"].UpgradeValueBy(4m);
+    }
 }

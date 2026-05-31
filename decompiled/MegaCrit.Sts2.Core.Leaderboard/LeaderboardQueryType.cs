@@ -2,8 +2,8 @@ namespace MegaCrit.Sts2.Core.Leaderboard;
 
 public enum LeaderboardQueryType
 {
-	None,
-	Global,
-	AroundUser,
-	FriendsOnly
+    None,
+    Global,
+    AroundUser,
+    FriendsOnly,
 }

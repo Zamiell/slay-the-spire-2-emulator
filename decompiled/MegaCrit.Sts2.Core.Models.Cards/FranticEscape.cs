@@ -12,41 +12,43 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class FranticEscape : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips
-	{
-		get
-		{
-			SandpitPower sandpitPower = GetSandpitEnemy()?.GetPower<SandpitPower>();
-			if (sandpitPower == null)
-			{
-				return new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<SandpitPower>());
-			}
-			return sandpitPower.HoverTips;
-		}
-	}
+    protected override IEnumerable<IHoverTip> ExtraHoverTips
+    {
+        get
+        {
+            SandpitPower sandpitPower = GetSandpitEnemy()?.GetPower<SandpitPower>();
+            if (sandpitPower == null)
+            {
+                return new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+                    HoverTipFactory.FromPower<SandpitPower>()
+                );
+            }
+            return sandpitPower.HoverTips;
+        }
+    }
 
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	public override bool CanBeGeneratedInCombat => false;
+    public override bool CanBeGeneratedInCombat => false;
 
-	public FranticEscape()
-		: base(1, CardType.Status, CardRarity.Status, TargetType.Self)
-	{
-	}
+    public FranticEscape()
+        : base(1, CardType.Status, CardRarity.Status, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		Creature sandpitEnemy = GetSandpitEnemy();
-		SandpitPower sandpitPower = sandpitEnemy?.Powers.OfType<SandpitPower>().FirstOrDefault((SandpitPower s) => s.Target == base.Owner.Creature);
-		if (sandpitPower != null)
-		{
-			await PowerCmd.ModifyAmount(choiceContext, sandpitPower, 1m, sandpitEnemy, this);
-		}
-		base.EnergyCost.AddThisCombat(1);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        Creature sandpitEnemy = GetSandpitEnemy();
+        SandpitPower sandpitPower = sandpitEnemy
+            ?.Powers.OfType<SandpitPower>()
+            .FirstOrDefault((SandpitPower s) => s.Target == base.Owner.Creature);
+        if (sandpitPower != null)
+        {
+            await PowerCmd.ModifyAmount(choiceContext, sandpitPower, 1m, sandpitEnemy, this);
+        }
+        base.EnergyCost.AddThisCombat(1);
+    }
 
-	private Creature? GetSandpitEnemy()
-	{
-		return base.CombatState?.Enemies.FirstOrDefault((Creature c) => c.HasPower<SandpitPower>());
-	}
+    private Creature? GetSandpitEnemy()
+    {
+        return base.CombatState?.Enemies.FirstOrDefault((Creature c) => c.HasPower<SandpitPower>());
+    }
 }

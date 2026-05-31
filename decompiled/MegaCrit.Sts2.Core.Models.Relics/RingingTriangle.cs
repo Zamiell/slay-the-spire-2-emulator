@@ -8,16 +8,19 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class RingingTriangle : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Shop;
+    public override RelicRarity Rarity => RelicRarity.Shop;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromKeyword(CardKeyword.Retain));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromKeyword(CardKeyword.Retain)
+        );
 
-	public override bool ShouldFlush(Player player)
-	{
-		if (player != base.Owner)
-		{
-			return true;
-		}
-		return base.Owner.PlayerCombatState.TurnNumber > 1;
-	}
+    public override bool ShouldFlush(Player player)
+    {
+        if (player != base.Owner)
+        {
+            return true;
+        }
+        return base.Owner.PlayerCombatState.TurnNumber > 1;
+    }
 }

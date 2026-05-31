@@ -12,67 +12,76 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class YummyCookie : RelicModel
 {
-	private static CharacterModel? _cachedRandomCharacter;
+    private static CharacterModel? _cachedRandomCharacter;
 
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	public override bool HasUponPickupEffect => true;
+    public override bool HasUponPickupEffect => true;
 
-	protected override string IconBaseName
-	{
-		get
-		{
-			CharacterModel characterModel;
-			if (base.IsCanonical || base.Owner == null)
-			{
-				if (_cachedRandomCharacter == null)
-				{
-					_cachedRandomCharacter = Rng.Chaotic.NextItem(ModelDb.AllCharacters);
-				}
-				characterModel = _cachedRandomCharacter;
-			}
-			else
-			{
-				characterModel = base.Owner.Character;
-			}
-			if (!(characterModel is Ironclad))
-			{
-				if (!(characterModel is Silent))
-				{
-					if (!(characterModel is Regent))
-					{
-						if (!(characterModel is Necrobinder))
-						{
-							if (characterModel is Defect)
-							{
-								return "yummy_cookie_defect";
-							}
-							return "yummy_cookie_ironclad";
-						}
-						return "yummy_cookie_necro";
-					}
-					return "yummy_cookie_regent";
-				}
-				return "yummy_cookie_silent";
-			}
-			return "yummy_cookie_ironclad";
-		}
-	}
+    protected override string IconBaseName
+    {
+        get
+        {
+            CharacterModel characterModel;
+            if (base.IsCanonical || base.Owner == null)
+            {
+                if (_cachedRandomCharacter == null)
+                {
+                    _cachedRandomCharacter = Rng.Chaotic.NextItem(ModelDb.AllCharacters);
+                }
+                characterModel = _cachedRandomCharacter;
+            }
+            else
+            {
+                characterModel = base.Owner.Character;
+            }
+            if (!(characterModel is Ironclad))
+            {
+                if (!(characterModel is Silent))
+                {
+                    if (!(characterModel is Regent))
+                    {
+                        if (!(characterModel is Necrobinder))
+                        {
+                            if (characterModel is Defect)
+                            {
+                                return "yummy_cookie_defect";
+                            }
+                            return "yummy_cookie_ironclad";
+                        }
+                        return "yummy_cookie_necro";
+                    }
+                    return "yummy_cookie_regent";
+                }
+                return "yummy_cookie_silent";
+            }
+            return "yummy_cookie_ironclad";
+        }
+    }
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(4));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(4));
 
-	protected override void AfterCloned()
-	{
-		base.AfterCloned();
-		RelicIconChanged();
-	}
+    protected override void AfterCloned()
+    {
+        base.AfterCloned();
+        RelicIconChanged();
+    }
 
-	public override async Task AfterObtained()
-	{
-		List<CardModel> list = (await CardSelectCmd.FromDeckForUpgrade(prefs: new CardSelectorPrefs(CardSelectorPrefs.UpgradeSelectionPrompt, base.DynamicVars.Cards.IntValue), player: base.Owner)).ToList();
-		foreach (CardModel item in list)
-		{
-			CardCmd.Upgrade(item);
-		}
-	}
+    public override async Task AfterObtained()
+    {
+        List<CardModel> list = (
+            await CardSelectCmd.FromDeckForUpgrade(
+                prefs: new CardSelectorPrefs(
+                    CardSelectorPrefs.UpgradeSelectionPrompt,
+                    base.DynamicVars.Cards.IntValue
+                ),
+                player: base.Owner
+            )
+        ).ToList();
+        foreach (CardModel item in list)
+        {
+            CardCmd.Upgrade(item);
+        }
+    }
 }

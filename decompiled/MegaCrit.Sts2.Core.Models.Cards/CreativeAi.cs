@@ -10,23 +10,34 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class CreativeAi : CardModel
 {
-	private const string _creativeAiKey = "CreativeAi";
+    private const string _creativeAiKey = "CreativeAi";
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("CreativeAi", 1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("CreativeAi", 1m)
+        );
 
-	public CreativeAi()
-		: base(3, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public CreativeAi()
+        : base(3, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<CreativeAiPower>(choiceContext, base.Owner.Creature, base.DynamicVars["CreativeAi"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<CreativeAiPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["CreativeAi"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.EnergyCost.UpgradeBy(-1);
-	}
+    protected override void OnUpgrade()
+    {
+        base.EnergyCost.UpgradeBy(-1);
+    }
 }

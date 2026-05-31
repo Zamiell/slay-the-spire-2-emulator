@@ -12,22 +12,28 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class RampartPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override bool ShouldScaleInMultiplayer => true;
+    public override bool ShouldScaleInMultiplayer => true;
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (side != CombatSide.Player || CombatManager.Instance.PlayersTakingExtraTurn.Count > 0)
-		{
-			return;
-		}
-		IEnumerable<Creature> enumerable = base.CombatState.Enemies.Where((Creature c) => c.Monster is TurretOperator);
-		foreach (Creature item in enumerable)
-		{
-			await CreatureCmd.GainBlock(item, base.Amount, ValueProp.Unpowered, null);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (side != CombatSide.Player || CombatManager.Instance.PlayersTakingExtraTurn.Count > 0)
+        {
+            return;
+        }
+        IEnumerable<Creature> enumerable = base.CombatState.Enemies.Where(
+            (Creature c) => c.Monster is TurretOperator
+        );
+        foreach (Creature item in enumerable)
+        {
+            await CreatureCmd.GainBlock(item, base.Amount, ValueProp.Unpowered, null);
+        }
+    }
 }

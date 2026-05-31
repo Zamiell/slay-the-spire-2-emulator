@@ -10,20 +10,27 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class StratagemPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterShuffle(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player != base.Owner.Player)
-		{
-			return;
-		}
-		Flash();
-		foreach (CardModel item in await CardSelectCmd.FromCombatPile(choiceContext, PileType.Draw.GetPile(base.Owner.Player), base.Owner.Player, new CardSelectorPrefs(base.SelectionScreenPrompt, base.Amount)))
-		{
-			await CardPileCmd.Add(item, PileType.Hand);
-		}
-	}
+    public override async Task AfterShuffle(PlayerChoiceContext choiceContext, Player player)
+    {
+        if (player != base.Owner.Player)
+        {
+            return;
+        }
+        Flash();
+        foreach (
+            CardModel item in await CardSelectCmd.FromCombatPile(
+                choiceContext,
+                PileType.Draw.GetPile(base.Owner.Player),
+                base.Owner.Player,
+                new CardSelectorPrefs(base.SelectionScreenPrompt, base.Amount)
+            )
+        )
+        {
+            await CardPileCmd.Add(item, PileType.Hand);
+        }
+    }
 }

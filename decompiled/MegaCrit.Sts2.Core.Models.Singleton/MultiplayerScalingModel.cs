@@ -10,65 +10,76 @@ namespace MegaCrit.Sts2.Core.Models.Singleton;
 
 public class MultiplayerScalingModel : SingletonModel
 {
-	private RunState _runState;
+    private RunState _runState;
 
-	private CombatState? _combatState;
+    private CombatState? _combatState;
 
-	public override bool ShouldReceiveCombatHooks => true;
+    public override bool ShouldReceiveCombatHooks => true;
 
-	public void Initialize(RunState state)
-	{
-		if (_runState != null)
-		{
-			throw new InvalidOperationException("Already initialized");
-		}
-		_runState = state;
-	}
+    public void Initialize(RunState state)
+    {
+        if (_runState != null)
+        {
+            throw new InvalidOperationException("Already initialized");
+        }
+        _runState = state;
+    }
 
-	public void OnCombatEntered(CombatState combatState)
-	{
-		_combatState = combatState;
-	}
+    public void OnCombatEntered(CombatState combatState)
+    {
+        _combatState = combatState;
+    }
 
-	public void OnCombatFinished()
-	{
-		_combatState = null;
-	}
+    public void OnCombatFinished()
+    {
+        _combatState = null;
+    }
 
-	public override decimal ModifyBlockMultiplicative(Creature target, decimal block, ValueProp props, CardModel? cardSource, CardPlay? cardPlay)
-	{
-		if (target != null && !target.IsPrimaryEnemy && !target.IsSecondaryEnemy)
-		{
-			return 1m;
-		}
-		if (!props.IsPoweredCardOrMonsterMoveBlock())
-		{
-			return 1m;
-		}
-		int count = _runState.Players.Count;
-		if (count == 1)
-		{
-			return 1m;
-		}
-		return (decimal)count * GetMultiplayerScaling(_combatState.Encounter, _runState.CurrentActIndex);
-	}
+    public override decimal ModifyBlockMultiplicative(
+        Creature target,
+        decimal block,
+        ValueProp props,
+        CardModel? cardSource,
+        CardPlay? cardPlay
+    )
+    {
+        if (target != null && !target.IsPrimaryEnemy && !target.IsSecondaryEnemy)
+        {
+            return 1m;
+        }
+        if (!props.IsPoweredCardOrMonsterMoveBlock())
+        {
+            return 1m;
+        }
+        int count = _runState.Players.Count;
+        if (count == 1)
+        {
+            return 1m;
+        }
+        return (decimal)count
+            * GetMultiplayerScaling(_combatState.Encounter, _runState.CurrentActIndex);
+    }
 
-	public static decimal GetMultiplayerScaling(EncounterModel? encounter, int actIndex)
-	{
-		switch (actIndex)
-		{
-		case 0:
-			return 1.1m;
-		case 1:
-			return 1.2m;
-		case 2:
-			if (encounter != null && encounter.RoomType == RoomType.Boss)
-			{
-				return 1.3m;
-			}
-			return 1.2m;
-		default:
-			throw new ArgumentOutOfRangeException("actIndex", actIndex, "Invalid act index for HP scaling");
-		}
-	}
+    public static decimal GetMultiplayerScaling(EncounterModel? encounter, int actIndex)
+    {
+        switch (actIndex)
+        {
+            case 0:
+                return 1.1m;
+            case 1:
+                return 1.2m;
+            case 2:
+                if (encounter != null && encounter.RoomType == RoomType.Boss)
+                {
+                    return 1.3m;
+                }
+                return 1.2m;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    "actIndex",
+                    actIndex,
+                    "Invalid act index for HP scaling"
+                );
+        }
+    }
 }

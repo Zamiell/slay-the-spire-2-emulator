@@ -5,7 +5,7 @@ namespace MegaCrit.Sts2.Core.Nodes.Screens.CharacterSelect;
 
 public interface ICharacterSelectButtonDelegate
 {
-	StartRunLobby Lobby { get; }
+    StartRunLobby Lobby { get; }
 
-	void SelectCharacter(NCharacterSelectButton charSelectButton, CharacterModel characterModel);
+    void SelectCharacter(NCharacterSelectButton charSelectButton, CharacterModel characterModel);
 }

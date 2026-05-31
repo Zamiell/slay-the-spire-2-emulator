@@ -7,34 +7,34 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game.Sync;
 
 public struct GoldLostMessage : INetMessage, IPacketSerializable, IRunLocationTargetedMessage
 {
-	public required int goldLost;
+    public required int goldLost;
 
-	public required RunLocation location;
+    public required RunLocation location;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public RunLocation Location => location;
+    public RunLocation Location => location;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteInt(goldLost);
-		writer.Write(location);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteInt(goldLost);
+        writer.Write(location);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		goldLost = reader.ReadInt();
-		location = reader.Read<RunLocation>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        goldLost = reader.ReadInt();
+        location = reader.Read<RunLocation>();
+    }
 
-	public override string ToString()
-	{
-		return $"{"GoldLostMessage"} gold: {goldLost} location: {location}";
-	}
+    public override string ToString()
+    {
+        return $"{"GoldLostMessage"} gold: {goldLost} location: {location}";
+    }
 }

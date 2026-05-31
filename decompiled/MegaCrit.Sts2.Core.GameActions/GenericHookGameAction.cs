@@ -7,65 +7,72 @@ namespace MegaCrit.Sts2.Core.GameActions;
 
 public class GenericHookGameAction : GameAction
 {
-	private readonly TaskCompletionSource _executionStartedSource = new TaskCompletionSource();
+    private readonly TaskCompletionSource _executionStartedSource = new TaskCompletionSource();
 
-	private readonly TaskCompletionSource _choiceContextSetSource = new TaskCompletionSource();
+    private readonly TaskCompletionSource _choiceContextSetSource = new TaskCompletionSource();
 
-	private readonly GameActionType _gameActionType;
+    private readonly GameActionType _gameActionType;
 
-	public Task? debugArtificialDelayAfterTask;
+    public Task? debugArtificialDelayAfterTask;
 
-	public override bool RecordableToReplay => false;
+    public override bool RecordableToReplay => false;
 
-	public HookPlayerChoiceContext? ChoiceContext { get; private set; }
+    public HookPlayerChoiceContext? ChoiceContext { get; private set; }
 
-	public override ulong OwnerId { get; }
+    public override ulong OwnerId { get; }
 
-	public override GameActionType ActionType => _gameActionType;
+    public override GameActionType ActionType => _gameActionType;
 
-	public uint HookId { get; }
+    public uint HookId { get; }
 
-	public Task ExecutionStartedTask => _executionStartedSource.Task;
+    public Task ExecutionStartedTask => _executionStartedSource.Task;
 
-	public GenericHookGameAction(uint hookId, ulong ownerId, GameActionType gameActionType)
-	{
-		_gameActionType = gameActionType;
-		HookId = hookId;
-		OwnerId = ownerId;
-		if (_gameActionType != GameActionType.Combat && _gameActionType != GameActionType.CombatPlayPhaseOnly)
-		{
-			throw new InvalidOperationException($"Unexpected GameActionType {_gameActionType} received for GenericHookGameAction!");
-		}
-	}
+    public GenericHookGameAction(uint hookId, ulong ownerId, GameActionType gameActionType)
+    {
+        _gameActionType = gameActionType;
+        HookId = hookId;
+        OwnerId = ownerId;
+        if (
+            _gameActionType != GameActionType.Combat
+            && _gameActionType != GameActionType.CombatPlayPhaseOnly
+        )
+        {
+            throw new InvalidOperationException(
+                $"Unexpected GameActionType {_gameActionType} received for GenericHookGameAction!"
+            );
+        }
+    }
 
-	public void SetChoiceContext(HookPlayerChoiceContext choiceContext)
-	{
-		if (choiceContext.Owner?.NetId != OwnerId)
-		{
-			throw new InvalidOperationException($"Assigned choice context with owner {choiceContext.Owner?.NetId} to GenericHookGameAction with owner {OwnerId}!");
-		}
-		ChoiceContext = choiceContext;
-		_choiceContextSetSource.SetResult();
-	}
+    public void SetChoiceContext(HookPlayerChoiceContext choiceContext)
+    {
+        if (choiceContext.Owner?.NetId != OwnerId)
+        {
+            throw new InvalidOperationException(
+                $"Assigned choice context with owner {choiceContext.Owner?.NetId} to GenericHookGameAction with owner {OwnerId}!"
+            );
+        }
+        ChoiceContext = choiceContext;
+        _choiceContextSetSource.SetResult();
+    }
 
-	protected override async Task ExecuteAction()
-	{
-		await _choiceContextSetSource.Task;
-		_executionStartedSource.SetResult();
-		await ChoiceContext.Task;
-		if (debugArtificialDelayAfterTask != null)
-		{
-			await debugArtificialDelayAfterTask;
-		}
-	}
+    protected override async Task ExecuteAction()
+    {
+        await _choiceContextSetSource.Task;
+        _executionStartedSource.SetResult();
+        await ChoiceContext.Task;
+        if (debugArtificialDelayAfterTask != null)
+        {
+            await debugArtificialDelayAfterTask;
+        }
+    }
 
-	public override INetAction ToNetAction()
-	{
-		throw new NotImplementedException();
-	}
+    public override INetAction ToNetAction()
+    {
+        throw new NotImplementedException();
+    }
 
-	public override string ToString()
-	{
-		return $"{"GenericHookGameAction"} id {HookId} owner {OwnerId} source {ChoiceContext?.Source} last involved {ChoiceContext?.LastInvolvedModel}";
-	}
+    public override string ToString()
+    {
+        return $"{"GenericHookGameAction"} id {HookId} owner {OwnerId} source {ChoiceContext?.Source} last involved {ChoiceContext?.LastInvolvedModel}";
+    }
 }

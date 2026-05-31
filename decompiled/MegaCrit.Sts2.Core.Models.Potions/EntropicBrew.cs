@@ -10,21 +10,26 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class EntropicBrew : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Rare;
+    public override PotionRarity Rarity => PotionRarity.Rare;
 
-	public override PotionUsage Usage => PotionUsage.AnyTime;
+    public override PotionUsage Usage => PotionUsage.AnyTime;
 
-	public override TargetType TargetType => TargetType.Self;
+    public override TargetType TargetType => TargetType.Self;
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		while (base.Owner.HasOpenPotionSlots)
-		{
-			PotionModel potion = PotionFactory.CreateRandomPotionOutOfCombat(base.Owner, base.Owner.RunState.Rng.CombatPotionGeneration).ToMutable();
-			if (!(await PotionCmd.TryToProcure(potion, base.Owner)).success)
-			{
-				break;
-			}
-		}
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        while (base.Owner.HasOpenPotionSlots)
+        {
+            PotionModel potion = PotionFactory
+                .CreateRandomPotionOutOfCombat(
+                    base.Owner,
+                    base.Owner.RunState.Rng.CombatPotionGeneration
+                )
+                .ToMutable();
+            if (!(await PotionCmd.TryToProcure(potion, base.Owner)).success)
+            {
+                break;
+            }
+        }
+    }
 }

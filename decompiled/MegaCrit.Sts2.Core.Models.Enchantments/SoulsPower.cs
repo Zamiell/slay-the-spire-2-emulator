@@ -7,23 +7,26 @@ namespace MegaCrit.Sts2.Core.Models.Enchantments;
 
 public sealed class SoulsPower : EnchantmentModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromKeyword(CardKeyword.Exhaust));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromKeyword(CardKeyword.Exhaust)
+        );
 
-	public override bool CanEnchant(CardModel card)
-	{
-		if (!base.CanEnchant(card))
-		{
-			return false;
-		}
-		if (!card.Keywords.Contains(CardKeyword.Exhaust))
-		{
-			return false;
-		}
-		return true;
-	}
+    public override bool CanEnchant(CardModel card)
+    {
+        if (!base.CanEnchant(card))
+        {
+            return false;
+        }
+        if (!card.Keywords.Contains(CardKeyword.Exhaust))
+        {
+            return false;
+        }
+        return true;
+    }
 
-	protected override void OnEnchant()
-	{
-		CardCmd.RemoveKeyword(base.Card, CardKeyword.Exhaust);
-	}
+    protected override void OnEnchant()
+    {
+        CardCmd.RemoveKeyword(base.Card, CardKeyword.Exhaust);
+    }
 }

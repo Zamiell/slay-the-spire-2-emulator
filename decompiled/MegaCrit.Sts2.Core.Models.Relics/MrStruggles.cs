@@ -10,15 +10,24 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class MrStruggles : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Event;
+    public override RelicRarity Rarity => RelicRarity.Event;
 
-	public override async Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player == base.Owner)
-		{
-			Flash();
-			ICombatState combatState = player.Creature.CombatState;
-			await CreatureCmd.Damage(choiceContext, combatState.HittableEnemies, base.Owner.PlayerCombatState.TurnNumber, ValueProp.Unpowered, base.Owner.Creature);
-		}
-	}
+    public override async Task AfterPlayerTurnStart(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player == base.Owner)
+        {
+            Flash();
+            ICombatState combatState = player.Creature.CombatState;
+            await CreatureCmd.Damage(
+                choiceContext,
+                combatState.HittableEnemies,
+                base.Owner.PlayerCombatState.TurnNumber,
+                ValueProp.Unpowered,
+                base.Owner.Creature
+            );
+        }
+    }
 }

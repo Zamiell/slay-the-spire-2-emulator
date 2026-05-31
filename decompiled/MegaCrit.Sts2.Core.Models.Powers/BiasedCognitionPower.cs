@@ -12,18 +12,31 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class BiasedCognitionPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<FocusPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<FocusPower>()
+        );
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			Flash();
-			await PowerCmd.Apply<FocusPower>(new ThrowingPlayerChoiceContext(), base.Owner, -base.Amount, base.Owner, null);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            Flash();
+            await PowerCmd.Apply<FocusPower>(
+                new ThrowingPlayerChoiceContext(),
+                base.Owner,
+                -base.Amount,
+                base.Owner,
+                null
+            );
+        }
+    }
 }

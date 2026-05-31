@@ -19,89 +19,92 @@ namespace MegaCrit.Sts2.Core.Rewards;
 
 public class PotionReward : Reward
 {
-	private bool _wasTaken;
+    private bool _wasTaken;
 
-	private Control? _icon;
+    private Control? _icon;
 
-	protected override RewardType RewardType => RewardType.Potion;
+    protected override RewardType RewardType => RewardType.Potion;
 
-	public override int RewardsSetIndex => 2;
+    public override int RewardsSetIndex => 2;
 
-	public PotionModel? Potion { get; private set; }
+    public PotionModel? Potion { get; private set; }
 
-	public override Vector2 IconPosition => new Vector2(0f, -2f);
+    public override Vector2 IconPosition => new Vector2(0f, -2f);
 
-	public override LocString Description => Potion.Title;
+    public override LocString Description => Potion.Title;
 
-	public PotionModel? ClaimedPotion { get; private set; }
+    public PotionModel? ClaimedPotion { get; private set; }
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => Potion.HoverTips;
+    protected override IEnumerable<IHoverTip> ExtraHoverTips => Potion.HoverTips;
 
-	public override bool IsPopulated => Potion != null;
+    public override bool IsPopulated => Potion != null;
 
-	public PotionReward(Player player)
-		: base(player)
-	{
-	}
+    public PotionReward(Player player)
+        : base(player) { }
 
-	public PotionReward(PotionModel potion, Player player)
-		: base(player)
-	{
-		potion.AssertMutable();
-		Potion = potion;
-	}
+    public PotionReward(PotionModel potion, Player player)
+        : base(player)
+    {
+        potion.AssertMutable();
+        Potion = potion;
+    }
 
-	public override void Populate()
-	{
-		Rng rng = _rngOverride ?? base.Player.PlayerRng.Rewards;
-		if (Potion == null)
-		{
-			PotionModel potionModel = (Potion = PotionFactory.CreateRandomPotionOutOfCombat(base.Player, rng).ToMutable());
-		}
-	}
+    public override void Populate()
+    {
+        Rng rng = _rngOverride ?? base.Player.PlayerRng.Rewards;
+        if (Potion == null)
+        {
+            PotionModel potionModel = (
+                Potion = PotionFactory.CreateRandomPotionOutOfCombat(base.Player, rng).ToMutable()
+            );
+        }
+    }
 
-	public override Control? CreateIcon()
-	{
-		if (TestMode.IsOn)
-		{
-			return null;
-		}
-		if (_icon == null)
-		{
-			_icon = NPotion.Create(Potion);
-		}
-		return _icon;
-	}
+    public override Control? CreateIcon()
+    {
+        if (TestMode.IsOn)
+        {
+            return null;
+        }
+        if (_icon == null)
+        {
+            _icon = NPotion.Create(Potion);
+        }
+        return _icon;
+    }
 
-	protected override async Task<bool> OnSelect()
-	{
-		PotionProcureResult potionProcureResult = await PotionCmd.TryToProcure(Potion, base.Player);
-		if (potionProcureResult.success)
-		{
-			Log.Info($"Player {base.Player.NetId} obtained {potionProcureResult.potion.Id} from potion reward");
-			ClaimedPotion = Potion;
-			_wasTaken = true;
-			return true;
-		}
-		if (potionProcureResult.failureReason == PotionProcureFailureReason.TooFull)
-		{
-			return false;
-		}
-		ClaimedPotion = Potion;
-		_wasTaken = true;
-		return true;
-	}
+    protected override async Task<bool> OnSelect()
+    {
+        PotionProcureResult potionProcureResult = await PotionCmd.TryToProcure(Potion, base.Player);
+        if (potionProcureResult.success)
+        {
+            Log.Info(
+                $"Player {base.Player.NetId} obtained {potionProcureResult.potion.Id} from potion reward"
+            );
+            ClaimedPotion = Potion;
+            _wasTaken = true;
+            return true;
+        }
+        if (potionProcureResult.failureReason == PotionProcureFailureReason.TooFull)
+        {
+            return false;
+        }
+        ClaimedPotion = Potion;
+        _wasTaken = true;
+        return true;
+    }
 
-	public override void OnSkipped()
-	{
-		if (!_wasTaken)
-		{
-			base.Player.RunState.CurrentMapPointHistoryEntry.GetEntry(base.Player.NetId).PotionChoices.Add(new ModelChoiceHistoryEntry(Potion.Id, wasPicked: false));
-		}
-	}
+    public override void OnSkipped()
+    {
+        if (!_wasTaken)
+        {
+            base.Player.RunState.CurrentMapPointHistoryEntry.GetEntry(base.Player.NetId)
+                .PotionChoices.Add(new ModelChoiceHistoryEntry(Potion.Id, wasPicked: false));
+        }
+    }
 
-	public override void MarkContentAsSeen()
-	{
-		SaveManager.Instance.MarkPotionAsSeen(Potion);
-	}
+    public override void MarkContentAsSeen()
+    {
+        SaveManager.Instance.MarkPotionAsSeen(Potion);
+    }
 }

@@ -12,21 +12,25 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class JeweledMask : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			IReadOnlyList<CardModel> cards = PileType.Draw.GetPile(player).Cards;
-			List<CardModel> list = cards.Where((CardModel c) => c.Type == CardType.Power).ToList();
-			if (list.Count != 0)
-			{
-				CardModel cardModel = player.RunState.Rng.CombatCardSelection.NextItem(list);
-				Flash();
-				cardModel.SetToFreeThisTurn();
-				await CardPileCmd.Add(cardModel, PileType.Hand);
-			}
-		}
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber <= 1)
+        {
+            IReadOnlyList<CardModel> cards = PileType.Draw.GetPile(player).Cards;
+            List<CardModel> list = cards.Where((CardModel c) => c.Type == CardType.Power).ToList();
+            if (list.Count != 0)
+            {
+                CardModel cardModel = player.RunState.Rng.CombatCardSelection.NextItem(list);
+                Flash();
+                cardModel.SetToFreeThisTurn();
+                await CardPileCmd.Add(cardModel, PileType.Hand);
+            }
+        }
+    }
 }

@@ -13,28 +13,42 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class FyshOil : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Uncommon;
+    public override PotionRarity Rarity => PotionRarity.Uncommon;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyPlayer;
+    public override TargetType TargetType => TargetType.AnyPlayer;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new PowerVar<StrengthPower>(1m),
-		new PowerVar<DexterityPower>(1m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new PowerVar<StrengthPower>(1m), new PowerVar<DexterityPower>(1m) }
+        );
 
-	public override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.FromPower<StrengthPower>(),
-		HoverTipFactory.FromPower<DexterityPower>()
-	});
+    public override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.FromPower<StrengthPower>(),
+                HoverTipFactory.FromPower<DexterityPower>(),
+            }
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		await PowerCmd.Apply<StrengthPower>(choiceContext, target, base.DynamicVars.Strength.BaseValue, base.Owner.Creature, null);
-		await PowerCmd.Apply<DexterityPower>(choiceContext, target, base.DynamicVars.Dexterity.BaseValue, base.Owner.Creature, null);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        await PowerCmd.Apply<StrengthPower>(
+            choiceContext,
+            target,
+            base.DynamicVars.Strength.BaseValue,
+            base.Owner.Creature,
+            null
+        );
+        await PowerCmd.Apply<DexterityPower>(
+            choiceContext,
+            target,
+            base.DynamicVars.Dexterity.BaseValue,
+            base.Owner.Creature,
+            null
+        );
+    }
 }

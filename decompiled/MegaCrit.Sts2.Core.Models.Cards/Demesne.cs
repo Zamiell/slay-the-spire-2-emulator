@@ -11,29 +11,38 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Demesne : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new EnergyVar(1),
-		new CardsVar(1)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new EnergyVar(1), new CardsVar(1) }
+        );
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Ethereal);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Ethereal);
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(base.EnergyHoverTip);
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(base.EnergyHoverTip);
 
-	public Demesne()
-		: base(3, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public Demesne()
+        : base(3, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<DemesnePower>(choiceContext, base.Owner.Creature, base.DynamicVars.Cards.BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<DemesnePower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars.Cards.BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.EnergyCost.UpgradeBy(-1);
-	}
+    protected override void OnUpgrade()
+    {
+        base.EnergyCost.UpgradeBy(-1);
+    }
 }

@@ -4,7 +4,7 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class DyingStarPower : TemporaryStrengthPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<DyingStar>();
+    public override AbstractModel OriginModel => ModelDb.Card<DyingStar>();
 
-	protected override bool IsPositive => false;
+    protected override bool IsPositive => false;
 }

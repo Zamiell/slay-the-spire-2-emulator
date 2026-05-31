@@ -14,18 +14,38 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class OrangeDough : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(2));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(2));
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature) && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			Flash();
-			List<CardModel> cards = CardFactory.GetDistinctForCombat(base.Owner, ModelDb.CardPool<ColorlessCardPool>().GetUnlockedCards(base.Owner.UnlockState, base.Owner.RunState.CardMultiplayerConstraint), base.DynamicVars.Cards.IntValue, base.Owner.RunState.Rng.CombatCardGeneration).ToList();
-			Flash();
-			await CardPileCmd.AddGeneratedCardsToCombat(cards, PileType.Hand, base.Owner);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (
+            participants.Contains(base.Owner.Creature)
+            && base.Owner.PlayerCombatState.TurnNumber <= 1
+        )
+        {
+            Flash();
+            List<CardModel> cards = CardFactory
+                .GetDistinctForCombat(
+                    base.Owner,
+                    ModelDb
+                        .CardPool<ColorlessCardPool>()
+                        .GetUnlockedCards(
+                            base.Owner.UnlockState,
+                            base.Owner.RunState.CardMultiplayerConstraint
+                        ),
+                    base.DynamicVars.Cards.IntValue,
+                    base.Owner.RunState.Rng.CombatCardGeneration
+                )
+                .ToList();
+            Flash();
+            await CardPileCmd.AddGeneratedCardsToCombat(cards, PileType.Hand, base.Owner);
+        }
+    }
 }

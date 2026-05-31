@@ -9,22 +9,24 @@ namespace MegaCrit.Sts2.Core.Saves.Migrations.SerializableRuns;
 [Migration(typeof(SerializableRun), 14, 15)]
 public class SerializableRunV14ToV15 : MigrationBase<SerializableRun>
 {
-	protected override void ApplyMigration(MigratingData saveData)
-	{
-		Log.Info("SerializableRun migration v14 -> v15: Adding GameMode to save files, initialized as Standard");
-		DateTimeOffset? asOrNull = saveData.GetAsOrNull<DateTimeOffset>("dailyTime");
-		List<SerializableModifier> list = saveData.GetAs<List<SerializableModifier>>("modifiers");
-		if (asOrNull.HasValue)
-		{
-			saveData.Set("game_mode", GameMode.Daily);
-		}
-		else if (list != null && list.Count > 0)
-		{
-			saveData.Set("game_mode", GameMode.Custom);
-		}
-		else
-		{
-			saveData.Set("game_mode", GameMode.Standard);
-		}
-	}
+    protected override void ApplyMigration(MigratingData saveData)
+    {
+        Log.Info(
+            "SerializableRun migration v14 -> v15: Adding GameMode to save files, initialized as Standard"
+        );
+        DateTimeOffset? asOrNull = saveData.GetAsOrNull<DateTimeOffset>("dailyTime");
+        List<SerializableModifier> list = saveData.GetAs<List<SerializableModifier>>("modifiers");
+        if (asOrNull.HasValue)
+        {
+            saveData.Set("game_mode", GameMode.Daily);
+        }
+        else if (list != null && list.Count > 0)
+        {
+            saveData.Set("game_mode", GameMode.Custom);
+        }
+        else
+        {
+            saveData.Set("game_mode", GameMode.Standard);
+        }
+    }
 }

@@ -17,27 +17,49 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class TwistedFunnel : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Uncommon;
+    public override RelicRarity Rarity => RelicRarity.Uncommon;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<PoisonPower>(4m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<PoisonPower>(4m)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<PoisonPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<PoisonPower>()
+        );
 
-	public override async Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (!participants.Contains(base.Owner.Creature) || base.Owner.PlayerCombatState.TurnNumber > 1)
-		{
-			return;
-		}
-		Flash();
-		foreach (Creature hittableEnemy in base.Owner.Creature.CombatState.HittableEnemies)
-		{
-			NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(NSmokePuffVfx.Create(hittableEnemy, NSmokePuffVfx.SmokePuffColor.Green));
-		}
-		await Cmd.CustomScaledWait(0.2f, 0.4f);
-		foreach (Creature hittableEnemy2 in base.Owner.Creature.CombatState.HittableEnemies)
-		{
-			await PowerCmd.Apply<PoisonPower>(choiceContext, hittableEnemy2, base.DynamicVars["PoisonPower"].IntValue, base.Owner.Creature, null);
-		}
-	}
+    public override async Task BeforeSideTurnStart(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (
+            !participants.Contains(base.Owner.Creature)
+            || base.Owner.PlayerCombatState.TurnNumber > 1
+        )
+        {
+            return;
+        }
+        Flash();
+        foreach (Creature hittableEnemy in base.Owner.Creature.CombatState.HittableEnemies)
+        {
+            NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(
+                NSmokePuffVfx.Create(hittableEnemy, NSmokePuffVfx.SmokePuffColor.Green)
+            );
+        }
+        await Cmd.CustomScaledWait(0.2f, 0.4f);
+        foreach (Creature hittableEnemy2 in base.Owner.Creature.CombatState.HittableEnemies)
+        {
+            await PowerCmd.Apply<PoisonPower>(
+                choiceContext,
+                hittableEnemy2,
+                base.DynamicVars["PoisonPower"].IntValue,
+                base.Owner.Creature,
+                null
+            );
+        }
+    }
 }

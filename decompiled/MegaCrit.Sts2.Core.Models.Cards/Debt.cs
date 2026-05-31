@@ -10,22 +10,22 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Debt : CardModel
 {
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Unplayable);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Unplayable);
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new GoldVar(10));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new GoldVar(10));
 
-	public override bool HasTurnEndInHandEffect => true;
+    public override bool HasTurnEndInHandEffect => true;
 
-	public Debt()
-		: base(-1, CardType.Curse, CardRarity.Curse, TargetType.None)
-	{
-	}
+    public Debt()
+        : base(-1, CardType.Curse, CardRarity.Curse, TargetType.None) { }
 
-	protected override async Task OnTurnEndInHand(PlayerChoiceContext choiceContext)
-	{
-		int num = Mathf.Min(base.DynamicVars.Gold.IntValue, base.Owner.Gold);
-		await PlayerCmd.LoseGold(num, base.Owner);
-	}
+    protected override async Task OnTurnEndInHand(PlayerChoiceContext choiceContext)
+    {
+        int num = Mathf.Min(base.DynamicVars.Gold.IntValue, base.Owner.Gold);
+        await PlayerCmd.LoseGold(num, base.Owner);
+    }
 }

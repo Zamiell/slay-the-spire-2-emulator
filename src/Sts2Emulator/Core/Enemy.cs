@@ -1,13 +1,20 @@
 namespace Sts2Emulator.Core;
 
-public enum IntentType { Attack, Defend, Buff, Debuff, Unknown }
+public enum IntentType
+{
+    Attack,
+    Defend,
+    Buff,
+    Debuff,
+    Unknown,
+}
 
 public readonly record struct EnemyDef(
     int Id,
     string Name,
     int MinHp,
     int MaxHp,
-    int[] Moves   // flat [damage, repeats, damage, repeats, ...] pairs
+    int[] Moves // flat [damage, repeats, damage, repeats, ...] pairs
 );
 
 public readonly record struct Intent(IntentType Type, int Magnitude);

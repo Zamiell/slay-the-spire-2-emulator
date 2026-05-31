@@ -9,36 +9,36 @@ namespace MegaCrit.Sts2.Core.Timeline.Epochs;
 
 public class Ironclad6Epoch : EpochModel
 {
-	public override string Id => "IRONCLAD6_EPOCH";
+    public override string Id => "IRONCLAD6_EPOCH";
 
-	public override EpochEra Era => EpochEra.Flourish3;
+    public override EpochEra Era => EpochEra.Flourish3;
 
-	public override int EraPosition => 1;
+    public override int EraPosition => 1;
 
-	public override string StoryId => "Ironclad";
+    public override string StoryId => "Ironclad";
 
-	public static List<RelicModel> Relics
-	{
-		get
-		{
-			int num = 3;
-			List<RelicModel> list = new List<RelicModel>(num);
-			CollectionsMarshal.SetCount(list, num);
-			Span<RelicModel> span = CollectionsMarshal.AsSpan(list);
-			int num2 = 0;
-			span[num2] = ModelDb.Relic<SelfFormingClay>();
-			num2++;
-			span[num2] = ModelDb.Relic<CharonsAshes>();
-			num2++;
-			span[num2] = ModelDb.Relic<DemonTongue>();
-			return list;
-		}
-	}
+    public static List<RelicModel> Relics
+    {
+        get
+        {
+            int num = 3;
+            List<RelicModel> list = new List<RelicModel>(num);
+            CollectionsMarshal.SetCount(list, num);
+            Span<RelicModel> span = CollectionsMarshal.AsSpan(list);
+            int num2 = 0;
+            span[num2] = ModelDb.Relic<SelfFormingClay>();
+            num2++;
+            span[num2] = ModelDb.Relic<CharonsAshes>();
+            num2++;
+            span[num2] = ModelDb.Relic<DemonTongue>();
+            return list;
+        }
+    }
 
-	public override string UnlockText => CreateRelicUnlockText(Relics);
+    public override string UnlockText => CreateRelicUnlockText(Relics);
 
-	public override void QueueUnlocks()
-	{
-		NTimelineScreen.Instance.QueueRelicUnlock(Relics);
-	}
+    public override void QueueUnlocks()
+    {
+        NTimelineScreen.Instance.QueueRelicUnlock(Relics);
+    }
 }

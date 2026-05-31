@@ -43,10 +43,16 @@ public class RunEngineTests
     public void GameRng_MatchesPythonPinnedHelpers()
     {
         var ints = new GameRng(123, "shuffle");
-        Assert.Equal(new[] { 6, 6, 7, 8, 4 }, Enumerable.Range(0, 5).Select(_ => ints.NextInt(10)).ToArray());
+        Assert.Equal(
+            new[] { 6, 6, 7, 8, 4 },
+            Enumerable.Range(0, 5).Select(_ => ints.NextInt(10)).ToArray()
+        );
 
         var bools = new GameRng(123, "shuffle");
-        Assert.Equal(new[] { false, false, false, false, true }, Enumerable.Range(0, 5).Select(_ => bools.NextBool()).ToArray());
+        Assert.Equal(
+            new[] { false, false, false, false, true },
+            Enumerable.Range(0, 5).Select(_ => bools.NextBool()).ToArray()
+        );
 
         var item = new GameRng(123, "shuffle");
         Assert.Equal(40, item.NextItem(new[] { 10, 20, 30, 40, 50 }));
@@ -65,7 +71,8 @@ public class RunEngineTests
         var gaussian = new GameRng(123, "niche");
         Assert.Equal(
             new[] { 50, 56, 46, 50, 47 },
-            Enumerable.Range(0, 5).Select(_ => gaussian.NextGaussianInt(50, 10, 30, 70)).ToArray());
+            Enumerable.Range(0, 5).Select(_ => gaussian.NextGaussianInt(50, 10, 30, 70)).ToArray()
+        );
         Assert.Equal(10, gaussian.CallCount);
     }
 
@@ -97,8 +104,14 @@ public class RunEngineTests
         var neow = rng.NeowRng();
         var player = new PlayerRngSet(rng);
 
-        Assert.Equal(new[] { 103, 812, 338, 25, 578 }, Enumerable.Range(0, 5).Select(_ => actMap.NextInt(1000)).ToArray());
-        Assert.Equal(new[] { 251, 527, 171, 59, 947 }, Enumerable.Range(0, 5).Select(_ => neow.NextInt(1000)).ToArray());
+        Assert.Equal(
+            new[] { 103, 812, 338, 25, 578 },
+            Enumerable.Range(0, 5).Select(_ => actMap.NextInt(1000)).ToArray()
+        );
+        Assert.Equal(
+            new[] { 251, 527, 171, 59, 947 },
+            Enumerable.Range(0, 5).Select(_ => neow.NextInt(1000)).ToArray()
+        );
         Assert.Equal(1826229476, player.Rewards.NextInt(int.MaxValue));
         Assert.Equal(271950293, player.Shops.NextInt(int.MaxValue));
         Assert.Equal(1896126315, player.Transformations.NextInt(int.MaxValue));
@@ -129,14 +142,25 @@ public class RunEngineTests
         engine.State.Phase = RunPhase.Shop;
         engine.State.Floor = 7;
         engine.State.Act = RunConstants.ActUnderdocks;
-        engine.State.Deck = [new CardInstance(1, false), new CardInstance(2, false), new CardInstance(3, true)];
+        engine.State.Deck =
+        [
+            new CardInstance(1, false),
+            new CardInstance(2, false),
+            new CardInstance(3, true),
+        ];
         engine.State.Gold = 123;
         engine.State.PlayerHp = 55;
         engine.State.PlayerMaxHp = 77;
         engine.State.Relics = [new RelicInstance(10), new RelicInstance(20)];
         engine.State.CurrentNodeType = RunConstants.NodeShop;
         engine.State.RewardCards = [101, 102, 103];
-        engine.State.MapNodeTypes = [RunConstants.NodeNormal, RunConstants.NodeElite, RunConstants.NodeRest, RunConstants.NodeShop];
+        engine.State.MapNodeTypes =
+        [
+            RunConstants.NodeNormal,
+            RunConstants.NodeElite,
+            RunConstants.NodeRest,
+            RunConstants.NodeShop,
+        ];
         engine.State.MapChoices = [201, 202, 203, 204];
         engine.State.ShopCards = [301, 302, 303, 304, 305, 306, 307];
         engine.State.RelicReward = 401;
@@ -188,7 +212,8 @@ public class RunEngineTests
                 703,
                 175,
             },
-            obs[offset..(offset + RunConstants.RunExtraObsSize)]);
+            obs[offset..(offset + RunConstants.RunExtraObsSize)]
+        );
     }
 
     [Fact]
@@ -225,7 +250,10 @@ public class RunEngineTests
         Assert.Equal((int)RunPhase.Map, obs[offset]);
         Assert.Equal(249, obs[offset + 4]);
         Assert.Equal(2, obs[offset + 7]);
-        Assert.Contains(obs[(offset + 12)..(offset + 16)], nodeType => nodeType != RunConstants.NodeNone);
+        Assert.Contains(
+            obs[(offset + 12)..(offset + 16)],
+            nodeType => nodeType != RunConstants.NodeNone
+        );
         Assert.Contains(mask[..RunConstants.MapChoices], value => value == 1);
     }
 
@@ -262,7 +290,10 @@ public class RunEngineTests
 
         engine.Reset("0");
         engine.Step(0, -1, out _, out _, out _);
-        int action = Array.FindIndex(engine.State.MapNodeTypes, nodeType => nodeType == RunConstants.NodeNormal);
+        int action = Array.FindIndex(
+            engine.State.MapNodeTypes,
+            nodeType => nodeType == RunConstants.NodeNormal
+        );
         Assert.True(action >= 0);
 
         int status = engine.Step(action, -1, out _, out bool terminal, out bool truncated);
@@ -314,7 +345,8 @@ public class RunEngineTests
                 RunConstants.EventSunkenTreasury,
                 123,
             },
-            info);
+            info
+        );
     }
 
     [Fact]
@@ -366,7 +398,13 @@ public class RunEngineTests
 
         Array.Clear(mask);
         engine.State.Phase = RunPhase.Map;
-        engine.State.MapNodeTypes = [RunConstants.NodeNormal, RunConstants.NodeNone, RunConstants.NodeEvent, RunConstants.NodeNone];
+        engine.State.MapNodeTypes =
+        [
+            RunConstants.NodeNormal,
+            RunConstants.NodeNone,
+            RunConstants.NodeEvent,
+            RunConstants.NodeNone,
+        ];
         engine.WriteActionMask(mask);
         AssertMask(mask, 0, 2);
 
@@ -379,7 +417,12 @@ public class RunEngineTests
         Array.Clear(mask);
         engine.State.Deck = [new CardInstance(10001, false), new CardInstance(472, false)];
         engine.WriteActionMask(mask);
-        AssertMask(mask, RunConstants.RestHealAction, RunConstants.RestUpgradeAction, RunConstants.RewardSkipAction);
+        AssertMask(
+            mask,
+            RunConstants.RestHealAction,
+            RunConstants.RestUpgradeAction,
+            RunConstants.RewardSkipAction
+        );
 
         Array.Clear(mask);
         engine.State.Phase = RunPhase.RelicReward;
@@ -394,7 +437,12 @@ public class RunEngineTests
 
         Array.Clear(mask);
         engine.State.Phase = RunPhase.TransformSelect;
-        engine.State.Deck = [new CardInstance(1, false), new CardInstance(2, true), new CardInstance(10001, false)];
+        engine.State.Deck =
+        [
+            new CardInstance(1, false),
+            new CardInstance(2, true),
+            new CardInstance(10001, false),
+        ];
         engine.WriteActionMask(mask);
         AssertMask(mask, 0, 1, 2);
 
@@ -478,7 +526,13 @@ public class RunEngineTests
         engine.State.ActiveCombat = combat;
         engine.WriteActionMask(mask);
 
-        AssertMask(mask, CombatEngine.ValidActions(combat).Where(action => action < RunConstants.MaxActions).ToArray());
+        AssertMask(
+            mask,
+            CombatEngine
+                .ValidActions(combat)
+                .Where(action => action < RunConstants.MaxActions)
+                .ToArray()
+        );
     }
 
     [Fact]
@@ -499,7 +553,9 @@ public class RunEngineTests
                 playerHp: 64,
                 playerMaxHp: 80,
                 potions,
-                playerGold: 99));
+                playerGold: 99
+            )
+        );
 
         var expectedDeck = deck.ToArray();
         var shuffle = new GameRng(new RunRngSet("0").Seed, "shuffle");
@@ -525,7 +581,8 @@ public class RunEngineTests
             expectedShuffleRng,
             encounterRngSeed: 0,
             nicheSkipCount: 0,
-            new Random(new RunRngSet("0").MonsterAi.RawSeed));
+            new Random(new RunRngSet("0").MonsterAi.RawSeed)
+        );
 
         var expectedObs = new int[CombatObservation.ObsSize];
         var actualObs = new int[CombatObservation.ObsSize];
@@ -551,7 +608,8 @@ public class RunEngineTests
             playerHp: 1,
             playerMaxHp: 80,
             [0, 0, 0],
-            playerGold: 99);
+            playerGold: 99
+        );
 
         engine.WriteActionMask(mask);
         Assert.Contains(1, mask);
@@ -664,7 +722,10 @@ public class RunEngineTests
         Assert.False(terminal);
         Assert.Equal(RunPhase.RelicReward, engine.State.Phase);
         Assert.Equal(relicCount + 1, engine.State.Relics.Count);
-        Assert.Contains(engine.State.Relics, relic => relic.DefId == RunConstants.RelicMeatOnTheBone);
+        Assert.Contains(
+            engine.State.Relics,
+            relic => relic.DefId == RunConstants.RelicMeatOnTheBone
+        );
         Assert.Equal(0, engine.State.RelicReward);
 
         status = engine.Step(RunConstants.RewardSkipAction, -1, out _, out terminal, out _);
@@ -714,7 +775,13 @@ public class RunEngineTests
         healEngine.State.Phase = RunPhase.Rest;
         healEngine.State.PlayerHp = 48;
 
-        int healStatus = healEngine.Step(RunConstants.RestHealAction, -1, out _, out bool healTerminal, out _);
+        int healStatus = healEngine.Step(
+            RunConstants.RestHealAction,
+            -1,
+            out _,
+            out bool healTerminal,
+            out _
+        );
 
         Assert.Equal(0, healStatus);
         Assert.False(healTerminal);
@@ -728,13 +795,22 @@ public class RunEngineTests
         upgradeEngine.Step(0, -1, out _, out _, out _);
         upgradeEngine.State.Phase = RunPhase.Rest;
 
-        int upgradeStatus = upgradeEngine.Step(RunConstants.RestUpgradeAction, -1, out _, out bool upgradeTerminal, out _);
+        int upgradeStatus = upgradeEngine.Step(
+            RunConstants.RestUpgradeAction,
+            -1,
+            out _,
+            out bool upgradeTerminal,
+            out _
+        );
 
         Assert.Equal(0, upgradeStatus);
         Assert.False(upgradeTerminal);
         Assert.Equal(RunPhase.Rest, upgradeEngine.State.Phase);
         Assert.Contains(upgradeEngine.State.Deck, card => card.Upgraded);
-        Assert.Equal(0, upgradeEngine.Step(RunConstants.RestUpgradeAction, -1, out _, out _, out _));
+        Assert.Equal(
+            0,
+            upgradeEngine.Step(RunConstants.RestUpgradeAction, -1, out _, out _, out _)
+        );
         Assert.Equal(RunPhase.Map, upgradeEngine.State.Phase);
     }
 
@@ -746,7 +822,12 @@ public class RunEngineTests
         engine.Step(0, -1, out _, out _, out _);
         engine.State.Phase = RunPhase.Event;
         engine.State.EventId = RunConstants.EventDoorsOfLightAndDark;
-        engine.State.Deck = [new CardInstance(472, false), new CardInstance(131, false), new CardInstance(30, false)];
+        engine.State.Deck =
+        [
+            new CardInstance(472, false),
+            new CardInstance(131, false),
+            new CardInstance(30, false),
+        ];
 
         int status = engine.Step(0, -1, out _, out bool terminal, out _);
 
@@ -826,7 +907,8 @@ public class RunEngineTests
             engine.State.PlayerHp,
             engine.State.PlayerMaxHp,
             engine.State.PotionSlots,
-            engine.State.Gold);
+            engine.State.Gold
+        );
 
         Assert.Equal(0, status);
         Assert.Equal(18, engine.State.PotionSlots[0]);

@@ -9,15 +9,27 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class PaperCutsPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterDamageGiven(PlayerChoiceContext choiceContext, Creature? dealer, DamageResult result, ValueProp props, Creature target, CardModel? cardSource)
-	{
-		if (dealer == base.Owner && target.IsPlayer && props.IsPoweredAttack() && result.UnblockedDamage > 0)
-		{
-			await CreatureCmd.LoseMaxHp(choiceContext, target, base.Amount, isFromCard: false);
-		}
-	}
+    public override async Task AfterDamageGiven(
+        PlayerChoiceContext choiceContext,
+        Creature? dealer,
+        DamageResult result,
+        ValueProp props,
+        Creature target,
+        CardModel? cardSource
+    )
+    {
+        if (
+            dealer == base.Owner
+            && target.IsPlayer
+            && props.IsPoweredAttack()
+            && result.UnblockedDamage > 0
+        )
+        {
+            await CreatureCmd.LoseMaxHp(choiceContext, target, base.Amount, isFromCard: false);
+        }
+    }
 }

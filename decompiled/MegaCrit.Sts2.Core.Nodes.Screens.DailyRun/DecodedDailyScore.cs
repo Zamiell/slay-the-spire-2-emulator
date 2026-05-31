@@ -2,13 +2,13 @@ namespace MegaCrit.Sts2.Core.Nodes.Screens.DailyRun;
 
 public struct DecodedDailyScore
 {
-	public int victory;
+    public int victory;
 
-	public int floors;
+    public int floors;
 
-	public int badges;
+    public int badges;
 
-	public int runTime;
+    public int runTime;
 
-	public bool isValid;
+    public bool isValid;
 }

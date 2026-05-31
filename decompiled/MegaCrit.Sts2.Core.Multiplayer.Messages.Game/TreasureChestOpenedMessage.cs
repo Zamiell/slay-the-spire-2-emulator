@@ -5,25 +5,28 @@ using MegaCrit.Sts2.Core.Runs;
 
 namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game;
 
-public class TreasureChestOpenedMessage : INetMessage, IPacketSerializable, IRunLocationTargetedMessage
+public class TreasureChestOpenedMessage
+    : INetMessage,
+        IPacketSerializable,
+        IRunLocationTargetedMessage
 {
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.Debug;
+    public LogLevel LogLevel => LogLevel.Debug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public RunLocation Location { get; set; }
+    public RunLocation Location { get; set; }
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(Location);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(Location);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		Location = reader.Read<RunLocation>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        Location = reader.Read<RunLocation>();
+    }
 }

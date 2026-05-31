@@ -11,23 +11,37 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Juggernaut : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<JuggernautPower>(5m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<JuggernautPower>(5m)
+        );
 
-	public Juggernaut()
-		: base(2, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public Juggernaut()
+        : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<JuggernautPower>(choiceContext, base.Owner.Creature, base.DynamicVars["JuggernautPower"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<JuggernautPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["JuggernautPower"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars["JuggernautPower"].UpgradeValueBy(2m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars["JuggernautPower"].UpgradeValueBy(2m);
+    }
 }

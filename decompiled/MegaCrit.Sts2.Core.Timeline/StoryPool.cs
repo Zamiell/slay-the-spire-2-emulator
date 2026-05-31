@@ -1,5 +1,3 @@
 namespace MegaCrit.Sts2.Core.Timeline;
 
-public class StoryPool
-{
-}
+public class StoryPool { }

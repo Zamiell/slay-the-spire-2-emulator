@@ -10,21 +10,34 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Inferno : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<InfernoPower>(6m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<InfernoPower>(6m)
+        );
 
-	public Inferno()
-		: base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Inferno()
+        : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		(await PowerCmd.Apply<InfernoPower>(choiceContext, base.Owner.Creature, base.DynamicVars["InfernoPower"].BaseValue, base.Owner.Creature, this))?.IncrementSelfDamage();
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        (
+            await PowerCmd.Apply<InfernoPower>(
+                choiceContext,
+                base.Owner.Creature,
+                base.DynamicVars["InfernoPower"].BaseValue,
+                base.Owner.Creature,
+                this
+            )
+        )?.IncrementSelfDamage();
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars["InfernoPower"].UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars["InfernoPower"].UpgradeValueBy(3m);
+    }
 }

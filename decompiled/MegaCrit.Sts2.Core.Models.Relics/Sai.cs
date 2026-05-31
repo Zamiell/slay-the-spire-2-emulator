@@ -12,16 +12,23 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Sai : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(7m, ValueProp.Unpowered));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(7m, ValueProp.Unpowered)
+        );
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature))
-		{
-			Flash();
-			await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (participants.Contains(base.Owner.Creature))
+        {
+            Flash();
+            await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
+        }
+    }
 }

@@ -13,21 +13,28 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class SentryModePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromCard<SweepingGaze>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromCard<SweepingGaze>()
+        );
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player == base.Owner.Player)
-		{
-			for (int i = 0; i < base.Amount; i++)
-			{
-				CardModel card = combatState.CreateCard<SweepingGaze>(base.Owner.Player);
-				await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, base.Owner.Player);
-			}
-		}
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player == base.Owner.Player)
+        {
+            for (int i = 0; i < base.Amount; i++)
+            {
+                CardModel card = combatState.CreateCard<SweepingGaze>(base.Owner.Player);
+                await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, base.Owner.Player);
+            }
+        }
+    }
 }

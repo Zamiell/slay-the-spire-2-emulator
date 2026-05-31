@@ -10,71 +10,83 @@ namespace MegaCrit.Sts2.Core.Entities.Merchant;
 
 public sealed class MerchantCardRemovalEntry : MerchantEntry
 {
-	public bool Used { get; private set; }
+    public bool Used { get; private set; }
 
-	public override bool IsStocked => !Used;
+    public override bool IsStocked => !Used;
 
-	private static int BaseCost => AscensionHelper.GetValueIfAscension(AscensionLevel.Inflation, 100, 75);
+    private static int BaseCost =>
+        AscensionHelper.GetValueIfAscension(AscensionLevel.Inflation, 100, 75);
 
-	public static int PriceIncrease => AscensionHelper.GetValueIfAscension(AscensionLevel.Inflation, 50, 25);
+    public static int PriceIncrease =>
+        AscensionHelper.GetValueIfAscension(AscensionLevel.Inflation, 50, 25);
 
-	public MerchantCardRemovalEntry(Player player)
-		: base(player)
-	{
-		CalcCost();
-	}
+    public MerchantCardRemovalEntry(Player player)
+        : base(player)
+    {
+        CalcCost();
+    }
 
-	public override void CalcCost()
-	{
-		_cost = BaseCost + PriceIncrease * _player.ExtraFields.CardShopRemovalsUsed;
-	}
+    public override void CalcCost()
+    {
+        _cost = BaseCost + PriceIncrease * _player.ExtraFields.CardShopRemovalsUsed;
+    }
 
-	public async Task<bool> OnTryPurchaseWrapper(MerchantInventory? inventory, bool ignoreCost = false, bool cancelable = true)
-	{
-		if (!base.EnoughGold && !ignoreCost)
-		{
-			InvokePurchaseFailed(PurchaseStatus.FailureGold);
-			return false;
-		}
-		var (success, goldSpent) = await OnTryPurchase(inventory, ignoreCost, cancelable);
-		if (success)
-		{
-			await Hook.AfterItemPurchased(_player.RunState, _player, this, goldSpent);
-			InvokePurchaseCompleted(this);
-		}
-		return success;
-	}
+    public async Task<bool> OnTryPurchaseWrapper(
+        MerchantInventory? inventory,
+        bool ignoreCost = false,
+        bool cancelable = true
+    )
+    {
+        if (!base.EnoughGold && !ignoreCost)
+        {
+            InvokePurchaseFailed(PurchaseStatus.FailureGold);
+            return false;
+        }
+        var (success, goldSpent) = await OnTryPurchase(inventory, ignoreCost, cancelable);
+        if (success)
+        {
+            await Hook.AfterItemPurchased(_player.RunState, _player, this, goldSpent);
+            InvokePurchaseCompleted(this);
+        }
+        return success;
+    }
 
-	protected override async Task<(bool, int)> OnTryPurchase(MerchantInventory? inventory, bool ignoreCost)
-	{
-		return await OnTryPurchase(inventory, ignoreCost, cancelable: true);
-	}
+    protected override async Task<(bool, int)> OnTryPurchase(
+        MerchantInventory? inventory,
+        bool ignoreCost
+    )
+    {
+        return await OnTryPurchase(inventory, ignoreCost, cancelable: true);
+    }
 
-	private async Task<(bool, int)> OnTryPurchase(MerchantInventory? inventory, bool ignoreCost, bool cancelable)
-	{
-		if (Used)
-		{
-			return (false, 0);
-		}
-		int goldToSpend = ((!ignoreCost) ? base.Cost : 0);
-		bool flag = await RunManager.Instance.OneOffSynchronizer.DoLocalMerchantCardRemoval(goldToSpend, cancelable);
-		if (flag)
-		{
-			NRun.Instance?.MerchantRoom?.Inventory.OnCardRemovalUsed();
-		}
-		return (flag, goldToSpend);
-	}
+    private async Task<(bool, int)> OnTryPurchase(
+        MerchantInventory? inventory,
+        bool ignoreCost,
+        bool cancelable
+    )
+    {
+        if (Used)
+        {
+            return (false, 0);
+        }
+        int goldToSpend = ((!ignoreCost) ? base.Cost : 0);
+        bool flag = await RunManager.Instance.OneOffSynchronizer.DoLocalMerchantCardRemoval(
+            goldToSpend,
+            cancelable
+        );
+        if (flag)
+        {
+            NRun.Instance?.MerchantRoom?.Inventory.OnCardRemovalUsed();
+        }
+        return (flag, goldToSpend);
+    }
 
-	protected override void ClearAfterPurchase()
-	{
-	}
+    protected override void ClearAfterPurchase() { }
 
-	protected override void RestockAfterPurchase(MerchantInventory? inventory)
-	{
-	}
+    protected override void RestockAfterPurchase(MerchantInventory? inventory) { }
 
-	public void SetUsed()
-	{
-		Used = true;
-	}
+    public void SetUsed()
+    {
+        Used = true;
+    }
 }

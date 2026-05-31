@@ -2,7 +2,7 @@ namespace MegaCrit.Sts2.Core.Nodes.Pooling;
 
 public interface INodePool
 {
-	IPoolable Get();
+    IPoolable Get();
 
-	void Free(IPoolable poolable);
+    void Free(IPoolable poolable);
 }

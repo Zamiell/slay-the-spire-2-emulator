@@ -11,15 +11,19 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class HatchPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Decrement(this);
+        }
+    }
 }

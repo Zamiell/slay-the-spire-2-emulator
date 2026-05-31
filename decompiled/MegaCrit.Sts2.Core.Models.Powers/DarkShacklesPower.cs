@@ -4,7 +4,7 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class DarkShacklesPower : TemporaryStrengthPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<DarkShackles>();
+    public override AbstractModel OriginModel => ModelDb.Card<DarkShackles>();
 
-	protected override bool IsPositive => false;
+    protected override bool IsPositive => false;
 }

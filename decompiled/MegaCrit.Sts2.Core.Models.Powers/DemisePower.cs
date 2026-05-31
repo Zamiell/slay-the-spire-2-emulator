@@ -12,16 +12,27 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class DemisePower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			Flash();
-			await CreatureCmd.Damage(choiceContext, base.Owner, base.Amount, ValueProp.Unblockable | ValueProp.Unpowered, null, null);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            Flash();
+            await CreatureCmd.Damage(
+                choiceContext,
+                base.Owner,
+                base.Amount,
+                ValueProp.Unblockable | ValueProp.Unpowered,
+                null,
+                null
+            );
+        }
+    }
 }

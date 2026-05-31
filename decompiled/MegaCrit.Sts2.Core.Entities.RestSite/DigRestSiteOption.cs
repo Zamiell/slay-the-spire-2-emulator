@@ -17,37 +17,40 @@ namespace MegaCrit.Sts2.Core.Entities.RestSite;
 
 public class DigRestSiteOption : RestSiteOption
 {
-	public override string OptionId => "DIG";
+    public override string OptionId => "DIG";
 
-	public DigRestSiteOption(Player owner)
-		: base(owner)
-	{
-	}
+    public DigRestSiteOption(Player owner)
+        : base(owner) { }
 
-	public override async Task<bool> OnSelect()
-	{
-		await RelicCmd.Obtain(RelicFactory.PullNextRelicFromFront(base.Owner).ToMutable(), base.Owner);
-		return true;
-	}
+    public override async Task<bool> OnSelect()
+    {
+        await RelicCmd.Obtain(
+            RelicFactory.PullNextRelicFromFront(base.Owner).ToMutable(),
+            base.Owner
+        );
+        return true;
+    }
 
-	public override Task DoLocalPostSelectVfx(CancellationToken ct = default(CancellationToken))
-	{
-		NDebugAudioManager.Instance.Play("sts_sfx_shovel_v1.mp3", 1f, PitchVariance.Small);
-		return Task.CompletedTask;
-	}
+    public override Task DoLocalPostSelectVfx(CancellationToken ct = default(CancellationToken))
+    {
+        NDebugAudioManager.Instance.Play("sts_sfx_shovel_v1.mp3", 1f, PitchVariance.Small);
+        return Task.CompletedTask;
+    }
 
-	public override Task DoRemotePostSelectVfx()
-	{
-		NDebugAudioManager.Instance?.Play("sts_sfx_shovel_v1.mp3", 0.5f, PitchVariance.Small);
-		NRestSiteCharacter nRestSiteCharacter = NRestSiteRoom.Instance?.Characters.First((NRestSiteCharacter c) => c.Player == base.Owner);
-		nRestSiteCharacter?.Shake();
-		NRelicFlashVfx nRelicFlashVfx = NRelicFlashVfx.Create(ModelDb.Relic<Shovel>());
-		if (nRelicFlashVfx == null)
-		{
-			return Task.CompletedTask;
-		}
-		nRestSiteCharacter?.AddChildSafely(nRelicFlashVfx);
-		nRelicFlashVfx.Position = Vector2.Zero;
-		return Task.CompletedTask;
-	}
+    public override Task DoRemotePostSelectVfx()
+    {
+        NDebugAudioManager.Instance?.Play("sts_sfx_shovel_v1.mp3", 0.5f, PitchVariance.Small);
+        NRestSiteCharacter nRestSiteCharacter = NRestSiteRoom.Instance?.Characters.First(
+            (NRestSiteCharacter c) => c.Player == base.Owner
+        );
+        nRestSiteCharacter?.Shake();
+        NRelicFlashVfx nRelicFlashVfx = NRelicFlashVfx.Create(ModelDb.Relic<Shovel>());
+        if (nRelicFlashVfx == null)
+        {
+            return Task.CompletedTask;
+        }
+        nRestSiteCharacter?.AddChildSafely(nRelicFlashVfx);
+        nRelicFlashVfx.Position = Vector2.Zero;
+        return Task.CompletedTask;
+    }
 }

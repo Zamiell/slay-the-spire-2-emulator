@@ -51,8 +51,10 @@ public static class RunConstants
 
     public static ReadOnlySpan<int> OvergrowthWeakEncounters => [8, 2, 11, 3];
     public static ReadOnlySpan<int> UnderdocksWeakEncounters => [9, 12, 10, 13];
-    public static ReadOnlySpan<int> OvergrowthNormalEncounters => [19, 17, 29, 5, 14, 15, 21, 28, 16, 27, 18, 20];
-    public static ReadOnlySpan<int> UnderdocksNormalEncounters => [9, 0, 23, 7, 26, 30, 24, 12, 25, 6];
+    public static ReadOnlySpan<int> OvergrowthNormalEncounters =>
+        [19, 17, 29, 5, 14, 15, 21, 28, 16, 27, 18, 20];
+    public static ReadOnlySpan<int> UnderdocksNormalEncounters =>
+        [9, 0, 23, 7, 26, 30, 24, 12, 25, 6];
     public static ReadOnlySpan<int> OvergrowthEliteEncounters => [68, 65];
     public static ReadOnlySpan<int> UnderdocksEliteEncounters => [72, 67];
     public static ReadOnlySpan<int> OvergrowthBossEncounters => [83, 74, 82];
@@ -105,19 +107,24 @@ public static class RunConstants
     public const int NeowsFuryCard = 321;
 
     public static ReadOnlySpan<int> StarterDeckIds =>
-    [
-        IC.StrikeIronclad, IC.StrikeIronclad, IC.StrikeIronclad, IC.StrikeIronclad, IC.StrikeIronclad,
-        IC.DefendIronclad, IC.DefendIronclad, IC.DefendIronclad, IC.DefendIronclad,
-        IC.Bash,
-        IC.AscendersBane,
-    ];
+        [
+            IC.StrikeIronclad,
+            IC.StrikeIronclad,
+            IC.StrikeIronclad,
+            IC.StrikeIronclad,
+            IC.StrikeIronclad,
+            IC.DefendIronclad,
+            IC.DefendIronclad,
+            IC.DefendIronclad,
+            IC.DefendIronclad,
+            IC.Bash,
+            IC.AscendersBane,
+        ];
 
     public static ReadOnlySpan<int> NeowCurseOptions => [54, 111, 129, 134, 161, 205, 239, 240];
 
     public static ReadOnlySpan<int> NeowPositiveOptions =>
-    [
-        5, 29, 89, 105, 124, 133, 140, 163, 164, 195, 206, 231, 293,
-    ];
+        [5, 29, 89, 105, 124, 133, 140, 163, 164, 195, 206, 231, 293];
 
     public static bool IsRunCardUpgradable(CardInstance card)
     {
@@ -126,7 +133,20 @@ public static class RunConstants
 
     private static bool IsNonUpgradableCard(int cardId)
     {
-        return cardId is 36 or 128 or 166 or 206 or 440 or 457 or 512
-            or 10001 or 10002 or 10008 or 10009 or 10010 or 10011 or 10012;
+        return cardId
+            is 36
+                or 128
+                or 166
+                or 206
+                or 440
+                or 457
+                or 512
+                or 10001
+                or 10002
+                or 10008
+                or 10009
+                or 10010
+                or 10011
+                or 10012;
     }
 }

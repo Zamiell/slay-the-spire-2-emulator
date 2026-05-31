@@ -11,76 +11,85 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class GigantificationPower : PowerModel
 {
-	private class Data
-	{
-		public AttackCommand? commandToModify;
-	}
+    private class Data
+    {
+        public AttackCommand? commandToModify;
+    }
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override object InitInternalData()
-	{
-		return new Data();
-	}
+    protected override object InitInternalData()
+    {
+        return new Data();
+    }
 
-	public override Task BeforeAttack(AttackCommand command)
-	{
-		if (!(command.ModelSource is CardModel cardModel))
-		{
-			return Task.CompletedTask;
-		}
-		if (cardModel.Owner.Creature != base.Owner)
-		{
-			return Task.CompletedTask;
-		}
-		if (cardModel.Type != CardType.Attack)
-		{
-			return Task.CompletedTask;
-		}
-		if (!command.DamageProps.IsPoweredAttack())
-		{
-			return Task.CompletedTask;
-		}
-		Data internalData = GetInternalData<Data>();
-		if (internalData.commandToModify != null)
-		{
-			return Task.CompletedTask;
-		}
-		internalData.commandToModify = command;
-		return Task.CompletedTask;
-	}
+    public override Task BeforeAttack(AttackCommand command)
+    {
+        if (!(command.ModelSource is CardModel cardModel))
+        {
+            return Task.CompletedTask;
+        }
+        if (cardModel.Owner.Creature != base.Owner)
+        {
+            return Task.CompletedTask;
+        }
+        if (cardModel.Type != CardType.Attack)
+        {
+            return Task.CompletedTask;
+        }
+        if (!command.DamageProps.IsPoweredAttack())
+        {
+            return Task.CompletedTask;
+        }
+        Data internalData = GetInternalData<Data>();
+        if (internalData.commandToModify != null)
+        {
+            return Task.CompletedTask;
+        }
+        internalData.commandToModify = command;
+        return Task.CompletedTask;
+    }
 
-	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (cardSource == null)
-		{
-			return 1m;
-		}
-		if (cardSource.Owner.Creature != base.Owner)
-		{
-			return 1m;
-		}
-		if (!props.IsPoweredAttack())
-		{
-			return 1m;
-		}
-		Data internalData = GetInternalData<Data>();
-		if (internalData.commandToModify == null || cardSource == internalData.commandToModify.ModelSource)
-		{
-			return 3m;
-		}
-		return 1m;
-	}
+    public override decimal ModifyDamageMultiplicative(
+        Creature? target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (cardSource == null)
+        {
+            return 1m;
+        }
+        if (cardSource.Owner.Creature != base.Owner)
+        {
+            return 1m;
+        }
+        if (!props.IsPoweredAttack())
+        {
+            return 1m;
+        }
+        Data internalData = GetInternalData<Data>();
+        if (
+            internalData.commandToModify == null
+            || cardSource == internalData.commandToModify.ModelSource
+        )
+        {
+            return 3m;
+        }
+        return 1m;
+    }
 
-	public override async Task AfterAttack(PlayerChoiceContext choiceContext, AttackCommand command)
-	{
-		Data internalData = GetInternalData<Data>();
-		if (command == internalData.commandToModify)
-		{
-			internalData.commandToModify = null;
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterAttack(PlayerChoiceContext choiceContext, AttackCommand command)
+    {
+        Data internalData = GetInternalData<Data>();
+        if (command == internalData.commandToModify)
+        {
+            internalData.commandToModify = null;
+            await PowerCmd.Decrement(this);
+        }
+    }
 }

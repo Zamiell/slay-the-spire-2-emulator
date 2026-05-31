@@ -4,5 +4,5 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game;
 
 public interface IRunLocationTargetedMessage
 {
-	RunLocation Location { get; }
+    RunLocation Location { get; }
 }

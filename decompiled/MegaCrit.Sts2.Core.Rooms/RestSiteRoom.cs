@@ -14,44 +14,47 @@ namespace MegaCrit.Sts2.Core.Rooms;
 
 public class RestSiteRoom : AbstractRoom
 {
-	private RestSiteSynchronizer? _synchronizer;
+    private RestSiteSynchronizer? _synchronizer;
 
-	public override RoomType RoomType => RoomType.RestSite;
+    public override RoomType RoomType => RoomType.RestSite;
 
-	public override ModelId? ModelId => null;
+    public override ModelId? ModelId => null;
 
-	public IReadOnlyList<RestSiteOption> Options => _synchronizer?.GetLocalOptions() ?? Array.Empty<RestSiteOption>();
+    public IReadOnlyList<RestSiteOption> Options =>
+        _synchronizer?.GetLocalOptions() ?? Array.Empty<RestSiteOption>();
 
-	public override async Task EnterInternal(IRunState? runState, bool isRestoringRoomStackBase)
-	{
-		if (isRestoringRoomStackBase)
-		{
-			throw new InvalidOperationException("RestSiteRoom does not support room stack reconstruction.");
-		}
-		_synchronizer = RunManager.Instance.RestSiteSynchronizer;
-		_synchronizer.BeginRestSite();
-		if (runState != null)
-		{
-			await PreloadManager.LoadRoomRestSite(runState.Act, Options);
-			ShowRoomNode(runState);
-			await Hook.AfterRoomEntered(runState, this);
-		}
-	}
+    public override async Task EnterInternal(IRunState? runState, bool isRestoringRoomStackBase)
+    {
+        if (isRestoringRoomStackBase)
+        {
+            throw new InvalidOperationException(
+                "RestSiteRoom does not support room stack reconstruction."
+            );
+        }
+        _synchronizer = RunManager.Instance.RestSiteSynchronizer;
+        _synchronizer.BeginRestSite();
+        if (runState != null)
+        {
+            await PreloadManager.LoadRoomRestSite(runState.Act, Options);
+            ShowRoomNode(runState);
+            await Hook.AfterRoomEntered(runState, this);
+        }
+    }
 
-	public override Task Exit(IRunState? runState)
-	{
-		RunManager.Instance.ChecksumTracker.GenerateChecksum("Exiting rest site room", null);
-		return Task.CompletedTask;
-	}
+    public override Task Exit(IRunState? runState)
+    {
+        RunManager.Instance.ChecksumTracker.GenerateChecksum("Exiting rest site room", null);
+        return Task.CompletedTask;
+    }
 
-	public override Task Resume(AbstractRoom _, IRunState? runState)
-	{
-		ShowRoomNode(runState);
-		return Task.CompletedTask;
-	}
+    public override Task Resume(AbstractRoom _, IRunState? runState)
+    {
+        ShowRoomNode(runState);
+        return Task.CompletedTask;
+    }
 
-	private void ShowRoomNode(IRunState runState)
-	{
-		NRun.Instance?.SetCurrentRoom(NRestSiteRoom.Create(this, runState));
-	}
+    private void ShowRoomNode(IRunState runState)
+    {
+        NRun.Instance?.SetCurrentRoom(NRestSiteRoom.Create(this, runState));
+    }
 }

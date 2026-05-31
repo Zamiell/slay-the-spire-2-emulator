@@ -14,25 +14,45 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class SicEmPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.SummonStatic));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.SummonStatic)
+        );
 
-	public override async Task AfterDamageGiven(PlayerChoiceContext choiceContext, Creature? dealer, DamageResult result, ValueProp props, Creature target, CardModel? cardSource)
-	{
-		if (dealer?.Monster is Osty osty && osty.Creature.PetOwner != null && base.Applier != null && osty.Creature.PetOwner.Creature == base.Applier && target == base.Owner)
-		{
-			await OstyCmd.Summon(choiceContext, dealer.PetOwner, base.Amount, this);
-		}
-	}
+    public override async Task AfterDamageGiven(
+        PlayerChoiceContext choiceContext,
+        Creature? dealer,
+        DamageResult result,
+        ValueProp props,
+        Creature target,
+        CardModel? cardSource
+    )
+    {
+        if (
+            dealer?.Monster is Osty osty
+            && osty.Creature.PetOwner != null
+            && base.Applier != null
+            && osty.Creature.PetOwner.Creature == base.Applier
+            && target == base.Owner
+        )
+        {
+            await OstyCmd.Summon(choiceContext, dealer.PetOwner, base.Amount, this);
+        }
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
 }

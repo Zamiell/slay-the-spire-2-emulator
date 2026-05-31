@@ -4,9 +4,9 @@ namespace MegaCrit.Sts2.Core.Entities.Potions;
 
 public class PotionProcureResult
 {
-	public bool success;
+    public bool success;
 
-	public PotionModel potion;
+    public PotionModel potion;
 
-	public PotionProcureFailureReason failureReason;
+    public PotionProcureFailureReason failureReason;
 }

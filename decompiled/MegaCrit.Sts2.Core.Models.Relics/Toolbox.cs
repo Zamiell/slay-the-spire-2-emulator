@@ -15,21 +15,42 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Toolbox : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Shop;
+    public override RelicRarity Rarity => RelicRarity.Shop;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber == 1)
-		{
-			Flash();
-			List<CardModel> cards = CardFactory.GetDistinctForCombat(base.Owner, ModelDb.CardPool<ColorlessCardPool>().GetUnlockedCards(player.UnlockState, player.RunState.CardMultiplayerConstraint), base.DynamicVars.Cards.IntValue, base.Owner.RunState.Rng.CombatCardGeneration).ToList();
-			CardModel cardModel = await CardSelectCmd.FromChooseACardScreen(choiceContext, cards, base.Owner);
-			if (cardModel != null)
-			{
-				await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, player);
-			}
-		}
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber == 1)
+        {
+            Flash();
+            List<CardModel> cards = CardFactory
+                .GetDistinctForCombat(
+                    base.Owner,
+                    ModelDb
+                        .CardPool<ColorlessCardPool>()
+                        .GetUnlockedCards(
+                            player.UnlockState,
+                            player.RunState.CardMultiplayerConstraint
+                        ),
+                    base.DynamicVars.Cards.IntValue,
+                    base.Owner.RunState.Rng.CombatCardGeneration
+                )
+                .ToList();
+            CardModel cardModel = await CardSelectCmd.FromChooseACardScreen(
+                choiceContext,
+                cards,
+                base.Owner
+            );
+            if (cardModel != null)
+            {
+                await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, player);
+            }
+        }
+    }
 }

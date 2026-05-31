@@ -18,39 +18,56 @@ namespace MegaCrit.Sts2.Core.Models.Monsters;
 
 public sealed class Stabbot : MonsterModel
 {
-	public override int MinInitialHp => AscensionHelper.GetValueIfAscension(AscensionLevel.ToughEnemies, 19, 18);
+    public override int MinInitialHp =>
+        AscensionHelper.GetValueIfAscension(AscensionLevel.ToughEnemies, 19, 18);
 
-	public override int MaxInitialHp => AscensionHelper.GetValueIfAscension(AscensionLevel.ToughEnemies, 24, 23);
+    public override int MaxInitialHp =>
+        AscensionHelper.GetValueIfAscension(AscensionLevel.ToughEnemies, 24, 23);
 
-	private int StabDamage => AscensionHelper.GetValueIfAscension(AscensionLevel.DeadlyEnemies, 12, 11);
+    private int StabDamage =>
+        AscensionHelper.GetValueIfAscension(AscensionLevel.DeadlyEnemies, 12, 11);
 
-	public override DamageSfxType TakeDamageSfxType => DamageSfxType.Armor;
+    public override DamageSfxType TakeDamageSfxType => DamageSfxType.Armor;
 
-	public override Task AfterAddedToRoom()
-	{
-		base.AfterAddedToRoom();
-		if (TestMode.IsOff)
-		{
-			NCreature creatureNode = NCombatRoom.Instance.GetCreatureNode(base.Creature);
-			FabricatorNormal.SetBotFallPosition(creatureNode);
-		}
-		return Task.CompletedTask;
-	}
+    public override Task AfterAddedToRoom()
+    {
+        base.AfterAddedToRoom();
+        if (TestMode.IsOff)
+        {
+            NCreature creatureNode = NCombatRoom.Instance.GetCreatureNode(base.Creature);
+            FabricatorNormal.SetBotFallPosition(creatureNode);
+        }
+        return Task.CompletedTask;
+    }
 
-	protected override MonsterMoveStateMachine GenerateMoveStateMachine()
-	{
-		List<MonsterState> list = new List<MonsterState>();
-		MoveState moveState = new MoveState("STAB_MOVE", StabMove, new SingleAttackIntent(StabDamage), new DebuffIntent());
-		moveState.FollowUpState = moveState;
-		list.Add(moveState);
-		return new MonsterMoveStateMachine(list, moveState);
-	}
+    protected override MonsterMoveStateMachine GenerateMoveStateMachine()
+    {
+        List<MonsterState> list = new List<MonsterState>();
+        MoveState moveState = new MoveState(
+            "STAB_MOVE",
+            StabMove,
+            new SingleAttackIntent(StabDamage),
+            new DebuffIntent()
+        );
+        moveState.FollowUpState = moveState;
+        list.Add(moveState);
+        return new MonsterMoveStateMachine(list, moveState);
+    }
 
-	private async Task StabMove(IReadOnlyList<Creature> targets)
-	{
-		await DamageCmd.Attack(StabDamage).FromMonster(this).WithAttackerAnim("Attack", 0.6f)
-			.WithHitFx("vfx/vfx_attack_slash")
-			.Execute(null);
-		await PowerCmd.Apply<FrailPower>(new ThrowingPlayerChoiceContext(), targets, 1m, base.Creature, null);
-	}
+    private async Task StabMove(IReadOnlyList<Creature> targets)
+    {
+        await DamageCmd
+            .Attack(StabDamage)
+            .FromMonster(this)
+            .WithAttackerAnim("Attack", 0.6f)
+            .WithHitFx("vfx/vfx_attack_slash")
+            .Execute(null);
+        await PowerCmd.Apply<FrailPower>(
+            new ThrowingPlayerChoiceContext(),
+            targets,
+            1m,
+            base.Creature,
+            null
+        );
+    }
 }

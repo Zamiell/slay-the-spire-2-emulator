@@ -10,23 +10,30 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ImbalancedPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	public override async Task AfterDamageGiven(PlayerChoiceContext choiceContext, Creature? dealer, DamageResult result, ValueProp props, Creature target, CardModel? cardSource)
-	{
-		if (dealer == base.Owner && result.WasFullyBlocked)
-		{
-			Flash();
-			if (!(base.Owner.Monster is BowlbugRock bowlbugRock))
-			{
-				await CreatureCmd.Stun(base.Owner);
-			}
-			else
-			{
-				bowlbugRock.IsOffBalance = true;
-			}
-		}
-	}
+    public override async Task AfterDamageGiven(
+        PlayerChoiceContext choiceContext,
+        Creature? dealer,
+        DamageResult result,
+        ValueProp props,
+        Creature target,
+        CardModel? cardSource
+    )
+    {
+        if (dealer == base.Owner && result.WasFullyBlocked)
+        {
+            Flash();
+            if (!(base.Owner.Monster is BowlbugRock bowlbugRock))
+            {
+                await CreatureCmd.Stun(base.Owner);
+            }
+            else
+            {
+                bowlbugRock.IsOffBalance = true;
+            }
+        }
+    }
 }

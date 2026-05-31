@@ -6,35 +6,35 @@ namespace MegaCrit.Sts2.Core.Platform;
 
 internal interface IPlatformUtilStrategy
 {
-	bool SupportsInviteDialog { get; }
+    bool SupportsInviteDialog { get; }
 
-	bool IsPlatformOverlayOpen { get; }
+    bool IsPlatformOverlayOpen { get; }
 
-	string GetPlayerName(ulong playerId);
+    string GetPlayerName(ulong playerId);
 
-	ulong GetLocalPlayerId();
+    ulong GetLocalPlayerId();
 
-	Task<IEnumerable<ulong>> GetFriendsWithOpenLobbies();
+    Task<IEnumerable<ulong>> GetFriendsWithOpenLobbies();
 
-	void OpenInviteDialog(INetGameService gameService);
+    void OpenInviteDialog(INetGameService gameService);
 
-	void OpenUrl(string url);
+    void OpenUrl(string url);
 
-	void OpenVirtualKeyboard();
+    void OpenVirtualKeyboard();
 
-	void CloseVirtualKeyboard();
+    void CloseVirtualKeyboard();
 
-	PlatformBranch GetPlatformBranch();
+    PlatformBranch GetPlatformBranch();
 
-	string? GetThreeLetterLanguageCode();
+    string? GetThreeLetterLanguageCode();
 
-	string GetRawLanguage();
+    string GetRawLanguage();
 
-	void SetRichPresence(string token, string? playerGroup, int? groupSize);
+    void SetRichPresence(string token, string? playerGroup, int? groupSize);
 
-	void SetRichPresenceValue(string key, string? value);
+    void SetRichPresenceValue(string key, string? value);
 
-	void ClearRichPresence();
+    void ClearRichPresence();
 
-	SupportedWindowMode GetSupportedWindowMode();
+    SupportedWindowMode GetSupportedWindowMode();
 }

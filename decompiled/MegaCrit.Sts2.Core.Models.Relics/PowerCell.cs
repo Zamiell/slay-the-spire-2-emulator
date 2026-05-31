@@ -14,18 +14,35 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class PowerCell : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(2));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(2));
 
-	public override async Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature) && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			Flash();
-			IEnumerable<CardModel> cards = PileType.Draw.GetPile(base.Owner).Cards.Where((CardModel c) => !c.EnergyCost.CostsX && c.EnergyCost.GetWithModifiers(CostModifiers.Local) == 0).ToList().StableShuffle(base.Owner.RunState.Rng.CombatCardSelection)
-				.Take(base.DynamicVars.Cards.IntValue);
-			await CardPileCmd.Add(cards, PileType.Hand);
-		}
-	}
+    public override async Task BeforeSideTurnStart(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (
+            participants.Contains(base.Owner.Creature)
+            && base.Owner.PlayerCombatState.TurnNumber <= 1
+        )
+        {
+            Flash();
+            IEnumerable<CardModel> cards = PileType
+                .Draw.GetPile(base.Owner)
+                .Cards.Where(
+                    (CardModel c) =>
+                        !c.EnergyCost.CostsX
+                        && c.EnergyCost.GetWithModifiers(CostModifiers.Local) == 0
+                )
+                .ToList()
+                .StableShuffle(base.Owner.RunState.Rng.CombatCardSelection)
+                .Take(base.DynamicVars.Cards.IntValue);
+            await CardPileCmd.Add(cards, PileType.Hand);
+        }
+    }
 }

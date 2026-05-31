@@ -8,19 +8,19 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class BlackStar : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	public override bool TryModifyRewards(Player player, List<Reward> rewards, AbstractRoom? room)
-	{
-		if (player != base.Owner)
-		{
-			return false;
-		}
-		if (room == null || room.RoomType != RoomType.Elite)
-		{
-			return false;
-		}
-		rewards.Add(new RelicReward(player));
-		return true;
-	}
+    public override bool TryModifyRewards(Player player, List<Reward> rewards, AbstractRoom? room)
+    {
+        if (player != base.Owner)
+        {
+            return false;
+        }
+        if (room == null || room.RoomType != RoomType.Elite)
+        {
+            return false;
+        }
+        rewards.Add(new RelicReward(player));
+        return true;
+    }
 }

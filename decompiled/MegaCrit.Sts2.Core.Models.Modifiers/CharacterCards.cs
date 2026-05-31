@@ -10,56 +10,85 @@ namespace MegaCrit.Sts2.Core.Models.Modifiers;
 
 public class CharacterCards : ModifierModel
 {
-	private ModelId? _characterModel;
+    private ModelId? _characterModel;
 
-	public override LocString Title => ModelDb.GetById<CharacterModel>(CharacterModel).CardsModifierTitle;
+    public override LocString Title =>
+        ModelDb.GetById<CharacterModel>(CharacterModel).CardsModifierTitle;
 
-	public override LocString Description => ModelDb.GetById<CharacterModel>(CharacterModel).CardsModifierDescription;
+    public override LocString Description =>
+        ModelDb.GetById<CharacterModel>(CharacterModel).CardsModifierDescription;
 
-	[SavedProperty]
-	public ModelId CharacterModel
-	{
-		get
-		{
-			return _characterModel ?? throw new InvalidOperationException("CharacterCards modifier used without CharacterModel set!");
-		}
-		set
-		{
-			AssertMutable();
-			_characterModel = value;
-		}
-	}
+    [SavedProperty]
+    public ModelId CharacterModel
+    {
+        get
+        {
+            return _characterModel
+                ?? throw new InvalidOperationException(
+                    "CharacterCards modifier used without CharacterModel set!"
+                );
+        }
+        set
+        {
+            AssertMutable();
+            _characterModel = value;
+        }
+    }
 
-	public override IEnumerable<CardModel> ModifyMerchantCardPool(Player player, IEnumerable<CardModel> options)
-	{
-		CardPoolModel cardPool = player.Character.CardPool;
-		CardModel[] array = options.ToArray();
-		if (array.Any((CardModel c) => c.Pool != cardPool))
-		{
-			return array;
-		}
-		return array.Concat(ModelDb.GetById<CharacterModel>(CharacterModel).CardPool.GetUnlockedCards(player.UnlockState, player.RunState.CardMultiplayerConstraint));
-	}
+    public override IEnumerable<CardModel> ModifyMerchantCardPool(
+        Player player,
+        IEnumerable<CardModel> options
+    )
+    {
+        CardPoolModel cardPool = player.Character.CardPool;
+        CardModel[] array = options.ToArray();
+        if (array.Any((CardModel c) => c.Pool != cardPool))
+        {
+            return array;
+        }
+        return array.Concat(
+            ModelDb
+                .GetById<CharacterModel>(CharacterModel)
+                .CardPool.GetUnlockedCards(
+                    player.UnlockState,
+                    player.RunState.CardMultiplayerConstraint
+                )
+        );
+    }
 
-	public override CardCreationOptions ModifyCardRewardCreationOptions(Player player, CardCreationOptions options)
-	{
-		if (options.Flags.HasFlag(CardCreationFlags.NoCardPoolModifications))
-		{
-			return options;
-		}
-		if (!options.Flags.HasFlag(CardCreationFlags.IsCardReward))
-		{
-			return options;
-		}
-		return options.WithCustomPool(options.GetPossibleCards(player).Concat(ModelDb.GetById<CharacterModel>(CharacterModel).CardPool.GetUnlockedCards(player.UnlockState, player.RunState.CardMultiplayerConstraint)));
-	}
+    public override CardCreationOptions ModifyCardRewardCreationOptions(
+        Player player,
+        CardCreationOptions options
+    )
+    {
+        if (options.Flags.HasFlag(CardCreationFlags.NoCardPoolModifications))
+        {
+            return options;
+        }
+        if (!options.Flags.HasFlag(CardCreationFlags.IsCardReward))
+        {
+            return options;
+        }
+        return options.WithCustomPool(
+            options
+                .GetPossibleCards(player)
+                .Concat(
+                    ModelDb
+                        .GetById<CharacterModel>(CharacterModel)
+                        .CardPool.GetUnlockedCards(
+                            player.UnlockState,
+                            player.RunState.CardMultiplayerConstraint
+                        )
+                )
+        );
+    }
 
-	public override bool IsEquivalent(ModifierModel other)
-	{
-		if (base.IsEquivalent(other))
-		{
-			return ((CharacterCards)other)._characterModel == _characterModel;
-		}
-		return false;
-	}
+    public override bool IsEquivalent(ModifierModel other)
+    {
+        if (base.IsEquivalent(other))
+        {
+            return ((CharacterCards)other)._characterModel == _characterModel;
+        }
+        return false;
+    }
 }

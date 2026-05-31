@@ -9,21 +9,21 @@ namespace MegaCrit.Sts2.Core.Models.PotionPools;
 
 public sealed class NecrobinderPotionPool : PotionPoolModel
 {
-	public override string EnergyColorName => "necrobinder";
+    public override string EnergyColorName => "necrobinder";
 
-	public override Color LabOutlineColor => StsColors.pink;
+    public override Color LabOutlineColor => StsColors.pink;
 
-	protected override IEnumerable<PotionModel> GenerateAllPotions()
-	{
-		return Necrobinder4Epoch.Potions;
-	}
+    protected override IEnumerable<PotionModel> GenerateAllPotions()
+    {
+        return Necrobinder4Epoch.Potions;
+    }
 
-	public override IEnumerable<PotionModel> GetUnlockedPotions(UnlockState unlockState)
-	{
-		if (!unlockState.IsEpochRevealed<Necrobinder4Epoch>())
-		{
-			return Array.Empty<PotionModel>();
-		}
-		return GenerateAllPotions();
-	}
+    public override IEnumerable<PotionModel> GetUnlockedPotions(UnlockState unlockState)
+    {
+        if (!unlockState.IsEpochRevealed<Necrobinder4Epoch>())
+        {
+            return Array.Empty<PotionModel>();
+        }
+        return GenerateAllPotions();
+    }
 }

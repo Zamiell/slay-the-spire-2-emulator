@@ -10,50 +10,50 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game.Flavor;
 
 public class MapDrawingMessage : INetMessage, IPacketSerializable
 {
-	public static readonly int maxEventCount = (int)Math.Pow(2.0, 4.0) - 1;
+    public static readonly int maxEventCount = (int)Math.Pow(2.0, 4.0) - 1;
 
-	private const int _listBits = 4;
+    private const int _listBits = 4;
 
-	private List<NetMapDrawingEvent> _events = new List<NetMapDrawingEvent>();
+    private List<NetMapDrawingEvent> _events = new List<NetMapDrawingEvent>();
 
-	public DrawingMode? drawingMode;
+    public DrawingMode? drawingMode;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Unreliable;
+    public NetTransferMode Mode => NetTransferMode.Unreliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public IReadOnlyList<NetMapDrawingEvent> Events => _events;
+    public IReadOnlyList<NetMapDrawingEvent> Events => _events;
 
-	public bool TryAddEvent(NetMapDrawingEvent ev)
-	{
-		if (_events.Count >= maxEventCount)
-		{
-			return false;
-		}
-		_events.Add(ev);
-		return true;
-	}
+    public bool TryAddEvent(NetMapDrawingEvent ev)
+    {
+        if (_events.Count >= maxEventCount)
+        {
+            return false;
+        }
+        _events.Add(ev);
+        return true;
+    }
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteList(_events, 4);
-		writer.WriteBool(drawingMode.HasValue);
-		if (drawingMode.HasValue)
-		{
-			writer.WriteEnum(drawingMode.Value);
-		}
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteList(_events, 4);
+        writer.WriteBool(drawingMode.HasValue);
+        if (drawingMode.HasValue)
+        {
+            writer.WriteEnum(drawingMode.Value);
+        }
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		_events = reader.ReadList<NetMapDrawingEvent>(4);
-		if (reader.ReadBool())
-		{
-			drawingMode = reader.ReadEnum<DrawingMode>();
-		}
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        _events = reader.ReadList<NetMapDrawingEvent>(4);
+        if (reader.ReadBool())
+        {
+            drawingMode = reader.ReadEnum<DrawingMode>();
+        }
+    }
 }

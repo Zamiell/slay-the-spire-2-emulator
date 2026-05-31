@@ -12,45 +12,50 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class NightmarePower : PowerModel
 {
-	private class Data
-	{
-		public CardModel? selectedCard;
-	}
+    private class Data
+    {
+        public CardModel? selectedCard;
+    }
 
-	private const string _cardKey = "Card";
+    private const string _cardKey = "Card";
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
+    public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new StringVar("Card"));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new StringVar("Card"));
 
-	protected override object InitInternalData()
-	{
-		return new Data();
-	}
+    protected override object InitInternalData()
+    {
+        return new Data();
+    }
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player == base.Owner.Player)
-		{
-			CardModel card = GetInternalData<Data>().selectedCard;
-			for (int i = 0; i < base.Amount; i++)
-			{
-				CardModel card2 = card.CreateClone();
-				await CardPileCmd.AddGeneratedCardToCombat(card2, PileType.Hand, base.Owner.Player);
-			}
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player == base.Owner.Player)
+        {
+            CardModel card = GetInternalData<Data>().selectedCard;
+            for (int i = 0; i < base.Amount; i++)
+            {
+                CardModel card2 = card.CreateClone();
+                await CardPileCmd.AddGeneratedCardToCombat(card2, PileType.Hand, base.Owner.Player);
+            }
+            await PowerCmd.Remove(this);
+        }
+    }
 
-	public void SetSelectedCard(CardModel card)
-	{
-		CardModel cardModel = card.CreateClone();
-		CardCmd.ClearAffliction(cardModel);
-		GetInternalData<Data>().selectedCard = cardModel;
-		((StringVar)base.DynamicVars["Card"]).StringValue = cardModel.Title;
-	}
+    public void SetSelectedCard(CardModel card)
+    {
+        CardModel cardModel = card.CreateClone();
+        CardCmd.ClearAffliction(cardModel);
+        GetInternalData<Data>().selectedCard = cardModel;
+        ((StringVar)base.DynamicVars["Card"]).StringValue = cardModel.Title;
+    }
 }

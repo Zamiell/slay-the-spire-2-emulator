@@ -15,61 +15,81 @@ namespace MegaCrit.Sts2.Core.Entities.Merchant;
 
 public sealed class MerchantRelicEntry : MerchantEntry
 {
-	public RelicModel? Model { get; private set; }
+    public RelicModel? Model { get; private set; }
 
-	public override bool IsStocked => Model != null;
+    public override bool IsStocked => Model != null;
 
-	public MerchantRelicEntry(RelicRarity rarity, Player player)
-		: base(player)
-	{
-		FillSlot(rarity);
-	}
+    public MerchantRelicEntry(RelicRarity rarity, Player player)
+        : base(player)
+    {
+        FillSlot(rarity);
+    }
 
-	public MerchantRelicEntry(RelicModel relic, Player player)
-		: base(player)
-	{
-		SetModel(relic);
-	}
+    public MerchantRelicEntry(RelicModel relic, Player player)
+        : base(player)
+    {
+        SetModel(relic);
+    }
 
-	private void FillSlot(RelicRarity rarity, IEnumerable<RelicModel>? blacklist = null)
-	{
-		SetModel(RelicFactory.PullNextRelicFromBack(_player, rarity, (RelicModel r) => (blacklist == null || !blacklist.Contains(r)) && r.IsAllowedInShops).ToMutable());
-	}
+    private void FillSlot(RelicRarity rarity, IEnumerable<RelicModel>? blacklist = null)
+    {
+        SetModel(
+            RelicFactory
+                .PullNextRelicFromBack(
+                    _player,
+                    rarity,
+                    (RelicModel r) =>
+                        (blacklist == null || !blacklist.Contains(r)) && r.IsAllowedInShops
+                )
+                .ToMutable()
+        );
+    }
 
-	public override void CalcCost()
-	{
-		_cost = (int)Math.Round((float)Model.MerchantCost * _player.PlayerRng.Shops.NextFloat(0.85f, 1.15f));
-	}
+    public override void CalcCost()
+    {
+        _cost = (int)
+            Math.Round((float)Model.MerchantCost * _player.PlayerRng.Shops.NextFloat(0.85f, 1.15f));
+    }
 
-	private void SetModel(RelicModel model)
-	{
-		model.AssertMutable();
-		Model = model;
-		CalcCost();
-		SaveManager.Instance.MarkRelicAsSeen(Model);
-	}
+    private void SetModel(RelicModel model)
+    {
+        model.AssertMutable();
+        Model = model;
+        CalcCost();
+        SaveManager.Instance.MarkRelicAsSeen(Model);
+    }
 
-	protected override async Task<(bool, int)> OnTryPurchase(MerchantInventory? inventory, bool ignoreCost)
-	{
-		if (!ignoreCost)
-		{
-			await PlayerCmd.LoseGold(base.Cost, _player, GoldLossType.Spent);
-		}
-		_player.RunState.CurrentMapPointHistoryEntry?.GetEntry(_player.NetId).BoughtRelics.Add(Model.Id);
-		await RelicCmd.Obtain(Model, _player);
-		RunManager.Instance.RewardSynchronizer.SyncLocalGoldLost(base.Cost);
-		RunManager.Instance.RewardSynchronizer.SyncLocalObtainedRelic(Model);
-		return (true, (!ignoreCost) ? base.Cost : 0);
-	}
+    protected override async Task<(bool, int)> OnTryPurchase(
+        MerchantInventory? inventory,
+        bool ignoreCost
+    )
+    {
+        if (!ignoreCost)
+        {
+            await PlayerCmd.LoseGold(base.Cost, _player, GoldLossType.Spent);
+        }
+        _player
+            .RunState.CurrentMapPointHistoryEntry?.GetEntry(_player.NetId)
+            .BoughtRelics.Add(Model.Id);
+        await RelicCmd.Obtain(Model, _player);
+        RunManager.Instance.RewardSynchronizer.SyncLocalGoldLost(base.Cost);
+        RunManager.Instance.RewardSynchronizer.SyncLocalObtainedRelic(Model);
+        return (true, (!ignoreCost) ? base.Cost : 0);
+    }
 
-	protected override void ClearAfterPurchase()
-	{
-		Model = null;
-	}
+    protected override void ClearAfterPurchase()
+    {
+        Model = null;
+    }
 
-	protected override void RestockAfterPurchase(MerchantInventory? inventory)
-	{
-		HashSet<RelicModel> blacklist = inventory?.RelicEntries.Select((MerchantRelicEntry e) => e.Model?.CanonicalInstance).OfType<RelicModel>().ToHashSet() ?? new HashSet<RelicModel>();
-		FillSlot(RelicFactory.RollRarity(_player), blacklist);
-	}
+    protected override void RestockAfterPurchase(MerchantInventory? inventory)
+    {
+        HashSet<RelicModel> blacklist =
+            inventory
+                ?.RelicEntries.Select((MerchantRelicEntry e) => e.Model?.CanonicalInstance)
+                .OfType<RelicModel>()
+                .ToHashSet()
+            ?? new HashSet<RelicModel>();
+        FillSlot(RelicFactory.RollRarity(_player), blacklist);
+    }
 }

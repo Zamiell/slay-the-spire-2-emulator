@@ -11,37 +11,53 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Transfigure : CardModel
 {
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(1));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(1));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		base.EnergyHoverTip,
-		HoverTipFactory.Static(StaticHoverTip.ReplayStatic)
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                base.EnergyHoverTip,
+                HoverTipFactory.Static(StaticHoverTip.ReplayStatic),
+            }
+        );
 
-	public Transfigure()
-		: base(1, CardType.Skill, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public Transfigure()
+        : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		IEnumerable<CardModel> cardToTransfigure = await CardSelectCmd.FromHand(choiceContext, base.Owner, new CardSelectorPrefs(base.SelectionScreenPrompt, 1), null, this);
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		foreach (CardModel item in cardToTransfigure)
-		{
-			if (!item.EnergyCost.CostsX && item.EnergyCost.GetWithModifiers(CostModifiers.None) >= 0)
-			{
-				item.EnergyCost.AddThisCombat(1);
-			}
-			item.BaseReplayCount++;
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        IEnumerable<CardModel> cardToTransfigure = await CardSelectCmd.FromHand(
+            choiceContext,
+            base.Owner,
+            new CardSelectorPrefs(base.SelectionScreenPrompt, 1),
+            null,
+            this
+        );
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        foreach (CardModel item in cardToTransfigure)
+        {
+            if (
+                !item.EnergyCost.CostsX
+                && item.EnergyCost.GetWithModifiers(CostModifiers.None) >= 0
+            )
+            {
+                item.EnergyCost.AddThisCombat(1);
+            }
+            item.BaseReplayCount++;
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		RemoveKeyword(CardKeyword.Exhaust);
-	}
+    protected override void OnUpgrade()
+    {
+        RemoveKeyword(CardKeyword.Exhaust);
+    }
 }

@@ -7,27 +7,27 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby;
 
 public struct ClientLobbyJoinRequestMessage : INetMessage, IPacketSerializable
 {
-	public int maxAscensionUnlocked;
+    public int maxAscensionUnlocked;
 
-	public SerializableUnlockState unlockState;
+    public SerializableUnlockState unlockState;
 
-	public bool ShouldBroadcast => false;
+    public bool ShouldBroadcast => false;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.Info;
+    public LogLevel LogLevel => LogLevel.Info;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteInt(maxAscensionUnlocked);
-		writer.Write(unlockState);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteInt(maxAscensionUnlocked);
+        writer.Write(unlockState);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		maxAscensionUnlocked = reader.ReadInt();
-		unlockState = reader.Read<SerializableUnlockState>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        maxAscensionUnlocked = reader.ReadInt();
+        unlockState = reader.Read<SerializableUnlockState>();
+    }
 }

@@ -12,23 +12,37 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Hailstorm : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromOrb<FrostOrb>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromOrb<FrostOrb>()
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<HailstormPower>(6m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<HailstormPower>(6m)
+        );
 
-	public Hailstorm()
-		: base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Hailstorm()
+        : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<HailstormPower>(choiceContext, base.Owner.Creature, base.DynamicVars["HailstormPower"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<HailstormPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["HailstormPower"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars["HailstormPower"].UpgradeValueBy(2m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars["HailstormPower"].UpgradeValueBy(2m);
+    }
 }

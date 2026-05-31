@@ -12,34 +12,38 @@ namespace MegaCrit.Sts2.Core.Models.Badges;
 
 public class CccComboModel : BadgeModel
 {
-	private int _cardsPlayedThisTurn;
+    private int _cardsPlayedThisTurn;
 
-	public override Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (!LocalContext.IsMine(cardPlay.Card))
-		{
-			return Task.CompletedTask;
-		}
-		_cardsPlayedThisTurn++;
-		if (_cardsPlayedThisTurn >= 20)
-		{
-			Player owner = cardPlay.Card.Owner;
-			if (!owner.ExtraFields.CccomboBadgeUnlocked)
-			{
-				Log.Info("Player played 20 cards in a single turn, ccccombo unlocked");
-			}
-			owner.ExtraFields.CccomboBadgeUnlocked = true;
-		}
-		return Task.CompletedTask;
-	}
+    public override Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (!LocalContext.IsMine(cardPlay.Card))
+        {
+            return Task.CompletedTask;
+        }
+        _cardsPlayedThisTurn++;
+        if (_cardsPlayedThisTurn >= 20)
+        {
+            Player owner = cardPlay.Card.Owner;
+            if (!owner.ExtraFields.CccomboBadgeUnlocked)
+            {
+                Log.Info("Player played 20 cards in a single turn, ccccombo unlocked");
+            }
+            owner.ExtraFields.CccomboBadgeUnlocked = true;
+        }
+        return Task.CompletedTask;
+    }
 
-	public override Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (side != CombatSide.Player)
-		{
-			return Task.CompletedTask;
-		}
-		_cardsPlayedThisTurn = 0;
-		return Task.CompletedTask;
-	}
+    public override Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (side != CombatSide.Player)
+        {
+            return Task.CompletedTask;
+        }
+        _cardsPlayedThisTurn = 0;
+        return Task.CompletedTask;
+    }
 }

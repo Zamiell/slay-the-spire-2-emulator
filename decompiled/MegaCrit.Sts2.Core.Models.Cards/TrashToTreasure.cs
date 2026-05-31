@@ -10,21 +10,32 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class TrashToTreasure : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Channeling));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Channeling)
+        );
 
-	public TrashToTreasure()
-		: base(1, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public TrashToTreasure()
+        : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<TrashToTreasurePower>(choiceContext, base.Owner.Creature, 1m, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<TrashToTreasurePower>(
+            choiceContext,
+            base.Owner.Creature,
+            1m,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		AddKeyword(CardKeyword.Innate);
-	}
+    protected override void OnUpgrade()
+    {
+        AddKeyword(CardKeyword.Innate);
+    }
 }

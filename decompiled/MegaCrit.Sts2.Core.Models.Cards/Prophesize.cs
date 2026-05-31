@@ -9,21 +9,24 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Prophesize : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(6));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(6));
 
-	public Prophesize()
-		: base(2, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Prophesize()
+        : base(2, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.AttackAnimDelay);
-		await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, base.Owner);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.AttackAnimDelay
+        );
+        await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, base.Owner);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Cards.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Cards.UpgradeValueBy(3m);
+    }
 }

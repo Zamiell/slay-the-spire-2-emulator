@@ -7,7 +7,7 @@ namespace MegaCrit.Sts2.Core.AutoSlay.Handlers;
 
 public interface IHandler
 {
-	TimeSpan Timeout { get; }
+    TimeSpan Timeout { get; }
 
-	Task HandleAsync(Rng random, CancellationToken ct);
+    Task HandleAsync(Rng random, CancellationToken ct);
 }

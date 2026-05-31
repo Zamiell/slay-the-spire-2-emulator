@@ -9,15 +9,28 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class MonarchsGazePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterDamageGiven(PlayerChoiceContext choiceContext, Creature? dealer, DamageResult _, ValueProp props, Creature target, CardModel? cardSource)
-	{
-		if (dealer == base.Owner && props.IsPoweredAttack())
-		{
-			await PowerCmd.Apply<MonarchsGazeStrengthDownPower>(choiceContext, target, base.Amount, base.Owner, null);
-		}
-	}
+    public override async Task AfterDamageGiven(
+        PlayerChoiceContext choiceContext,
+        Creature? dealer,
+        DamageResult _,
+        ValueProp props,
+        Creature target,
+        CardModel? cardSource
+    )
+    {
+        if (dealer == base.Owner && props.IsPoweredAttack())
+        {
+            await PowerCmd.Apply<MonarchsGazeStrengthDownPower>(
+                choiceContext,
+                target,
+                base.Amount,
+                base.Owner,
+                null
+            );
+        }
+    }
 }

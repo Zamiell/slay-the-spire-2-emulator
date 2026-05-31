@@ -12,48 +12,45 @@ namespace MegaCrit.Sts2.Core.GameActions;
 
 public class MoveToMapCoordAction : GameAction
 {
-	private readonly Player _player;
+    private readonly Player _player;
 
-	private readonly MapCoord _destination;
+    private readonly MapCoord _destination;
 
-	public override ulong OwnerId => _player.NetId;
+    public override ulong OwnerId => _player.NetId;
 
-	public override GameActionType ActionType => GameActionType.NonCombat;
+    public override GameActionType ActionType => GameActionType.NonCombat;
 
-	public MoveToMapCoordAction(Player player, MapCoord destination)
-	{
-		_player = player;
-		_destination = destination;
-	}
+    public MoveToMapCoordAction(Player player, MapCoord destination)
+    {
+        _player = player;
+        _destination = destination;
+    }
 
-	protected override Task ExecuteAction()
-	{
-		TaskHelper.RunSafely(GoToMapCoord());
-		return Task.CompletedTask;
-	}
+    protected override Task ExecuteAction()
+    {
+        TaskHelper.RunSafely(GoToMapCoord());
+        return Task.CompletedTask;
+    }
 
-	private async Task GoToMapCoord()
-	{
-		if (TestMode.IsOn)
-		{
-			await RunManager.Instance.EnterMapCoord(_destination);
-		}
-		else
-		{
-			await NMapScreen.Instance.TravelToMapCoord(_destination);
-		}
-	}
+    private async Task GoToMapCoord()
+    {
+        if (TestMode.IsOn)
+        {
+            await RunManager.Instance.EnterMapCoord(_destination);
+        }
+        else
+        {
+            await NMapScreen.Instance.TravelToMapCoord(_destination);
+        }
+    }
 
-	public override INetAction ToNetAction()
-	{
-		return new NetMoveToMapCoordAction
-		{
-			destination = _destination
-		};
-	}
+    public override INetAction ToNetAction()
+    {
+        return new NetMoveToMapCoordAction { destination = _destination };
+    }
 
-	public override string ToString()
-	{
-		return $"{"MoveToMapCoordAction"} {_player.NetId} {_destination}";
-	}
+    public override string ToString()
+    {
+        return $"{"MoveToMapCoordAction"} {_player.NetId} {_destination}";
+    }
 }

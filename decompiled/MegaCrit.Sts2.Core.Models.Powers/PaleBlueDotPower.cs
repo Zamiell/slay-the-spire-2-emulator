@@ -11,33 +11,39 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class PaleBlueDotPower : PowerModel
 {
-	public const string cardPlayThresholdKey = "CardPlay";
+    public const string cardPlayThresholdKey = "CardPlay";
 
-	public const int cardPlayThresholdValue = 5;
+    public const int cardPlayThresholdValue = 5;
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("CardPlay", 5m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("CardPlay", 5m)
+        );
 
-	public override decimal ModifyHandDraw(Player player, decimal count)
-	{
-		if (player != base.Owner.Player)
-		{
-			return count;
-		}
-		int num = CombatManager.Instance.History.CardPlaysFinished.Count((CardPlayFinishedEntry c) => c.HappenedLastPlayerTurn(player) && c.CardPlay.Card.Owner == base.Owner.Player);
-		if (num < base.DynamicVars["CardPlay"].IntValue)
-		{
-			return count;
-		}
-		return count + (decimal)base.Amount;
-	}
+    public override decimal ModifyHandDraw(Player player, decimal count)
+    {
+        if (player != base.Owner.Player)
+        {
+            return count;
+        }
+        int num = CombatManager.Instance.History.CardPlaysFinished.Count(
+            (CardPlayFinishedEntry c) =>
+                c.HappenedLastPlayerTurn(player) && c.CardPlay.Card.Owner == base.Owner.Player
+        );
+        if (num < base.DynamicVars["CardPlay"].IntValue)
+        {
+            return count;
+        }
+        return count + (decimal)base.Amount;
+    }
 
-	public override Task AfterModifyingHandDraw()
-	{
-		Flash();
-		return Task.CompletedTask;
-	}
+    public override Task AfterModifyingHandDraw()
+    {
+        Flash();
+        return Task.CompletedTask;
+    }
 }

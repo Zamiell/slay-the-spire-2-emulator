@@ -13,19 +13,31 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class LuckyTonic : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Rare;
+    public override PotionRarity Rarity => PotionRarity.Rare;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyPlayer;
+    public override TargetType TargetType => TargetType.AnyPlayer;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<BufferPower>(1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<BufferPower>(1m)
+        );
 
-	public override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<BufferPower>());
+    public override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<BufferPower>()
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		await PowerCmd.Apply<BufferPower>(choiceContext, target, base.DynamicVars["BufferPower"].BaseValue, base.Owner.Creature, null);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        await PowerCmd.Apply<BufferPower>(
+            choiceContext,
+            target,
+            base.DynamicVars["BufferPower"].BaseValue,
+            base.Owner.Creature,
+            null
+        );
+    }
 }

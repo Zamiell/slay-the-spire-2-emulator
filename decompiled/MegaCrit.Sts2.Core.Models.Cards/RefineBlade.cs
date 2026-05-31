@@ -11,28 +11,35 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class RefineBlade : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new ForgeVar(9),
-		new EnergyVar(1)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new ForgeVar(9), new EnergyVar(1) }
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromForge();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromForge();
 
-	public RefineBlade()
-		: base(1, CardType.Skill, CardRarity.Common, TargetType.Self)
-	{
-	}
+    public RefineBlade()
+        : base(1, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await ForgeCmd.Forge(base.DynamicVars.Forge.IntValue, base.Owner, this);
-		await PowerCmd.Apply<EnergyNextTurnPower>(choiceContext, base.Owner.Creature, base.DynamicVars.Energy.BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await ForgeCmd.Forge(base.DynamicVars.Forge.IntValue, base.Owner, this);
+        await PowerCmd.Apply<EnergyNextTurnPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars.Energy.BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Forge.UpgradeValueBy(4m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Forge.UpgradeValueBy(4m);
+    }
 }

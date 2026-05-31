@@ -4,7 +4,12 @@ using Effects;
 
 public static class EnemyAI
 {
-    public static void ChooseIntents(List<EnemyState> enemies, int turn, Random rng, Random? aiRng = null)
+    public static void ChooseIntents(
+        List<EnemyState> enemies,
+        int turn,
+        Random rng,
+        Random? aiRng = null
+    )
     {
         var effectiveAiRng = aiRng ?? rng;
         foreach (var enemy in enemies.Where(e => e.Hp > 0))
@@ -74,7 +79,10 @@ public static class EnemyAI
 
                 int baseDamage = enemy.CurrentIntent.Magnitude;
                 if (enemy.DefId == KE.FlailKnight)
-                    baseDamage = Math.Max(0, baseDamage - BuffSystem.Get(enemy.Buffs, BuffId.Strength));
+                    baseDamage = Math.Max(
+                        0,
+                        baseDamage - BuffSystem.Get(enemy.Buffs, BuffId.Strength)
+                    );
 
                 DealAttackDamage(enemy, state, baseDamage);
 
@@ -133,8 +141,7 @@ public static class EnemyAI
             }
 
             case IntentType.Defend:
-                enemy.Block += BuffSystem.IncomingBlock(
-                    enemy.CurrentIntent.Magnitude, enemy.Buffs);
+                enemy.Block += BuffSystem.IncomingBlock(enemy.CurrentIntent.Magnitude, enemy.Buffs);
                 break;
 
             case IntentType.Buff:
@@ -146,9 +153,11 @@ public static class EnemyAI
                 break;
         }
 
-        if (enemy.DefId == KE.Nibbit
+        if (
+            enemy.DefId == KE.Nibbit
             && enemy.CurrentIntent.Type == IntentType.Attack
-            && enemy.MoveIndex % 3 == 1)
+            && enemy.MoveIndex % 3 == 1
+        )
         {
             enemy.Block += BuffSystem.IncomingBlock(6, enemy.Buffs);
         }
@@ -783,9 +792,11 @@ public static class EnemyAI
             case KE.ShrinkerBeetle:
                 return enemy.MoveIndex == 0
                     ? new Intent(IntentType.Debuff, 1)
-                    : (enemy.MoveIndex % 2 == 1
-                        ? new Intent(IntentType.Attack, 8)
-                        : new Intent(IntentType.Attack, 14));
+                    : (
+                        enemy.MoveIndex % 2 == 1
+                            ? new Intent(IntentType.Attack, 8)
+                            : new Intent(IntentType.Attack, 14)
+                    );
 
             case KE.Nibbit:
                 // Alone Nibbit: Butt, Slice+block, Hiss loop.
@@ -885,13 +896,15 @@ public static class EnemyAI
             case KE.SludgeSpinner:
             {
                 int move;
-                if (enemy.MoveIndex == 0) move = 0;
+                if (enemy.MoveIndex == 0)
+                    move = 0;
                 else
                 {
-                    int[] pool = enemy.LastMove switch {
+                    int[] pool = enemy.LastMove switch
+                    {
                         0 => [1, 2],
                         1 => [0, 2],
-                        _ => [0, 1]
+                        _ => [0, 1],
                     };
                     move = pool[rng.Next(pool.Length)];
                 }
@@ -948,15 +961,24 @@ public static class EnemyAI
     {
         return enemy.DefId switch
         {
-            KE.GremlinMerc when enemy.MoveIndex % 3 is 1 or 2 =>
-                new Intent(IntentType.Attack, enemy.CurrentIntent.Magnitude),
-            KE.SludgeSpinner when enemy.MoveIndex % 3 is 0 or 2 =>
-                new Intent(IntentType.Attack, enemy.CurrentIntent.Magnitude),
-            KE.LivingFog when enemy.MoveIndex % 3 == 0 =>
-                new Intent(IntentType.Attack, enemy.CurrentIntent.Magnitude),
-            KE.Flyconid when enemy.CurrentIntent.Type == IntentType.Debuff
-                && enemy.CurrentIntent.Magnitude > 2 =>
-                new Intent(IntentType.Attack, enemy.CurrentIntent.Magnitude),
+            KE.GremlinMerc when enemy.MoveIndex % 3 is 1 or 2 => new Intent(
+                IntentType.Attack,
+                enemy.CurrentIntent.Magnitude
+            ),
+            KE.SludgeSpinner when enemy.MoveIndex % 3 is 0 or 2 => new Intent(
+                IntentType.Attack,
+                enemy.CurrentIntent.Magnitude
+            ),
+            KE.LivingFog when enemy.MoveIndex % 3 == 0 => new Intent(
+                IntentType.Attack,
+                enemy.CurrentIntent.Magnitude
+            ),
+            KE.Flyconid
+                when enemy.CurrentIntent.Type == IntentType.Debuff
+                    && enemy.CurrentIntent.Magnitude > 2 => new Intent(
+                IntentType.Attack,
+                enemy.CurrentIntent.Magnitude
+            ),
             _ => null,
         };
     }
@@ -1022,7 +1044,10 @@ public static class EnemyAI
                 break;
 
             case KE.SewerClam:
-                enemy.Block += BuffSystem.IncomingBlock(BuffSystem.Get(enemy.Buffs, BuffId.Plating), enemy.Buffs);
+                enemy.Block += BuffSystem.IncomingBlock(
+                    BuffSystem.Get(enemy.Buffs, BuffId.Plating),
+                    enemy.Buffs
+                );
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 4);
                 break;
 
@@ -1034,7 +1059,12 @@ public static class EnemyAI
                 }
                 else if (!state.Enemies.Any(e => e.Hp > 0 && e.DefId == KE.EyeWithTeeth))
                 {
-                    var eye = CreateEnemy(KE.EyeWithTeeth, rng, new Intent(IntentType.Debuff, 3), stunned: true);
+                    var eye = CreateEnemy(
+                        KE.EyeWithTeeth,
+                        rng,
+                        new Intent(IntentType.Debuff, 3),
+                        stunned: true
+                    );
                     BuffSystem.Apply(eye.Buffs, BuffId.Illusion, 1);
                     state.Enemies.Insert(state.Enemies.IndexOf(enemy), eye);
                 }
@@ -1043,7 +1073,12 @@ public static class EnemyAI
             case KE.LivingFog:
                 if (state.Enemies.Count(e => e.Hp > 0 && e.DefId == KE.GasBomb) < 3)
                 {
-                    var bomb = CreateEnemy(KE.GasBomb, rng, new Intent(IntentType.Attack, 9), stunned: true);
+                    var bomb = CreateEnemy(
+                        KE.GasBomb,
+                        rng,
+                        new Intent(IntentType.Attack, 9),
+                        stunned: true
+                    );
                     BuffSystem.Apply(bomb.Buffs, BuffId.Minion, 1);
                     state.Enemies.Add(bomb);
                 }
@@ -1300,7 +1335,11 @@ public static class EnemyAI
                 break;
 
             case KE.HunterKiller:
-                BuffSystem.Apply(state.PlayerBuffs, BuffId.Vulnerable, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(
+                    state.PlayerBuffs,
+                    BuffId.Vulnerable,
+                    enemy.CurrentIntent.Magnitude
+                );
                 break;
 
             case KE.FakeMerchant:
@@ -1340,7 +1379,11 @@ public static class EnemyAI
                 break;
 
             case KE.Queen:
-                BuffSystem.Apply(state.PlayerBuffs, BuffId.ChainsOfBinding, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(
+                    state.PlayerBuffs,
+                    BuffId.ChainsOfBinding,
+                    enemy.CurrentIntent.Magnitude
+                );
                 break;
 
             case KE.SoulFysh:
@@ -1362,13 +1405,21 @@ public static class EnemyAI
                 break;
 
             case KE.TheLost:
-                BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, -enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(
+                    state.PlayerBuffs,
+                    BuffId.Strength,
+                    -enemy.CurrentIntent.Magnitude
+                );
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
                 break;
 
             case KE.TheForgotten:
                 enemy.Block += BuffSystem.IncomingBlock(8, enemy.Buffs);
-                BuffSystem.Apply(state.PlayerBuffs, BuffId.Dexterity, -enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(
+                    state.PlayerBuffs,
+                    BuffId.Dexterity,
+                    -enemy.CurrentIntent.Magnitude
+                );
                 BuffSystem.Apply(enemy.Buffs, BuffId.Dexterity, enemy.CurrentIntent.Magnitude);
                 break;
 
@@ -1406,18 +1457,26 @@ public static class EnemyAI
         }
     }
 
-    private static bool DealAttackDamage(EnemyState enemy, CombatState state, int baseDamage, bool triggerSuck = true)
+    private static bool DealAttackDamage(
+        EnemyState enemy,
+        CombatState state,
+        int baseDamage,
+        bool triggerSuck = true
+    )
     {
         int damage = BuffSystem.IncomingDamage(baseDamage, enemy.Buffs, state.PlayerBuffs);
-        if (BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus) > 0
-            && BuffSystem.Get(enemy.Buffs, BuffId.Vulnerable) > 0)
+        if (
+            BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus) > 0
+            && BuffSystem.Get(enemy.Buffs, BuffId.Vulnerable) > 0
+        )
         {
             damage /= 2;
         }
         int absorbed = Math.Min(state.PlayerBlock, damage);
         state.PlayerBlock -= absorbed;
         int unblocked = damage - absorbed;
-        if (unblocked > 0) state.UnblockedDamageHitCount++;
+        if (unblocked > 0)
+            state.UnblockedDamageHitCount++;
         state.PlayerHp = Math.Max(0, state.PlayerHp - unblocked);
         if (unblocked > 0 && triggerSuck)
             TriggerSuck(enemy);
@@ -1476,10 +1535,18 @@ public static class EnemyAI
             state.DiscardPile.Add(new CardInstance(cardId, false));
     }
 
-    private static void AddStatusToDrawPileRandomly(CombatState state, int cardId, int count, Random rng)
+    private static void AddStatusToDrawPileRandomly(
+        CombatState state,
+        int cardId,
+        int count,
+        Random rng
+    )
     {
         for (int i = 0; i < count; i++)
-            state.DrawPile.Insert(rng.Next(state.DrawPile.Count + 1), new CardInstance(cardId, false));
+            state.DrawPile.Insert(
+                rng.Next(state.DrawPile.Count + 1),
+                new CardInstance(cardId, false)
+            );
     }
 
     private static void AddStatusToHand(CombatState state, int cardId, int count)
@@ -1494,14 +1561,23 @@ public static class EnemyAI
         int insertIndex = state.Enemies.IndexOf(enemy);
         for (int i = 0; i < eggsToAdd; i++)
         {
-            var egg = CreateEnemy(KE.ToughEgg, rng, new Intent(IntentType.Unknown, 0), stunned: true);
+            var egg = CreateEnemy(
+                KE.ToughEgg,
+                rng,
+                new Intent(IntentType.Unknown, 0),
+                stunned: true
+            );
             BuffSystem.Apply(egg.Buffs, BuffId.Minion, 1);
             state.Enemies.Insert(insertIndex + i, egg);
         }
     }
 
     private static void SummonFabricatorBots(
-        EnemyState enemy, CombatState state, Random rng, bool includeDefensive)
+        EnemyState enemy,
+        CombatState state,
+        Random rng,
+        bool includeDefensive
+    )
     {
         int insertIndex = state.Enemies.IndexOf(enemy);
         if (includeDefensive && state.Enemies.Count < 6)
@@ -1532,7 +1608,12 @@ public static class EnemyAI
 
     private static void SummonParafright(EnemyState enemy, CombatState state)
     {
-        var parafright = CreateEnemy(KE.Parafright, new Random(0), new Intent(IntentType.Attack, 17), stunned: true);
+        var parafright = CreateEnemy(
+            KE.Parafright,
+            new Random(0),
+            new Intent(IntentType.Attack, 17),
+            stunned: true
+        );
         BuffSystem.Apply(parafright.Buffs, BuffId.Illusion, 1);
         state.Enemies.Insert(state.Enemies.IndexOf(enemy), parafright);
     }
@@ -1559,13 +1640,16 @@ public static class EnemyAI
         if (state.Enemies.Count(e => e.DefId == KE.TwoTailedRat) >= 6)
             return;
 
-        state.Enemies.Add(CreateEnemy(KE.TwoTailedRat, rng, new Intent(IntentType.Unknown, 0), stunned: true));
+        state.Enemies.Add(
+            CreateEnemy(KE.TwoTailedRat, rng, new Intent(IntentType.Unknown, 0), stunned: true)
+        );
 
-        int nextBackupCount = state.Enemies
-            .Where(e => e.DefId == KE.TwoTailedRat)
-            .Select(e => BuffSystem.Get(e.Buffs, BuffId.BackupCount))
-            .DefaultIfEmpty(0)
-            .Max() + 1;
+        int nextBackupCount =
+            state
+                .Enemies.Where(e => e.DefId == KE.TwoTailedRat)
+                .Select(e => BuffSystem.Get(e.Buffs, BuffId.BackupCount))
+                .DefaultIfEmpty(0)
+                .Max() + 1;
         foreach (var rat in state.Enemies.Where(e => e.DefId == KE.TwoTailedRat))
         {
             int current = BuffSystem.Get(rat.Buffs, BuffId.BackupCount);
@@ -1573,7 +1657,12 @@ public static class EnemyAI
         }
     }
 
-    private static EnemyState CreateEnemy(int defId, Random rng, Intent intent, bool stunned = false)
+    private static EnemyState CreateEnemy(
+        int defId,
+        Random rng,
+        Intent intent,
+        bool stunned = false
+    )
     {
         var def = GeneratedData.Enemies.Get(defId);
         int hp = rng.Next(def.MinHp, def.MaxHp + 1);

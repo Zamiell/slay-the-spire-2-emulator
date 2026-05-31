@@ -5,15 +5,15 @@ namespace MegaCrit.Sts2.Core.Nodes.Screens.Overlays;
 
 public interface IOverlayScreen : IScreenContext
 {
-	NetScreenType ScreenType { get; }
+    NetScreenType ScreenType { get; }
 
-	bool UseSharedBackstop { get; }
+    bool UseSharedBackstop { get; }
 
-	void AfterOverlayOpened();
+    void AfterOverlayOpened();
 
-	void AfterOverlayClosed();
+    void AfterOverlayClosed();
 
-	void AfterOverlayShown();
+    void AfterOverlayShown();
 
-	void AfterOverlayHidden();
+    void AfterOverlayHidden();
 }

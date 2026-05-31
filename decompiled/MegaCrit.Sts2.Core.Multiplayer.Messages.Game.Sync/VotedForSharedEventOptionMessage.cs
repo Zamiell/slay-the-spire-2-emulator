@@ -5,40 +5,43 @@ using MegaCrit.Sts2.Core.Runs;
 
 namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game.Sync;
 
-public struct VotedForSharedEventOptionMessage : INetMessage, IPacketSerializable, IRunLocationTargetedMessage
+public struct VotedForSharedEventOptionMessage
+    : INetMessage,
+        IPacketSerializable,
+        IRunLocationTargetedMessage
 {
-	public uint optionIndex;
+    public uint optionIndex;
 
-	public uint pageIndex;
+    public uint pageIndex;
 
-	public RunLocation location;
+    public RunLocation location;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public RunLocation Location => location;
+    public RunLocation Location => location;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteUInt(optionIndex, 4);
-		writer.WriteUInt(pageIndex, 4);
-		writer.Write(location);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteUInt(optionIndex, 4);
+        writer.WriteUInt(pageIndex, 4);
+        writer.Write(location);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		optionIndex = reader.ReadUInt(4);
-		pageIndex = reader.ReadUInt(4);
-		location = reader.Read<RunLocation>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        optionIndex = reader.ReadUInt(4);
+        pageIndex = reader.ReadUInt(4);
+        location = reader.Read<RunLocation>();
+    }
 
-	public override string ToString()
-	{
-		return $"{"VotedForSharedEventOptionMessage"} index {optionIndex} page {pageIndex}";
-	}
+    public override string ToString()
+    {
+        return $"{"VotedForSharedEventOptionMessage"} index {optionIndex} page {pageIndex}";
+    }
 }

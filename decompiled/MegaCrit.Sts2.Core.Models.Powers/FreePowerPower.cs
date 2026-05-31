@@ -7,59 +7,63 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class FreePowerPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override bool TryModifyEnergyCostInCombatLate(CardModel card, decimal originalCost, out decimal modifiedCost)
-	{
-		modifiedCost = originalCost;
-		if (card.Owner.Creature != base.Owner)
-		{
-			return false;
-		}
-		if (card.Type != CardType.Power)
-		{
-			return false;
-		}
-		bool flag;
-		switch (card.Pile?.Type)
-		{
-		case PileType.Hand:
-		case PileType.Play:
-			flag = true;
-			break;
-		default:
-			flag = false;
-			break;
-		}
-		if (!flag)
-		{
-			return false;
-		}
-		modifiedCost = default(decimal);
-		return true;
-	}
+    public override bool TryModifyEnergyCostInCombatLate(
+        CardModel card,
+        decimal originalCost,
+        out decimal modifiedCost
+    )
+    {
+        modifiedCost = originalCost;
+        if (card.Owner.Creature != base.Owner)
+        {
+            return false;
+        }
+        if (card.Type != CardType.Power)
+        {
+            return false;
+        }
+        bool flag;
+        switch (card.Pile?.Type)
+        {
+            case PileType.Hand:
+            case PileType.Play:
+                flag = true;
+                break;
+            default:
+                flag = false;
+                break;
+        }
+        if (!flag)
+        {
+            return false;
+        }
+        modifiedCost = default(decimal);
+        return true;
+    }
 
-	public override async Task BeforeCardPlayed(CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner.Creature == base.Owner && cardPlay.Card.Type == CardType.Power)
-		{
-			bool flag;
-			switch (cardPlay.Card.Pile?.Type)
-			{
-			case PileType.Hand:
-			case PileType.Play:
-				flag = true;
-				break;
-			default:
-				flag = false;
-				break;
-			}
-			if (flag)
-			{
-				await PowerCmd.Decrement(this);
-			}
-		}
-	}
+    public override async Task BeforeCardPlayed(CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Owner.Creature == base.Owner && cardPlay.Card.Type == CardType.Power)
+        {
+            bool flag;
+            switch (cardPlay.Card.Pile?.Type)
+            {
+                case PileType.Hand:
+                case PileType.Play:
+                    flag = true;
+                    break;
+                default:
+                    flag = false;
+                    break;
+            }
+            if (flag)
+            {
+                await PowerCmd.Decrement(this);
+            }
+        }
+    }
 }

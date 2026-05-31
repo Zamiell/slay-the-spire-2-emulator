@@ -10,18 +10,24 @@ namespace MegaCrit.Sts2.Core.Models.Achievements;
 
 public class SkillNecrobinder1Achievement : AchievementModel
 {
-	private const int _doomThreshold = 999;
+    private const int _doomThreshold = 999;
 
-	public override Task AfterPowerAmountChanged(PlayerChoiceContext choiceContext, PowerModel power, decimal amount, Creature? applier, CardModel? cardSource)
-	{
-		if (!LocalContext.IsMe(applier))
-		{
-			return Task.CompletedTask;
-		}
-		if (power is DoomPower && power.Amount >= 999)
-		{
-			AchievementsUtil.Unlock(Achievement.CharacterSkillNecrobinder1, applier.Player);
-		}
-		return Task.CompletedTask;
-	}
+    public override Task AfterPowerAmountChanged(
+        PlayerChoiceContext choiceContext,
+        PowerModel power,
+        decimal amount,
+        Creature? applier,
+        CardModel? cardSource
+    )
+    {
+        if (!LocalContext.IsMe(applier))
+        {
+            return Task.CompletedTask;
+        }
+        if (power is DoomPower && power.Amount >= 999)
+        {
+            AchievementsUtil.Unlock(Achievement.CharacterSkillNecrobinder1, applier.Player);
+        }
+        return Task.CompletedTask;
+    }
 }

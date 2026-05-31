@@ -15,28 +15,46 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class HailstormPower : PowerModel
 {
-	public const string frostOrbKey = "FrostOrbs";
+    public const string frostOrbKey = "FrostOrbs";
 
-	public const int frostOrbCount = 1;
+    public const int frostOrbCount = 1;
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromOrb<FrostOrb>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromOrb<FrostOrb>()
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("FrostOrbs", 1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("FrostOrbs", 1m)
+        );
 
-	public override async Task BeforeSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			int num = base.Owner.Player.PlayerCombatState.OrbQueue.Orbs.Count((OrbModel o) => o is FrostOrb);
-			if (num >= base.DynamicVars["FrostOrbs"].IntValue)
-			{
-				Flash();
-				await CreatureCmd.Damage(choiceContext, base.CombatState.HittableEnemies, base.Amount, ValueProp.Unpowered, base.Owner);
-			}
-		}
-	}
+    public override async Task BeforeSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            int num = base.Owner.Player.PlayerCombatState.OrbQueue.Orbs.Count(
+                (OrbModel o) => o is FrostOrb
+            );
+            if (num >= base.DynamicVars["FrostOrbs"].IntValue)
+            {
+                Flash();
+                await CreatureCmd.Damage(
+                    choiceContext,
+                    base.CombatState.HittableEnemies,
+                    base.Amount,
+                    ValueProp.Unpowered,
+                    base.Owner
+                );
+            }
+        }
+    }
 }

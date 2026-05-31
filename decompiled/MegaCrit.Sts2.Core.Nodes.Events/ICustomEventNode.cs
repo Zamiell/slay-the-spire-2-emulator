@@ -5,7 +5,7 @@ namespace MegaCrit.Sts2.Core.Nodes.Events;
 
 public interface ICustomEventNode : IScreenContext
 {
-	IScreenContext CurrentScreenContext { get; }
+    IScreenContext CurrentScreenContext { get; }
 
-	void Initialize(EventModel eventModel);
+    void Initialize(EventModel eventModel);
 }

@@ -8,19 +8,27 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Subroutine : CardModel
 {
-	public Subroutine()
-		: base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Subroutine()
+        : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<SubroutinePower>(choiceContext, base.Owner.Creature, 1m, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<SubroutinePower>(
+            choiceContext,
+            base.Owner.Creature,
+            1m,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.EnergyCost.UpgradeBy(-1);
-	}
+    protected override void OnUpgrade()
+    {
+        base.EnergyCost.UpgradeBy(-1);
+    }
 }

@@ -16,50 +16,64 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class MiniRegent : RelicModel
 {
-	private bool _usedThisTurn;
+    private bool _usedThisTurn;
 
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<StrengthPower>(1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<StrengthPower>(1m)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<StrengthPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<StrengthPower>()
+        );
 
-	private bool UsedThisTurn
-	{
-		get
-		{
-			return _usedThisTurn;
-		}
-		set
-		{
-			AssertMutable();
-			_usedThisTurn = value;
-		}
-	}
+    private bool UsedThisTurn
+    {
+        get { return _usedThisTurn; }
+        set
+        {
+            AssertMutable();
+            _usedThisTurn = value;
+        }
+    }
 
-	public override async Task AfterStarsSpent(int amount, Player spender)
-	{
-		if (spender == base.Owner && !UsedThisTurn)
-		{
-			UsedThisTurn = true;
-			Flash();
-			await PowerCmd.Apply<StrengthPower>(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars.Strength.BaseValue, base.Owner.Creature, null);
-		}
-	}
+    public override async Task AfterStarsSpent(int amount, Player spender)
+    {
+        if (spender == base.Owner && !UsedThisTurn)
+        {
+            UsedThisTurn = true;
+            Flash();
+            await PowerCmd.Apply<StrengthPower>(
+                new ThrowingPlayerChoiceContext(),
+                base.Owner.Creature,
+                base.DynamicVars.Strength.BaseValue,
+                base.Owner.Creature,
+                null
+            );
+        }
+    }
 
-	public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (!participants.Contains(base.Owner.Creature))
-		{
-			return Task.CompletedTask;
-		}
-		UsedThisTurn = false;
-		return Task.CompletedTask;
-	}
+    public override Task BeforeSideTurnStart(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (!participants.Contains(base.Owner.Creature))
+        {
+            return Task.CompletedTask;
+        }
+        UsedThisTurn = false;
+        return Task.CompletedTask;
+    }
 
-	public override Task AfterCombatEnd(CombatRoom _)
-	{
-		UsedThisTurn = false;
-		return Task.CompletedTask;
-	}
+    public override Task AfterCombatEnd(CombatRoom _)
+    {
+        UsedThisTurn = false;
+        return Task.CompletedTask;
+    }
 }

@@ -14,44 +14,50 @@ namespace MegaCrit.Sts2.Core.Events.Custom.CrystalSphereEvent.CrystalSphereItems
 
 public class CrystalSpherePotion : CrystalSphereItem
 {
-	private readonly PotionRarity _rarity;
+    private readonly PotionRarity _rarity;
 
-	protected override string TexturePath => ImageHelper.GetImagePath("events/crystal_sphere/crystal_sphere_" + _rarity.ToString().ToLowerInvariant() + "_potion.png");
+    protected override string TexturePath =>
+        ImageHelper.GetImagePath(
+            "events/crystal_sphere/crystal_sphere_"
+                + _rarity.ToString().ToLowerInvariant()
+                + "_potion.png"
+        );
 
-	public override bool IsGood => true;
+    public override bool IsGood => true;
 
-	public override Vector2I Size
-	{
-		get
-		{
-			if (_rarity != PotionRarity.Rare)
-			{
-				return new Vector2I(1, 3);
-			}
-			return new Vector2I(2, 2);
-		}
-	}
+    public override Vector2I Size
+    {
+        get
+        {
+            if (_rarity != PotionRarity.Rare)
+            {
+                return new Vector2I(1, 3);
+            }
+            return new Vector2I(2, 2);
+        }
+    }
 
-	public CrystalSpherePotion(PotionRarity rarity)
-	{
-		_rarity = rarity;
-	}
+    public CrystalSpherePotion(PotionRarity rarity)
+    {
+        _rarity = rarity;
+    }
 
-	public override Reward? ToReward(Player owner, Rng rng)
-	{
-		IEnumerable<PotionModel> items = from p in PotionFactory.GetPotionOptions(owner, Array.Empty<PotionModel>())
-			where p.Rarity == _rarity
-			select p;
-		PotionModel potion = rng.NextItem(items).ToMutable();
-		return new PotionReward(potion, owner).SetRng(rng);
-	}
+    public override Reward? ToReward(Player owner, Rng rng)
+    {
+        IEnumerable<PotionModel> items =
+            from p in PotionFactory.GetPotionOptions(owner, Array.Empty<PotionModel>())
+            where p.Rarity == _rarity
+            select p;
+        PotionModel potion = rng.NextItem(items).ToMutable();
+        return new PotionReward(potion, owner).SetRng(rng);
+    }
 
-	public override SerializableCrystalSphereItem ToSerializable()
-	{
-		return new SerializableCrystalSphereItem
-		{
-			type = CrystalSphereItemType.Potion,
-			potionRarity = _rarity
-		};
-	}
+    public override SerializableCrystalSphereItem ToSerializable()
+    {
+        return new SerializableCrystalSphereItem
+        {
+            type = CrystalSphereItemType.Potion,
+            potionRarity = _rarity,
+        };
+    }
 }

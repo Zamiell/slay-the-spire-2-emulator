@@ -9,65 +9,55 @@ namespace MegaCrit.Sts2.Core.Multiplayer;
 
 public class NetReplayGameService : INetGameService
 {
-	private bool _isLoading;
+    private bool _isLoading;
 
-	public bool IsGameLoading => _isLoading;
+    public bool IsGameLoading => _isLoading;
 
-	public bool IsConnected => true;
+    public bool IsConnected => true;
 
-	public ulong NetId { get; set; }
+    public ulong NetId { get; set; }
 
-	public NetGameType Type => NetGameType.Replay;
+    public NetGameType Type => NetGameType.Replay;
 
-	public PlatformType Platform => PlatformType.None;
+    public PlatformType Platform => PlatformType.None;
 
-	public event Action<NetErrorInfo>? Disconnected;
+    public event Action<NetErrorInfo>? Disconnected;
 
-	public NetReplayGameService(ulong netId)
-	{
-		NetId = netId;
-	}
+    public NetReplayGameService(ulong netId)
+    {
+        NetId = netId;
+    }
 
-	public void SendMessage<T>(T message, ulong playerId) where T : INetMessage
-	{
-	}
+    public void SendMessage<T>(T message, ulong playerId)
+        where T : INetMessage { }
 
-	public void SendMessage<T>(T message) where T : INetMessage
-	{
-	}
+    public void SendMessage<T>(T message)
+        where T : INetMessage { }
 
-	public void RegisterMessageHandler<T>(MessageHandlerDelegate<T> handler) where T : INetMessage
-	{
-	}
+    public void RegisterMessageHandler<T>(MessageHandlerDelegate<T> handler)
+        where T : INetMessage { }
 
-	public void UnregisterMessageHandler<T>(MessageHandlerDelegate<T> handler) where T : INetMessage
-	{
-	}
+    public void UnregisterMessageHandler<T>(MessageHandlerDelegate<T> handler)
+        where T : INetMessage { }
 
-	public void Update()
-	{
-	}
+    public void Update() { }
 
-	public void Disconnect(NetError reason, bool now = false)
-	{
-	}
+    public void Disconnect(NetError reason, bool now = false) { }
 
-	public ConnectionStats GetStatsForPeer(ulong peerId)
-	{
-		return new ConnectionStats(peerId);
-	}
+    public ConnectionStats GetStatsForPeer(ulong peerId)
+    {
+        return new ConnectionStats(peerId);
+    }
 
-	public void SetGameLoading(bool isLoading)
-	{
-		_isLoading = isLoading;
-	}
+    public void SetGameLoading(bool isLoading)
+    {
+        _isLoading = isLoading;
+    }
 
-	public void SetBufferMessages(bool bufferMessages)
-	{
-	}
+    public void SetBufferMessages(bool bufferMessages) { }
 
-	public string? GetRawLobbyIdentifier()
-	{
-		return null;
-	}
+    public string? GetRawLobbyIdentifier()
+    {
+        return null;
+    }
 }

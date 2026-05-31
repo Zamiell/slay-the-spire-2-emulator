@@ -17,35 +17,55 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Nightmare : CardModel
 {
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	protected override IEnumerable<string> ExtraRunAssetPaths => NNightmareHandsVfx.AssetPaths;
+    protected override IEnumerable<string> ExtraRunAssetPaths => NNightmareHandsVfx.AssetPaths;
 
-	public Nightmare()
-		: base(3, CardType.Skill, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public Nightmare()
+        : base(3, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		IEnumerable<CardModel> cards = await CardSelectCmd.FromHand(prefs: new CardSelectorPrefs(base.SelectionScreenPrompt, 1), context: choiceContext, player: base.Owner, filter: null, source: this);
-		if (TestMode.IsOff)
-		{
-			NSmokyVignetteVfx child = NSmokyVignetteVfx.Create(new Color(0.8f, 0.3f, 0.8f, 0.66f), new Color(0f, 0f, 4f, 0.33f));
-			NGame.Instance.CurrentRunNode.GlobalUi.AddChildSafely(child);
-			NGame.Instance.CurrentRunNode.GlobalUi.AddChildSafely(NNightmareHandsVfx.Create());
-			await Cmd.CustomScaledWait(0.1f, 0.25f);
-		}
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		CardModel selectedCard = cards.FirstOrDefault();
-		if (selectedCard != null)
-		{
-			(await PowerCmd.Apply<NightmarePower>(choiceContext, base.Owner.Creature, 3m, base.Owner.Creature, this)).SetSelectedCard(selectedCard);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        IEnumerable<CardModel> cards = await CardSelectCmd.FromHand(
+            prefs: new CardSelectorPrefs(base.SelectionScreenPrompt, 1),
+            context: choiceContext,
+            player: base.Owner,
+            filter: null,
+            source: this
+        );
+        if (TestMode.IsOff)
+        {
+            NSmokyVignetteVfx child = NSmokyVignetteVfx.Create(
+                new Color(0.8f, 0.3f, 0.8f, 0.66f),
+                new Color(0f, 0f, 4f, 0.33f)
+            );
+            NGame.Instance.CurrentRunNode.GlobalUi.AddChildSafely(child);
+            NGame.Instance.CurrentRunNode.GlobalUi.AddChildSafely(NNightmareHandsVfx.Create());
+            await Cmd.CustomScaledWait(0.1f, 0.25f);
+        }
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        CardModel selectedCard = cards.FirstOrDefault();
+        if (selectedCard != null)
+        {
+            (
+                await PowerCmd.Apply<NightmarePower>(
+                    choiceContext,
+                    base.Owner.Creature,
+                    3m,
+                    base.Owner.Creature,
+                    this
+                )
+            ).SetSelectedCard(selectedCard);
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.EnergyCost.UpgradeBy(-1);
-	}
+    protected override void OnUpgrade()
+    {
+        base.EnergyCost.UpgradeBy(-1);
+    }
 }

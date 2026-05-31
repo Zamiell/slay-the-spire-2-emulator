@@ -5,17 +5,17 @@ namespace MegaCrit.Sts2.Core.Models.Enchantments;
 
 public sealed class Instinct : EnchantmentModel
 {
-	public override bool CanEnchantCardType(CardType cardType)
-	{
-		return cardType == CardType.Attack;
-	}
+    public override bool CanEnchantCardType(CardType cardType)
+    {
+        return cardType == CardType.Attack;
+    }
 
-	public override decimal EnchantDamageMultiplicative(decimal originalDamage, ValueProp props)
-	{
-		if (!props.IsPoweredAttack())
-		{
-			return 1m;
-		}
-		return 2m;
-	}
+    public override decimal EnchantDamageMultiplicative(decimal originalDamage, ValueProp props)
+    {
+        if (!props.IsPoweredAttack())
+        {
+            return 1m;
+        }
+        return 2m;
+    }
 }

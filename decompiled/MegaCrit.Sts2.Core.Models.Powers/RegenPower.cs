@@ -11,19 +11,23 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class RegenPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override bool ShouldScaleInMultiplayer => true;
+    public override bool ShouldScaleInMultiplayer => true;
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner) && !base.Owner.IsDead)
-		{
-			Flash();
-			await CreatureCmd.Heal(base.Owner, base.Amount);
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner) && !base.Owner.IsDead)
+        {
+            Flash();
+            await CreatureCmd.Heal(base.Owner, base.Amount);
+            await PowerCmd.Decrement(this);
+        }
+    }
 }

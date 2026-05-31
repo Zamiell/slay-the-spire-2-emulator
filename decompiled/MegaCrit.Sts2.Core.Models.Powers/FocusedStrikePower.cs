@@ -4,5 +4,5 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class FocusedStrikePower : TemporaryFocusPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<FocusedStrike>();
+    public override AbstractModel OriginModel => ModelDb.Card<FocusedStrike>();
 }

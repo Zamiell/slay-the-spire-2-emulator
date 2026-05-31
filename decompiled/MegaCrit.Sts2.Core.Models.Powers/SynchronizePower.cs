@@ -4,5 +4,5 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class SynchronizePower : TemporaryFocusPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<Synchronize>();
+    public override AbstractModel OriginModel => ModelDb.Card<Synchronize>();
 }

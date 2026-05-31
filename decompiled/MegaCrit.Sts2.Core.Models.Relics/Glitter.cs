@@ -11,27 +11,32 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Glitter : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromEnchantment<Glam>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromEnchantment<Glam>();
 
-	public override bool TryModifyCardRewardOptionsLate(Player player, List<CardCreationResult> cardRewards, CardCreationOptions options)
-	{
-		if (player != base.Owner)
-		{
-			return false;
-		}
-		Glam glam = ModelDb.Enchantment<Glam>();
-		foreach (CardCreationResult cardReward in cardRewards)
-		{
-			CardModel card = cardReward.Card;
-			if (glam.CanEnchant(card))
-			{
-				CardModel card2 = base.Owner.RunState.CloneCard(card);
-				CardCmd.Enchant<Glam>(card2, 1m);
-				cardReward.ModifyCard(card2, this);
-			}
-		}
-		return true;
-	}
+    public override bool TryModifyCardRewardOptionsLate(
+        Player player,
+        List<CardCreationResult> cardRewards,
+        CardCreationOptions options
+    )
+    {
+        if (player != base.Owner)
+        {
+            return false;
+        }
+        Glam glam = ModelDb.Enchantment<Glam>();
+        foreach (CardCreationResult cardReward in cardRewards)
+        {
+            CardModel card = cardReward.Card;
+            if (glam.CanEnchant(card))
+            {
+                CardModel card2 = base.Owner.RunState.CloneCard(card);
+                CardCmd.Enchant<Glam>(card2, 1m);
+                cardReward.ModifyCard(card2, this);
+            }
+        }
+        return true;
+    }
 }

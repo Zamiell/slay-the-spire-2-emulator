@@ -7,14 +7,22 @@ namespace MegaCrit.Sts2.Core.Models.Encounters;
 
 public sealed class VineShamblerNormal : EncounterModel
 {
-	public override RoomType RoomType => RoomType.Monster;
+    public override RoomType RoomType => RoomType.Monster;
 
-	public override IEnumerable<MonsterModel> AllPossibleMonsters => new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(ModelDb.Monster<VineShambler>());
+    public override IEnumerable<MonsterModel> AllPossibleMonsters =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(
+            ModelDb.Monster<VineShambler>()
+        );
 
-	public override IEnumerable<string> ExtraAssetPaths => new global::_003C_003Ez__ReadOnlySingleElementList<string>(ModelDb.Affliction<Entangled>().OverlayPath);
+    public override IEnumerable<string> ExtraAssetPaths =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<string>(
+            ModelDb.Affliction<Entangled>().OverlayPath
+        );
 
-	protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
-	{
-		return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>((ModelDb.Monster<VineShambler>().ToMutable(), null));
-	}
+    protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
+    {
+        return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>(
+            (ModelDb.Monster<VineShambler>().ToMutable(), null)
+        );
+    }
 }

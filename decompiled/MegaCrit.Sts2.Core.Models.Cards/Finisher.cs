@@ -16,33 +16,47 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Finisher : CardModel
 {
-	private const string _calculatedHitsKey = "CalculatedHits";
+    private const string _calculatedHitsKey = "CalculatedHits";
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[4]
-	{
-		new DamageVar(6m, ValueProp.Move),
-		new CalculationBaseVar(0m),
-		new CalculationExtraVar(1m),
-		new CalculatedVar("CalculatedHits").WithMultiplier((CardModel card, Creature? _) => CombatManager.Instance.History.CardPlaysFinished.Count((CardPlayFinishedEntry e) => e.HappenedThisTurn(card.CombatState) && e.CardPlay.Card.Type == CardType.Attack && e.CardPlay.Card.Owner == card.Owner))
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[4]
+            {
+                new DamageVar(6m, ValueProp.Move),
+                new CalculationBaseVar(0m),
+                new CalculationExtraVar(1m),
+                new CalculatedVar("CalculatedHits").WithMultiplier(
+                    (CardModel card, Creature? _) =>
+                        CombatManager.Instance.History.CardPlaysFinished.Count(
+                            (CardPlayFinishedEntry e) =>
+                                e.HappenedThisTurn(card.CombatState)
+                                && e.CardPlay.Card.Type == CardType.Attack
+                                && e.CardPlay.Card.Owner == card.Owner
+                        )
+                ),
+            }
+        );
 
-	public Finisher()
-		: base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
-	{
-	}
+    public Finisher()
+        : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).WithHitCount((int)((CalculatedVar)base.DynamicVars["CalculatedHits"]).Calculate(cardPlay.Target)).FromCard(this)
-			.Targeting(cardPlay.Target)
-			.WithHitVfxNode((Creature t) => NStabVfx.Create(t, facingEnemies: true))
-			.WithHitFx(null, null, "blunt_attack.mp3")
-			.Execute(choiceContext);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .WithHitCount(
+                (int)((CalculatedVar)base.DynamicVars["CalculatedHits"]).Calculate(cardPlay.Target)
+            )
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitVfxNode((Creature t) => NStabVfx.Create(t, facingEnemies: true))
+            .WithHitFx(null, null, "blunt_attack.mp3")
+            .Execute(choiceContext);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(2m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(2m);
+    }
 }

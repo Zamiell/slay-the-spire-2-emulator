@@ -10,15 +10,21 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Anchor : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Common;
+    public override RelicRarity Rarity => RelicRarity.Common;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(10m, ValueProp.Unpowered));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(10m, ValueProp.Unpowered)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	public override async Task BeforeCombatStart()
-	{
-		Flash();
-		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
-	}
+    public override async Task BeforeCombatStart()
+    {
+        Flash();
+        await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
+    }
 }

@@ -13,42 +13,47 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Permafrost : RelicModel
 {
-	private bool _activatedThisCombat;
+    private bool _activatedThisCombat;
 
-	public override RelicRarity Rarity => RelicRarity.Uncommon;
+    public override RelicRarity Rarity => RelicRarity.Uncommon;
 
-	private bool ActivatedThisCombat
-	{
-		get
-		{
-			return _activatedThisCombat;
-		}
-		set
-		{
-			AssertMutable();
-			_activatedThisCombat = value;
-		}
-	}
+    private bool ActivatedThisCombat
+    {
+        get { return _activatedThisCombat; }
+        set
+        {
+            AssertMutable();
+            _activatedThisCombat = value;
+        }
+    }
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(7m, ValueProp.Unpowered));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(7m, ValueProp.Unpowered)
+        );
 
-	public override Task AfterRoomEntered(AbstractRoom room)
-	{
-		if (!(room is CombatRoom))
-		{
-			return Task.CompletedTask;
-		}
-		ActivatedThisCombat = false;
-		return Task.CompletedTask;
-	}
+    public override Task AfterRoomEntered(AbstractRoom room)
+    {
+        if (!(room is CombatRoom))
+        {
+            return Task.CompletedTask;
+        }
+        ActivatedThisCombat = false;
+        return Task.CompletedTask;
+    }
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (CombatManager.Instance.IsInProgress && cardPlay.Card.Owner == base.Owner && cardPlay.Card.Type == CardType.Power && !ActivatedThisCombat)
-		{
-			Flash();
-			await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
-			ActivatedThisCombat = true;
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (
+            CombatManager.Instance.IsInProgress
+            && cardPlay.Card.Owner == base.Owner
+            && cardPlay.Card.Type == CardType.Power
+            && !ActivatedThisCombat
+        )
+        {
+            Flash();
+            await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
+            ActivatedThisCombat = true;
+        }
+    }
 }

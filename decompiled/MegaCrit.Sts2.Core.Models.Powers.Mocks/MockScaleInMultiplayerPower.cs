@@ -6,26 +6,38 @@ namespace MegaCrit.Sts2.Core.Models.Powers.Mocks;
 
 public class MockScaleInMultiplayerPower : PowerModel
 {
-	public delegate decimal GetScaledAmountForMultiplayerDelegate(ICombatState combatState, Creature? applier, decimal amount, Creature target, CardModel? cardSource);
+    public delegate decimal GetScaledAmountForMultiplayerDelegate(
+        ICombatState combatState,
+        Creature? applier,
+        decimal amount,
+        Creature target,
+        CardModel? cardSource
+    );
 
-	public bool shouldScaleInMultiplayer = true;
+    public bool shouldScaleInMultiplayer = true;
 
-	public static GetScaledAmountForMultiplayerDelegate? getScaledAmountForMultiplayer;
+    public static GetScaledAmountForMultiplayerDelegate? getScaledAmountForMultiplayer;
 
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override bool AllowNegative => true;
+    public override bool AllowNegative => true;
 
-	public override bool ShouldScaleInMultiplayer => shouldScaleInMultiplayer;
+    public override bool ShouldScaleInMultiplayer => shouldScaleInMultiplayer;
 
-	public override decimal GetScaledAmountForMultiplayer(ICombatState combatState, Creature? applier, decimal amount, Creature target, CardModel? cardSource)
-	{
-		if (getScaledAmountForMultiplayer != null)
-		{
-			return getScaledAmountForMultiplayer(combatState, applier, amount, target, cardSource);
-		}
-		return base.GetScaledAmountForMultiplayer(combatState, applier, amount, target, cardSource);
-	}
+    public override decimal GetScaledAmountForMultiplayer(
+        ICombatState combatState,
+        Creature? applier,
+        decimal amount,
+        Creature target,
+        CardModel? cardSource
+    )
+    {
+        if (getScaledAmountForMultiplayer != null)
+        {
+            return getScaledAmountForMultiplayer(combatState, applier, amount, target, cardSource);
+        }
+        return base.GetScaledAmountForMultiplayer(combatState, applier, amount, target, cardSource);
+    }
 }

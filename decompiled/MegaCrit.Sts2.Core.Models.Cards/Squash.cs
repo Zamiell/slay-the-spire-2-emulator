@@ -13,31 +13,44 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Squash : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<VulnerablePower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<VulnerablePower>()
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new DamageVar(10m, ValueProp.Move),
-		new PowerVar<VulnerablePower>(2m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2]
+            {
+                new DamageVar(10m, ValueProp.Move),
+                new PowerVar<VulnerablePower>(2m),
+            }
+        );
 
-	public Squash()
-		: base(1, CardType.Attack, CardRarity.Event, TargetType.AnyEnemy)
-	{
-	}
+    public Squash()
+        : base(1, CardType.Attack, CardRarity.Event, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_attack_blunt")
-			.Execute(choiceContext);
-		await PowerCmd.Apply<VulnerablePower>(choiceContext, cardPlay.Target, base.DynamicVars.Vulnerable.BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_attack_blunt")
+            .Execute(choiceContext);
+        await PowerCmd.Apply<VulnerablePower>(
+            choiceContext,
+            cardPlay.Target,
+            base.DynamicVars.Vulnerable.BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(2m);
-		base.DynamicVars.Vulnerable.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(2m);
+        base.DynamicVars.Vulnerable.UpgradeValueBy(1m);
+    }
 }

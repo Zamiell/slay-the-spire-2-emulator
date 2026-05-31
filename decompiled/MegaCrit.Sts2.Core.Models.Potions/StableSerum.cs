@@ -13,19 +13,29 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class StableSerum : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Uncommon;
+    public override PotionRarity Rarity => PotionRarity.Uncommon;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyPlayer;
+    public override TargetType TargetType => TargetType.AnyPlayer;
 
-	public override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromKeyword(CardKeyword.Retain));
+    public override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromKeyword(CardKeyword.Retain)
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new RepeatVar(2));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new RepeatVar(2));
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		await PowerCmd.Apply<RetainHandPower>(choiceContext, target, base.DynamicVars.Repeat.BaseValue, base.Owner.Creature, null);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        await PowerCmd.Apply<RetainHandPower>(
+            choiceContext,
+            target,
+            base.DynamicVars.Repeat.BaseValue,
+            base.Owner.Creature,
+            null
+        );
+    }
 }

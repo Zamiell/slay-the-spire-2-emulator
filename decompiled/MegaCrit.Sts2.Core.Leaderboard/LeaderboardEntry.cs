@@ -4,13 +4,13 @@ namespace MegaCrit.Sts2.Core.Leaderboard;
 
 public class LeaderboardEntry
 {
-	public int rank;
+    public int rank;
 
-	public required string name;
+    public required string name;
 
-	public ulong id;
+    public ulong id;
 
-	public int score;
+    public int score;
 
-	public List<ulong> userIds = new List<ulong>();
+    public List<ulong> userIds = new List<ulong>();
 }

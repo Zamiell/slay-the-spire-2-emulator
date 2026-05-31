@@ -18,10 +18,26 @@ public static class RunMapGenerator
         for (int i = 0; i < (underdocks ? 57 : 60); i++)
             upFront.NextInt((underdocks ? 57 : 60) + 1);
 
-        int[] weakPool = (underdocks ? RunConstants.UnderdocksWeakEncounters : RunConstants.OvergrowthWeakEncounters).ToArray();
-        int[] normalPool = (underdocks ? RunConstants.UnderdocksNormalEncounters : RunConstants.OvergrowthNormalEncounters).ToArray();
-        int[] elitePool = (underdocks ? RunConstants.UnderdocksEliteEncounters : RunConstants.OvergrowthEliteEncounters).ToArray();
-        int[] bossPool = (underdocks ? RunConstants.UnderdocksBossEncounters : RunConstants.OvergrowthBossEncounters).ToArray();
+        int[] weakPool = (
+            underdocks
+                ? RunConstants.UnderdocksWeakEncounters
+                : RunConstants.OvergrowthWeakEncounters
+        ).ToArray();
+        int[] normalPool = (
+            underdocks
+                ? RunConstants.UnderdocksNormalEncounters
+                : RunConstants.OvergrowthNormalEncounters
+        ).ToArray();
+        int[] elitePool = (
+            underdocks
+                ? RunConstants.UnderdocksEliteEncounters
+                : RunConstants.OvergrowthEliteEncounters
+        ).ToArray();
+        int[] bossPool = (
+            underdocks
+                ? RunConstants.UnderdocksBossEncounters
+                : RunConstants.OvergrowthBossEncounters
+        ).ToArray();
 
         var normalSequence = new List<int>();
         var weakBag = weakPool.ToList();
@@ -102,7 +118,8 @@ public static class RunMapGenerator
         state.CurrentMapCoord = (RunConstants.MapStartCol, 0);
         Array.Clear(state.MapOptionCoords);
         GetOrCreate(state, RunConstants.MapStartCol, 0).NodeType = RunConstants.NodeNone;
-        GetOrCreate(state, RunConstants.MapStartCol, RunConstants.MapBossRow).NodeType = RunConstants.NodeBoss;
+        GetOrCreate(state, RunConstants.MapStartCol, RunConstants.MapBossRow).NodeType =
+            RunConstants.NodeBoss;
 
         var mapRng = state.Rng.ActMapRng(0);
         int restCount = mapRng.NextGaussianInt(7, 1, 6, 7);
@@ -123,8 +140,16 @@ public static class RunMapGenerator
 
         foreach (var start in starts)
             AddEdge(state, state.CurrentMapCoord, start);
-        foreach (var node in state.MapNodes.Values.Where(n => n.Row == RunConstants.MapBossRow - 1).ToArray())
-            AddEdge(state, (node.Col, node.Row), (RunConstants.MapStartCol, RunConstants.MapBossRow));
+        foreach (
+            var node in state
+                .MapNodes.Values.Where(n => n.Row == RunConstants.MapBossRow - 1)
+                .ToArray()
+        )
+            AddEdge(
+                state,
+                (node.Col, node.Row),
+                (RunConstants.MapStartCol, RunConstants.MapBossRow)
+            );
 
         AssignPointTypes(state, mapRng, restCount, unknownCount);
         AssignEncounterIds(state);
@@ -139,15 +164,23 @@ public static class RunMapGenerator
         if (!state.MapNodes.TryGetValue(state.CurrentMapCoord, out var current))
             return;
 
-        var options = current.Children.OrderBy(coord => coord.Row).ThenBy(coord => coord.Col).Take(RunConstants.MapChoices).ToArray();
+        var options = current
+            .Children.OrderBy(coord => coord.Row)
+            .ThenBy(coord => coord.Col)
+            .Take(RunConstants.MapChoices)
+            .ToArray();
         for (int i = 0; i < options.Length; i++)
         {
             var node = state.MapNodes[options[i]];
             state.MapNodeTypes[i] = node.NodeType;
             state.MapChoices[i] = node.NodeType switch
             {
-                RunConstants.NodeNormal => state.NormalEncounterSequence[state.NormalEncountersVisited % state.NormalEncounterSequence.Length],
-                RunConstants.NodeElite => state.EliteEncounterSequence[state.EliteEncountersVisited % state.EliteEncounterSequence.Length],
+                RunConstants.NodeNormal => state.NormalEncounterSequence[
+                    state.NormalEncountersVisited % state.NormalEncounterSequence.Length
+                ],
+                RunConstants.NodeElite => state.EliteEncounterSequence[
+                    state.EliteEncountersVisited % state.EliteEncounterSequence.Length
+                ],
                 RunConstants.NodeBoss => state.BossEncounterId,
                 _ => node.EncounterId,
             };
@@ -155,11 +188,19 @@ public static class RunMapGenerator
         }
     }
 
-    public static bool ChooseMapNode(RunState state, int action, out int nodeType, out int encounterId)
+    public static bool ChooseMapNode(
+        RunState state,
+        int action,
+        out int nodeType,
+        out int encounterId
+    )
     {
         nodeType = RunConstants.NodeNone;
         encounterId = 0;
-        if ((uint)action >= RunConstants.MapChoices || state.MapNodeTypes[action] == RunConstants.NodeNone)
+        if (
+            (uint)action >= RunConstants.MapChoices
+            || state.MapNodeTypes[action] == RunConstants.NodeNone
+        )
             return false;
         var coord = state.MapOptionCoords[action];
         if (coord is null)
@@ -192,7 +233,11 @@ public static class RunMapGenerator
         }
     }
 
-    private static (int Col, int Row) GenerateNextCoord(RunState state, GameRng rng, RunMapNode current)
+    private static (int Col, int Row) GenerateNextCoord(
+        RunState state,
+        GameRng rng,
+        RunMapNode current
+    )
     {
         var deltas = new List<int> { -1, 0, 1 };
         rng.StableShuffle(deltas, Comparer<int>.Default);
@@ -213,7 +258,12 @@ public static class RunMapGenerator
         return sibling.Children.Any(child => child.Col - sibling.Col == -delta);
     }
 
-    private static void AssignPointTypes(RunState state, GameRng rng, int restCount, int unknownCount)
+    private static void AssignPointTypes(
+        RunState state,
+        GameRng rng,
+        int restCount,
+        int unknownCount
+    )
     {
         foreach (var node in state.MapNodes.Values)
         {
@@ -229,15 +279,20 @@ public static class RunMapGenerator
         }
 
         var pointTypes = new Queue<int>(
-            Enumerable.Repeat(RunConstants.NodeRest, restCount)
+            Enumerable
+                .Repeat(RunConstants.NodeRest, restCount)
                 .Concat(Enumerable.Repeat(RunConstants.NodeShop, 3))
                 .Concat(Enumerable.Repeat(RunConstants.NodeElite, 8))
                 .Concat(Enumerable.Repeat(RunConstants.NodeEvent, unknownCount))
         );
         for (int pass = 0; pass < 3 && pointTypes.Count > 0; pass++)
         {
-            var candidates = state.MapNodes.Values
-                .Where(n => n.NodeType == RunConstants.NodeNone && n.Row is > 1 and < RunConstants.MapFinalRestRow && n.Row != RunConstants.MapTreasureRow)
+            var candidates = state
+                .MapNodes.Values.Where(n =>
+                    n.NodeType == RunConstants.NodeNone
+                    && n.Row is > 1 and < RunConstants.MapFinalRestRow
+                    && n.Row != RunConstants.MapTreasureRow
+                )
                 .ToList();
             rng.StableShuffle(candidates, CompareNodesByColThenRow);
             foreach (var node in candidates)
@@ -248,7 +303,11 @@ public static class RunMapGenerator
             }
         }
 
-        foreach (var node in state.MapNodes.Values.Where(n => n.NodeType == RunConstants.NodeNone && n.Row > 0))
+        foreach (
+            var node in state.MapNodes.Values.Where(n =>
+                n.NodeType == RunConstants.NodeNone && n.Row > 0
+            )
+        )
             node.NodeType = RunConstants.NodeNormal;
     }
 
@@ -277,42 +336,72 @@ public static class RunMapGenerator
     private static bool IsValidForUpper(int nodeType, RunMapNode node) =>
         node.Row < RunConstants.MapBossRow - 3 || nodeType != RunConstants.NodeRest;
 
-    private static bool IsValidWithParentsAndChildren(RunState state, int nodeType, RunMapNode node) =>
+    private static bool IsValidWithParentsAndChildren(
+        RunState state,
+        int nodeType,
+        RunMapNode node
+    ) =>
         !HasParentChildRestriction(nodeType)
-        || !node.Parents.Concat(node.Children).Any(coord => MapNodeTypeAt(state, coord) == nodeType);
+        || !node
+            .Parents.Concat(node.Children)
+            .Any(coord => MapNodeTypeAt(state, coord) == nodeType);
 
     private static bool IsValidWithChildren(RunState state, int nodeType, RunMapNode node) =>
-        !HasParentChildRestriction(nodeType) || !node.Children.Any(coord => MapNodeTypeAt(state, coord) == nodeType);
+        !HasParentChildRestriction(nodeType)
+        || !node.Children.Any(coord => MapNodeTypeAt(state, coord) == nodeType);
 
     private static bool IsValidWithSiblings(RunState state, int nodeType, RunMapNode node) =>
         !HasSiblingRestriction(nodeType)
-        || !node.Parents
-            .SelectMany(parent => MapNodeAt(state, parent).Children)
+        || !node
+            .Parents.SelectMany(parent => MapNodeAt(state, parent).Children)
             .Where(coord => coord != (node.Col, node.Row))
             .Any(coord => MapNodeTypeAt(state, coord) == nodeType);
 
-    private static RunMapNode MapNodeAt(RunState state, (int Col, int Row) coord) => state.MapNodes[coord];
+    private static RunMapNode MapNodeAt(RunState state, (int Col, int Row) coord) =>
+        state.MapNodes[coord];
 
-    private static int MapNodeTypeAt(RunState state, (int Col, int Row) coord) => MapNodeAt(state, coord).NodeType;
+    private static int MapNodeTypeAt(RunState state, (int Col, int Row) coord) =>
+        MapNodeAt(state, coord).NodeType;
 
     private static bool HasParentChildRestriction(int nodeType) =>
-        nodeType is RunConstants.NodeElite or RunConstants.NodeRest or RunConstants.NodeRelic or RunConstants.NodeShop;
+        nodeType
+            is RunConstants.NodeElite
+                or RunConstants.NodeRest
+                or RunConstants.NodeRelic
+                or RunConstants.NodeShop;
 
     private static bool HasSiblingRestriction(int nodeType) =>
-        nodeType is RunConstants.NodeRest or RunConstants.NodeNormal or RunConstants.NodeEvent or RunConstants.NodeElite or RunConstants.NodeShop;
+        nodeType
+            is RunConstants.NodeRest
+                or RunConstants.NodeNormal
+                or RunConstants.NodeEvent
+                or RunConstants.NodeElite
+                or RunConstants.NodeShop;
 
     private static readonly Comparer<RunMapNode> CompareNodesByColThenRow =
-        Comparer<RunMapNode>.Create((a, b) => a.Col != b.Col ? a.Col.CompareTo(b.Col) : a.Row.CompareTo(b.Row));
+        Comparer<RunMapNode>.Create(
+            (a, b) => a.Col != b.Col ? a.Col.CompareTo(b.Col) : a.Row.CompareTo(b.Row)
+        );
 
     private static void AssignEncounterIds(RunState state)
     {
-        foreach (var group in state.MapNodes.Values.Where(n => n.NodeType == RunConstants.NodeNormal).GroupBy(n => n.Row).OrderBy(g => g.Key))
+        foreach (
+            var group in state
+                .MapNodes.Values.Where(n => n.NodeType == RunConstants.NodeNormal)
+                .GroupBy(n => n.Row)
+                .OrderBy(g => g.Key)
+        )
         {
             int index = Math.Min(group.Key - 1, state.NormalEncounterSequence.Length - 1);
             foreach (var node in group)
                 node.EncounterId = state.NormalEncounterSequence[Math.Max(0, index)];
         }
-        foreach (var group in state.MapNodes.Values.Where(n => n.NodeType == RunConstants.NodeElite).GroupBy(n => n.Row).OrderBy(g => g.Key))
+        foreach (
+            var group in state
+                .MapNodes.Values.Where(n => n.NodeType == RunConstants.NodeElite)
+                .GroupBy(n => n.Row)
+                .OrderBy(g => g.Key)
+        )
         {
             int index = Math.Min(group.Key, state.EliteEncounterSequence.Length - 1);
             foreach (var node in group)
@@ -332,7 +421,11 @@ public static class RunMapGenerator
         return node;
     }
 
-    private static void AddEdge(RunState state, (int Col, int Row) parentCoord, (int Col, int Row) childCoord)
+    private static void AddEdge(
+        RunState state,
+        (int Col, int Row) parentCoord,
+        (int Col, int Row) childCoord
+    )
     {
         var parent = GetOrCreate(state, parentCoord.Col, parentCoord.Row);
         var child = GetOrCreate(state, childCoord.Col, childCoord.Row);
@@ -358,19 +451,20 @@ public static class RunMapGenerator
         }
     }
 
-    private static HashSet<string> Tags(int encounterId) => encounterId switch
-    {
-        2 => ["Nibbit"],
-        3 => ["Slimes"],
-        8 => ["Crawler"],
-        9 => ["Slugs"],
-        11 => ["Shrinker"],
-        12 => ["Seapunk"],
-        15 => ["Nibbit"],
-        16 => ["Slimes"],
-        17 => ["Mushroom", "Slimes"],
-        18 => ["Mushroom"],
-        21 => ["Shrinker", "Crawler"],
-        _ => [],
-    };
+    private static HashSet<string> Tags(int encounterId) =>
+        encounterId switch
+        {
+            2 => ["Nibbit"],
+            3 => ["Slimes"],
+            8 => ["Crawler"],
+            9 => ["Slugs"],
+            11 => ["Shrinker"],
+            12 => ["Seapunk"],
+            15 => ["Nibbit"],
+            16 => ["Slimes"],
+            17 => ["Mushroom", "Slimes"],
+            18 => ["Mushroom"],
+            21 => ["Shrinker", "Crawler"],
+            _ => [],
+        };
 }

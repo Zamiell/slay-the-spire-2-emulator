@@ -18,100 +18,106 @@ namespace MegaCrit.Sts2.Core.Runs;
 
 public interface IRunState : ICardScope, IPlayerCollection
 {
-	IReadOnlyList<ActModel> Acts { get; }
+    IReadOnlyList<ActModel> Acts { get; }
 
-	int CurrentActIndex { get; set; }
+    int CurrentActIndex { get; set; }
 
-	ActModel Act { get; }
+    ActModel Act { get; }
 
-	ActMap Map { get; set; }
+    ActMap Map { get; set; }
 
-	MapCoord? CurrentMapCoord { get; }
+    MapCoord? CurrentMapCoord { get; }
 
-	GameMode GameMode { get; }
+    GameMode GameMode { get; }
 
-	MapPoint? CurrentMapPoint { get; }
+    MapPoint? CurrentMapPoint { get; }
 
-	RunLocation RunLocation { get; }
+    RunLocation RunLocation { get; }
 
-	MapLocation MapLocation { get; }
+    MapLocation MapLocation { get; }
 
-	int ActFloor { get; set; }
+    int ActFloor { get; set; }
 
-	int TotalFloor { get; }
+    int TotalFloor { get; }
 
-	int CurrentRoomCount { get; }
+    int CurrentRoomCount { get; }
 
-	AbstractRoom? CurrentRoom { get; }
+    AbstractRoom? CurrentRoom { get; }
 
-	AbstractRoom? BaseRoom { get; }
+    AbstractRoom? BaseRoom { get; }
 
-	bool IsGameOver { get; }
+    bool IsGameOver { get; }
 
-	int AscensionLevel { get; }
+    int AscensionLevel { get; }
 
-	RunRngSet Rng { get; }
+    RunRngSet Rng { get; }
 
-	RunOddsSet Odds { get; }
+    RunOddsSet Odds { get; }
 
-	RelicGrabBag SharedRelicGrabBag { get; }
+    RelicGrabBag SharedRelicGrabBag { get; }
 
-	UnlockState UnlockState { get; }
+    UnlockState UnlockState { get; }
 
-	IReadOnlyList<ModifierModel> Modifiers { get; }
+    IReadOnlyList<ModifierModel> Modifiers { get; }
 
-	IReadOnlyList<BadgeModel> BadgeModels { get; }
+    IReadOnlyList<BadgeModel> BadgeModels { get; }
 
-	MultiplayerScalingModel? MultiplayerScalingModel { get; }
+    MultiplayerScalingModel? MultiplayerScalingModel { get; }
 
-	IReadOnlyList<IReadOnlyList<MapPointHistoryEntry>> MapPointHistory { get; }
+    IReadOnlyList<IReadOnlyList<MapPointHistoryEntry>> MapPointHistory { get; }
 
-	MapPointHistoryEntry? CurrentMapPointHistoryEntry { get; }
+    MapPointHistoryEntry? CurrentMapPointHistoryEntry { get; }
 
-	ExtraRunFields ExtraFields { get; }
+    ExtraRunFields ExtraFields { get; }
 
-	CardMultiplayerConstraint CardMultiplayerConstraint
-	{
-		get
-		{
-			if (Players.Count <= 1)
-			{
-				return CardMultiplayerConstraint.SingleplayerOnly;
-			}
-			return CardMultiplayerConstraint.MultiplayerOnly;
-		}
-	}
+    CardMultiplayerConstraint CardMultiplayerConstraint
+    {
+        get
+        {
+            if (Players.Count <= 1)
+            {
+                return CardMultiplayerConstraint.SingleplayerOnly;
+            }
+            return CardMultiplayerConstraint.MultiplayerOnly;
+        }
+    }
 
-	bool ContainsCard(CardModel card);
+    bool ContainsCard(CardModel card);
 
-	CardModel LoadCard(SerializableCard serializableCard, Player owner);
+    CardModel LoadCard(SerializableCard serializableCard, Player owner);
 
-	void AppendToMapPointHistory(MapPointType mapPointType, RoomType initialRoomType, ModelId? modelId);
+    void AppendToMapPointHistory(
+        MapPointType mapPointType,
+        RoomType initialRoomType,
+        ModelId? modelId
+    );
 
-	MapPointHistoryEntry? GetHistoryEntryFor(MapLocation location);
+    MapPointHistoryEntry? GetHistoryEntryFor(MapLocation location);
 
-	IEnumerable<AbstractModel> IterateHookListeners(ICombatState? childCombatState);
+    IEnumerable<AbstractModel> IterateHookListeners(ICombatState? childCombatState);
 
-	int GetAndIncrementNextRoomId();
+    int GetAndIncrementNextRoomId();
 
-	static IRunState GetFrom(IEnumerable<Creature> creatures)
-	{
-		Creature creature = creatures.FirstOrDefault((Creature c) => c.IsPlayer);
-		if (creature != null)
-		{
-			return creature.Player.RunState;
-		}
-		Creature creature2 = creatures.FirstOrDefault((Creature c) => c.PetOwner != null);
-		if (creature2 != null)
-		{
-			return creature2.PetOwner.RunState;
-		}
-		Creature creature3 = creatures.FirstOrDefault((Creature c) => c.CombatState != null);
-		if (creature3 != null)
-		{
-			return creature3.CombatState.RunState;
-		}
-		Log.Warn("Unable to extract RunState from creatures list! If you're in a test, this is okay, but it's probably a bug outside of tests. Falling back to null run state.");
-		return NullRunState.Instance;
-	}
+    static IRunState GetFrom(IEnumerable<Creature> creatures)
+    {
+        Creature creature = creatures.FirstOrDefault((Creature c) => c.IsPlayer);
+        if (creature != null)
+        {
+            return creature.Player.RunState;
+        }
+        Creature creature2 = creatures.FirstOrDefault((Creature c) => c.PetOwner != null);
+        if (creature2 != null)
+        {
+            return creature2.PetOwner.RunState;
+        }
+        Creature creature3 = creatures.FirstOrDefault((Creature c) => c.CombatState != null);
+        if (creature3 != null)
+        {
+            return creature3.CombatState.RunState;
+        }
+        Log.Warn(
+            "Unable to extract RunState from creatures list! If you're in a test, this is okay, but it's probably a bug outside of tests. Falling back to null run state."
+        );
+        return NullRunState.Instance;
+    }
 }

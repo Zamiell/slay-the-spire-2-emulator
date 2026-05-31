@@ -10,39 +10,41 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby;
 
 public struct LobbyBeginRunMessage : INetMessage, IPacketSerializable
 {
-	public List<LobbyPlayer>? playersInLobby;
+    public List<LobbyPlayer>? playersInLobby;
 
-	public string seed;
+    public string seed;
 
-	public List<SerializableModifier> modifiers;
+    public List<SerializableModifier> modifiers;
 
-	public string act1;
+    public string act1;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		if (playersInLobby == null)
-		{
-			throw new InvalidOperationException("Tried to serialize ClientSlotGrantedMessage with null list!");
-		}
-		writer.WriteList(playersInLobby, 3);
-		writer.WriteString(seed);
-		writer.WriteList(modifiers);
-		writer.WriteString(act1);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        if (playersInLobby == null)
+        {
+            throw new InvalidOperationException(
+                "Tried to serialize ClientSlotGrantedMessage with null list!"
+            );
+        }
+        writer.WriteList(playersInLobby, 3);
+        writer.WriteString(seed);
+        writer.WriteList(modifiers);
+        writer.WriteString(act1);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		playersInLobby = reader.ReadList<LobbyPlayer>(3);
-		seed = reader.ReadString();
-		modifiers = reader.ReadList<SerializableModifier>();
-		act1 = reader.ReadString();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        playersInLobby = reader.ReadList<LobbyPlayer>(3);
+        seed = reader.ReadString();
+        modifiers = reader.ReadList<SerializableModifier>();
+        act1 = reader.ReadString();
+    }
 }

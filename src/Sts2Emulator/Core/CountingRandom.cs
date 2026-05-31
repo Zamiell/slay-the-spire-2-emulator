@@ -8,7 +8,8 @@ public sealed class CountingRandom : Random
 {
     public int CallCount { get; private set; }
 
-    public CountingRandom(int seed) : base(seed) { }
+    public CountingRandom(int seed)
+        : base(seed) { }
 
     public override int Next(int maxValue)
     {

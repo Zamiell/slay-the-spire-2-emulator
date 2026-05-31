@@ -13,33 +13,37 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class GrandFinale : CardModel
 {
-	protected override bool ShouldGlowGoldInternal => IsPlayable;
+    protected override bool ShouldGlowGoldInternal => IsPlayable;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(60m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(60m, ValueProp.Move)
+        );
 
-	protected override bool IsPlayable => PileType.Draw.GetPile(base.Owner).Cards.Count == 0;
+    protected override bool IsPlayable => PileType.Draw.GetPile(base.Owner).Cards.Count == 0;
 
-	public GrandFinale()
-		: base(0, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies)
-	{
-	}
+    public GrandFinale()
+        : base(0, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		NGrandFinaleVfx nGrandFinaleVfx = NGrandFinaleVfx.Create(base.Owner.Creature);
-		if (nGrandFinaleVfx != null)
-		{
-			NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(nGrandFinaleVfx);
-			await Cmd.Wait(NGrandFinaleVfx.totalAnticipationDuration);
-		}
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).TargetingAllOpponents(base.CombatState)
-			.WithHitVfxNode(NGrandFinaleImpactVfx.Create)
-			.WithHitFx(null, null, "blunt_attack.mp3")
-			.Execute(choiceContext);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        NGrandFinaleVfx nGrandFinaleVfx = NGrandFinaleVfx.Create(base.Owner.Creature);
+        if (nGrandFinaleVfx != null)
+        {
+            NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(nGrandFinaleVfx);
+            await Cmd.Wait(NGrandFinaleVfx.totalAnticipationDuration);
+        }
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .TargetingAllOpponents(base.CombatState)
+            .WithHitVfxNode(NGrandFinaleImpactVfx.Create)
+            .WithHitFx(null, null, "blunt_attack.mp3")
+            .Execute(choiceContext);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(15m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(15m);
+    }
 }

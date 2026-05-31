@@ -11,18 +11,27 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class SneakyPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner.Creature != base.Owner && cardPlay.Card.Type == CardType.Attack)
-		{
-			Flash();
-			await CreatureCmd.GainBlock(base.Owner, base.Amount, ValueProp.Unpowered, null, fast: true);
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Owner.Creature != base.Owner && cardPlay.Card.Type == CardType.Attack)
+        {
+            Flash();
+            await CreatureCmd.GainBlock(
+                base.Owner,
+                base.Amount,
+                ValueProp.Unpowered,
+                null,
+                fast: true
+            );
+        }
+    }
 }

@@ -7,17 +7,16 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Debris : CardModel
 {
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	public Debris()
-		: base(1, CardType.Status, CardRarity.Status, TargetType.None)
-	{
-	}
+    public Debris()
+        : base(1, CardType.Status, CardRarity.Status, TargetType.None) { }
 
-	protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		return Task.CompletedTask;
-	}
+    protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        return Task.CompletedTask;
+    }
 }

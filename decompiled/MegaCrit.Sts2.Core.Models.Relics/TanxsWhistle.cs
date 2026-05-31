@@ -10,13 +10,19 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class TanxsWhistle : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromCardWithCardHoverTips<Whistle>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromCardWithCardHoverTips<Whistle>();
 
-	public override async Task AfterObtained()
-	{
-		CardModel card = base.Owner.RunState.CreateCard<Whistle>(base.Owner);
-		CardCmd.PreviewCardPileAdd(new global::_003C_003Ez__ReadOnlySingleElementList<CardPileAddResult>(await CardPileCmd.Add(card, PileType.Deck)), 2f);
-	}
+    public override async Task AfterObtained()
+    {
+        CardModel card = base.Owner.RunState.CreateCard<Whistle>(base.Owner);
+        CardCmd.PreviewCardPileAdd(
+            new global::_003C_003Ez__ReadOnlySingleElementList<CardPileAddResult>(
+                await CardPileCmd.Add(card, PileType.Deck)
+            ),
+            2f
+        );
+    }
 }

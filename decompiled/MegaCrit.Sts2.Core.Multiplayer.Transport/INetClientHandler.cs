@@ -4,7 +4,7 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Transport;
 
 public interface INetClientHandler : INetHandler
 {
-	void OnConnectedToHost();
+    void OnConnectedToHost();
 
-	void OnDisconnectedFromHost(ulong hostNetId, NetErrorInfo info);
+    void OnDisconnectedFromHost(ulong hostNetId, NetErrorInfo info);
 }

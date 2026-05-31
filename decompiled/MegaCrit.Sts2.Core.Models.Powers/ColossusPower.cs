@@ -13,42 +13,58 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ColossusPower : PowerModel
 {
-	private const string _damageDecreaseKey = "DamageDecrease";
+    private const string _damageDecreaseKey = "DamageDecrease";
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("DamageDecrease", 0.5m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("DamageDecrease", 0.5m)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<VulnerablePower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<VulnerablePower>()
+        );
 
-	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target != base.Owner)
-		{
-			return 1m;
-		}
-		if (!props.IsPoweredAttack())
-		{
-			return 1m;
-		}
-		if (dealer == null)
-		{
-			return 1m;
-		}
-		if (!dealer.HasPower<VulnerablePower>())
-		{
-			return 1m;
-		}
-		return base.DynamicVars["DamageDecrease"].BaseValue;
-	}
+    public override decimal ModifyDamageMultiplicative(
+        Creature? target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (target != base.Owner)
+        {
+            return 1m;
+        }
+        if (!props.IsPoweredAttack())
+        {
+            return 1m;
+        }
+        if (dealer == null)
+        {
+            return 1m;
+        }
+        if (!dealer.HasPower<VulnerablePower>())
+        {
+            return 1m;
+        }
+        return base.DynamicVars["DamageDecrease"].BaseValue;
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (side == CombatSide.Enemy)
-		{
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (side == CombatSide.Enemy)
+        {
+            await PowerCmd.Decrement(this);
+        }
+    }
 }

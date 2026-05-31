@@ -12,27 +12,45 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class DemonTongue : RelicModel
 {
-	private bool _triggeredThisTurn;
+    private bool _triggeredThisTurn;
 
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override async Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target, DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (base.Owner.Creature.CombatState != null && base.Owner.Creature.CombatState.CurrentSide == base.Owner.Creature.Side && target == base.Owner.Creature && result.UnblockedDamage > 0 && !_triggeredThisTurn)
-		{
-			_triggeredThisTurn = true;
-			Flash();
-			await CreatureCmd.Heal(base.Owner.Creature, result.UnblockedDamage);
-		}
-	}
+    public override async Task AfterDamageReceived(
+        PlayerChoiceContext choiceContext,
+        Creature target,
+        DamageResult result,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (
+            base.Owner.Creature.CombatState != null
+            && base.Owner.Creature.CombatState.CurrentSide == base.Owner.Creature.Side
+            && target == base.Owner.Creature
+            && result.UnblockedDamage > 0
+            && !_triggeredThisTurn
+        )
+        {
+            _triggeredThisTurn = true;
+            Flash();
+            await CreatureCmd.Heal(base.Owner.Creature, result.UnblockedDamage);
+        }
+    }
 
-	public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (!participants.Contains(base.Owner.Creature))
-		{
-			return Task.CompletedTask;
-		}
-		_triggeredThisTurn = false;
-		return Task.CompletedTask;
-	}
+    public override Task BeforeSideTurnStart(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (!participants.Contains(base.Owner.Creature))
+        {
+            return Task.CompletedTask;
+        }
+        _triggeredThisTurn = false;
+        return Task.CompletedTask;
+    }
 }

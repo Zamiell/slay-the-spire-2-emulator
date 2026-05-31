@@ -7,16 +7,16 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ForbiddenGrimoirePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override Task AfterCombatEnd(CombatRoom room)
-	{
-		for (int i = 0; i < base.Amount; i++)
-		{
-			room.AddExtraReward(base.Owner.Player, new CardRemovalReward(base.Owner.Player));
-		}
-		return Task.CompletedTask;
-	}
+    public override Task AfterCombatEnd(CombatRoom room)
+    {
+        for (int i = 0; i < base.Amount; i++)
+        {
+            room.AddExtraReward(base.Owner.Player, new CardRemovalReward(base.Owner.Player));
+        }
+        return Task.CompletedTask;
+    }
 }

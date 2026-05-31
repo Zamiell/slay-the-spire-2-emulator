@@ -20,8 +20,8 @@ public class CombatEngineTests
     public void NewCombat_StartsWithHighestDifficultyStarterDeck()
     {
         var state = CombatFactory.NewCombat(seed: 0);
-        var cards = state.Hand
-            .Concat(state.DrawPile)
+        var cards = state
+            .Hand.Concat(state.DrawPile)
             .Concat(state.DiscardPile)
             .Concat(state.ExhaustPile)
             .ToList();
@@ -60,8 +60,18 @@ public class CombatEngineTests
             Hand = [new CardInstance(IC.Bash, Upgraded: false)],
             Enemies =
             [
-                new EnemyState { DefId = KE.LeafSlimeS, Hp = 8, MaxHp = 8 },
-                new EnemyState { DefId = KE.TwigSlimeM, Hp = 29, MaxHp = 29 },
+                new EnemyState
+                {
+                    DefId = KE.LeafSlimeS,
+                    Hp = 8,
+                    MaxHp = 8,
+                },
+                new EnemyState
+                {
+                    DefId = KE.TwigSlimeM,
+                    Hp = 29,
+                    MaxHp = 29,
+                },
             ],
         };
 
@@ -116,10 +126,7 @@ public class CombatEngineTests
 
         CardEffects.DrawCards(state, 2, new Random(0));
 
-        Assert.Equal(
-            [IC.StrikeIronclad, IC.Bash],
-            state.Hand.Select(card => card.DefId)
-        );
+        Assert.Equal([IC.StrikeIronclad, IC.Bash], state.Hand.Select(card => card.DefId));
         Assert.Equal([IC.DefendIronclad], state.DrawPile.Select(card => card.DefId));
     }
 
@@ -131,11 +138,14 @@ public class CombatEngineTests
         CombatFactory.Reset(state, new Random(0), [-IC.Bash], encounterId: 1);
 
         Assert.Single(state.Hand.Concat(state.DrawPile));
-        Assert.All(state.Hand.Concat(state.DrawPile), card =>
-        {
-            Assert.Equal(IC.Bash, card.DefId);
-            Assert.True(card.Upgraded);
-        });
+        Assert.All(
+            state.Hand.Concat(state.DrawPile),
+            card =>
+            {
+                Assert.Equal(IC.Bash, card.DefId);
+                Assert.True(card.Upgraded);
+            }
+        );
     }
 
     [Fact]
@@ -284,7 +294,10 @@ public class CombatEngineTests
         CombatEngine.Step(state, 0, new Random(0));
 
         Assert.Equal(5, state.PlayerBlock);
-        Assert.DoesNotContain(state.Hand, card => card.DefId == IC.StrikeIronclad && !card.Upgraded);
+        Assert.DoesNotContain(
+            state.Hand,
+            card => card.DefId == IC.StrikeIronclad && !card.Upgraded
+        );
         Assert.Contains(state.Hand, card => card.DefId == IC.StrikeIronclad && card.Upgraded);
         Assert.Contains(state.Hand, card => card.DefId == IC.DefendIronclad && !card.Upgraded);
     }
@@ -324,7 +337,13 @@ public class CombatEngineTests
         state.Energy = 2;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -346,7 +365,13 @@ public class CombatEngineTests
         state.Energy = 4;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -423,7 +448,13 @@ public class CombatEngineTests
         state.Energy = 2;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -517,7 +548,13 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -541,7 +578,13 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -579,7 +622,13 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -598,8 +647,20 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -617,8 +678,20 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -635,8 +708,20 @@ public class CombatEngineTests
         state.Energy = 0;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -654,8 +739,20 @@ public class CombatEngineTests
         state.Energy = 0;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -671,9 +768,28 @@ public class CombatEngineTests
         state.Energy = 0;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 5, MaxHp = 5, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Block = 3, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 5,
+                MaxHp = 5,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Block = 3,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -691,8 +807,20 @@ public class CombatEngineTests
         state.Energy = 0;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [new BuffState(BuffId.Vulnerable, 1)] },
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [new BuffState(BuffId.Vulnerable, 1)] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [new BuffState(BuffId.Vulnerable, 1)],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [new BuffState(BuffId.Vulnerable, 1)],
+            },
         ];
         BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, 2);
 
@@ -709,7 +837,13 @@ public class CombatEngineTests
         state.Energy = 3;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 40,
+                MaxHp = 40,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -726,7 +860,13 @@ public class CombatEngineTests
         state.Energy = 2;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 40,
+                MaxHp = 40,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -776,9 +916,14 @@ public class CombatEngineTests
         CombatEngine.Step(state, state.Hand.Count, new Random(0));
 
         Assert.Equal(0, BuffSystem.Get(state.PlayerBuffs, BuffId.RetainHand));
-        Assert.Equal([IC.StrikeIronclad, IC.DefendIronclad], state.Hand.Take(2).Select(card => card.DefId));
-        Assert.DoesNotContain(state.DiscardPile, card =>
-            card.DefId is IC.StrikeIronclad or IC.DefendIronclad);
+        Assert.Equal(
+            [IC.StrikeIronclad, IC.DefendIronclad],
+            state.Hand.Take(2).Select(card => card.DefId)
+        );
+        Assert.DoesNotContain(
+            state.DiscardPile,
+            card => card.DefId is IC.StrikeIronclad or IC.DefendIronclad
+        );
     }
 
     [Fact]
@@ -789,7 +934,13 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 40,
+                MaxHp = 40,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -811,16 +962,19 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 40,
+                MaxHp = 40,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
 
         Assert.Equal(30, state.Enemies[0].Hp);
-        Assert.Equal(
-            [IC.StrikeIronclad, IC.DefendIronclad],
-            state.Hand.Select(card => card.DefId)
-        );
+        Assert.Equal([IC.StrikeIronclad, IC.DefendIronclad], state.Hand.Select(card => card.DefId));
         Assert.Equal([IC.Bash], state.DiscardPile.Select(card => card.DefId));
         Assert.Contains(state.ExhaustPile, card => card.DefId == AN.NeowsFury);
     }
@@ -850,7 +1004,13 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 40, MaxHp = 40, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 40,
+                MaxHp = 40,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -949,11 +1109,7 @@ public class CombatEngineTests
     public void Bolas_ReturnsOnceWhenAttackEffectIsDuplicated()
     {
         var state = CombatFactory.NewCombat(seed: 0);
-        state.Hand =
-        [
-            new CardInstance(IC.OneTwoPunch, false),
-            new CardInstance(CL.Bolas, false),
-        ];
+        state.Hand = [new CardInstance(IC.OneTwoPunch, false), new CardInstance(CL.Bolas, false)];
         state.DrawPile.Clear();
         state.DiscardPile.Clear();
         state.Energy = 1;
@@ -993,7 +1149,13 @@ public class CombatEngineTests
         state.Energy = 2;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1012,7 +1174,13 @@ public class CombatEngineTests
         state.Energy = 2;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1029,8 +1197,20 @@ public class CombatEngineTests
         state.Energy = 3;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1046,8 +1226,20 @@ public class CombatEngineTests
         state.Energy = 3;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 30, MaxHp = 30, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1068,8 +1260,20 @@ public class CombatEngineTests
         state.Energy = 3;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1135,7 +1339,13 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1146,7 +1356,10 @@ public class CombatEngineTests
         CombatEngine.Step(state, 0, new Random(0));
 
         Assert.Equal(41, state.Enemies[0].Hp);
-        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.AshenStrike && !card.FreeThisTurn);
+        Assert.Contains(
+            state.ExhaustPile,
+            card => card.DefId == IC.AshenStrike && !card.FreeThisTurn
+        );
     }
 
     [Fact]
@@ -1247,11 +1460,7 @@ public class CombatEngineTests
     public void Vicious_DrawsWhenPlayerAppliesVulnerable()
     {
         var state = CombatFactory.NewCombat(seed: 0);
-        state.Hand =
-        [
-            new CardInstance(IC.Vicious, false),
-            new CardInstance(IC.Taunt, false),
-        ];
+        state.Hand = [new CardInstance(IC.Vicious, false), new CardInstance(IC.Taunt, false)];
         state.DrawPile =
         [
             new CardInstance(IC.StrikeIronclad, false),
@@ -1260,7 +1469,13 @@ public class CombatEngineTests
         state.Energy = 2;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1286,7 +1501,13 @@ public class CombatEngineTests
         state.Energy = 3;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1309,7 +1530,13 @@ public class CombatEngineTests
         state.Energy = 0;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         Assert.Contains(0, CombatEngine.ValidActions(state));
@@ -1334,7 +1561,13 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1352,7 +1585,13 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
         CardEffects.ExhaustCard(state, new CardInstance(IC.StrikeIronclad, false));
 
@@ -1474,7 +1713,13 @@ public class CombatEngineTests
         state.Energy = 2;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1497,7 +1742,13 @@ public class CombatEngineTests
         state.Energy = 3;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1569,11 +1820,16 @@ public class CombatEngineTests
     public void DarkEmbrace_DrawsCardOnImmediateExhaust()
     {
         var state = CombatFactory.NewCombat(seed: 0);
-        state.Hand = [new CardInstance(IC.DarkEmbrace, false), new CardInstance(IC.TrueGrit, false)];
-        state.DrawPile = [
+        state.Hand =
+        [
+            new CardInstance(IC.DarkEmbrace, false),
+            new CardInstance(IC.TrueGrit, false),
+        ];
+        state.DrawPile =
+        [
             new CardInstance(IC.StrikeIronclad, false),
             new CardInstance(IC.DefendIronclad, false),
-            new CardInstance(IC.IronWave, false)
+            new CardInstance(IC.IronWave, false),
         ];
         state.Energy = 3;
 
@@ -1598,15 +1854,20 @@ public class CombatEngineTests
     public void DarkEmbrace_DrawsCardAfterTurnEndForEtherealExhaust()
     {
         var state = CombatFactory.NewCombat(seed: 0);
-        state.Hand = [new CardInstance(IC.DarkEmbrace, false), new CardInstance(IC.AscendersBane, false)];
-        state.DrawPile = [
+        state.Hand =
+        [
+            new CardInstance(IC.DarkEmbrace, false),
+            new CardInstance(IC.AscendersBane, false),
+        ];
+        state.DrawPile =
+        [
             new CardInstance(IC.StrikeIronclad, false),
             new CardInstance(IC.DefendIronclad, false),
             new CardInstance(IC.IronWave, false),
             new CardInstance(IC.Bash, false),
             new CardInstance(IC.Anger, false),
             new CardInstance(IC.BodySlam, false),
-            new CardInstance(IC.Break, false)
+            new CardInstance(IC.Break, false),
         ];
         state.Energy = 3;
 
@@ -1629,7 +1890,15 @@ public class CombatEngineTests
     {
         // SludgeSpinner Move 0 is Oil Spray (9 dmg + 1 Weak).
         var state = CombatFactory.NewCombat(seed: 0);
-        state.Enemies = [CombatFactory.CreateEnemy(KE.SludgeSpinner, new Random(0), new Intent(IntentType.Debuff, 9), 0)];
+        state.Enemies =
+        [
+            CombatFactory.CreateEnemy(
+                KE.SludgeSpinner,
+                new Random(0),
+                new Intent(IntentType.Debuff, 9),
+                0
+            ),
+        ];
         state.Hand = [new CardInstance(IC.StrikeIronclad, false)];
         state.DrawPile = [];
         state.DiscardPile = [];
@@ -1678,7 +1947,11 @@ public class CombatEngineTests
     public void Hellraiser_AutoPlaysDrawnStrike()
     {
         var state = CombatFactory.NewCombat(seed: 0);
-        state.Hand = [new CardInstance(IC.Hellraiser, false), new CardInstance(IC.PommelStrike, false)];
+        state.Hand =
+        [
+            new CardInstance(IC.Hellraiser, false),
+            new CardInstance(IC.PommelStrike, false),
+        ];
         state.DrawPile = [new CardInstance(IC.StrikeIronclad, false)];
         state.DiscardPile = [];
         state.Energy = 3;
@@ -1694,7 +1967,7 @@ public class CombatEngineTests
         // StrikeIronclad deals 6 damage. Pommel Strike deals 9.
         // Total damage should be 15.
         CombatEngine.Step(state, 0, new Random(0));
-        
+
         Assert.Equal(85, enemy.Hp);
         // Hand should be empty (Pommel Strike played, StrikeIronclad auto-played).
         Assert.Empty(state.Hand);
@@ -1764,16 +2037,24 @@ public class CombatEngineTests
     {
         var state = CombatFactory.NewCombat(seed: 0);
         state.PlayerHp = 50;
-        state.Hand =
-        [
-            new CardInstance(IC.Inferno, false),
-            new CardInstance(IC.Hemokinesis, false),
-        ];
+        state.Hand = [new CardInstance(IC.Inferno, false), new CardInstance(IC.Hemokinesis, false)];
         state.Energy = 2;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1832,7 +2113,13 @@ public class CombatEngineTests
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 100, MaxHp = 100, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1855,7 +2142,13 @@ public class CombatEngineTests
         state.Energy = 0;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1868,15 +2161,17 @@ public class CombatEngineTests
     {
         var state = CombatFactory.NewCombat(seed: 0);
         state.PlayerHp = 50;
-        state.Hand =
-        [
-            new CardInstance(IC.Bloodletting, false),
-            new CardInstance(IC.Spite, false),
-        ];
+        state.Hand = [new CardInstance(IC.Bloodletting, false), new CardInstance(IC.Spite, false)];
         state.Energy = 0;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -1891,15 +2186,17 @@ public class CombatEngineTests
     {
         var state = CombatFactory.NewCombat(seed: 0);
         state.PlayerHp = 50;
-        state.Hand =
-        [
-            new CardInstance(IC.Breakthrough, false),
-            new CardInstance(IC.Spite, true),
-        ];
+        state.Hand = [new CardInstance(IC.Breakthrough, false), new CardInstance(IC.Spite, true)];
         state.Energy = 1;
         state.Enemies =
         [
-            new EnemyState { DefId = 16, Hp = 50, MaxHp = 50, Buffs = [] },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 50,
+                MaxHp = 50,
+                Buffs = [],
+            },
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
@@ -2075,15 +2372,15 @@ public class CombatEngineTests
     [Fact]
     public void NewCombat_SamplesActOneWeakEncounterPools()
     {
-        var states = Enumerable.Range(0, 64)
-            .Select(seed => CombatFactory.NewCombat(seed))
-            .ToList();
+        var states = Enumerable.Range(0, 64).Select(seed => CombatFactory.NewCombat(seed)).ToList();
         var shapes = states
-            .Select(state => (
-                state.EncounterId,
-                Count: state.Enemies.Count,
-                Intents: string.Join(",", state.Enemies.Select(e => e.CurrentIntent.Type))
-            ))
+            .Select(state =>
+                (
+                    state.EncounterId,
+                    Count: state.Enemies.Count,
+                    Intents: string.Join(",", state.Enemies.Select(e => e.CurrentIntent.Type))
+                )
+            )
             .Distinct()
             .ToList();
 
@@ -2121,11 +2418,14 @@ public class CombatEngineTests
 
         Assert.Equal(1, state.EncounterId);
         Assert.Equal(2, state.Enemies.Count);
-        Assert.All(state.Enemies, enemy =>
-        {
-            Assert.Equal(16, enemy.DefId);
-            Assert.Equal(2, BuffSystem.Get(enemy.Buffs, BuffId.Artifact));
-        });
+        Assert.All(
+            state.Enemies,
+            enemy =>
+            {
+                Assert.Equal(16, enemy.DefId);
+                Assert.Equal(2, BuffSystem.Get(enemy.Buffs, BuffId.Artifact));
+            }
+        );
         Assert.Equal(IntentType.Attack, state.Enemies[0].CurrentIntent.Type);
         Assert.Equal(18, state.Enemies[0].CurrentIntent.Magnitude);
         Assert.Equal(IntentType.Debuff, state.Enemies[1].CurrentIntent.Type);
@@ -2356,8 +2656,14 @@ public class CombatEngineTests
         Assert.False(result.Terminal);
         Assert.Contains(state.Enemies, e => e.DefId == 78 && e.Hp > 0);
         Assert.Contains(state.Enemies, e => e.DefId == 28 && e.Hp > 0);
-        Assert.Contains(state.Enemies, e => e.DefId == 78 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
-        Assert.Contains(state.Enemies, e => e.DefId == 28 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
+        Assert.Contains(
+            state.Enemies,
+            e => e.DefId == 78 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1
+        );
+        Assert.Contains(
+            state.Enemies,
+            e => e.DefId == 28 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1
+        );
     }
 
     [Fact]
@@ -2458,16 +2764,22 @@ public class CombatEngineTests
         EnemyAI.ExecuteIntent(state.Enemies[0], state, new Random(0));
 
         Assert.Equal(2, state.Enemies.Count(e => e.DefId == 101));
-        Assert.All(state.Enemies.Where(e => e.DefId == 101),
-            rat => Assert.Equal(1, BuffSystem.Get(rat.Buffs, BuffId.BackupCount)));
-        Assert.Contains(state.Enemies, e => e.DefId == 101 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
+        Assert.All(
+            state.Enemies.Where(e => e.DefId == 101),
+            rat => Assert.Equal(1, BuffSystem.Get(rat.Buffs, BuffId.BackupCount))
+        );
+        Assert.Contains(
+            state.Enemies,
+            e => e.DefId == 101 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1
+        );
     }
 
     [Fact]
     public void TwoTailedRat_CallForBackupRespectsTotalSlotLimit()
     {
         var state = CombatFactory.NewCombat(seed: 0);
-        state.Enemies = Enumerable.Range(0, 6)
+        state.Enemies = Enumerable
+            .Range(0, 6)
             .Select(i => new EnemyState
             {
                 DefId = 101,
@@ -2503,23 +2815,23 @@ public class CombatEngineTests
     {
         var expectedEnemyIds = new Dictionary<int, int>
         {
-            [14] = 53,  // Mawler
-            [15] = 56,  // Nibbits
-            [16] = 47,  // Large slimes include LeafSlimeM
-            [17] = 30,  // Flyconid encounter
-            [18] = 77,  // Snapping Jaxfruit
-            [19] = 20,  // Cubex Construct
+            [14] = 53, // Mawler
+            [15] = 56, // Nibbits
+            [16] = 47, // Large slimes include LeafSlimeM
+            [17] = 30, // Flyconid encounter
+            [18] = 77, // Snapping Jaxfruit
+            [19] = 20, // Cubex Construct
             [20] = 103, // Vine Shambler
-            [21] = 71,  // Shrinker Beetle + Fuzzy
-            [22] = 14,  // Calcified Cultist + Seapunk
-            [23] = 32,  // Fossil Stalker
-            [24] = 65,  // Punch Construct
-            [25] = 70,  // Sewer Clam
-            [26] = 39,  // Haunted Ship
-            [27] = 74,  // Slithering Strangler
-            [28] = 5,   // Ruby Raiders
-            [29] = 31,  // Fogmog
-            [30] = 49,  // Living Fog
+            [21] = 71, // Shrinker Beetle + Fuzzy
+            [22] = 14, // Calcified Cultist + Seapunk
+            [23] = 32, // Fossil Stalker
+            [24] = 65, // Punch Construct
+            [25] = 70, // Sewer Clam
+            [26] = 39, // Haunted Ship
+            [27] = 74, // Slithering Strangler
+            [28] = 5, // Ruby Raiders
+            [29] = 31, // Fogmog
+            [30] = 49, // Living Fog
         };
 
         foreach (var (encounterId, enemyId) in expectedEnemyIds)
@@ -2609,8 +2921,14 @@ public class CombatEngineTests
 
         EnemyAI.ExecuteIntent(state.Enemies[0], state, new Random(0));
 
-        Assert.Contains(state.Enemies, e => e.DefId == 26 && BuffSystem.Get(e.Buffs, BuffId.Illusion) == 1);
-        Assert.Contains(state.Enemies, e => e.DefId == 26 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1);
+        Assert.Contains(
+            state.Enemies,
+            e => e.DefId == 26 && BuffSystem.Get(e.Buffs, BuffId.Illusion) == 1
+        );
+        Assert.Contains(
+            state.Enemies,
+            e => e.DefId == 26 && BuffSystem.Get(e.Buffs, BuffId.Stunned) == 1
+        );
     }
 
     [Fact]
@@ -2649,7 +2967,10 @@ public class CombatEngineTests
         EnemyAI.ExecuteIntent(enemy, state, new Random(0));
 
         Assert.Equal(58, state.PlayerHp);
-        Assert.Contains(state.Enemies, e => e.DefId == 35 && BuffSystem.Get(e.Buffs, BuffId.Minion) == 1);
+        Assert.Contains(
+            state.Enemies,
+            e => e.DefId == 35 && BuffSystem.Get(e.Buffs, BuffId.Minion) == 1
+        );
     }
 
     [Fact]
@@ -2719,12 +3040,19 @@ public class CombatEngineTests
     }
 
     private static ReadOnlySpan<int> StarterDeckIds =>
-    [
-        IC.StrikeIronclad, IC.StrikeIronclad, IC.StrikeIronclad, IC.StrikeIronclad, IC.StrikeIronclad,
-        IC.DefendIronclad, IC.DefendIronclad, IC.DefendIronclad, IC.DefendIronclad,
-        IC.Bash,
-        IC.AscendersBane,
-    ];
+        [
+            IC.StrikeIronclad,
+            IC.StrikeIronclad,
+            IC.StrikeIronclad,
+            IC.StrikeIronclad,
+            IC.StrikeIronclad,
+            IC.DefendIronclad,
+            IC.DefendIronclad,
+            IC.DefendIronclad,
+            IC.DefendIronclad,
+            IC.Bash,
+            IC.AscendersBane,
+        ];
 
     [Fact]
     public void Dazed_ExhaustsAtEndOfTurn()
@@ -2924,13 +3252,14 @@ public class CombatEngineTests
         var rng = new Random(0);
         CombatFactory.Reset(state, rng, StarterDeckIds, encounterId: 0);
 
-        Assert.All(state.Enemies, enemy =>
-            Assert.Equal(IntentType.Buff, enemy.CurrentIntent.Type));
+        Assert.All(state.Enemies, enemy => Assert.Equal(IntentType.Buff, enemy.CurrentIntent.Type));
 
         CombatEngine.Step(state, state.Hand.Count, rng); // end turn
 
-        Assert.All(state.Enemies, enemy =>
-            Assert.Equal(IntentType.Attack, enemy.CurrentIntent.Type));
+        Assert.All(
+            state.Enemies,
+            enemy => Assert.Equal(IntentType.Attack, enemy.CurrentIntent.Type)
+        );
     }
 
     [Fact]
@@ -3290,5 +3619,4 @@ public class CombatEngineTests
         CombatEngine.Step(state, 0, rng);
         Assert.Equal(hpBefore - 15, enemy.Hp); // 5 dmg × 3 hits
     }
-
 }

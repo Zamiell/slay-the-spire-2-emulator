@@ -8,21 +8,29 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class TheSealedThrone : CardModel
 {
-	public override int CanonicalStarCost => 3;
+    public override int CanonicalStarCost => 3;
 
-	public TheSealedThrone()
-		: base(1, CardType.Power, CardRarity.Ancient, TargetType.Self)
-	{
-	}
+    public TheSealedThrone()
+        : base(1, CardType.Power, CardRarity.Ancient, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<TheSealedThronePower>(choiceContext, base.Owner.Creature, 1m, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<TheSealedThronePower>(
+            choiceContext,
+            base.Owner.Creature,
+            1m,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.EnergyCost.UpgradeBy(-1);
-	}
+    protected override void OnUpgrade()
+    {
+        base.EnergyCost.UpgradeBy(-1);
+    }
 }

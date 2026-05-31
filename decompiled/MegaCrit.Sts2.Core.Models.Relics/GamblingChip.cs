@@ -11,17 +11,28 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class GamblingChip : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override async Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			List<CardModel> list = (await CardSelectCmd.FromHandForDiscard(choiceContext, base.Owner, new CardSelectorPrefs(base.SelectionScreenPrompt, 0, 999999999), null, this)).ToList();
-			if (list.Count != 0)
-			{
-				await CardCmd.DiscardAndDraw(choiceContext, list, list.Count);
-			}
-		}
-	}
+    public override async Task AfterPlayerTurnStart(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber <= 1)
+        {
+            List<CardModel> list = (
+                await CardSelectCmd.FromHandForDiscard(
+                    choiceContext,
+                    base.Owner,
+                    new CardSelectorPrefs(base.SelectionScreenPrompt, 0, 999999999),
+                    null,
+                    this
+                )
+            ).ToList();
+            if (list.Count != 0)
+            {
+                await CardCmd.DiscardAndDraw(choiceContext, list, list.Count);
+            }
+        }
+    }
 }

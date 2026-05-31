@@ -6,23 +6,23 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby;
 
 public struct LobbyPlayerSetReadyMessage : INetMessage, IPacketSerializable
 {
-	public bool ready;
+    public bool ready;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteBool(ready);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteBool(ready);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		ready = reader.ReadBool();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        ready = reader.ReadBool();
+    }
 }

@@ -10,23 +10,32 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Royalties : CardModel
 {
-	public override bool CanBeGeneratedInCombat => false;
+    public override bool CanBeGeneratedInCombat => false;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new GoldVar(30));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new GoldVar(30));
 
-	public Royalties()
-		: base(1, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public Royalties()
+        : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<RoyaltiesPower>(choiceContext, base.Owner.Creature, base.DynamicVars.Gold.BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<RoyaltiesPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars.Gold.BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Gold.UpgradeValueBy(10m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Gold.UpgradeValueBy(10m);
+    }
 }

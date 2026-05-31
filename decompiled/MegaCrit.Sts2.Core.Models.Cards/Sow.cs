@@ -10,24 +10,29 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Sow : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(8m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(8m, ValueProp.Move)
+        );
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Retain);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Retain);
 
-	public Sow()
-		: base(1, CardType.Attack, CardRarity.Common, TargetType.AllEnemies)
-	{
-	}
+    public Sow()
+        : base(1, CardType.Attack, CardRarity.Common, TargetType.AllEnemies) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).TargetingAllOpponents(base.CombatState)
-			.WithHitFx("vfx/vfx_attack_blunt", null, "heavy_attack.mp3")
-			.Execute(choiceContext);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .TargetingAllOpponents(base.CombatState)
+            .WithHitFx("vfx/vfx_attack_blunt", null, "heavy_attack.mp3")
+            .Execute(choiceContext);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(3m);
+    }
 }

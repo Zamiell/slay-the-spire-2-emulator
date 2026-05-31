@@ -5,17 +5,17 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Transport.ENet;
 
 public struct ENetServiceData
 {
-	public ENetConnection.EventType type;
+    public ENetConnection.EventType type;
 
-	public ENetPacketPeer peer;
+    public ENetPacketPeer peer;
 
-	public int channel;
+    public int channel;
 
-	public NetTransferMode mode;
+    public NetTransferMode mode;
 
-	public byte[] packetData;
+    public byte[] packetData;
 
-	public Error error;
+    public Error error;
 
-	public Array originalData;
+    public Array originalData;
 }

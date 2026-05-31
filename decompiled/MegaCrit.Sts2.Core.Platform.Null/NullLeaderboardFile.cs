@@ -6,9 +6,9 @@ namespace MegaCrit.Sts2.Core.Platform.Null;
 
 public class NullLeaderboardFile : ISaveSchema
 {
-	[JsonPropertyName("leaderboards")]
-	public List<NullLeaderboard> leaderboards = new List<NullLeaderboard>();
+    [JsonPropertyName("leaderboards")]
+    public List<NullLeaderboard> leaderboards = new List<NullLeaderboard>();
 
-	[JsonPropertyName("version")]
-	public int SchemaVersion { get; set; }
+    [JsonPropertyName("version")]
+    public int SchemaVersion { get; set; }
 }

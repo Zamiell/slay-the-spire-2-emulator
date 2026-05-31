@@ -12,30 +12,34 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class NoEnergyGainPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	public override decimal ModifyEnergyGain(Player player, decimal amount)
-	{
-		if (player != base.Owner.Player)
-		{
-			return amount;
-		}
-		return 0m;
-	}
+    public override decimal ModifyEnergyGain(Player player, decimal amount)
+    {
+        if (player != base.Owner.Player)
+        {
+            return amount;
+        }
+        return 0m;
+    }
 
-	public override Task AfterModifyingEnergyGain()
-	{
-		Flash();
-		return Task.CompletedTask;
-	}
+    public override Task AfterModifyingEnergyGain()
+    {
+        Flash();
+        return Task.CompletedTask;
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
 }

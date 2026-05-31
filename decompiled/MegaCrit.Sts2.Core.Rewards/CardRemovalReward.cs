@@ -10,36 +10,33 @@ namespace MegaCrit.Sts2.Core.Rewards;
 
 public class CardRemovalReward : Reward
 {
-	private static string RewardIcon => ImageHelper.GetImagePath("ui/reward_screen/reward_icon_card_removal.png");
+    private static string RewardIcon =>
+        ImageHelper.GetImagePath("ui/reward_screen/reward_icon_card_removal.png");
 
-	protected override RewardType RewardType => RewardType.RemoveCard;
+    protected override RewardType RewardType => RewardType.RemoveCard;
 
-	public override int RewardsSetIndex => 7;
+    public override int RewardsSetIndex => 7;
 
-	protected override string IconPath => RewardIcon;
+    protected override string IconPath => RewardIcon;
 
-	public static IEnumerable<string> AssetPaths => new global::_003C_003Ez__ReadOnlySingleElementList<string>(RewardIcon);
+    public static IEnumerable<string> AssetPaths =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<string>(RewardIcon);
 
-	public override bool IsPopulated => true;
+    public override bool IsPopulated => true;
 
-	public override LocString Description => new LocString("gameplay_ui", "COMBAT_REWARD_CARD_REMOVAL");
+    public override LocString Description =>
+        new LocString("gameplay_ui", "COMBAT_REWARD_CARD_REMOVAL");
 
-	public CardRemovalReward(Player player)
-		: base(player)
-	{
-	}
+    public CardRemovalReward(Player player)
+        : base(player) { }
 
-	public override void Populate()
-	{
-	}
+    public override void Populate() { }
 
-	protected override async Task<bool> OnSelect()
-	{
-		Log.Info($"Player {base.Player.NetId} obtained card removal from reward");
-		return await RunManager.Instance.RewardSynchronizer.DoUnsyncedCardRemoval(base.Player);
-	}
+    protected override async Task<bool> OnSelect()
+    {
+        Log.Info($"Player {base.Player.NetId} obtained card removal from reward");
+        return await RunManager.Instance.RewardSynchronizer.DoUnsyncedCardRemoval(base.Player);
+    }
 
-	public override void MarkContentAsSeen()
-	{
-	}
+    public override void MarkContentAsSeen() { }
 }

@@ -14,40 +14,72 @@ namespace MegaCrit.Sts2.Core.Models.Events;
 
 public sealed class InfestedAutomaton : EventModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => Array.Empty<DynamicVar>();
+    protected override IEnumerable<DynamicVar> CanonicalVars => Array.Empty<DynamicVar>();
 
-	protected override IReadOnlyList<EventOption> GenerateInitialOptions()
-	{
-		return new global::_003C_003Ez__ReadOnlyArray<EventOption>(new EventOption[2]
-		{
-			new EventOption(this, Study, "INFESTED_AUTOMATON.pages.INITIAL.options.STUDY"),
-			new EventOption(this, TouchCore, "INFESTED_AUTOMATON.pages.INITIAL.options.TOUCH_CORE")
-		});
-	}
+    protected override IReadOnlyList<EventOption> GenerateInitialOptions()
+    {
+        return new global::_003C_003Ez__ReadOnlyArray<EventOption>(
+            new EventOption[2]
+            {
+                new EventOption(this, Study, "INFESTED_AUTOMATON.pages.INITIAL.options.STUDY"),
+                new EventOption(
+                    this,
+                    TouchCore,
+                    "INFESTED_AUTOMATON.pages.INITIAL.options.TOUCH_CORE"
+                ),
+            }
+        );
+    }
 
-	private async Task Study()
-	{
-		CardCreationOptions options = CardCreationOptions.ForNonCombatWithDefaultOdds(new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(base.Owner.Character.CardPool), (CardModel c) => c.Type == CardType.Power);
-		CardModel cardModel = CardFactory.CreateForReward(base.Owner, 1, options).FirstOrDefault()?.Card;
-		if (cardModel != null)
-		{
-			CardCmd.PreviewCardPileAdd(await CardPileCmd.Add(cardModel, PileType.Deck), 1.2f, CardPreviewStyle.EventLayout);
-		}
-		SetEventFinished(L10NLookup("INFESTED_AUTOMATON.pages.STUDY.description"));
-	}
+    private async Task Study()
+    {
+        CardCreationOptions options = CardCreationOptions.ForNonCombatWithDefaultOdds(
+            new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(
+                base.Owner.Character.CardPool
+            ),
+            (CardModel c) => c.Type == CardType.Power
+        );
+        CardModel cardModel = CardFactory
+            .CreateForReward(base.Owner, 1, options)
+            .FirstOrDefault()
+            ?.Card;
+        if (cardModel != null)
+        {
+            CardCmd.PreviewCardPileAdd(
+                await CardPileCmd.Add(cardModel, PileType.Deck),
+                1.2f,
+                CardPreviewStyle.EventLayout
+            );
+        }
+        SetEventFinished(L10NLookup("INFESTED_AUTOMATON.pages.STUDY.description"));
+    }
 
-	private async Task TouchCore()
-	{
-		CardCreationOptions options = CardCreationOptions.ForNonCombatWithDefaultOdds(new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(base.Owner.Character.CardPool), delegate(CardModel c)
-		{
-			CardEnergyCost energyCost = c.EnergyCost;
-			return energyCost != null && energyCost.Canonical == 0 && !energyCost.CostsX;
-		}).WithFlags(CardCreationFlags.NoCardPoolModifications);
-		CardModel cardModel = CardFactory.CreateForReward(base.Owner, 1, options).FirstOrDefault()?.Card;
-		if (cardModel != null)
-		{
-			CardCmd.PreviewCardPileAdd(await CardPileCmd.Add(cardModel, PileType.Deck), 1.2f, CardPreviewStyle.EventLayout);
-		}
-		SetEventFinished(L10NLookup("INFESTED_AUTOMATON.pages.TOUCH_CORE.description"));
-	}
+    private async Task TouchCore()
+    {
+        CardCreationOptions options = CardCreationOptions
+            .ForNonCombatWithDefaultOdds(
+                new global::_003C_003Ez__ReadOnlySingleElementList<CardPoolModel>(
+                    base.Owner.Character.CardPool
+                ),
+                delegate(CardModel c)
+                {
+                    CardEnergyCost energyCost = c.EnergyCost;
+                    return energyCost != null && energyCost.Canonical == 0 && !energyCost.CostsX;
+                }
+            )
+            .WithFlags(CardCreationFlags.NoCardPoolModifications);
+        CardModel cardModel = CardFactory
+            .CreateForReward(base.Owner, 1, options)
+            .FirstOrDefault()
+            ?.Card;
+        if (cardModel != null)
+        {
+            CardCmd.PreviewCardPileAdd(
+                await CardPileCmd.Add(cardModel, PileType.Deck),
+                1.2f,
+                CardPreviewStyle.EventLayout
+            );
+        }
+        SetEventFinished(L10NLookup("INFESTED_AUTOMATON.pages.TOUCH_CORE.description"));
+    }
 }

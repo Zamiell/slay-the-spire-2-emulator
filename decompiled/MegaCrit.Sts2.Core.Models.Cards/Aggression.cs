@@ -8,19 +8,27 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Aggression : CardModel
 {
-	public Aggression()
-		: base(1, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public Aggression()
+        : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<AggressionPower>(choiceContext, base.Owner.Creature, 1m, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<AggressionPower>(
+            choiceContext,
+            base.Owner.Creature,
+            1m,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		AddKeyword(CardKeyword.Innate);
-	}
+    protected override void OnUpgrade()
+    {
+        AddKeyword(CardKeyword.Innate);
+    }
 }

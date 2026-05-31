@@ -4,9 +4,9 @@ namespace MegaCrit.Sts2.Core.Platform;
 
 public interface IAchievementStrategy
 {
-	void Unlock(Achievement achievement);
+    void Unlock(Achievement achievement);
 
-	void Revoke(Achievement achievement);
+    void Revoke(Achievement achievement);
 
-	bool IsUnlocked(Achievement achievement);
+    bool IsUnlocked(Achievement achievement);
 }

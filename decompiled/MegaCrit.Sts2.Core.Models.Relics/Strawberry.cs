@@ -8,14 +8,15 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Strawberry : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Common;
+    public override RelicRarity Rarity => RelicRarity.Common;
 
-	public override bool HasUponPickupEffect => true;
+    public override bool HasUponPickupEffect => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new MaxHpVar(7m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new MaxHpVar(7m));
 
-	public override async Task AfterObtained()
-	{
-		await CreatureCmd.GainMaxHp(base.Owner.Creature, base.DynamicVars.MaxHp.BaseValue);
-	}
+    public override async Task AfterObtained()
+    {
+        await CreatureCmd.GainMaxHp(base.Owner.Creature, base.DynamicVars.MaxHp.BaseValue);
+    }
 }

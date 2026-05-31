@@ -8,22 +8,31 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class CrueltyPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<VulnerablePower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<VulnerablePower>()
+        );
 
-	public decimal ModifyVulnerableMultiplier(Creature target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target == base.Owner)
-		{
-			return amount;
-		}
-		if (!props.IsPoweredAttack())
-		{
-			return amount;
-		}
-		return amount + (decimal)base.Amount / 100m;
-	}
+    public decimal ModifyVulnerableMultiplier(
+        Creature target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (target == base.Owner)
+        {
+            return amount;
+        }
+        if (!props.IsPoweredAttack())
+        {
+            return amount;
+        }
+        return amount + (decimal)base.Amount / 100m;
+    }
 }

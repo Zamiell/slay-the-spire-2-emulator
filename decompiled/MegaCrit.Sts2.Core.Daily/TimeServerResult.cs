@@ -5,19 +5,19 @@ namespace MegaCrit.Sts2.Core.Daily;
 
 public struct TimeServerResult : IPacketSerializable
 {
-	public DateTimeOffset serverTime;
+    public DateTimeOffset serverTime;
 
-	public DateTimeOffset localReceivedTime;
+    public DateTimeOffset localReceivedTime;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteLong(serverTime.ToUnixTimeSeconds());
-		writer.WriteLong(localReceivedTime.ToUnixTimeSeconds());
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteLong(serverTime.ToUnixTimeSeconds());
+        writer.WriteLong(localReceivedTime.ToUnixTimeSeconds());
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		serverTime = DateTimeOffset.FromUnixTimeSeconds(reader.ReadLong());
-		localReceivedTime = DateTimeOffset.FromUnixTimeSeconds(reader.ReadLong());
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        serverTime = DateTimeOffset.FromUnixTimeSeconds(reader.ReadLong());
+        localReceivedTime = DateTimeOffset.FromUnixTimeSeconds(reader.ReadLong());
+    }
 }

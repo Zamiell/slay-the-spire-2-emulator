@@ -13,8 +13,31 @@ public static class RunNonCombatEffects
 {
     private static readonly int[] RareIroncladSingleplayerPool =
     [
-        9, 29, 58, 546, 99, 113, 114, 119, 141, 183, 188, 246, 261,
-        272, 295, 328, 332, 334, 339, 364, 374, 464, 494, 505, 525,
+        9,
+        29,
+        58,
+        546,
+        99,
+        113,
+        114,
+        119,
+        141,
+        183,
+        188,
+        246,
+        261,
+        272,
+        295,
+        328,
+        332,
+        334,
+        339,
+        364,
+        374,
+        464,
+        494,
+        505,
+        525,
     ];
 
     public static RunFollowUp ApplyRelicPickup(RunState state, int relicId)
@@ -32,8 +55,13 @@ public static class RunNonCombatEffects
                 break;
             case RunConstants.RelicNeowsBones:
                 for (int i = 0; i < 2; i++)
-                    ApplyRelicPickup(state, state.Rng.UpFront.NextItem(RunConstants.NeowPositiveOptions.ToArray()));
-                state.Deck.Add(new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false));
+                    ApplyRelicPickup(
+                        state,
+                        state.Rng.UpFront.NextItem(RunConstants.NeowPositiveOptions.ToArray())
+                    );
+                state.Deck.Add(
+                    new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false)
+                );
                 break;
             case RunConstants.RelicNutritiousOyster:
                 GainMaxHp(state, 11);
@@ -71,26 +99,41 @@ public static class RunNonCombatEffects
                 UpgradeLastCardMatching(state, 131);
                 break;
             case RunConstants.RelicCursedPearl:
-                state.Deck.Add(new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false));
+                state.Deck.Add(
+                    new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false)
+                );
                 state.Gold += 333;
                 break;
             case RunConstants.RelicHeftyTablet:
                 AddRandomRewardCard(state, state.Rng.UpFront);
-                state.Deck.Add(new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false));
+                state.Deck.Add(
+                    new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false)
+                );
                 break;
             case RunConstants.RelicKaleidoscope:
                 AddRandomRewardCard(state, state.Rng.UpFront);
                 AddRandomRewardCard(state, state.Rng.UpFront);
                 break;
             case RunConstants.RelicArcaneScroll:
-                state.Deck.Add(new CardInstance(state.PlayerRng.Rewards.NextItem(RareIroncladSingleplayerPool), Upgraded: false));
+                state.Deck.Add(
+                    new CardInstance(
+                        state.PlayerRng.Rewards.NextItem(RareIroncladSingleplayerPool),
+                        Upgraded: false
+                    )
+                );
                 break;
             case RunConstants.RelicLeadPaperweight:
                 AddRandomRewardCard(state, state.Rng.UpFront);
                 break;
             case RunConstants.RelicPhialHolster:
-                RunRewardGenerator.AddPotion(state, RunRewardGenerator.NextPotion(state, state.PlayerRng.Rewards));
-                RunRewardGenerator.AddPotion(state, RunRewardGenerator.NextPotion(state, state.PlayerRng.Rewards));
+                RunRewardGenerator.AddPotion(
+                    state,
+                    RunRewardGenerator.NextPotion(state, state.PlayerRng.Rewards)
+                );
+                RunRewardGenerator.AddPotion(
+                    state,
+                    RunRewardGenerator.NextPotion(state, state.PlayerRng.Rewards)
+                );
                 break;
             case RunConstants.RelicPreciseScissors:
                 RemoveLowestPriorityCard(state);
@@ -119,13 +162,17 @@ public static class RunNonCombatEffects
                 TransformAllMatching(state, 131);
                 break;
             case RunConstants.RelicCallingBell:
-                state.Deck.Add(new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false));
+                state.Deck.Add(
+                    new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false)
+                );
                 ApplyRelicPickup(state, RunRewardGenerator.NextRelic(state));
                 ApplyRelicPickup(state, RunRewardGenerator.NextRelic(state));
                 ApplyRelicPickup(state, RunRewardGenerator.NextRelic(state));
                 break;
             case RunConstants.RelicDustyTome:
-                state.Deck.Add(new CardInstance(RandomRewardCard(state.Rng.UpFront), Upgraded: true));
+                state.Deck.Add(
+                    new CardInstance(RandomRewardCard(state.Rng.UpFront), Upgraded: true)
+                );
                 break;
             case RunConstants.RelicPrismaticGem:
                 AddRandomRewardCard(state, state.Rng.UpFront);
@@ -165,7 +212,10 @@ public static class RunNonCombatEffects
         eventPool.Add(RunConstants.EventBrainLeech);
         eventPool.Add(RunConstants.EventDoorsOfLightAndDark);
         eventPool.Add(RunConstants.EventSunkenTreasury);
-        if (state.PlayerHp >= 10 && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard))
+        if (
+            state.PlayerHp >= 10
+            && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard)
+        )
             eventPool.Add(RunConstants.EventTheLegendsWereTrue);
         if (state.Gold >= 100 && state.Deck.Count >= 2)
             eventPool.Add(RunConstants.EventMorphicGrove);
@@ -191,8 +241,11 @@ public static class RunNonCombatEffects
         return eventId switch
         {
             RunConstants.EventMorphicGrove => state.Gold >= 100 && state.Deck.Count >= 2,
-            RunConstants.EventTheLegendsWereTrue => state.PlayerHp >= 10 && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard),
-            RunConstants.EventUnrestSite or RunConstants.EventAromaOfChaos or RunConstants.EventSimpleReward => true,
+            RunConstants.EventTheLegendsWereTrue => state.PlayerHp >= 10
+                && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard),
+            RunConstants.EventUnrestSite
+            or RunConstants.EventAromaOfChaos
+            or RunConstants.EventSimpleReward => true,
             _ => true,
         };
     }
@@ -230,7 +283,9 @@ public static class RunNonCombatEffects
 
     private static GameRng EventRng(RunState state, string eventEntry)
     {
-        uint eventSeed = unchecked(state.Rng.Seed + 1u + (uint)DeterministicHash.GetDeterministicHashCode(eventEntry));
+        uint eventSeed = unchecked(
+            state.Rng.Seed + 1u + (uint)DeterministicHash.GetDeterministicHashCode(eventEntry)
+        );
         return new GameRng(eventSeed);
     }
 
@@ -254,8 +309,8 @@ public static class RunNonCombatEffects
 
     public static void UpgradeTwoRandomCardsWithNiche(RunState state)
     {
-        var indexes = state.Deck
-            .Select((card, index) => (card, index))
+        var indexes = state
+            .Deck.Select((card, index) => (card, index))
             .Where(item => RunConstants.IsRunCardUpgradable(item.card))
             .Select(item => item.index)
             .OrderBy(index => Math.Abs(state.Deck[index].DefId))
@@ -288,7 +343,8 @@ public static class RunNonCombatEffects
             return;
 
         int originalId = Math.Abs(state.Deck[deckIndex].DefId);
-        var pool = RunRewardGenerator.IroncladRewardPool.ToArray()
+        var pool = RunRewardGenerator
+            .IroncladRewardPool.ToArray()
             .Where(cardId => cardId != originalId)
             .ToArray();
         if (pool.Length == 0)
@@ -296,7 +352,8 @@ public static class RunNonCombatEffects
         state.Deck[deckIndex] = new CardInstance(rng.NextItem(pool), Upgraded: false);
     }
 
-    public static void TransformFirstCard(RunState state) => TransformCardAt(state, 0, state.PlayerRng.Transformations);
+    public static void TransformFirstCard(RunState state) =>
+        TransformCardAt(state, 0, state.PlayerRng.Transformations);
 
     public static void TransformFirstCardMatching(RunState state, int cardId)
     {
@@ -323,7 +380,8 @@ public static class RunNonCombatEffects
         }
     }
 
-    private static int RandomRewardCard(GameRng rng) => rng.NextItem(RunRewardGenerator.IroncladRewardPool.ToArray());
+    private static int RandomRewardCard(GameRng rng) =>
+        rng.NextItem(RunRewardGenerator.IroncladRewardPool.ToArray());
 
     private static void AddRandomRewardCard(RunState state, GameRng rng)
     {

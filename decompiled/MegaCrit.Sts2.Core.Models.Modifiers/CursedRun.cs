@@ -10,19 +10,23 @@ namespace MegaCrit.Sts2.Core.Models.Modifiers;
 
 public class CursedRun : ModifierModel
 {
-	public override async Task AfterActEntered()
-	{
-		foreach (Player player in base.RunState.Players)
-		{
-			CardModel canonicalCard = base.RunState.Rng.Niche.NextItem(from c in ModelDb.CardPool<CurseCardPool>().GetUnlockedCards(player.UnlockState, player.RunState.CardMultiplayerConstraint)
-				where c.CanBeGeneratedByModifiers
-				select c);
-			CardModel card = player.RunState.CreateCard(canonicalCard, player);
-			CardPileAddResult result = await CardPileCmd.Add(card, PileType.Deck);
-			if (LocalContext.IsMe(player))
-			{
-				CardCmd.PreviewCardPileAdd(result);
-			}
-		}
-	}
+    public override async Task AfterActEntered()
+    {
+        foreach (Player player in base.RunState.Players)
+        {
+            CardModel canonicalCard = base.RunState.Rng.Niche.NextItem(
+                from c in ModelDb
+                    .CardPool<CurseCardPool>()
+                    .GetUnlockedCards(player.UnlockState, player.RunState.CardMultiplayerConstraint)
+                where c.CanBeGeneratedByModifiers
+                select c
+            );
+            CardModel card = player.RunState.CreateCard(canonicalCard, player);
+            CardPileAddResult result = await CardPileCmd.Add(card, PileType.Deck);
+            if (LocalContext.IsMe(player))
+            {
+                CardCmd.PreviewCardPileAdd(result);
+            }
+        }
+    }
 }

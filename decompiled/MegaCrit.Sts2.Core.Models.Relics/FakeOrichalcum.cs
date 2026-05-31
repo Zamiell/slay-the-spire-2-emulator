@@ -14,60 +14,76 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class FakeOrichalcum : RelicModel
 {
-	private bool _shouldTrigger;
+    private bool _shouldTrigger;
 
-	public override RelicRarity Rarity => RelicRarity.Event;
+    public override RelicRarity Rarity => RelicRarity.Event;
 
-	public override int MerchantCost => 50;
+    public override int MerchantCost => 50;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(3m, ValueProp.Unpowered));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(3m, ValueProp.Unpowered)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	private bool ShouldTrigger
-	{
-		get
-		{
-			return _shouldTrigger;
-		}
-		set
-		{
-			AssertMutable();
-			_shouldTrigger = value;
-		}
-	}
+    private bool ShouldTrigger
+    {
+        get { return _shouldTrigger; }
+        set
+        {
+            AssertMutable();
+            _shouldTrigger = value;
+        }
+    }
 
-	public override Task BeforeSideTurnEndVeryEarly(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (!participants.Contains(base.Owner.Creature))
-		{
-			return Task.CompletedTask;
-		}
-		if (base.Owner.Creature.Block > 0)
-		{
-			return Task.CompletedTask;
-		}
-		ShouldTrigger = true;
-		return Task.CompletedTask;
-	}
+    public override Task BeforeSideTurnEndVeryEarly(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (!participants.Contains(base.Owner.Creature))
+        {
+            return Task.CompletedTask;
+        }
+        if (base.Owner.Creature.Block > 0)
+        {
+            return Task.CompletedTask;
+        }
+        ShouldTrigger = true;
+        return Task.CompletedTask;
+    }
 
-	public override async Task BeforeSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (ShouldTrigger)
-		{
-			ShouldTrigger = false;
-			Flash();
-			await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
-		}
-	}
+    public override async Task BeforeSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (ShouldTrigger)
+        {
+            ShouldTrigger = false;
+            Flash();
+            await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
+        }
+    }
 
-	public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (!participants.Contains(base.Owner.Creature))
-		{
-			return Task.CompletedTask;
-		}
-		ShouldTrigger = false;
-		return Task.CompletedTask;
-	}
+    public override Task BeforeSideTurnStart(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (!participants.Contains(base.Owner.Creature))
+        {
+            return Task.CompletedTask;
+        }
+        ShouldTrigger = false;
+        return Task.CompletedTask;
+    }
 }

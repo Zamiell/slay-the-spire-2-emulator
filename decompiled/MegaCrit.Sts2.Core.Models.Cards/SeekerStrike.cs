@@ -14,35 +14,47 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class SeekerStrike : CardModel
 {
-	protected override HashSet<CardTag> CanonicalTags => new HashSet<CardTag> { CardTag.Strike };
+    protected override HashSet<CardTag> CanonicalTags => new HashSet<CardTag> { CardTag.Strike };
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new DamageVar(9m, ValueProp.Move),
-		new CardsVar(3)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new DamageVar(9m, ValueProp.Move), new CardsVar(3) }
+        );
 
-	public SeekerStrike()
-		: base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
-	{
-	}
+    public SeekerStrike()
+        : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_attack_slash")
-			.Execute(choiceContext);
-		IEnumerable<CardModel> cardOptions = PileType.Draw.GetPile(base.Owner).Cards.ToList().StableShuffle(base.Owner.RunState.Rng.CombatCardSelection).Take(base.DynamicVars.Cards.IntValue);
-		CardModel cardModel = (await CardSelectCmd.FromCombatPile(choiceContext, PileType.Draw.GetPile(base.Owner), base.Owner, new CardSelectorPrefs(base.SelectionScreenPrompt, 1), (CardModel c) => cardOptions.Contains(c))).FirstOrDefault();
-		if (cardModel != null)
-		{
-			await CardPileCmd.Add(cardModel, PileType.Hand);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_attack_slash")
+            .Execute(choiceContext);
+        IEnumerable<CardModel> cardOptions = PileType
+            .Draw.GetPile(base.Owner)
+            .Cards.ToList()
+            .StableShuffle(base.Owner.RunState.Rng.CombatCardSelection)
+            .Take(base.DynamicVars.Cards.IntValue);
+        CardModel cardModel = (
+            await CardSelectCmd.FromCombatPile(
+                choiceContext,
+                PileType.Draw.GetPile(base.Owner),
+                base.Owner,
+                new CardSelectorPrefs(base.SelectionScreenPrompt, 1),
+                (CardModel c) => cardOptions.Contains(c)
+            )
+        ).FirstOrDefault();
+        if (cardModel != null)
+        {
+            await CardPileCmd.Add(cardModel, PileType.Hand);
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(3m);
+    }
 }

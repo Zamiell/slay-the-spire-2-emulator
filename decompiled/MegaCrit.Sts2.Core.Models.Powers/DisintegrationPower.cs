@@ -12,16 +12,27 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class DisintegrationPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterSideTurnEndLate(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await CreatureCmd.Damage(choiceContext, base.Owner, base.Amount, ValueProp.Unpowered, base.Owner, null);
-			VfxCmd.PlayOnCreatureCenter(base.Owner, "vfx/vfx_attack_blunt");
-		}
-	}
+    public override async Task AfterSideTurnEndLate(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await CreatureCmd.Damage(
+                choiceContext,
+                base.Owner,
+                base.Amount,
+                ValueProp.Unpowered,
+                base.Owner,
+                null
+            );
+            VfxCmd.PlayOnCreatureCenter(base.Owner, "vfx/vfx_attack_blunt");
+        }
+    }
 }

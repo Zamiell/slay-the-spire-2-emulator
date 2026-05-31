@@ -15,28 +15,37 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Supermassive : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[3]
-	{
-		new CalculationBaseVar(5m),
-		new ExtraDamageVar(3m),
-		new CalculatedDamageVar(ValueProp.Move).WithMultiplier((CardModel card, Creature? _) => CombatManager.Instance.History.Entries.OfType<CardGeneratedEntry>().Count((CardGeneratedEntry c) => c.Creator == card.Owner))
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[3]
+            {
+                new CalculationBaseVar(5m),
+                new ExtraDamageVar(3m),
+                new CalculatedDamageVar(ValueProp.Move).WithMultiplier(
+                    (CardModel card, Creature? _) =>
+                        CombatManager
+                            .Instance.History.Entries.OfType<CardGeneratedEntry>()
+                            .Count((CardGeneratedEntry c) => c.Creator == card.Owner)
+                ),
+            }
+        );
 
-	public Supermassive()
-		: base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
-	{
-	}
+    public Supermassive()
+        : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.CalculatedDamage).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_attack_slash", null, "heavy_attack.mp3")
-			.Execute(choiceContext);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.CalculatedDamage)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_attack_slash", null, "heavy_attack.mp3")
+            .Execute(choiceContext);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.ExtraDamage.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.ExtraDamage.UpgradeValueBy(1m);
+    }
 }

@@ -8,18 +8,22 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Calamity : CardModel
 {
-	public Calamity()
-		: base(3, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public Calamity()
+        : base(3, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await PowerCmd.Apply<CalamityPower>(choiceContext, base.Owner.Creature, 1m, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await PowerCmd.Apply<CalamityPower>(
+            choiceContext,
+            base.Owner.Creature,
+            1m,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.EnergyCost.UpgradeBy(-1);
-	}
+    protected override void OnUpgrade()
+    {
+        base.EnergyCost.UpgradeBy(-1);
+    }
 }

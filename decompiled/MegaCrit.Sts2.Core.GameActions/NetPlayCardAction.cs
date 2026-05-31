@@ -8,44 +8,44 @@ namespace MegaCrit.Sts2.Core.GameActions;
 
 public struct NetPlayCardAction : INetAction, IPacketSerializable
 {
-	public NetCombatCard card;
+    public NetCombatCard card;
 
-	public ModelId modelId;
+    public ModelId modelId;
 
-	public uint? targetId;
+    public uint? targetId;
 
-	public GameAction ToGameAction(Player player)
-	{
-		return new PlayCardAction(player, card, modelId, targetId);
-	}
+    public GameAction ToGameAction(Player player)
+    {
+        return new PlayCardAction(player, card, modelId, targetId);
+    }
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(card);
-		writer.WriteModelEntry(modelId);
-		writer.WriteBool(targetId.HasValue);
-		if (targetId.HasValue)
-		{
-			writer.WriteUInt(targetId.GetValueOrDefault(), 6);
-		}
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(card);
+        writer.WriteModelEntry(modelId);
+        writer.WriteBool(targetId.HasValue);
+        if (targetId.HasValue)
+        {
+            writer.WriteUInt(targetId.GetValueOrDefault(), 6);
+        }
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		card = reader.Read<NetCombatCard>();
-		modelId = reader.ReadModelIdAssumingType<CardModel>();
-		if (reader.ReadBool())
-		{
-			targetId = reader.ReadUInt(6);
-		}
-		else
-		{
-			targetId = null;
-		}
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        card = reader.Read<NetCombatCard>();
+        modelId = reader.ReadModelIdAssumingType<CardModel>();
+        if (reader.ReadBool())
+        {
+            targetId = reader.ReadUInt(6);
+        }
+        else
+        {
+            targetId = null;
+        }
+    }
 
-	public override string ToString()
-	{
-		return $"NetPlayCardAction ({card}) target: {targetId?.ToString() ?? "null"}";
-	}
+    public override string ToString()
+    {
+        return $"NetPlayCardAction ({card}) target: {targetId?.ToString() ?? "null"}";
+    }
 }

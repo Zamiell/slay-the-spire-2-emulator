@@ -6,17 +6,17 @@ namespace MegaCrit.Sts2.Core.ControllerInput;
 
 public interface IControllerInputStrategy
 {
-	ControllerConfig? ControllerConfig { get; }
+    ControllerConfig? ControllerConfig { get; }
 
-	Dictionary<StringName, StringName> GetDefaultControllerInputMap { get; }
+    Dictionary<StringName, StringName> GetDefaultControllerInputMap { get; }
 
-	bool ShouldAllowControllerRebinding { get; }
+    bool ShouldAllowControllerRebinding { get; }
 
-	Task Init();
+    Task Init();
 
-	void ProcessInput();
+    void ProcessInput();
 
-	Texture2D? GetHotkeyIcon(string hotkey);
+    Texture2D? GetHotkeyIcon(string hotkey);
 
-	string GetControllerName();
+    string GetControllerName();
 }

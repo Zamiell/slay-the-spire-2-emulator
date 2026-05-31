@@ -11,24 +11,30 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class SpinnerPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.Channeling),
-		HoverTipFactory.FromOrb<GlassOrb>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.Channeling),
+                HoverTipFactory.FromOrb<GlassOrb>(),
+            }
+        );
 
-	public override async Task AfterEnergyReset(Player player)
-	{
-		if (player == base.Owner.Player)
-		{
-			for (int i = 0; i < base.Amount; i++)
-			{
-				await OrbCmd.Channel<GlassOrb>(new ThrowingPlayerChoiceContext(), base.Owner.Player);
-			}
-		}
-	}
+    public override async Task AfterEnergyReset(Player player)
+    {
+        if (player == base.Owner.Player)
+        {
+            for (int i = 0; i < base.Amount; i++)
+            {
+                await OrbCmd.Channel<GlassOrb>(
+                    new ThrowingPlayerChoiceContext(),
+                    base.Owner.Player
+                );
+            }
+        }
+    }
 }

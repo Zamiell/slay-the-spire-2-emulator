@@ -8,28 +8,39 @@ namespace MegaCrit.Sts2.Core.Models.Modifiers;
 
 public class Hoarder : ModifierModel
 {
-	private readonly HashSet<CardModel> _cardsToSkip = new HashSet<CardModel>();
+    private readonly HashSet<CardModel> _cardsToSkip = new HashSet<CardModel>();
 
-	public override async Task AfterCardChangedPiles(CardModel card, PileType oldPileType, AbstractModel? clonedBy)
-	{
-		if (oldPileType != PileType.None)
-		{
-			return;
-		}
-		CardPile? pile = card.Pile;
-		if (pile != null && pile.Type == PileType.Deck && clonedBy == null && !_cardsToSkip.Remove(card))
-		{
-			for (int i = 0; i < 2; i++)
-			{
-				CardModel cardModel = card.Owner.RunState.CloneCard(card);
-				_cardsToSkip.Add(cardModel);
-				CardCmd.PreviewCardPileAdd(await CardPileCmd.Add(cardModel, PileType.Deck, CardPilePosition.Bottom, this));
-			}
-		}
-	}
+    public override async Task AfterCardChangedPiles(
+        CardModel card,
+        PileType oldPileType,
+        AbstractModel? clonedBy
+    )
+    {
+        if (oldPileType != PileType.None)
+        {
+            return;
+        }
+        CardPile? pile = card.Pile;
+        if (
+            pile != null
+            && pile.Type == PileType.Deck
+            && clonedBy == null
+            && !_cardsToSkip.Remove(card)
+        )
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                CardModel cardModel = card.Owner.RunState.CloneCard(card);
+                _cardsToSkip.Add(cardModel);
+                CardCmd.PreviewCardPileAdd(
+                    await CardPileCmd.Add(cardModel, PileType.Deck, CardPilePosition.Bottom, this)
+                );
+            }
+        }
+    }
 
-	public override bool ShouldAllowMerchantCardRemoval(Player player)
-	{
-		return false;
-	}
+    public override bool ShouldAllowMerchantCardRemoval(Player player)
+    {
+        return false;
+    }
 }

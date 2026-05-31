@@ -13,30 +13,37 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class BallLightning : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.Channeling),
-		HoverTipFactory.FromOrb<LightningOrb>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.Channeling),
+                HoverTipFactory.FromOrb<LightningOrb>(),
+            }
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(7m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(7m, ValueProp.Move)
+        );
 
-	public BallLightning()
-		: base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy)
-	{
-	}
+    public BallLightning()
+        : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_attack_blunt", null, "blunt_attack.mp3")
-			.Execute(choiceContext);
-		await OrbCmd.Channel<LightningOrb>(choiceContext, base.Owner);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_attack_blunt", null, "blunt_attack.mp3")
+            .Execute(choiceContext);
+        await OrbCmd.Channel<LightningOrb>(choiceContext, base.Owner);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(3m);
+    }
 }

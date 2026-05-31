@@ -4,5 +4,5 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class FakeMerchantsRug : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Event;
+    public override RelicRarity Rarity => RelicRarity.Event;
 }

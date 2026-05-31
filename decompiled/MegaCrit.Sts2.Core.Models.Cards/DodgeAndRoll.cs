@@ -11,23 +11,34 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class DodgeAndRoll : CardModel
 {
-	public override bool GainsBlock => true;
+    public override bool GainsBlock => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(4m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(4m, ValueProp.Move)
+        );
 
-	public DodgeAndRoll()
-		: base(1, CardType.Skill, CardRarity.Common, TargetType.Self)
-	{
-	}
+    public DodgeAndRoll()
+        : base(1, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		decimal amount = await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		await PowerCmd.Apply<BlockNextTurnPower>(choiceContext, base.Owner.Creature, amount, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        decimal amount = await CreatureCmd.GainBlock(
+            base.Owner.Creature,
+            base.DynamicVars.Block,
+            cardPlay
+        );
+        await PowerCmd.Apply<BlockNextTurnPower>(
+            choiceContext,
+            base.Owner.Creature,
+            amount,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Block.UpgradeValueBy(2m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Block.UpgradeValueBy(2m);
+    }
 }

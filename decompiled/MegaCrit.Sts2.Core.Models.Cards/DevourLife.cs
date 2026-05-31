@@ -11,27 +11,41 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class DevourLife : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.FromCard<Soul>(),
-		HoverTipFactory.Static(StaticHoverTip.SummonStatic)
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.FromCard<Soul>(),
+                HoverTipFactory.Static(StaticHoverTip.SummonStatic),
+            }
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<DevourLifePower>(1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<DevourLifePower>(1m)
+        );
 
-	public DevourLife()
-		: base(1, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public DevourLife()
+        : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<DevourLifePower>(choiceContext, base.Owner.Creature, base.DynamicVars["DevourLifePower"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<DevourLifePower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["DevourLifePower"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars["DevourLifePower"].UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars["DevourLifePower"].UpgradeValueBy(1m);
+    }
 }

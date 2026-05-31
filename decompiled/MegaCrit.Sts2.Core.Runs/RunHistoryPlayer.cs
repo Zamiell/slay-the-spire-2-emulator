@@ -7,24 +7,24 @@ namespace MegaCrit.Sts2.Core.Runs;
 
 public class RunHistoryPlayer
 {
-	[JsonPropertyName("id")]
-	public ulong Id { get; init; }
+    [JsonPropertyName("id")]
+    public ulong Id { get; init; }
 
-	[JsonPropertyName("character")]
-	public ModelId Character { get; init; } = ModelId.none;
+    [JsonPropertyName("character")]
+    public ModelId Character { get; init; } = ModelId.none;
 
-	[JsonPropertyName("deck")]
-	public IEnumerable<SerializableCard> Deck { get; set; } = new List<SerializableCard>();
+    [JsonPropertyName("deck")]
+    public IEnumerable<SerializableCard> Deck { get; set; } = new List<SerializableCard>();
 
-	[JsonPropertyName("relics")]
-	public IEnumerable<SerializableRelic> Relics { get; set; } = new List<SerializableRelic>();
+    [JsonPropertyName("relics")]
+    public IEnumerable<SerializableRelic> Relics { get; set; } = new List<SerializableRelic>();
 
-	[JsonPropertyName("potions")]
-	public IEnumerable<SerializablePotion> Potions { get; set; } = new List<SerializablePotion>();
+    [JsonPropertyName("potions")]
+    public IEnumerable<SerializablePotion> Potions { get; set; } = new List<SerializablePotion>();
 
-	[JsonPropertyName("badges")]
-	public IEnumerable<SerializableBadge> Badges { get; set; } = new List<SerializableBadge>();
+    [JsonPropertyName("badges")]
+    public IEnumerable<SerializableBadge> Badges { get; set; } = new List<SerializableBadge>();
 
-	[JsonPropertyName("max_potion_slot_count")]
-	public int MaxPotionSlotCount { get; set; } = 3;
+    [JsonPropertyName("max_potion_slot_count")]
+    public int MaxPotionSlotCount { get; set; } = 3;
 }

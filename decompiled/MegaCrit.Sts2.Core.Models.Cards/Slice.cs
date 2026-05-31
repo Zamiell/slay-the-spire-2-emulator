@@ -16,30 +16,36 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Slice : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(6m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(6m, ValueProp.Move)
+        );
 
-	public Slice()
-		: base(0, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy)
-	{
-	}
+    public Slice()
+        : base(0, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(NThinSliceVfx.Create(cardPlay.Target, VfxColor.Red));
-		float num = base.Owner.Character.AttackAnimDelay;
-		if (SaveManager.Instance.PrefsSave.FastMode == FastModeType.Normal)
-		{
-			num += 0.2f;
-		}
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-			.WithAttackerAnim("Attack", num)
-			.WithHitFx("vfx/vfx_attack_slash", null, "slash_attack.mp3")
-			.Execute(choiceContext);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(
+            NThinSliceVfx.Create(cardPlay.Target, VfxColor.Red)
+        );
+        float num = base.Owner.Character.AttackAnimDelay;
+        if (SaveManager.Instance.PrefsSave.FastMode == FastModeType.Normal)
+        {
+            num += 0.2f;
+        }
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithAttackerAnim("Attack", num)
+            .WithHitFx("vfx/vfx_attack_slash", null, "slash_attack.mp3")
+            .Execute(choiceContext);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(3m);
+    }
 }

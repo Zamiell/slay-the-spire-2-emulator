@@ -2,13 +2,13 @@ namespace MegaCrit.Sts2.Core.Saves;
 
 public interface ICloudSaveStore : ISaveStore
 {
-	bool HasCloudFiles();
+    bool HasCloudFiles();
 
-	void ForgetFile(string path);
+    void ForgetFile(string path);
 
-	bool IsFilePersisted(string path);
+    bool IsFilePersisted(string path);
 
-	void BeginSaveBatch();
+    void BeginSaveBatch();
 
-	void EndSaveBatch();
+    void EndSaveBatch();
 }

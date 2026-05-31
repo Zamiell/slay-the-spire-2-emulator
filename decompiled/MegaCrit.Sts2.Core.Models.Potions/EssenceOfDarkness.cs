@@ -12,24 +12,27 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class EssenceOfDarkness : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Rare;
+    public override PotionRarity Rarity => PotionRarity.Rare;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.Self;
+    public override TargetType TargetType => TargetType.Self;
 
-	public override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.Channeling),
-		HoverTipFactory.FromOrb<DarkOrb>()
-	});
+    public override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.Channeling),
+                HoverTipFactory.FromOrb<DarkOrb>(),
+            }
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		int count = base.Owner.PlayerCombatState.OrbQueue.Capacity;
-		for (int i = 0; i < count; i++)
-		{
-			await OrbCmd.Channel<DarkOrb>(choiceContext, base.Owner);
-		}
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        int count = base.Owner.PlayerCombatState.OrbQueue.Capacity;
+        for (int i = 0; i < count; i++)
+        {
+            await OrbCmd.Channel<DarkOrb>(choiceContext, base.Owner);
+        }
+    }
 }

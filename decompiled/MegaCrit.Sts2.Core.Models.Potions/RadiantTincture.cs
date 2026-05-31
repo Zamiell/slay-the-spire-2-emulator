@@ -13,24 +13,32 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class RadiantTincture : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Uncommon;
+    public override PotionRarity Rarity => PotionRarity.Uncommon;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyPlayer;
+    public override TargetType TargetType => TargetType.AnyPlayer;
 
-	public override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    public override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new EnergyVar(1),
-		new PowerVar<RadiancePower>(3m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new EnergyVar(1), new PowerVar<RadiancePower>(3m) }
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		await PlayerCmd.GainEnergy(base.DynamicVars.Energy.IntValue, target.Player);
-		await PowerCmd.Apply<RadiancePower>(choiceContext, target, base.DynamicVars["RadiancePower"].BaseValue, base.Owner.Creature, null);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        await PlayerCmd.GainEnergy(base.DynamicVars.Energy.IntValue, target.Player);
+        await PowerCmd.Apply<RadiancePower>(
+            choiceContext,
+            target,
+            base.DynamicVars["RadiancePower"].BaseValue,
+            base.Owner.Creature,
+            null
+        );
+    }
 }

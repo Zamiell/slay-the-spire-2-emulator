@@ -11,50 +11,55 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class OblivionPower : PowerModel
 {
-	private class Data
-	{
-		public readonly Dictionary<CardModel, int> amountsForPlayedCards = new Dictionary<CardModel, int>();
-	}
+    private class Data
+    {
+        public readonly Dictionary<CardModel, int> amountsForPlayedCards =
+            new Dictionary<CardModel, int>();
+    }
 
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override PowerInstanceType InstanceType => PowerInstanceType.InstancedPerApplier;
+    public override PowerInstanceType InstanceType => PowerInstanceType.InstancedPerApplier;
 
-	protected override object InitInternalData()
-	{
-		return new Data();
-	}
+    protected override object InitInternalData()
+    {
+        return new Data();
+    }
 
-	public override Task BeforeCardPlayed(CardPlay cardPlay)
-	{
-		if (base.Applier?.Player == null)
-		{
-			return Task.CompletedTask;
-		}
-		if (cardPlay.Card.Owner != base.Applier.Player)
-		{
-			return Task.CompletedTask;
-		}
-		GetInternalData<Data>().amountsForPlayedCards.Add(cardPlay.Card, base.Amount);
-		return Task.CompletedTask;
-	}
+    public override Task BeforeCardPlayed(CardPlay cardPlay)
+    {
+        if (base.Applier?.Player == null)
+        {
+            return Task.CompletedTask;
+        }
+        if (cardPlay.Card.Owner != base.Applier.Player)
+        {
+            return Task.CompletedTask;
+        }
+        GetInternalData<Data>().amountsForPlayedCards.Add(cardPlay.Card, base.Amount);
+        return Task.CompletedTask;
+    }
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (GetInternalData<Data>().amountsForPlayedCards.Remove(cardPlay.Card, out var value))
-		{
-			Flash();
-			await PowerCmd.Apply<DoomPower>(choiceContext, base.Owner, value, base.Applier, null);
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (GetInternalData<Data>().amountsForPlayedCards.Remove(cardPlay.Card, out var value))
+        {
+            Flash();
+            await PowerCmd.Apply<DoomPower>(choiceContext, base.Owner, value, base.Applier, null);
+        }
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (side == CombatSide.Player)
-		{
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (side == CombatSide.Player)
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
 }

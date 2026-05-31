@@ -8,22 +8,25 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class HeistPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
+    public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
 
-	public override Task BeforeDeath(Creature target)
-	{
-		if (base.Owner != target)
-		{
-			return Task.CompletedTask;
-		}
-		if (base.CombatState.RunState.CurrentRoom is CombatRoom combatRoom)
-		{
-			combatRoom.AddExtraReward(base.Target.Player, new GoldReward(base.Amount, base.Target.Player, wasGoldStolenBack: true));
-		}
-		return Task.CompletedTask;
-	}
+    public override Task BeforeDeath(Creature target)
+    {
+        if (base.Owner != target)
+        {
+            return Task.CompletedTask;
+        }
+        if (base.CombatState.RunState.CurrentRoom is CombatRoom combatRoom)
+        {
+            combatRoom.AddExtraReward(
+                base.Target.Player,
+                new GoldReward(base.Amount, base.Target.Player, wasGoldStolenBack: true)
+            );
+        }
+        return Task.CompletedTask;
+    }
 }

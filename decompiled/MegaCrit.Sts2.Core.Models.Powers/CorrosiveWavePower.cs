@@ -17,36 +17,56 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class CorrosiveWavePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<PoisonPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<PoisonPower>()
+        );
 
-	public override async Task AfterCardDrawn(PlayerChoiceContext choiceContext, CardModel card, bool fromHandDraw)
-	{
-		if (card.Owner.Creature != base.Owner)
-		{
-			return;
-		}
-		Flash();
-		foreach (Creature hittableEnemy in base.CombatState.HittableEnemies)
-		{
-			NCreature nCreature = NCombatRoom.Instance?.GetCreatureNode(hittableEnemy);
-			if (nCreature != null)
-			{
-				NGaseousImpactVfx child = NGaseousImpactVfx.Create(nCreature.VfxSpawnPosition, new Color("83eb85"));
-				NCombatRoom.Instance.CombatVfxContainer.AddChildSafely(child);
-			}
-		}
-		await PowerCmd.Apply<PoisonPower>(choiceContext, base.CombatState.HittableEnemies, base.Amount, base.Owner, null);
-	}
+    public override async Task AfterCardDrawn(
+        PlayerChoiceContext choiceContext,
+        CardModel card,
+        bool fromHandDraw
+    )
+    {
+        if (card.Owner.Creature != base.Owner)
+        {
+            return;
+        }
+        Flash();
+        foreach (Creature hittableEnemy in base.CombatState.HittableEnemies)
+        {
+            NCreature nCreature = NCombatRoom.Instance?.GetCreatureNode(hittableEnemy);
+            if (nCreature != null)
+            {
+                NGaseousImpactVfx child = NGaseousImpactVfx.Create(
+                    nCreature.VfxSpawnPosition,
+                    new Color("83eb85")
+                );
+                NCombatRoom.Instance.CombatVfxContainer.AddChildSafely(child);
+            }
+        }
+        await PowerCmd.Apply<PoisonPower>(
+            choiceContext,
+            base.CombatState.HittableEnemies,
+            base.Amount,
+            base.Owner,
+            null
+        );
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
 }

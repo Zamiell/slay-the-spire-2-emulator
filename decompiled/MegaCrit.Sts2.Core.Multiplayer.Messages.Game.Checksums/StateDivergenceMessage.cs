@@ -7,27 +7,27 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game.Checksums;
 
 public struct StateDivergenceMessage : INetMessage, IPacketSerializable
 {
-	public NetChecksumData senderChecksum;
+    public NetChecksumData senderChecksum;
 
-	public NetFullCombatState senderCombatState;
+    public NetFullCombatState senderCombatState;
 
-	public bool ShouldBroadcast => false;
+    public bool ShouldBroadcast => false;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.Info;
+    public LogLevel LogLevel => LogLevel.Info;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(senderChecksum);
-		writer.Write(senderCombatState);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(senderChecksum);
+        writer.Write(senderCombatState);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		senderChecksum = reader.Read<NetChecksumData>();
-		senderCombatState = reader.Read<NetFullCombatState>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        senderChecksum = reader.Read<NetChecksumData>();
+        senderCombatState = reader.Read<NetFullCombatState>();
+    }
 }

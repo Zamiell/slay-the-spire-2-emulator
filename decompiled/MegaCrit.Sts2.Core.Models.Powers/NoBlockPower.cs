@@ -13,34 +13,47 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class NoBlockPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (side == CombatSide.Enemy)
-		{
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (side == CombatSide.Enemy)
+        {
+            await PowerCmd.Decrement(this);
+        }
+    }
 
-	public override decimal ModifyBlockMultiplicative(Creature target, decimal block, ValueProp props, CardModel? cardSource, CardPlay? cardPlay)
-	{
-		if (target != base.Owner)
-		{
-			return 1m;
-		}
-		if (props.HasFlag(ValueProp.Unpowered))
-		{
-			return 1m;
-		}
-		if (cardSource == null)
-		{
-			return 1m;
-		}
-		return 0m;
-	}
+    public override decimal ModifyBlockMultiplicative(
+        Creature target,
+        decimal block,
+        ValueProp props,
+        CardModel? cardSource,
+        CardPlay? cardPlay
+    )
+    {
+        if (target != base.Owner)
+        {
+            return 1m;
+        }
+        if (props.HasFlag(ValueProp.Unpowered))
+        {
+            return 1m;
+        }
+        if (cardSource == null)
+        {
+            return 1m;
+        }
+        return 0m;
+    }
 }

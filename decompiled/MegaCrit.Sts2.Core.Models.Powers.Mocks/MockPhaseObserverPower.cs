@@ -12,73 +12,92 @@ namespace MegaCrit.Sts2.Core.Models.Powers.Mocks;
 
 public sealed class MockPhaseObserverPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public static List<(string Hook, PlayerTurnPhase Phase)> Observations { get; } = new List<(string, PlayerTurnPhase)>();
+    public static List<(string Hook, PlayerTurnPhase Phase)> Observations { get; } =
+        new List<(string, PlayerTurnPhase)>();
 
-	public static Action<string, Player>? OnRecordCallback { get; set; }
+    public static Action<string, Player>? OnRecordCallback { get; set; }
 
-	public static void ResetObservations()
-	{
-		Observations.Clear();
-		OnRecordCallback = null;
-	}
+    public static void ResetObservations()
+    {
+        Observations.Clear();
+        OnRecordCallback = null;
+    }
 
-	public override Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		Record("BeforeHandDraw", player);
-		return Task.CompletedTask;
-	}
+    public override Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        Record("BeforeHandDraw", player);
+        return Task.CompletedTask;
+    }
 
-	public override Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
-	{
-		Record("AfterPlayerTurnStart", player);
-		return Task.CompletedTask;
-	}
+    public override Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
+    {
+        Record("AfterPlayerTurnStart", player);
+        return Task.CompletedTask;
+    }
 
-	public override Task AfterAutoPrePlayPhaseEntered(PlayerChoiceContext choiceContext, Player player)
-	{
-		Record("AfterAutoPrePlayPhaseEntered", player);
-		return Task.CompletedTask;
-	}
+    public override Task AfterAutoPrePlayPhaseEntered(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        Record("AfterAutoPrePlayPhaseEntered", player);
+        return Task.CompletedTask;
+    }
 
-	public override Task AfterAutoPostPlayPhaseEntered(PlayerChoiceContext choiceContext, Player player)
-	{
-		Record("AfterAutoPostPlayPhaseEntered", player);
-		return Task.CompletedTask;
-	}
+    public override Task AfterAutoPostPlayPhaseEntered(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        Record("AfterAutoPostPlayPhaseEntered", player);
+        return Task.CompletedTask;
+    }
 
-	public override Task BeforeSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (!participants.Contains(base.Owner))
-		{
-			return Task.CompletedTask;
-		}
-		Record("BeforeSideTurnEnd", base.Owner.Player);
-		return Task.CompletedTask;
-	}
+    public override Task BeforeSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (!participants.Contains(base.Owner))
+        {
+            return Task.CompletedTask;
+        }
+        Record("BeforeSideTurnEnd", base.Owner.Player);
+        return Task.CompletedTask;
+    }
 
-	public override Task BeforeFlush(PlayerChoiceContext choiceContext, Player player)
-	{
-		Record("BeforeFlush", player);
-		return Task.CompletedTask;
-	}
+    public override Task BeforeFlush(PlayerChoiceContext choiceContext, Player player)
+    {
+        Record("BeforeFlush", player);
+        return Task.CompletedTask;
+    }
 
-	public override Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (!participants.Contains(base.Owner))
-		{
-			return Task.CompletedTask;
-		}
-		Record("AfterSideTurnEnd", base.Owner.Player);
-		return Task.CompletedTask;
-	}
+    public override Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (!participants.Contains(base.Owner))
+        {
+            return Task.CompletedTask;
+        }
+        Record("AfterSideTurnEnd", base.Owner.Player);
+        return Task.CompletedTask;
+    }
 
-	private void Record(string hook, Player player)
-	{
-		Observations.Add((hook, player.PlayerCombatState.Phase));
-		OnRecordCallback?.Invoke(hook, player);
-	}
+    private void Record(string hook, Player player)
+    {
+        Observations.Add((hook, player.PlayerCombatState.Phase));
+        OnRecordCallback?.Invoke(hook, player);
+    }
 }

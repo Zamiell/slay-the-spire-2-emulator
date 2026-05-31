@@ -10,21 +10,22 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class DragonFruit : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Shop;
+    public override RelicRarity Rarity => RelicRarity.Shop;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new MaxHpVar(1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new MaxHpVar(1m));
 
-	public override bool IsAllowed(IRunState runState)
-	{
-		return RelicModel.IsBeforeAct3TreasureChest(runState);
-	}
+    public override bool IsAllowed(IRunState runState)
+    {
+        return RelicModel.IsBeforeAct3TreasureChest(runState);
+    }
 
-	public override async Task AfterGoldGained(Player player)
-	{
-		if (player == base.Owner)
-		{
-			Flash();
-			await CreatureCmd.GainMaxHp(base.Owner.Creature, base.DynamicVars.MaxHp.BaseValue);
-		}
-	}
+    public override async Task AfterGoldGained(Player player)
+    {
+        if (player == base.Owner)
+        {
+            Flash();
+            await CreatureCmd.GainMaxHp(base.Owner.Creature, base.DynamicVars.MaxHp.BaseValue);
+        }
+    }
 }

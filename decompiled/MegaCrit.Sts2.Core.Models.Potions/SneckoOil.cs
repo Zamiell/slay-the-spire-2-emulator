@@ -16,52 +16,52 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class SneckoOil : PotionModel
 {
-	private int _testEnergyCostOverride = -1;
+    private int _testEnergyCostOverride = -1;
 
-	public override PotionRarity Rarity => PotionRarity.Rare;
+    public override PotionRarity Rarity => PotionRarity.Rare;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyPlayer;
+    public override TargetType TargetType => TargetType.AnyPlayer;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(7));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(7));
 
-	public int TestEnergyCostOverride
-	{
-		get
-		{
-			return _testEnergyCostOverride;
-		}
-		set
-		{
-			TestMode.AssertOn();
-			AssertMutable();
-			_testEnergyCostOverride = value;
-		}
-	}
+    public int TestEnergyCostOverride
+    {
+        get { return _testEnergyCostOverride; }
+        set
+        {
+            TestMode.AssertOn();
+            AssertMutable();
+            _testEnergyCostOverride = value;
+        }
+    }
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		NCombatRoom.Instance?.PlaySplashVfx(target, new Color("6ec46f"));
-		await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, target.Player);
-		IEnumerable<CardModel> enumerable = PileType.Hand.GetPile(target.Player).Cards.Where((CardModel c) => !c.EnergyCost.CostsX);
-		foreach (CardModel item in enumerable)
-		{
-			if (item.EnergyCost.GetWithModifiers(CostModifiers.None) >= 0)
-			{
-				item.EnergyCost.SetThisTurnOrUntilPlayed(NextEnergyCost());
-				NCard.FindOnTable(item)?.PlayRandomizeCostAnim();
-			}
-		}
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        NCombatRoom.Instance?.PlaySplashVfx(target, new Color("6ec46f"));
+        await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, target.Player);
+        IEnumerable<CardModel> enumerable = PileType
+            .Hand.GetPile(target.Player)
+            .Cards.Where((CardModel c) => !c.EnergyCost.CostsX);
+        foreach (CardModel item in enumerable)
+        {
+            if (item.EnergyCost.GetWithModifiers(CostModifiers.None) >= 0)
+            {
+                item.EnergyCost.SetThisTurnOrUntilPlayed(NextEnergyCost());
+                NCard.FindOnTable(item)?.PlayRandomizeCostAnim();
+            }
+        }
+    }
 
-	private int NextEnergyCost()
-	{
-		if (TestEnergyCostOverride >= 0)
-		{
-			return TestEnergyCostOverride;
-		}
-		return base.Owner.RunState.Rng.CombatEnergyCosts.NextInt(4);
-	}
+    private int NextEnergyCost()
+    {
+        if (TestEnergyCostOverride >= 0)
+        {
+            return TestEnergyCostOverride;
+        }
+        return base.Owner.RunState.Rng.CombatEnergyCosts.NextInt(4);
+    }
 }

@@ -11,23 +11,31 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Prolong : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	public Prolong()
-		: base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Prolong()
+        : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		Creature creature = base.Owner.Creature;
-		await PowerCmd.Apply<BlockNextTurnPower>(choiceContext, creature, creature.Block, creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        Creature creature = base.Owner.Creature;
+        await PowerCmd.Apply<BlockNextTurnPower>(
+            choiceContext,
+            creature,
+            creature.Block,
+            creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		RemoveKeyword(CardKeyword.Exhaust);
-	}
+    protected override void OnUpgrade()
+    {
+        RemoveKeyword(CardKeyword.Exhaust);
+    }
 }

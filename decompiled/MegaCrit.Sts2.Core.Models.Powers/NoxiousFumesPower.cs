@@ -17,29 +17,45 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class NoxiousFumesPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<PoisonPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<PoisonPower>()
+        );
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (!participants.Contains(base.Owner))
-		{
-			return;
-		}
-		Flash();
-		await Cmd.CustomScaledWait(0.2f, 0.4f);
-		foreach (Creature hittableEnemy in base.CombatState.HittableEnemies)
-		{
-			NCreature nCreature = NCombatRoom.Instance?.GetCreatureNode(hittableEnemy);
-			if (nCreature != null)
-			{
-				NGaseousImpactVfx child = NGaseousImpactVfx.Create(nCreature.VfxSpawnPosition, new Color("83eb85"));
-				NCombatRoom.Instance.CombatVfxContainer.AddChildSafely(child);
-			}
-		}
-		await PowerCmd.Apply<PoisonPower>(new ThrowingPlayerChoiceContext(), base.CombatState.HittableEnemies, base.Amount, base.Owner, null);
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (!participants.Contains(base.Owner))
+        {
+            return;
+        }
+        Flash();
+        await Cmd.CustomScaledWait(0.2f, 0.4f);
+        foreach (Creature hittableEnemy in base.CombatState.HittableEnemies)
+        {
+            NCreature nCreature = NCombatRoom.Instance?.GetCreatureNode(hittableEnemy);
+            if (nCreature != null)
+            {
+                NGaseousImpactVfx child = NGaseousImpactVfx.Create(
+                    nCreature.VfxSpawnPosition,
+                    new Color("83eb85")
+                );
+                NCombatRoom.Instance.CombatVfxContainer.AddChildSafely(child);
+            }
+        }
+        await PowerCmd.Apply<PoisonPower>(
+            new ThrowingPlayerChoiceContext(),
+            base.CombatState.HittableEnemies,
+            base.Amount,
+            base.Owner,
+            null
+        );
+    }
 }

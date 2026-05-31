@@ -11,19 +11,26 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class MindRot : CardModel, KnowledgeDemon.IChoosable
 {
-	public override bool CanBeGeneratedInCombat => false;
+    public override bool CanBeGeneratedInCombat => false;
 
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<MindRotPower>(1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<MindRotPower>(1m)
+        );
 
-	public MindRot()
-		: base(-1, CardType.Status, CardRarity.Status, TargetType.None)
-	{
-	}
+    public MindRot()
+        : base(-1, CardType.Status, CardRarity.Status, TargetType.None) { }
 
-	public async Task OnChosen()
-	{
-		await PowerCmd.Apply<MindRotPower>(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars["MindRotPower"].IntValue, base.Owner.Creature, this);
-	}
+    public async Task OnChosen()
+    {
+        await PowerCmd.Apply<MindRotPower>(
+            new ThrowingPlayerChoiceContext(),
+            base.Owner.Creature,
+            base.DynamicVars["MindRotPower"].IntValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 }

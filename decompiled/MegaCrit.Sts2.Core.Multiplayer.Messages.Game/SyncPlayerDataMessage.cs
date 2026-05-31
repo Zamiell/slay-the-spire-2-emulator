@@ -7,23 +7,23 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game;
 
 public struct SyncPlayerDataMessage : INetMessage, IPacketSerializable
 {
-	public SerializablePlayer player;
+    public SerializablePlayer player;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(player);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(player);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		player = reader.Read<SerializablePlayer>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        player = reader.Read<SerializablePlayer>();
+    }
 }

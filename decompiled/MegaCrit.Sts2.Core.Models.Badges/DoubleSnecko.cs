@@ -7,19 +7,19 @@ namespace MegaCrit.Sts2.Core.Models.Badges;
 
 public class DoubleSnecko : Badge
 {
-	public override BadgeRarity Rarity => BadgeRarity.Bronze;
+    public override BadgeRarity Rarity => BadgeRarity.Bronze;
 
-	public DoubleSnecko(SerializableRun run, bool won, ulong playerId)
-		: base(run, won, playerId, "DOUBLE_SNECKO", requiresWin: false, multiplayerOnly: false)
-	{
-	}
+    public DoubleSnecko(SerializableRun run, bool won, ulong playerId)
+        : base(run, won, playerId, "DOUBLE_SNECKO", requiresWin: false, multiplayerOnly: false) { }
 
-	public override bool IsObtained()
-	{
-		if (_localPlayer.Relics.Any((SerializableRelic r) => r.Id == ModelDb.Relic<SneckoEye>().Id))
-		{
-			return _localPlayer.Relics.Any((SerializableRelic r) => r.Id == ModelDb.Relic<FakeSneckoEye>().Id);
-		}
-		return false;
-	}
+    public override bool IsObtained()
+    {
+        if (_localPlayer.Relics.Any((SerializableRelic r) => r.Id == ModelDb.Relic<SneckoEye>().Id))
+        {
+            return _localPlayer.Relics.Any(
+                (SerializableRelic r) => r.Id == ModelDb.Relic<FakeSneckoEye>().Id
+            );
+        }
+        return false;
+    }
 }

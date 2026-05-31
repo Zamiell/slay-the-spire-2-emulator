@@ -9,46 +9,59 @@ namespace MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 public class CalculatedBlockVar : CalculatedVar
 {
-	public const string defaultName = "CalculatedBlock";
+    public const string defaultName = "CalculatedBlock";
 
-	public ValueProp Props { get; }
+    public ValueProp Props { get; }
 
-	public CalculatedBlockVar(ValueProp props)
-		: base("CalculatedBlock")
-	{
-		Props = props;
-	}
+    public CalculatedBlockVar(ValueProp props)
+        : base("CalculatedBlock")
+    {
+        Props = props;
+    }
 
-	public override void UpdateCardPreview(CardModel card, CardPreviewMode previewMode, Creature? target, bool runGlobalHooks)
-	{
-		EnchantmentModel enchantment = card.Enchantment;
-		if (enchantment != null)
-		{
-			decimal baseValue = GetBaseVar().BaseValue;
-			baseValue += enchantment.EnchantBlockAdditive(baseValue);
-			baseValue *= enchantment.EnchantBlockMultiplicative(baseValue);
-			if (card.IsEnchantmentPreview)
-			{
-				base.PreviewValue = baseValue;
-			}
-			else
-			{
-				base.EnchantedValue = baseValue;
-			}
-		}
-		decimal num = Calculate(target);
-		if (runGlobalHooks)
-		{
-			base.PreviewValue = Hook.ModifyBlock(card.CombatState, card.Owner.Creature, Calculate(target), Props, card, null, out IEnumerable<AbstractModel> _);
-		}
-		else if (!card.IsEnchantmentPreview)
-		{
-			if (enchantment != null)
-			{
-				num += enchantment.EnchantBlockAdditive(num);
-				num *= enchantment.EnchantBlockMultiplicative(num);
-			}
-			base.PreviewValue = num;
-		}
-	}
+    public override void UpdateCardPreview(
+        CardModel card,
+        CardPreviewMode previewMode,
+        Creature? target,
+        bool runGlobalHooks
+    )
+    {
+        EnchantmentModel enchantment = card.Enchantment;
+        if (enchantment != null)
+        {
+            decimal baseValue = GetBaseVar().BaseValue;
+            baseValue += enchantment.EnchantBlockAdditive(baseValue);
+            baseValue *= enchantment.EnchantBlockMultiplicative(baseValue);
+            if (card.IsEnchantmentPreview)
+            {
+                base.PreviewValue = baseValue;
+            }
+            else
+            {
+                base.EnchantedValue = baseValue;
+            }
+        }
+        decimal num = Calculate(target);
+        if (runGlobalHooks)
+        {
+            base.PreviewValue = Hook.ModifyBlock(
+                card.CombatState,
+                card.Owner.Creature,
+                Calculate(target),
+                Props,
+                card,
+                null,
+                out IEnumerable<AbstractModel> _
+            );
+        }
+        else if (!card.IsEnchantmentPreview)
+        {
+            if (enchantment != null)
+            {
+                num += enchantment.EnchantBlockAdditive(num);
+                num *= enchantment.EnchantBlockMultiplicative(num);
+            }
+            base.PreviewValue = num;
+        }
+    }
 }

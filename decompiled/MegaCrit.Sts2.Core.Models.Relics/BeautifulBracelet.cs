@@ -14,28 +14,38 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class BeautifulBracelet : RelicModel
 {
-	private const string _swiftKey = "Swift";
+    private const string _swiftKey = "Swift";
 
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new CardsVar(3),
-		new DynamicVar("Swift", 3m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new CardsVar(3), new DynamicVar("Swift", 3m) }
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromEnchantment<Swift>(base.DynamicVars["Swift"].IntValue);
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromEnchantment<Swift>(base.DynamicVars["Swift"].IntValue);
 
-	public override async Task AfterObtained()
-	{
-		foreach (CardModel item in await CardSelectCmd.FromDeckForEnchantment(prefs: new CardSelectorPrefs(CardSelectorPrefs.EnchantSelectionPrompt, base.DynamicVars.Cards.IntValue), player: base.Owner, enchantment: ModelDb.Enchantment<Swift>(), amount: base.DynamicVars["Swift"].IntValue))
-		{
-			CardCmd.Enchant<Swift>(item, 3m);
-			NCardEnchantVfx nCardEnchantVfx = NCardEnchantVfx.Create(item);
-			if (nCardEnchantVfx != null)
-			{
-				NRun.Instance?.GlobalUi.CardPreviewContainer.AddChildSafely(nCardEnchantVfx);
-			}
-		}
-	}
+    public override async Task AfterObtained()
+    {
+        foreach (
+            CardModel item in await CardSelectCmd.FromDeckForEnchantment(
+                prefs: new CardSelectorPrefs(
+                    CardSelectorPrefs.EnchantSelectionPrompt,
+                    base.DynamicVars.Cards.IntValue
+                ),
+                player: base.Owner,
+                enchantment: ModelDb.Enchantment<Swift>(),
+                amount: base.DynamicVars["Swift"].IntValue
+            )
+        )
+        {
+            CardCmd.Enchant<Swift>(item, 3m);
+            NCardEnchantVfx nCardEnchantVfx = NCardEnchantVfx.Create(item);
+            if (nCardEnchantVfx != null)
+            {
+                NRun.Instance?.GlobalUi.CardPreviewContainer.AddChildSafely(nCardEnchantVfx);
+            }
+        }
+    }
 }

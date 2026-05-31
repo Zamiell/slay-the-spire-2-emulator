@@ -9,46 +9,50 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class OrbitPower : PowerModel
 {
-	private class Data
-	{
-		public int energySpent;
+    private class Data
+    {
+        public int energySpent;
 
-		public int triggerCount;
-	}
+        public int triggerCount;
+    }
 
-	private const int _energyIncrement = 4;
+    private const int _energyIncrement = 4;
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override int DisplayAmount => 4 - GetInternalData<Data>().energySpent % 4;
+    public override int DisplayAmount => 4 - GetInternalData<Data>().energySpent % 4;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
+    public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(4));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(4));
 
-	protected override object InitInternalData()
-	{
-		return new Data();
-	}
+    protected override object InitInternalData()
+    {
+        return new Data();
+    }
 
-	public override async Task AfterEnergySpent(CardModel card, int amount)
-	{
-		if (card.Owner.Creature == base.Owner && amount > 0)
-		{
-			Data data = GetInternalData<Data>();
-			data.energySpent += amount;
-			int triggers = data.energySpent / 4 - data.triggerCount;
-			if (triggers > 0)
-			{
-				Flash();
-				await PlayerCmd.GainEnergy(base.Amount * triggers, base.Owner.Player);
-				data.triggerCount += triggers;
-			}
-			InvokeDisplayAmountChanged();
-		}
-	}
+    public override async Task AfterEnergySpent(CardModel card, int amount)
+    {
+        if (card.Owner.Creature == base.Owner && amount > 0)
+        {
+            Data data = GetInternalData<Data>();
+            data.energySpent += amount;
+            int triggers = data.energySpent / 4 - data.triggerCount;
+            if (triggers > 0)
+            {
+                Flash();
+                await PlayerCmd.GainEnergy(base.Amount * triggers, base.Owner.Player);
+                data.triggerCount += triggers;
+            }
+            InvokeDisplayAmountChanged();
+        }
+    }
 }

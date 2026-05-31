@@ -11,22 +11,28 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class LightningRodPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.Channeling),
-		HoverTipFactory.FromOrb<LightningOrb>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.Channeling),
+                HoverTipFactory.FromOrb<LightningOrb>(),
+            }
+        );
 
-	public override async Task AfterEnergyReset(Player player)
-	{
-		if (player == base.Owner.Player)
-		{
-			await OrbCmd.Channel<LightningOrb>(new ThrowingPlayerChoiceContext(), base.Owner.Player);
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterEnergyReset(Player player)
+    {
+        if (player == base.Owner.Player)
+        {
+            await OrbCmd.Channel<LightningOrb>(
+                new ThrowingPlayerChoiceContext(),
+                base.Owner.Player
+            );
+            await PowerCmd.Decrement(this);
+        }
+    }
 }

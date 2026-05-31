@@ -15,20 +15,32 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class PotionOfDoom : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Common;
+    public override PotionRarity Rarity => PotionRarity.Common;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyEnemy;
+    public override TargetType TargetType => TargetType.AnyEnemy;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<DoomPower>(33m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<DoomPower>(33m)
+        );
 
-	public override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<DoomPower>());
+    public override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<DoomPower>()
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		NCombatRoom.Instance?.PlaySplashVfx(target, Colors.Purple);
-		await PowerCmd.Apply<DoomPower>(choiceContext, target, base.DynamicVars.Doom.BaseValue, base.Owner.Creature, null);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        NCombatRoom.Instance?.PlaySplashVfx(target, Colors.Purple);
+        await PowerCmd.Apply<DoomPower>(
+            choiceContext,
+            target,
+            base.DynamicVars.Doom.BaseValue,
+            base.Owner.Creature,
+            null
+        );
+    }
 }

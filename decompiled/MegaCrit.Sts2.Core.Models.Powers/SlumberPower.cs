@@ -14,39 +14,52 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class SlumberPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target, DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target == base.Owner && result.UnblockedDamage != 0)
-		{
-			await PowerCmd.Decrement(this);
-			if (base.Amount <= 0)
-			{
-				SlumberingBeetle slumberingBeetle = (SlumberingBeetle)base.Owner.Monster;
-				await CreatureCmd.Stun(base.Owner, slumberingBeetle.WakeUpMove, "ROLL_OUT_MOVE");
-			}
-		}
-	}
+    public override async Task AfterDamageReceived(
+        PlayerChoiceContext choiceContext,
+        Creature target,
+        DamageResult result,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (target == base.Owner && result.UnblockedDamage != 0)
+        {
+            await PowerCmd.Decrement(this);
+            if (base.Amount <= 0)
+            {
+                SlumberingBeetle slumberingBeetle = (SlumberingBeetle)base.Owner.Monster;
+                await CreatureCmd.Stun(base.Owner, slumberingBeetle.WakeUpMove, "ROLL_OUT_MOVE");
+            }
+        }
+    }
 
-	public override Task AfterRemoved(Creature oldOwner)
-	{
-		SfxCmd.StopLoop("event:/sfx/enemy/enemy_attacks/slumbering_beetle/slumbering_beetle_sleep_loop");
-		return Task.CompletedTask;
-	}
+    public override Task AfterRemoved(Creature oldOwner)
+    {
+        SfxCmd.StopLoop(
+            "event:/sfx/enemy/enemy_attacks/slumbering_beetle/slumbering_beetle_sleep_loop"
+        );
+        return Task.CompletedTask;
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Decrement(this);
-			if (base.Amount <= 0)
-			{
-				SlumberingBeetle slumberingBeetle = (SlumberingBeetle)base.Owner.Monster;
-				await slumberingBeetle.WakeUpMove(Array.Empty<Creature>());
-			}
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Decrement(this);
+            if (base.Amount <= 0)
+            {
+                SlumberingBeetle slumberingBeetle = (SlumberingBeetle)base.Owner.Monster;
+                await slumberingBeetle.WakeUpMove(Array.Empty<Creature>());
+            }
+        }
+    }
 }

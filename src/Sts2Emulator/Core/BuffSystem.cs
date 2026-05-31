@@ -4,7 +4,8 @@ public static class BuffSystem
 {
     public static void Apply(List<BuffState> buffs, BuffId id, int magnitude)
     {
-        if (magnitude == 0) return;
+        if (magnitude == 0)
+            return;
 
         if (magnitude > 0 && IsDebuff(id))
         {
@@ -16,8 +17,10 @@ public static class BuffSystem
         if (idx >= 0)
         {
             int newVal = buffs[idx].Magnitude + magnitude;
-            if (newVal == 0) buffs.RemoveAt(idx);
-            else buffs[idx] = buffs[idx] with { Magnitude = newVal };
+            if (newVal == 0)
+                buffs.RemoveAt(idx);
+            else
+                buffs[idx] = buffs[idx] with { Magnitude = newVal };
         }
         else
             buffs.Add(new BuffState(id, magnitude));
@@ -29,13 +32,11 @@ public static class BuffSystem
         return idx >= 0 ? buffs[idx].Magnitude : 0;
     }
 
-    public static bool Has(List<BuffState> buffs, BuffId id)
-        => Get(buffs, id) > 0;
+    public static bool Has(List<BuffState> buffs, BuffId id) => Get(buffs, id) > 0;
 
-    public static void Remove(List<BuffState> buffs, BuffId id)
-        => buffs.RemoveAll(b => b.Id == id);
+    public static void Remove(List<BuffState> buffs, BuffId id) => buffs.RemoveAll(b => b.Id == id);
 
-     public static bool TryConsumeArtifact(List<BuffState> buffs)
+    public static bool TryConsumeArtifact(List<BuffState> buffs)
     {
         int artifact = Get(buffs, BuffId.Artifact);
         if (artifact <= 0)
@@ -61,20 +62,28 @@ public static class BuffSystem
                 case BuffId.Weak:
                 case BuffId.Frail:
                 case BuffId.Shrink:
-                    if (b.Magnitude < 0) break; // negative = permanent (e.g. ShrinkerBeetle Shrink)
+                    if (b.Magnitude < 0)
+                        break; // negative = permanent (e.g. ShrinkerBeetle Shrink)
                     buffs[i] = b with { Magnitude = b.Magnitude - 1 };
-                    if (buffs[i].Magnitude <= 0) buffs.RemoveAt(i);
+                    if (buffs[i].Magnitude <= 0)
+                        buffs.RemoveAt(i);
                     break;
             }
         }
     }
 
-    public static int IncomingDamage(int baseDamage, List<BuffState> attackerBuffs, List<BuffState> defenderBuffs)
+    public static int IncomingDamage(
+        int baseDamage,
+        List<BuffState> attackerBuffs,
+        List<BuffState> defenderBuffs
+    )
     {
         float dmg = baseDamage;
         dmg += Get(attackerBuffs, BuffId.Strength);
-        if (Get(attackerBuffs, BuffId.Weak) > 0) dmg *= 0.75f;
-        if (Get(attackerBuffs, BuffId.Shrink) != 0) dmg *= 0.70f; // negative = permanent
+        if (Get(attackerBuffs, BuffId.Weak) > 0)
+            dmg *= 0.75f;
+        if (Get(attackerBuffs, BuffId.Shrink) != 0)
+            dmg *= 0.70f; // negative = permanent
         if (Get(defenderBuffs, BuffId.Vulnerable) > 0)
         {
             float mult = 1.5f + Get(attackerBuffs, BuffId.CrueltyPower) / 100f;
@@ -87,20 +96,22 @@ public static class BuffSystem
     {
         float blk = baseBlock;
         blk += Get(buffs, BuffId.Dexterity);
-        if (Get(buffs, BuffId.Frail) > 0) blk *= 0.75f;
-        if (isDefend) blk += Get(buffs, BuffId.FastenPower);
+        if (Get(buffs, BuffId.Frail) > 0)
+            blk *= 0.75f;
+        if (isDefend)
+            blk += Get(buffs, BuffId.FastenPower);
         return Math.Max(0, (int)blk);
     }
 
-
     private static bool IsDebuff(BuffId id) =>
-        id is BuffId.Vulnerable
-            or BuffId.Weak
-            or BuffId.Frail
-            or BuffId.Poison
-            or BuffId.Burn
-            or BuffId.Shrink
-            or BuffId.Tangled
-            or BuffId.Constrict
-            or BuffId.Smoggy;
+        id
+            is BuffId.Vulnerable
+                or BuffId.Weak
+                or BuffId.Frail
+                or BuffId.Poison
+                or BuffId.Burn
+                or BuffId.Shrink
+                or BuffId.Tangled
+                or BuffId.Constrict
+                or BuffId.Smoggy;
 }

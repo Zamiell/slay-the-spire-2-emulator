@@ -15,24 +15,34 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class ExplosiveAmpoule : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Common;
+    public override PotionRarity Rarity => PotionRarity.Common;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AllEnemies;
+    public override TargetType TargetType => TargetType.AllEnemies;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(10m, ValueProp.Unpowered));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(10m, ValueProp.Unpowered)
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		Creature player = base.Owner.Creature;
-		DamageVar damage = base.DynamicVars.Damage;
-		IReadOnlyList<Creature> targets = player.CombatState.HittableEnemies;
-		foreach (Creature item in targets)
-		{
-			NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(NFireSmokePuffVfx.Create(item));
-		}
-		await Cmd.CustomScaledWait(0.2f, 0.3f);
-		await CreatureCmd.Damage(choiceContext, targets, damage.BaseValue, damage.Props, player, null);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        Creature player = base.Owner.Creature;
+        DamageVar damage = base.DynamicVars.Damage;
+        IReadOnlyList<Creature> targets = player.CombatState.HittableEnemies;
+        foreach (Creature item in targets)
+        {
+            NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(NFireSmokePuffVfx.Create(item));
+        }
+        await Cmd.CustomScaledWait(0.2f, 0.3f);
+        await CreatureCmd.Damage(
+            choiceContext,
+            targets,
+            damage.BaseValue,
+            damage.Props,
+            player,
+            null
+        );
+    }
 }

@@ -10,15 +10,17 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class CursedPearl : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromCardWithCardHoverTips<Greed>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromCardWithCardHoverTips<Greed>();
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new GoldVar(333));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new GoldVar(333));
 
-	public override async Task AfterObtained()
-	{
-		await CardPileCmd.AddCurseToDeck<Greed>(base.Owner);
-		await PlayerCmd.GainGold(base.DynamicVars.Gold.BaseValue, base.Owner);
-	}
+    public override async Task AfterObtained()
+    {
+        await CardPileCmd.AddCurseToDeck<Greed>(base.Owner);
+        await PlayerCmd.GainGold(base.DynamicVars.Gold.BaseValue, base.Owner);
+    }
 }

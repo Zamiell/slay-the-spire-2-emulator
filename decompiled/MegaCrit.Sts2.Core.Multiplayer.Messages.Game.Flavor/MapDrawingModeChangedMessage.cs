@@ -7,23 +7,23 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game.Flavor;
 
 public struct MapDrawingModeChangedMessage : INetMessage, IPacketSerializable
 {
-	public DrawingMode drawingMode;
+    public DrawingMode drawingMode;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Unreliable;
+    public NetTransferMode Mode => NetTransferMode.Unreliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteEnum(drawingMode);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteEnum(drawingMode);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		drawingMode = reader.ReadEnum<DrawingMode>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        drawingMode = reader.ReadEnum<DrawingMode>();
+    }
 }

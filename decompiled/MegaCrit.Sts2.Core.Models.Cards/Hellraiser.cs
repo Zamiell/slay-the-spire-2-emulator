@@ -13,26 +13,36 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Hellraiser : CardModel
 {
-	protected override IEnumerable<string> ExtraRunAssetPaths => NHellraiserVfx.AssetPaths;
+    protected override IEnumerable<string> ExtraRunAssetPaths => NHellraiserVfx.AssetPaths;
 
-	public Hellraiser()
-		: base(2, CardType.Power, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public Hellraiser()
+        : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await PowerCmd.Apply<HellraiserPower>(choiceContext, base.Owner.Creature, 1m, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await PowerCmd.Apply<HellraiserPower>(
+            choiceContext,
+            base.Owner.Creature,
+            1m,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	public override async Task OnEnqueuePlayVfx(Creature? target)
-	{
-		NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(NHellraiserVfx.Create(base.Owner.Creature));
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-	}
+    public override async Task OnEnqueuePlayVfx(Creature? target)
+    {
+        NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(
+            NHellraiserVfx.Create(base.Owner.Creature)
+        );
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.EnergyCost.UpgradeBy(-1);
-	}
+    protected override void OnUpgrade()
+    {
+        base.EnergyCost.UpgradeBy(-1);
+    }
 }

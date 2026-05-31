@@ -13,28 +13,39 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class EchoingSlash : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(10m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(10m, ValueProp.Move)
+        );
 
-	public EchoingSlash()
-		: base(1, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies)
-	{
-	}
+    public EchoingSlash()
+        : base(1, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await using AttackContext attackContext = await AttackCommand.CreateContextAsync(base.CombatState, choiceContext, this);
-		int attackCount = 1;
-		while (attackCount > 0)
-		{
-			attackCount--;
-			IEnumerable<DamageResult> enumerable = await CreatureCmd.Damage(choiceContext, base.CombatState.HittableEnemies, base.DynamicVars.Damage, base.Owner.Creature, this);
-			attackContext.AddHit(enumerable);
-			attackCount += enumerable.Count((DamageResult r) => r.WasTargetKilled);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await using AttackContext attackContext = await AttackCommand.CreateContextAsync(
+            base.CombatState,
+            choiceContext,
+            this
+        );
+        int attackCount = 1;
+        while (attackCount > 0)
+        {
+            attackCount--;
+            IEnumerable<DamageResult> enumerable = await CreatureCmd.Damage(
+                choiceContext,
+                base.CombatState.HittableEnemies,
+                base.DynamicVars.Damage,
+                base.Owner.Creature,
+                this
+            );
+            attackContext.AddHit(enumerable);
+            attackCount += enumerable.Count((DamageResult r) => r.WasTargetKilled);
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(3m);
+    }
 }

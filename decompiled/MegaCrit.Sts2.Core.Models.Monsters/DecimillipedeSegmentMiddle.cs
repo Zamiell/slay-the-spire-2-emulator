@@ -5,10 +5,14 @@ namespace MegaCrit.Sts2.Core.Models.Monsters;
 
 public sealed class DecimillipedeSegmentMiddle : DecimillipedeSegment
 {
-	public override void SegmentAttack()
-	{
-		NCreature creatureNode = base.Creature.GetCreatureNode();
-		creatureNode?.GetSpecialNode<NDecimillipedeSegmentDriver>("%Visuals/RightSegmentDriver")?.AttackShake();
-		creatureNode?.GetSpecialNode<NDecimillipedeSegmentDriver>("%Visuals/LeftSegmentDriver")?.AttackShake();
-	}
+    public override void SegmentAttack()
+    {
+        NCreature creatureNode = base.Creature.GetCreatureNode();
+        creatureNode
+            ?.GetSpecialNode<NDecimillipedeSegmentDriver>("%Visuals/RightSegmentDriver")
+            ?.AttackShake();
+        creatureNode
+            ?.GetSpecialNode<NDecimillipedeSegmentDriver>("%Visuals/LeftSegmentDriver")
+            ?.AttackShake();
+    }
 }

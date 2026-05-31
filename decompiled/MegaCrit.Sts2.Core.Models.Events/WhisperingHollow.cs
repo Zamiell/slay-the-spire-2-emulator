@@ -18,54 +18,71 @@ namespace MegaCrit.Sts2.Core.Models.Events;
 
 public sealed class WhisperingHollow : EventModel
 {
-	private const int _baseGold = 35;
+    private const int _baseGold = 35;
 
-	private const int _goldVariance = 9;
+    private const int _goldVariance = 9;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new GoldVar(35),
-		new HpLossVar(9m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new GoldVar(35), new HpLossVar(9m) }
+        );
 
-	public override bool IsAllowed(IRunState runState)
-	{
-		return runState.Players.All((Player p) => p.Gold >= 44);
-	}
+    public override bool IsAllowed(IRunState runState)
+    {
+        return runState.Players.All((Player p) => p.Gold >= 44);
+    }
 
-	public override void CalculateVars()
-	{
-		base.DynamicVars.Gold.BaseValue += (decimal)base.Rng.NextInt(-9, 10);
-	}
+    public override void CalculateVars()
+    {
+        base.DynamicVars.Gold.BaseValue += (decimal)base.Rng.NextInt(-9, 10);
+    }
 
-	protected override IReadOnlyList<EventOption> GenerateInitialOptions()
-	{
-		return new global::_003C_003Ez__ReadOnlyArray<EventOption>(new EventOption[2]
-		{
-			new EventOption(this, Gold, "WHISPERING_HOLLOW.pages.INITIAL.options.GOLD"),
-			new EventOption(this, Hug, "WHISPERING_HOLLOW.pages.INITIAL.options.HUG", HoverTipFactory.Static(StaticHoverTip.Transform)).ThatDoesDamage(base.DynamicVars.HpLoss.IntValue)
-		});
-	}
+    protected override IReadOnlyList<EventOption> GenerateInitialOptions()
+    {
+        return new global::_003C_003Ez__ReadOnlyArray<EventOption>(
+            new EventOption[2]
+            {
+                new EventOption(this, Gold, "WHISPERING_HOLLOW.pages.INITIAL.options.GOLD"),
+                new EventOption(
+                    this,
+                    Hug,
+                    "WHISPERING_HOLLOW.pages.INITIAL.options.HUG",
+                    HoverTipFactory.Static(StaticHoverTip.Transform)
+                ).ThatDoesDamage(base.DynamicVars.HpLoss.IntValue),
+            }
+        );
+    }
 
-	private async Task Gold()
-	{
-		await PlayerCmd.LoseGold(base.DynamicVars.Gold.IntValue, base.Owner, GoldLossType.Spent);
-		await RewardsCmd.OfferCustom(base.Owner, new List<Reward>(2)
-		{
-			new PotionReward(base.Owner),
-			new PotionReward(base.Owner)
-		});
-		SetEventFinished(L10NLookup("WHISPERING_HOLLOW.pages.GOLD.description"));
-	}
+    private async Task Gold()
+    {
+        await PlayerCmd.LoseGold(base.DynamicVars.Gold.IntValue, base.Owner, GoldLossType.Spent);
+        await RewardsCmd.OfferCustom(
+            base.Owner,
+            new List<Reward>(2) { new PotionReward(base.Owner), new PotionReward(base.Owner) }
+        );
+        SetEventFinished(L10NLookup("WHISPERING_HOLLOW.pages.GOLD.description"));
+    }
 
-	private async Task Hug()
-	{
-		List<CardModel> list = (await CardSelectCmd.FromDeckForTransformation(prefs: new CardSelectorPrefs(CardSelectorPrefs.TransformSelectionPrompt, 1), player: base.Owner)).ToList();
-		foreach (CardModel item in list)
-		{
-			await CardCmd.TransformToRandom(item, base.Rng, CardPreviewStyle.EventLayout);
-		}
-		await CreatureCmd.Damage(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars.HpLoss.BaseValue, ValueProp.Unblockable | ValueProp.Unpowered, null, null);
-		SetEventFinished(L10NLookup("WHISPERING_HOLLOW.pages.HUG.description"));
-	}
+    private async Task Hug()
+    {
+        List<CardModel> list = (
+            await CardSelectCmd.FromDeckForTransformation(
+                prefs: new CardSelectorPrefs(CardSelectorPrefs.TransformSelectionPrompt, 1),
+                player: base.Owner
+            )
+        ).ToList();
+        foreach (CardModel item in list)
+        {
+            await CardCmd.TransformToRandom(item, base.Rng, CardPreviewStyle.EventLayout);
+        }
+        await CreatureCmd.Damage(
+            new ThrowingPlayerChoiceContext(),
+            base.Owner.Creature,
+            base.DynamicVars.HpLoss.BaseValue,
+            ValueProp.Unblockable | ValueProp.Unpowered,
+            null,
+            null
+        );
+        SetEventFinished(L10NLookup("WHISPERING_HOLLOW.pages.HUG.description"));
+    }
 }

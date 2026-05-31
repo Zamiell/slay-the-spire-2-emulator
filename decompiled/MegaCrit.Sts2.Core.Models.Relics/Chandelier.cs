@@ -12,24 +12,32 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Chandelier : RelicModel
 {
-	private const int _energyTurn = 3;
+    private const int _energyTurn = 3;
 
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(3));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(3));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature))
-		{
-			if (base.Owner.PlayerCombatState.TurnNumber == 3)
-			{
-				Flash();
-				await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, base.Owner);
-			}
-			InvokeDisplayAmountChanged();
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (participants.Contains(base.Owner.Creature))
+        {
+            if (base.Owner.PlayerCombatState.TurnNumber == 3)
+            {
+                Flash();
+                await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, base.Owner);
+            }
+            InvokeDisplayAmountChanged();
+        }
+    }
 }

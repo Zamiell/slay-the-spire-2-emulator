@@ -11,32 +11,37 @@ namespace MegaCrit.Sts2.Core.Rooms;
 
 public class MapRoom : AbstractRoom
 {
-	public override RoomType RoomType => RoomType.Map;
+    public override RoomType RoomType => RoomType.Map;
 
-	public override ModelId? ModelId => null;
+    public override ModelId? ModelId => null;
 
-	public override Task EnterInternal(IRunState? runState, bool isRestoringRoomStackBase)
-	{
-		if (isRestoringRoomStackBase)
-		{
-			throw new InvalidOperationException("MapRoom does not support room stack reconstruction.");
-		}
-		if (TestMode.IsOn)
-		{
-			return Task.CompletedTask;
-		}
-		NMapRoom currentRoom = NMapRoom.Create(runState?.Act ?? ModelDb.Act<Overgrowth>(), runState?.CurrentActIndex ?? 0);
-		NRun.Instance.SetCurrentRoom(currentRoom);
-		return Task.CompletedTask;
-	}
+    public override Task EnterInternal(IRunState? runState, bool isRestoringRoomStackBase)
+    {
+        if (isRestoringRoomStackBase)
+        {
+            throw new InvalidOperationException(
+                "MapRoom does not support room stack reconstruction."
+            );
+        }
+        if (TestMode.IsOn)
+        {
+            return Task.CompletedTask;
+        }
+        NMapRoom currentRoom = NMapRoom.Create(
+            runState?.Act ?? ModelDb.Act<Overgrowth>(),
+            runState?.CurrentActIndex ?? 0
+        );
+        NRun.Instance.SetCurrentRoom(currentRoom);
+        return Task.CompletedTask;
+    }
 
-	public override Task Exit(IRunState? runState)
-	{
-		return Task.CompletedTask;
-	}
+    public override Task Exit(IRunState? runState)
+    {
+        return Task.CompletedTask;
+    }
 
-	public override Task Resume(AbstractRoom _, IRunState? runState)
-	{
-		throw new NotImplementedException();
-	}
+    public override Task Resume(AbstractRoom _, IRunState? runState)
+    {
+        throw new NotImplementedException();
+    }
 }

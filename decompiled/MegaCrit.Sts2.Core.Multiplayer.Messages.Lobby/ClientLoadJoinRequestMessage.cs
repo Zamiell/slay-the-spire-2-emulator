@@ -8,19 +8,15 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby;
 [StructLayout(LayoutKind.Sequential, Size = 1)]
 public struct ClientLoadJoinRequestMessage : INetMessage, IPacketSerializable
 {
-	public bool ShouldBroadcast => false;
+    public bool ShouldBroadcast => false;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.Info;
+    public LogLevel LogLevel => LogLevel.Info;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-	}
+    public void Serialize(PacketWriter writer) { }
 
-	public void Deserialize(PacketReader reader)
-	{
-	}
+    public void Deserialize(PacketReader reader) { }
 }

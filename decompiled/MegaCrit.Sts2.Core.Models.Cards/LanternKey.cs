@@ -7,32 +7,33 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class LanternKey : CardModel
 {
-	private const int _gloryActIndex = 2;
+    private const int _gloryActIndex = 2;
 
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Unplayable);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Unplayable);
 
-	public LanternKey()
-		: base(-1, CardType.Quest, CardRarity.Quest, TargetType.Self)
-	{
-	}
+    public LanternKey()
+        : base(-1, CardType.Quest, CardRarity.Quest, TargetType.Self) { }
 
-	public override IReadOnlySet<RoomType> ModifyUnknownMapPointRoomTypes(IReadOnlySet<RoomType> roomTypes)
-	{
-		if (2 != base.Owner.RunState.CurrentActIndex)
-		{
-			return roomTypes;
-		}
-		return new HashSet<RoomType> { RoomType.Event };
-	}
+    public override IReadOnlySet<RoomType> ModifyUnknownMapPointRoomTypes(
+        IReadOnlySet<RoomType> roomTypes
+    )
+    {
+        if (2 != base.Owner.RunState.CurrentActIndex)
+        {
+            return roomTypes;
+        }
+        return new HashSet<RoomType> { RoomType.Event };
+    }
 
-	public override EventModel ModifyNextEvent(EventModel currentEvent)
-	{
-		if (2 != base.Owner.RunState.CurrentActIndex)
-		{
-			return currentEvent;
-		}
-		return ModelDb.Event<WarHistorianRepy>();
-	}
+    public override EventModel ModifyNextEvent(EventModel currentEvent)
+    {
+        if (2 != base.Owner.RunState.CurrentActIndex)
+        {
+            return currentEvent;
+        }
+        return ModelDb.Event<WarHistorianRepy>();
+    }
 }

@@ -7,23 +7,29 @@ namespace MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 public class SummonVar : DynamicVar
 {
-	public const string defaultName = "Summon";
+    public const string defaultName = "Summon";
 
-	public SummonVar(decimal summonAmount)
-		: base("Summon", summonAmount)
-	{
-	}
+    public SummonVar(decimal summonAmount)
+        : base("Summon", summonAmount) { }
 
-	public SummonVar(string name, decimal summonAmount)
-		: base(name, summonAmount)
-	{
-	}
+    public SummonVar(string name, decimal summonAmount)
+        : base(name, summonAmount) { }
 
-	public override void UpdateCardPreview(CardModel card, CardPreviewMode previewMode, Creature? target, bool runGlobalHooks)
-	{
-		if (runGlobalHooks)
-		{
-			base.PreviewValue = Hook.ModifySummonAmount(card.CombatState, card.Owner, base.BaseValue, card);
-		}
-	}
+    public override void UpdateCardPreview(
+        CardModel card,
+        CardPreviewMode previewMode,
+        Creature? target,
+        bool runGlobalHooks
+    )
+    {
+        if (runGlobalHooks)
+        {
+            base.PreviewValue = Hook.ModifySummonAmount(
+                card.CombatState,
+                card.Owner,
+                base.BaseValue,
+                card
+            );
+        }
+    }
 }

@@ -10,21 +10,26 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class ShadowStep : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
 
-	public ShadowStep()
-		: base(1, CardType.Skill, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public ShadowStep()
+        : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CardCmd.Discard(choiceContext, PileType.Hand.GetPile(base.Owner).Cards);
-		await PowerCmd.Apply<ShadowStepPower>(choiceContext, base.Owner.Creature, 1m, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CardCmd.Discard(choiceContext, PileType.Hand.GetPile(base.Owner).Cards);
+        await PowerCmd.Apply<ShadowStepPower>(
+            choiceContext,
+            base.Owner.Creature,
+            1m,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.EnergyCost.UpgradeBy(-1);
-	}
+    protected override void OnUpgrade()
+    {
+        base.EnergyCost.UpgradeBy(-1);
+    }
 }

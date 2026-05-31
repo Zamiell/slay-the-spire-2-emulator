@@ -14,28 +14,35 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class GoldAxe : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[3]
-	{
-		new CalculationBaseVar(0m),
-		new ExtraDamageVar(1m),
-		new CalculatedDamageVar(ValueProp.Move).WithMultiplier((CardModel _, Creature? _) => CombatManager.Instance.History.CardPlaysFinished.Count())
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[3]
+            {
+                new CalculationBaseVar(0m),
+                new ExtraDamageVar(1m),
+                new CalculatedDamageVar(ValueProp.Move).WithMultiplier(
+                    (CardModel _, Creature? _) =>
+                        CombatManager.Instance.History.CardPlaysFinished.Count()
+                ),
+            }
+        );
 
-	public GoldAxe()
-		: base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy)
-	{
-	}
+    public GoldAxe()
+        : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.CalculatedDamage).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_dramatic_stab", null, "blunt_attack.mp3")
-			.Execute(choiceContext);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.CalculatedDamage)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_dramatic_stab", null, "blunt_attack.mp3")
+            .Execute(choiceContext);
+    }
 
-	protected override void OnUpgrade()
-	{
-		AddKeyword(CardKeyword.Retain);
-	}
+    protected override void OnUpgrade()
+    {
+        AddKeyword(CardKeyword.Retain);
+    }
 }

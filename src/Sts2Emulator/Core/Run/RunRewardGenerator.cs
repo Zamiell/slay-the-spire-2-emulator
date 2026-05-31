@@ -13,49 +13,269 @@ public static class RunRewardGenerator
     private const double PotionRewardStep = 0.1;
 
     public static ReadOnlySpan<int> IroncladRewardPool =>
-    [
-        9, 13, 18, 20, 29, 31, 45, 46, 47, 50, 58, 60, 66, 69, 87, 95,
-        99, 113, 114, 119, 141, 142, 147, 150, 155, 174, 175, 183, 185, 188, 189, 195,
-        205, 238, 240, 246, 247, 254, 261, 262, 263, 265, 268, 272, 273, 295, 313, 328,
-        332, 334, 339, 349, 353, 358, 364, 374, 378, 381, 396, 404, 414, 421, 433, 454,
-        455, 462, 464, 465, 466, 486, 492, 493, 494, 505, 508, 516, 517, 519, 521, 525,
-        526, 529, 533, 538,
-    ];
+        [
+            9,
+            13,
+            18,
+            20,
+            29,
+            31,
+            45,
+            46,
+            47,
+            50,
+            58,
+            60,
+            66,
+            69,
+            87,
+            95,
+            99,
+            113,
+            114,
+            119,
+            141,
+            142,
+            147,
+            150,
+            155,
+            174,
+            175,
+            183,
+            185,
+            188,
+            189,
+            195,
+            205,
+            238,
+            240,
+            246,
+            247,
+            254,
+            261,
+            262,
+            263,
+            265,
+            268,
+            272,
+            273,
+            295,
+            313,
+            328,
+            332,
+            334,
+            339,
+            349,
+            353,
+            358,
+            364,
+            374,
+            378,
+            381,
+            396,
+            404,
+            414,
+            421,
+            433,
+            454,
+            455,
+            462,
+            464,
+            465,
+            466,
+            486,
+            492,
+            493,
+            494,
+            505,
+            508,
+            516,
+            517,
+            519,
+            521,
+            525,
+            526,
+            529,
+            533,
+            538,
+        ];
 
     public static ReadOnlySpan<int> ColorlessRewardPool =>
-    [
-        10, 14, 23, 32, 34, 38, 51, 73, 80, 121, 146, 153, 168, 170, 173, 181,
-        191, 193, 197, 213, 225, 234, 250, 255, 260, 266, 270, 271, 277, 286, 297, 300,
-        306, 307, 327, 333, 342, 343, 363, 365, 366, 369, 372, 380, 394, 396, 401, 406,
-        411, 415, 416, 417, 431, 455, 470, 491, 498, 499, 504, 506, 521, 522, 535,
-    ];
+        [
+            10,
+            14,
+            23,
+            32,
+            34,
+            38,
+            51,
+            73,
+            80,
+            121,
+            146,
+            153,
+            168,
+            170,
+            173,
+            181,
+            191,
+            193,
+            197,
+            213,
+            225,
+            234,
+            250,
+            255,
+            260,
+            266,
+            270,
+            271,
+            277,
+            286,
+            297,
+            300,
+            306,
+            307,
+            327,
+            333,
+            342,
+            343,
+            363,
+            365,
+            366,
+            369,
+            372,
+            380,
+            394,
+            396,
+            401,
+            406,
+            411,
+            415,
+            416,
+            417,
+            431,
+            455,
+            470,
+            491,
+            498,
+            499,
+            504,
+            506,
+            521,
+            522,
+            535,
+        ];
 
     public static ReadOnlySpan<int> ShopAttackCards =>
-    [
-        13, 20, 50, 60, 69, 87, 147, 189, 240, 247, 254, 268, 349, 358, 421, 454,
-        465, 486, 508, 519, 538,
-    ];
+        [
+            13,
+            20,
+            50,
+            60,
+            69,
+            87,
+            147,
+            189,
+            240,
+            247,
+            254,
+            268,
+            349,
+            358,
+            421,
+            454,
+            465,
+            486,
+            508,
+            519,
+            538,
+        ];
 
     public static ReadOnlySpan<int> ShopSkillCards =>
-    [
-        18, 31, 46, 45, 150, 155, 174, 175, 205, 238, 396, 414, 433, 455, 493, 516,
-        517, 521,
-    ];
+        [18, 31, 46, 45, 150, 155, 174, 175, 205, 238, 396, 414, 433, 455, 493, 516, 517, 521];
 
     public static ReadOnlySpan<int> ShopPowerCards => [185, 265, 273, 462, 533];
 
     public static ReadOnlySpan<int> PotionRewardPool =>
-    [
-        1, 2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19,
-        21, 22, 23, 24, 26, 28, 29, 30, 32, 34, 36, 37, 38, 39, 40, 42,
-        47, 48, 49, 50, 51, 52, 53, 54, 56, 57, 58, 59, 60, 61, 62, 63,
-    ];
+        [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            8,
+            9,
+            10,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            26,
+            28,
+            29,
+            30,
+            32,
+            34,
+            36,
+            37,
+            38,
+            39,
+            40,
+            42,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+        ];
 
     public static ReadOnlySpan<int> RelicRewardPool =>
-    [
-        3, 4, 9, 10, 19, 23, 41, 110, 114, 128, 135, 144, 149, 169, 170, 172,
-        186, 190, 215, 250, 252, 279, 282, 286,
-    ];
+        [
+            3,
+            4,
+            9,
+            10,
+            19,
+            23,
+            41,
+            110,
+            114,
+            128,
+            135,
+            144,
+            149,
+            169,
+            170,
+            172,
+            186,
+            190,
+            215,
+            250,
+            252,
+            279,
+            282,
+            286,
+        ];
 
     public static void GenerateCombatRewards(RunState state)
     {
@@ -63,7 +283,10 @@ public static class RunRewardGenerator
             state.PlayerHp = Math.Min(state.PlayerMaxHp, state.PlayerHp + 6);
         if (HasRelic(state, RunConstants.RelicBlackBlood))
             state.PlayerHp = Math.Min(state.PlayerMaxHp, state.PlayerHp + 12);
-        if (HasRelic(state, RunConstants.RelicMeatOnTheBone) && state.PlayerHp <= state.PlayerMaxHp / 2)
+        if (
+            HasRelic(state, RunConstants.RelicMeatOnTheBone)
+            && state.PlayerHp <= state.PlayerMaxHp / 2
+        )
             state.PlayerHp = Math.Min(state.PlayerMaxHp, state.PlayerHp + 12);
 
         bool hasPotionReward = CheckPotionRoll(state, state.PlayerRng.Rewards.NextDouble());
@@ -72,7 +295,8 @@ public static class RunRewardGenerator
         if (hasPotionReward)
             state.RewardPotion = NextPotion(state, state.PlayerRng.Rewards);
 
-        state.PendingRelicReward = state.CurrentNodeType is RunConstants.NodeElite or RunConstants.NodeBoss;
+        state.PendingRelicReward =
+            state.CurrentNodeType is RunConstants.NodeElite or RunConstants.NodeBoss;
         if (state.PendingRelicReward)
             state.RelicReward = NextRelic(state);
         PopulateCardReward(state);
@@ -88,7 +312,10 @@ public static class RunRewardGenerator
 
     public static bool HasPendingRewards(RunState state)
     {
-        return state.RewardGold != 0 || state.RewardPotion != 0 || state.RelicReward != 0 || state.RewardCardPending;
+        return state.RewardGold != 0
+            || state.RewardPotion != 0
+            || state.RelicReward != 0
+            || state.RewardCardPending;
     }
 
     public static bool ClaimNextReward(RunState state)
@@ -143,7 +370,12 @@ public static class RunRewardGenerator
         for (int i = 0; i < state.RewardCards.Length; i++)
         {
             int rarity = RollRewardCardRarity(state);
-            int cardId = ChooseCardWithRarity(IroncladRewardPool, rarity, blacklist, state.PlayerRng.Rewards);
+            int cardId = ChooseCardWithRarity(
+                IroncladRewardPool,
+                rarity,
+                blacklist,
+                state.PlayerRng.Rewards
+            );
             state.RewardCards[i] = cardId;
             blacklist.Add(cardId);
             state.RewardUpgraded[i] = RollCardUpgrade(state, cardId, state.PlayerRng.Rewards);
@@ -184,8 +416,18 @@ public static class RunRewardGenerator
         ];
         for (int i = 0; i < typedPools.Length; i++)
         {
-            int rarity = RollCardRarity(state, (0.045, 0.37), mutateOffset: false, state.PlayerRng.Rewards);
-            int cardId = ChooseCardWithRarity(typedPools[i], rarity, blacklist, state.PlayerRng.Shops);
+            int rarity = RollCardRarity(
+                state,
+                (0.045, 0.37),
+                mutateOffset: false,
+                state.PlayerRng.Rewards
+            );
+            int cardId = ChooseCardWithRarity(
+                typedPools[i],
+                rarity,
+                blacklist,
+                state.PlayerRng.Shops
+            );
             state.ShopCards[i] = cardId;
             blacklist.Add(cardId);
             state.PlayerRng.Rewards.NextDouble();
@@ -197,7 +439,12 @@ public static class RunRewardGenerator
         {
             int action = 5 + i;
             int rarity = i == 0 ? RarityUncommon : RarityRare;
-            int cardId = ChooseCardWithRarity(ColorlessRewardPool, rarity, blacklist, state.PlayerRng.Shops);
+            int cardId = ChooseCardWithRarity(
+                ColorlessRewardPool,
+                rarity,
+                blacklist,
+                state.PlayerRng.Shops
+            );
             state.ShopCards[action] = cardId;
             blacklist.Add(cardId);
             state.PlayerRng.Rewards.NextDouble();
@@ -237,7 +484,8 @@ public static class RunRewardGenerator
 
     public static int NextRelic(RunState state)
     {
-        var available = RelicRewardPool.ToArray()
+        var available = RelicRewardPool
+            .ToArray()
             .Where(relicId => state.Relics.All(relic => relic.DefId != relicId))
             .ToArray();
         return available.Length == 0
@@ -263,33 +511,53 @@ public static class RunRewardGenerator
     {
         return state.CurrentNodeType switch
         {
-            RunConstants.NodeElite => RollCardRarity(state, (0.05, 0.4), mutateOffset: true, state.PlayerRng.Rewards),
-            RunConstants.NodeBoss => RollCardRarity(state, (1.0, 0.0), mutateOffset: true, state.PlayerRng.Rewards),
+            RunConstants.NodeElite => RollCardRarity(
+                state,
+                (0.05, 0.4),
+                mutateOffset: true,
+                state.PlayerRng.Rewards
+            ),
+            RunConstants.NodeBoss => RollCardRarity(
+                state,
+                (1.0, 0.0),
+                mutateOffset: true,
+                state.PlayerRng.Rewards
+            ),
             _ => RollCardRarity(state, (0.0149, 0.37), mutateOffset: true, state.PlayerRng.Rewards),
         };
     }
 
-    private static int RollCardRarity(RunState state, (double Rare, double Uncommon) odds, bool mutateOffset, GameRng rng)
+    private static int RollCardRarity(
+        RunState state,
+        (double Rare, double Uncommon) odds,
+        bool mutateOffset,
+        GameRng rng
+    )
     {
         double offset = odds.Rare >= 1.0 ? 0.0 : state.CardRarityOffset;
         double roll = rng.NextDouble();
         double rareThreshold = odds.Rare + offset;
-        int rarity = roll < rareThreshold
-            ? RarityRare
-            : roll < rareThreshold + odds.Uncommon
-                ? RarityUncommon
-                : RarityCommon;
+        int rarity =
+            roll < rareThreshold ? RarityRare
+            : roll < rareThreshold + odds.Uncommon ? RarityUncommon
+            : RarityCommon;
 
         if (mutateOffset)
         {
-            state.CardRarityOffset = rarity == RarityRare
-                ? CardRarityBaseOffset
-                : Math.Min(state.CardRarityOffset + CardRarityGrowth, CardRarityMaxOffset);
+            state.CardRarityOffset =
+                rarity == RarityRare
+                    ? CardRarityBaseOffset
+                    : Math.Min(state.CardRarityOffset + CardRarityGrowth, CardRarityMaxOffset);
         }
         return rarity;
     }
 
-    private static int ChooseCardWithRarity(ReadOnlySpan<int> pool, int rarity, List<int> blacklist, GameRng rng)
+    private static int ChooseCardWithRarity(
+        ReadOnlySpan<int> pool,
+        int rarity,
+        List<int> blacklist,
+        GameRng rng
+    )
     {
         foreach (int allowedRarity in RarityFallbacks(rarity))
         {
@@ -326,10 +594,13 @@ public static class RunRewardGenerator
     {
         int rarity = RollPotionRarity(rng);
         var blocked = blacklist ?? [];
-        var available = PotionRewardPool.ToArray()
+        var available = PotionRewardPool
+            .ToArray()
             .Where(potionId => !blocked.Contains(potionId) && PotionRarity(potionId) == rarity)
             .ToArray();
-        return available.Length > 0 ? rng.NextItem(available) : rng.NextItem(PotionRewardPool.ToArray());
+        return available.Length > 0
+            ? rng.NextItem(available)
+            : rng.NextItem(PotionRewardPool.ToArray());
     }
 
     private static int RollPotionRarity(GameRng rng)
@@ -345,7 +616,9 @@ public static class RunRewardGenerator
     private static int RollRelicRarity(GameRng rng)
     {
         double roll = rng.NextDouble();
-        return roll < 0.5 ? RarityCommon : roll < 0.83 ? RarityUncommon : RarityRare;
+        return roll < 0.5 ? RarityCommon
+            : roll < 0.83 ? RarityUncommon
+            : RarityRare;
     }
 
     private static int ShopCardCost(int cardId, bool colorless, GameRng rng)
@@ -378,63 +651,252 @@ public static class RunRewardGenerator
         return RoundPositive(baseCost * NextDouble(rng, 0.95, 1.05));
     }
 
-    private static double NextDouble(GameRng rng, double min, double max) => min + rng.NextDouble() * (max - min);
+    private static double NextDouble(GameRng rng, double min, double max) =>
+        min + rng.NextDouble() * (max - min);
 
     private static int RoundPositive(double value) => (int)(value + 0.5);
 
-    private static bool HasRelic(RunState state, int relicId) => state.Relics.Any(relic => relic.DefId == relicId);
+    private static bool HasRelic(RunState state, int relicId) =>
+        state.Relics.Any(relic => relic.DefId == relicId);
 
-    private static int CardRarity(int cardId) => CardRarityById.GetValueOrDefault(cardId, RarityCommon);
+    private static int CardRarity(int cardId) =>
+        CardRarityById.GetValueOrDefault(cardId, RarityCommon);
 
-    private static int PotionRarity(int potionId) => PotionRarityById.GetValueOrDefault(potionId, RarityCommon);
+    private static int PotionRarity(int potionId) =>
+        PotionRarityById.GetValueOrDefault(potionId, RarityCommon);
 
-    private static int[] RarityFallbacks(int rarity) => rarity switch
-    {
-        RarityCommon => [RarityCommon, RarityUncommon, RarityRare],
-        RarityUncommon => [RarityUncommon, RarityRare, RarityCommon],
-        _ => [RarityRare, RarityCommon, RarityUncommon],
-    };
+    private static int[] RarityFallbacks(int rarity) =>
+        rarity switch
+        {
+            RarityCommon => [RarityCommon, RarityUncommon, RarityRare],
+            RarityUncommon => [RarityUncommon, RarityRare, RarityCommon],
+            _ => [RarityRare, RarityCommon, RarityUncommon],
+        };
 
     private static readonly Dictionary<int, int> CardRarityById = new()
     {
-        [9] = 3, [10] = 3, [13] = 1, [14] = 3, [18] = 1, [20] = 2, [23] = 2, [29] = 3,
-        [31] = 2, [32] = 3, [34] = 3, [38] = 2, [45] = 1, [46] = 1, [47] = 2, [50] = 1,
-        [51] = 3, [58] = 3, [60] = 1, [66] = 2, [69] = 2, [73] = 3, [80] = 2, [87] = 1,
-        [95] = 2, [99] = 3, [113] = 3, [114] = 3, [119] = 3, [121] = 2, [141] = 3,
-        [142] = 2, [146] = 2, [147] = 2, [150] = 2, [153] = 2, [155] = 2, [168] = 3,
-        [170] = 2, [173] = 3, [174] = 2, [175] = 2, [181] = 2, [183] = 3, [185] = 2,
-        [188] = 3, [189] = 2, [191] = 2, [193] = 2, [195] = 2, [197] = 2, [205] = 2,
-        [213] = 2, [225] = 3, [234] = 3, [238] = 1, [240] = 1, [246] = 3, [247] = 2,
-        [250] = 3, [254] = 2, [255] = 2, [260] = 2, [261] = 3, [262] = 2, [263] = 2,
-        [265] = 2, [266] = 2, [268] = 1, [270] = 2, [271] = 3, [272] = 3, [273] = 2,
-        [277] = 3, [286] = 2, [295] = 3, [297] = 3, [300] = 3, [306] = 3, [307] = 2,
-        [313] = 1, [327] = 3, [328] = 3, [332] = 3, [333] = 2, [334] = 3, [339] = 3,
-        [342] = 2, [343] = 2, [349] = 1, [353] = 2, [358] = 1, [363] = 2, [364] = 3,
-        [365] = 2, [366] = 2, [369] = 2, [372] = 2, [374] = 3, [378] = 2, [380] = 3,
-        [381] = 2, [394] = 3, [396] = 2, [401] = 3, [404] = 2, [406] = 3, [411] = 3,
-        [414] = 2, [415] = 3, [416] = 3, [417] = 2, [421] = 1, [431] = 2, [433] = 1,
-        [454] = 2, [455] = 2, [462] = 2, [464] = 3, [465] = 2, [466] = 2, [470] = 2,
-        [486] = 1, [491] = 2, [492] = 3, [493] = 2, [494] = 3, [498] = 2, [499] = 3,
-        [504] = 2, [505] = 3, [506] = 2, [508] = 1, [516] = 1, [517] = 1, [519] = 1,
-        [521] = 2, [522] = 2, [525] = 3, [526] = 2, [529] = 2, [533] = 2, [535] = 2,
+        [9] = 3,
+        [10] = 3,
+        [13] = 1,
+        [14] = 3,
+        [18] = 1,
+        [20] = 2,
+        [23] = 2,
+        [29] = 3,
+        [31] = 2,
+        [32] = 3,
+        [34] = 3,
+        [38] = 2,
+        [45] = 1,
+        [46] = 1,
+        [47] = 2,
+        [50] = 1,
+        [51] = 3,
+        [58] = 3,
+        [60] = 1,
+        [66] = 2,
+        [69] = 2,
+        [73] = 3,
+        [80] = 2,
+        [87] = 1,
+        [95] = 2,
+        [99] = 3,
+        [113] = 3,
+        [114] = 3,
+        [119] = 3,
+        [121] = 2,
+        [141] = 3,
+        [142] = 2,
+        [146] = 2,
+        [147] = 2,
+        [150] = 2,
+        [153] = 2,
+        [155] = 2,
+        [168] = 3,
+        [170] = 2,
+        [173] = 3,
+        [174] = 2,
+        [175] = 2,
+        [181] = 2,
+        [183] = 3,
+        [185] = 2,
+        [188] = 3,
+        [189] = 2,
+        [191] = 2,
+        [193] = 2,
+        [195] = 2,
+        [197] = 2,
+        [205] = 2,
+        [213] = 2,
+        [225] = 3,
+        [234] = 3,
+        [238] = 1,
+        [240] = 1,
+        [246] = 3,
+        [247] = 2,
+        [250] = 3,
+        [254] = 2,
+        [255] = 2,
+        [260] = 2,
+        [261] = 3,
+        [262] = 2,
+        [263] = 2,
+        [265] = 2,
+        [266] = 2,
+        [268] = 1,
+        [270] = 2,
+        [271] = 3,
+        [272] = 3,
+        [273] = 2,
+        [277] = 3,
+        [286] = 2,
+        [295] = 3,
+        [297] = 3,
+        [300] = 3,
+        [306] = 3,
+        [307] = 2,
+        [313] = 1,
+        [327] = 3,
+        [328] = 3,
+        [332] = 3,
+        [333] = 2,
+        [334] = 3,
+        [339] = 3,
+        [342] = 2,
+        [343] = 2,
+        [349] = 1,
+        [353] = 2,
+        [358] = 1,
+        [363] = 2,
+        [364] = 3,
+        [365] = 2,
+        [366] = 2,
+        [369] = 2,
+        [372] = 2,
+        [374] = 3,
+        [378] = 2,
+        [380] = 3,
+        [381] = 2,
+        [394] = 3,
+        [396] = 2,
+        [401] = 3,
+        [404] = 2,
+        [406] = 3,
+        [411] = 3,
+        [414] = 2,
+        [415] = 3,
+        [416] = 3,
+        [417] = 2,
+        [421] = 1,
+        [431] = 2,
+        [433] = 1,
+        [454] = 2,
+        [455] = 2,
+        [462] = 2,
+        [464] = 3,
+        [465] = 2,
+        [466] = 2,
+        [470] = 2,
+        [486] = 1,
+        [491] = 2,
+        [492] = 3,
+        [493] = 2,
+        [494] = 3,
+        [498] = 2,
+        [499] = 3,
+        [504] = 2,
+        [505] = 3,
+        [506] = 2,
+        [508] = 1,
+        [516] = 1,
+        [517] = 1,
+        [519] = 1,
+        [521] = 2,
+        [522] = 2,
+        [525] = 3,
+        [526] = 2,
+        [529] = 2,
+        [533] = 2,
+        [535] = 2,
         [538] = 2,
     };
 
     private static readonly Dictionary<int, int> PotionRarityById = new()
     {
-        [1] = 2, [2] = 1, [3] = 3, [4] = 2, [5] = 1, [6] = 1, [8] = 3, [9] = 2,
-        [10] = 1, [13] = 2, [14] = 1, [15] = 3, [16] = 3, [17] = 2, [18] = 1, [19] = 3,
-        [21] = 1, [22] = 3, [23] = 1, [24] = 1, [26] = 2, [28] = 3, [29] = 2, [30] = 2,
-        [32] = 3, [34] = 2, [36] = 2, [37] = 3, [38] = 3, [39] = 3, [40] = 3, [42] = 2,
-        [47] = 2, [48] = 1, [49] = 2, [50] = 2, [51] = 3, [52] = 3, [53] = 1, [54] = 3,
-        [56] = 1, [57] = 2, [58] = 3, [59] = 1, [60] = 1, [61] = 2, [62] = 1, [63] = 1,
+        [1] = 2,
+        [2] = 1,
+        [3] = 3,
+        [4] = 2,
+        [5] = 1,
+        [6] = 1,
+        [8] = 3,
+        [9] = 2,
+        [10] = 1,
+        [13] = 2,
+        [14] = 1,
+        [15] = 3,
+        [16] = 3,
+        [17] = 2,
+        [18] = 1,
+        [19] = 3,
+        [21] = 1,
+        [22] = 3,
+        [23] = 1,
+        [24] = 1,
+        [26] = 2,
+        [28] = 3,
+        [29] = 2,
+        [30] = 2,
+        [32] = 3,
+        [34] = 2,
+        [36] = 2,
+        [37] = 3,
+        [38] = 3,
+        [39] = 3,
+        [40] = 3,
+        [42] = 2,
+        [47] = 2,
+        [48] = 1,
+        [49] = 2,
+        [50] = 2,
+        [51] = 3,
+        [52] = 3,
+        [53] = 1,
+        [54] = 3,
+        [56] = 1,
+        [57] = 2,
+        [58] = 3,
+        [59] = 1,
+        [60] = 1,
+        [61] = 2,
+        [62] = 1,
+        [63] = 1,
     };
 
     private static readonly Dictionary<int, int> ShopRelicBaseCosts = new()
     {
-        [3] = 175, [4] = 175, [9] = 175, [10] = 175, [23] = 175, [41] = 275, [110] = 175,
-        [114] = 225, [128] = 175, [135] = 200, [144] = 275, [149] = 275, [169] = 175,
-        [170] = 275, [172] = 175, [186] = 175, [190] = 225, [215] = 175, [250] = 175,
-        [252] = 175, [279] = 175, [282] = 175, [286] = 999999999,
+        [3] = 175,
+        [4] = 175,
+        [9] = 175,
+        [10] = 175,
+        [23] = 175,
+        [41] = 275,
+        [110] = 175,
+        [114] = 225,
+        [128] = 175,
+        [135] = 200,
+        [144] = 275,
+        [149] = 275,
+        [169] = 175,
+        [170] = 275,
+        [172] = 175,
+        [186] = 175,
+        [190] = 225,
+        [215] = 175,
+        [250] = 175,
+        [252] = 175,
+        [279] = 175,
+        [282] = 175,
+        [286] = 999999999,
     };
 }

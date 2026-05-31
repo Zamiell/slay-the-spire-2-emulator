@@ -6,14 +6,19 @@ namespace MegaCrit.Sts2.Core.Models.Encounters.Mocks;
 
 public sealed class MockArtifactEncounter : EncounterModel
 {
-	public override RoomType RoomType => RoomType.Monster;
+    public override RoomType RoomType => RoomType.Monster;
 
-	public override bool IsDebugEncounter => true;
+    public override bool IsDebugEncounter => true;
 
-	public override IEnumerable<MonsterModel> AllPossibleMonsters => new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(ModelDb.Monster<MockArtifactMonster>());
+    public override IEnumerable<MonsterModel> AllPossibleMonsters =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(
+            ModelDb.Monster<MockArtifactMonster>()
+        );
 
-	protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
-	{
-		return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>((ModelDb.Monster<MockArtifactMonster>().ToMutable(), null));
-	}
+    protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
+    {
+        return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>(
+            (ModelDb.Monster<MockArtifactMonster>().ToMutable(), null)
+        );
+    }
 }

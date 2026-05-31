@@ -12,29 +12,36 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Pillage : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(6m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(6m, ValueProp.Move)
+        );
 
-	public Pillage()
-		: base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
-	{
-	}
+    public Pillage()
+        : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_attack_slash")
-			.Execute(choiceContext);
-		CardModel cardModel;
-		do
-		{
-			cardModel = await CardPileCmd.Draw(choiceContext, base.Owner);
-		}
-		while (cardModel != null && cardModel.Type == CardType.Attack && CardPile.GetCards(base.Owner, PileType.Hand).Count() < CardPile.MaxCardsInHand);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_attack_slash")
+            .Execute(choiceContext);
+        CardModel cardModel;
+        do
+        {
+            cardModel = await CardPileCmd.Draw(choiceContext, base.Owner);
+        } while (
+            cardModel != null
+            && cardModel.Type == CardType.Attack
+            && CardPile.GetCards(base.Owner, PileType.Hand).Count() < CardPile.MaxCardsInHand
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(3m);
+    }
 }

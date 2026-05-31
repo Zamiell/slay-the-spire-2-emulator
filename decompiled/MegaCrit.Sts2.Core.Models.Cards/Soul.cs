@@ -11,39 +11,43 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Soul : CardModel
 {
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(2));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(2));
 
-	public Soul()
-		: base(0, CardType.Skill, CardRarity.Token, TargetType.Self)
-	{
-	}
+    public Soul()
+        : base(0, CardType.Skill, CardRarity.Token, TargetType.Self) { }
 
-	public static async Task<IEnumerable<Soul>> CreateInHand(Player owner, int amount, ICombatState combatState)
-	{
-		IEnumerable<Soul> souls = Create(owner, amount, combatState);
-		await CardPileCmd.AddGeneratedCardsToCombat(souls, PileType.Hand, owner);
-		return souls;
-	}
+    public static async Task<IEnumerable<Soul>> CreateInHand(
+        Player owner,
+        int amount,
+        ICombatState combatState
+    )
+    {
+        IEnumerable<Soul> souls = Create(owner, amount, combatState);
+        await CardPileCmd.AddGeneratedCardsToCombat(souls, PileType.Hand, owner);
+        return souls;
+    }
 
-	public static IEnumerable<Soul> Create(Player owner, int amount, ICombatState combatState)
-	{
-		List<Soul> list = new List<Soul>();
-		for (int i = 0; i < amount; i++)
-		{
-			list.Add(combatState.CreateCard<Soul>(owner));
-		}
-		return list;
-	}
+    public static IEnumerable<Soul> Create(Player owner, int amount, ICombatState combatState)
+    {
+        List<Soul> list = new List<Soul>();
+        for (int i = 0; i < amount; i++)
+        {
+            list.Add(combatState.CreateCard<Soul>(owner));
+        }
+        return list;
+    }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, base.Owner);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, base.Owner);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Cards.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Cards.UpgradeValueBy(1m);
+    }
 }

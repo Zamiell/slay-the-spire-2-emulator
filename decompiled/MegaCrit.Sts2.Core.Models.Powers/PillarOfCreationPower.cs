@@ -10,18 +10,21 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class PillarOfCreationPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	public override async Task AfterCardGeneratedForCombat(CardModel card, Player? creator)
-	{
-		if (creator != null && creator.Creature == base.Owner)
-		{
-			Flash();
-			await CreatureCmd.GainBlock(base.Owner, base.Amount, ValueProp.Unpowered, null);
-		}
-	}
+    public override async Task AfterCardGeneratedForCombat(CardModel card, Player? creator)
+    {
+        if (creator != null && creator.Creature == base.Owner)
+        {
+            Flash();
+            await CreatureCmd.GainBlock(base.Owner, base.Amount, ValueProp.Unpowered, null);
+        }
+    }
 }

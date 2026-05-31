@@ -4,7 +4,7 @@ namespace MegaCrit.Sts2.Core.Models.Powers.Mocks;
 
 public class MockTemporaryStrengthLossPower : TemporaryStrengthPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<MockSkillCard>();
+    public override AbstractModel OriginModel => ModelDb.Card<MockSkillCard>();
 
-	protected override bool IsPositive => false;
+    protected override bool IsPositive => false;
 }

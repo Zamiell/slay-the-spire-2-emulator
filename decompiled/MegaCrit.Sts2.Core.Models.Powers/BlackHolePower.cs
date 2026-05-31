@@ -10,29 +10,40 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class BlackHolePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Resources.StarsSpent > 0 && cardPlay.Card.Owner == base.Owner.Player && cardPlay.IsLastInSeries)
-		{
-			await DealDamageToAllEnemies();
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (
+            cardPlay.Resources.StarsSpent > 0
+            && cardPlay.Card.Owner == base.Owner.Player
+            && cardPlay.IsLastInSeries
+        )
+        {
+            await DealDamageToAllEnemies();
+        }
+    }
 
-	public override async Task AfterStarsGained(int amount, Player gainer)
-	{
-		if (amount > 0 && gainer == base.Owner.Player)
-		{
-			await DealDamageToAllEnemies();
-		}
-	}
+    public override async Task AfterStarsGained(int amount, Player gainer)
+    {
+        if (amount > 0 && gainer == base.Owner.Player)
+        {
+            await DealDamageToAllEnemies();
+        }
+    }
 
-	private async Task DealDamageToAllEnemies()
-	{
-		Flash();
-		await CreatureCmd.Damage(new BlockingPlayerChoiceContext(), base.CombatState.HittableEnemies, base.Amount, ValueProp.Unpowered, base.Owner, null);
-	}
+    private async Task DealDamageToAllEnemies()
+    {
+        Flash();
+        await CreatureCmd.Damage(
+            new BlockingPlayerChoiceContext(),
+            base.CombatState.HittableEnemies,
+            base.Amount,
+            ValueProp.Unpowered,
+            base.Owner,
+            null
+        );
+    }
 }

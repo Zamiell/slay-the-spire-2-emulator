@@ -14,46 +14,56 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class BlessedAntler : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new EnergyVar(1),
-		new CardsVar(3)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new EnergyVar(1), new CardsVar(3) }
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips
-	{
-		get
-		{
-			List<IHoverTip> list = new List<IHoverTip>();
-			list.Add(HoverTipFactory.ForEnergy(this));
-			list.AddRange(HoverTipFactory.FromCardWithCardHoverTips<Dazed>());
-			return new _003C_003Ez__ReadOnlyList<IHoverTip>(list);
-		}
-	}
+    protected override IEnumerable<IHoverTip> ExtraHoverTips
+    {
+        get
+        {
+            List<IHoverTip> list = new List<IHoverTip>();
+            list.Add(HoverTipFactory.ForEnergy(this));
+            list.AddRange(HoverTipFactory.FromCardWithCardHoverTips<Dazed>());
+            return new _003C_003Ez__ReadOnlyList<IHoverTip>(list);
+        }
+    }
 
-	public override decimal ModifyMaxEnergy(Player player, decimal amount)
-	{
-		if (player != base.Owner)
-		{
-			return amount;
-		}
-		return amount + (decimal)base.DynamicVars.Energy.IntValue;
-	}
+    public override decimal ModifyMaxEnergy(Player player, decimal amount)
+    {
+        if (player != base.Owner)
+        {
+            return amount;
+        }
+        return amount + (decimal)base.DynamicVars.Energy.IntValue;
+    }
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber == 1)
-		{
-			Flash();
-			List<CardModel> list = new List<CardModel>();
-			for (int i = 0; i < base.DynamicVars.Cards.IntValue; i++)
-			{
-				list.Add(combatState.CreateCard<Dazed>(base.Owner));
-			}
-			CardCmd.PreviewCardPileAdd(await CardPileCmd.AddGeneratedCardsToCombat(list, PileType.Draw, base.Owner, CardPilePosition.Random));
-			await Cmd.Wait(3f);
-		}
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber == 1)
+        {
+            Flash();
+            List<CardModel> list = new List<CardModel>();
+            for (int i = 0; i < base.DynamicVars.Cards.IntValue; i++)
+            {
+                list.Add(combatState.CreateCard<Dazed>(base.Owner));
+            }
+            CardCmd.PreviewCardPileAdd(
+                await CardPileCmd.AddGeneratedCardsToCombat(
+                    list,
+                    PileType.Draw,
+                    base.Owner,
+                    CardPilePosition.Random
+                )
+            );
+            await Cmd.Wait(3f);
+        }
+    }
 }

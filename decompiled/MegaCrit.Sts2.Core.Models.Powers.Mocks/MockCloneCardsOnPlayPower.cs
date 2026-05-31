@@ -8,16 +8,16 @@ namespace MegaCrit.Sts2.Core.Models.Powers.Mocks;
 
 public sealed class MockCloneCardsOnPlayPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner == base.Owner.Player)
-		{
-			CardModel card = cardPlay.Card.CreateClone();
-			await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, base.Owner.Player);
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Owner == base.Owner.Player)
+        {
+            CardModel card = cardPlay.Card.CreateClone();
+            await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, base.Owner.Player);
+        }
+    }
 }

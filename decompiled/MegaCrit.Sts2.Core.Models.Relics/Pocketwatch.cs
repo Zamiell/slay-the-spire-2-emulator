@@ -14,95 +14,107 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Pocketwatch : RelicModel
 {
-	private const string _cardThresholdKey = "CardThreshold";
+    private const string _cardThresholdKey = "CardThreshold";
 
-	private int _cardsPlayedThisTurn;
+    private int _cardsPlayedThisTurn;
 
-	private int _cardsPlayedLastTurn;
+    private int _cardsPlayedLastTurn;
 
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override bool ShowCounter => CombatManager.Instance.IsInProgress;
+    public override bool ShowCounter => CombatManager.Instance.IsInProgress;
 
-	public override int DisplayAmount => _cardsPlayedThisTurn;
+    public override int DisplayAmount => _cardsPlayedThisTurn;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new DynamicVar("CardThreshold", 3m),
-		new CardsVar(3)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new DynamicVar("CardThreshold", 3m), new CardsVar(3) }
+        );
 
-	public override Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner != base.Owner)
-		{
-			return Task.CompletedTask;
-		}
-		if (!CombatManager.Instance.IsInProgress)
-		{
-			return Task.CompletedTask;
-		}
-		_cardsPlayedThisTurn++;
-		RefreshCounter();
-		return Task.CompletedTask;
-	}
+    public override Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Owner != base.Owner)
+        {
+            return Task.CompletedTask;
+        }
+        if (!CombatManager.Instance.IsInProgress)
+        {
+            return Task.CompletedTask;
+        }
+        _cardsPlayedThisTurn++;
+        RefreshCounter();
+        return Task.CompletedTask;
+    }
 
-	public override decimal ModifyHandDraw(Player player, decimal count)
-	{
-		if (player != base.Owner)
-		{
-			return count;
-		}
-		if (base.Owner.PlayerCombatState.TurnNumber == 1)
-		{
-			return count;
-		}
-		if ((decimal)_cardsPlayedLastTurn > base.DynamicVars["CardThreshold"].BaseValue)
-		{
-			return count;
-		}
-		return count + base.DynamicVars.Cards.BaseValue;
-	}
+    public override decimal ModifyHandDraw(Player player, decimal count)
+    {
+        if (player != base.Owner)
+        {
+            return count;
+        }
+        if (base.Owner.PlayerCombatState.TurnNumber == 1)
+        {
+            return count;
+        }
+        if ((decimal)_cardsPlayedLastTurn > base.DynamicVars["CardThreshold"].BaseValue)
+        {
+            return count;
+        }
+        return count + base.DynamicVars.Cards.BaseValue;
+    }
 
-	public override Task AfterModifyingHandDraw()
-	{
-		Flash();
-		return Task.CompletedTask;
-	}
+    public override Task AfterModifyingHandDraw()
+    {
+        Flash();
+        return Task.CompletedTask;
+    }
 
-	public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (!participants.Contains(base.Owner.Creature))
-		{
-			return Task.CompletedTask;
-		}
-		_cardsPlayedLastTurn = _cardsPlayedThisTurn;
-		_cardsPlayedThisTurn = 0;
-		return Task.CompletedTask;
-	}
+    public override Task BeforeSideTurnStart(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (!participants.Contains(base.Owner.Creature))
+        {
+            return Task.CompletedTask;
+        }
+        _cardsPlayedLastTurn = _cardsPlayedThisTurn;
+        _cardsPlayedThisTurn = 0;
+        return Task.CompletedTask;
+    }
 
-	public override Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (!participants.Contains(base.Owner.Creature))
-		{
-			return Task.CompletedTask;
-		}
-		RefreshCounter();
-		return Task.CompletedTask;
-	}
+    public override Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (!participants.Contains(base.Owner.Creature))
+        {
+            return Task.CompletedTask;
+        }
+        RefreshCounter();
+        return Task.CompletedTask;
+    }
 
-	private void RefreshCounter()
-	{
-		base.Status = (((decimal)_cardsPlayedThisTurn <= base.DynamicVars["CardThreshold"].BaseValue) ? RelicStatus.Active : RelicStatus.Normal);
-		InvokeDisplayAmountChanged();
-	}
+    private void RefreshCounter()
+    {
+        base.Status = (
+            ((decimal)_cardsPlayedThisTurn <= base.DynamicVars["CardThreshold"].BaseValue)
+                ? RelicStatus.Active
+                : RelicStatus.Normal
+        );
+        InvokeDisplayAmountChanged();
+    }
 
-	public override Task AfterCombatEnd(CombatRoom _)
-	{
-		_cardsPlayedThisTurn = 0;
-		_cardsPlayedLastTurn = 0;
-		base.Status = RelicStatus.Normal;
-		InvokeDisplayAmountChanged();
-		return Task.CompletedTask;
-	}
+    public override Task AfterCombatEnd(CombatRoom _)
+    {
+        _cardsPlayedThisTurn = 0;
+        _cardsPlayedLastTurn = 0;
+        base.Status = RelicStatus.Normal;
+        InvokeDisplayAmountChanged();
+        return Task.CompletedTask;
+    }
 }

@@ -12,24 +12,30 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Outmaneuver : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(base.EnergyHoverTip);
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(base.EnergyHoverTip);
 
-	public override CardPoolModel VisualCardPool => ModelDb.CardPool<SilentCardPool>();
+    public override CardPoolModel VisualCardPool => ModelDb.CardPool<SilentCardPool>();
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(2));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(2));
 
-	public Outmaneuver()
-		: base(1, CardType.Skill, CardRarity.Event, TargetType.Self)
-	{
-	}
+    public Outmaneuver()
+        : base(1, CardType.Skill, CardRarity.Event, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await PowerCmd.Apply<EnergyNextTurnPower>(choiceContext, base.Owner.Creature, base.DynamicVars.Energy.IntValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await PowerCmd.Apply<EnergyNextTurnPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars.Energy.IntValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Energy.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Energy.UpgradeValueBy(1m);
+    }
 }

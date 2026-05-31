@@ -11,19 +11,26 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ConsumingShadowPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner) && base.Owner.Player.PlayerCombatState.OrbQueue.Orbs.Count != 0)
-		{
-			for (int i = 0; i < base.Amount; i++)
-			{
-				await OrbCmd.EvokeLast(choiceContext, base.Owner.Player);
-				await Cmd.Wait(0.25f);
-			}
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (
+            participants.Contains(base.Owner)
+            && base.Owner.Player.PlayerCombatState.OrbQueue.Orbs.Count != 0
+        )
+        {
+            for (int i = 0; i < base.Amount; i++)
+            {
+                await OrbCmd.EvokeLast(choiceContext, base.Owner.Player);
+                await Cmd.Wait(0.25f);
+            }
+        }
+    }
 }

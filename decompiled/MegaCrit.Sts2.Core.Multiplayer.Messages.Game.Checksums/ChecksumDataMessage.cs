@@ -7,23 +7,23 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game.Checksums;
 
 public struct ChecksumDataMessage : INetMessage, IPacketSerializable
 {
-	public NetChecksumData checksumData;
+    public NetChecksumData checksumData;
 
-	public bool ShouldBroadcast => false;
+    public bool ShouldBroadcast => false;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(checksumData);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(checksumData);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		checksumData = reader.Read<NetChecksumData>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        checksumData = reader.Read<NetChecksumData>();
+    }
 }

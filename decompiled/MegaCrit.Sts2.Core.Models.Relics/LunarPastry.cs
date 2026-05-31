@@ -12,15 +12,20 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class LunarPastry : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new StarsVar(1));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new StarsVar(1));
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner.Creature))
-		{
-			await PlayerCmd.GainStars(base.DynamicVars.Stars.BaseValue, base.Owner);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner.Creature))
+        {
+            await PlayerCmd.GainStars(base.DynamicVars.Stars.BaseValue, base.Owner);
+        }
+    }
 }

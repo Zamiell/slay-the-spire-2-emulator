@@ -14,34 +14,45 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ConquerorPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromCardWithCardHoverTips<SovereignBlade>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromCardWithCardHoverTips<SovereignBlade>();
 
-	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (!(cardSource is SovereignBlade))
-		{
-			return 1m;
-		}
-		if (!props.IsPoweredAttack())
-		{
-			return 1m;
-		}
-		if (target != base.Owner)
-		{
-			return 1m;
-		}
-		return 2m;
-	}
+    public override decimal ModifyDamageMultiplicative(
+        Creature? target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (!(cardSource is SovereignBlade))
+        {
+            return 1m;
+        }
+        if (!props.IsPoweredAttack())
+        {
+            return 1m;
+        }
+        if (target != base.Owner)
+        {
+            return 1m;
+        }
+        return 2m;
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Decrement(this);
+        }
+    }
 }

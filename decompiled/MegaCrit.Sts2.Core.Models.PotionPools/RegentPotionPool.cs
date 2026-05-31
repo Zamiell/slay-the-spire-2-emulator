@@ -9,21 +9,21 @@ namespace MegaCrit.Sts2.Core.Models.PotionPools;
 
 public sealed class RegentPotionPool : PotionPoolModel
 {
-	public override string EnergyColorName => "regent";
+    public override string EnergyColorName => "regent";
 
-	public override Color LabOutlineColor => StsColors.orange;
+    public override Color LabOutlineColor => StsColors.orange;
 
-	protected override IEnumerable<PotionModel> GenerateAllPotions()
-	{
-		return Regent4Epoch.Potions;
-	}
+    protected override IEnumerable<PotionModel> GenerateAllPotions()
+    {
+        return Regent4Epoch.Potions;
+    }
 
-	public override IEnumerable<PotionModel> GetUnlockedPotions(UnlockState unlockState)
-	{
-		if (!unlockState.IsEpochRevealed<Regent4Epoch>())
-		{
-			return Array.Empty<PotionModel>();
-		}
-		return GenerateAllPotions();
-	}
+    public override IEnumerable<PotionModel> GetUnlockedPotions(UnlockState unlockState)
+    {
+        if (!unlockState.IsEpochRevealed<Regent4Epoch>())
+        {
+            return Array.Empty<PotionModel>();
+        }
+        return GenerateAllPotions();
+    }
 }

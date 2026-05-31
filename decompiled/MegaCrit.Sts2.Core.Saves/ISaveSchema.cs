@@ -4,6 +4,6 @@ namespace MegaCrit.Sts2.Core.Saves;
 
 public interface ISaveSchema
 {
-	[JsonPropertyName("schema_version")]
-	int SchemaVersion { get; set; }
+    [JsonPropertyName("schema_version")]
+    int SchemaVersion { get; set; }
 }

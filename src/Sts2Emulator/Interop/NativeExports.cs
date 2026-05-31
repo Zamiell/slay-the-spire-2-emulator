@@ -36,12 +36,7 @@ public static class NativeExports
     public const int MAX_ENEMY_BUFFS = 5;
     public const int NATIVE_API_VERSION = 10;
     private static ReadOnlySpan<int> StarterDeckIds =>
-    [
-        472, 472, 472, 472, 472,
-        131, 131, 131, 131,
-        30,
-        10001,
-    ];
+        [472, 472, 472, 472, 472, 131, 131, 131, 131, 30, 10001];
 
     private sealed class NativeCombat
     {
@@ -88,7 +83,6 @@ public static class NativeExports
             LastPlayerWon = false;
             CombatFactory.Reset(State, Rng, deckIds, encounterId, relicIds);
         }
-
     }
 
     private static readonly NativeCombat?[] _pool = new NativeCombat?[256];
@@ -143,7 +137,12 @@ public static class NativeExports
 
     [UnmanagedCallersOnly]
     public static unsafe void Sts2_ResetWithDeckAndEncounter(
-        int handle, int* deckIds, int deckLen, int encounterId, int* obsBuf)
+        int handle,
+        int* deckIds,
+        int deckLen,
+        int encounterId,
+        int* obsBuf
+    )
     {
         var combat = _pool[handle]!;
         combat.Reset(new ReadOnlySpan<int>(deckIds, deckLen), encounterId);
@@ -158,7 +157,8 @@ public static class NativeExports
         int encounterId,
         int* relicIds,
         int relicLen,
-        int* obsBuf)
+        int* obsBuf
+    )
     {
         var combat = _pool[handle]!;
         combat.Reset(
@@ -181,7 +181,13 @@ public static class NativeExports
     }
 
     [UnmanagedCallersOnly]
-    public static unsafe int Sts2_StepTargeted(int handle, int action, int targetEnemyIdx, int* obsBuf, float* rewardOut)
+    public static unsafe int Sts2_StepTargeted(
+        int handle,
+        int action,
+        int targetEnemyIdx,
+        int* obsBuf,
+        float* rewardOut
+    )
     {
         var combat = _pool[handle]!;
         var result = CombatEngine.Step(combat.State, action, combat.Rng, targetEnemyIdx);
@@ -216,7 +222,8 @@ public static class NativeExports
         for (int i = 0; i < maxActions; i++)
             maskBuf[i] = 0;
         foreach (int a in valid)
-            if (a < maxActions) maskBuf[a] = 1;
+            if (a < maxActions)
+                maskBuf[a] = 1;
     }
 
     [UnmanagedCallersOnly]
@@ -254,7 +261,8 @@ public static class NativeExports
         int* obsBuf,
         float* rewardOut,
         int* terminalOut,
-        int* truncatedOut)
+        int* truncatedOut
+    )
     {
         return RunNativeExports.Sts2Run_Step(
             handle,
@@ -263,7 +271,8 @@ public static class NativeExports
             obsBuf,
             rewardOut,
             terminalOut,
-            truncatedOut);
+            truncatedOut
+        );
     }
 
     [UnmanagedCallersOnly]
@@ -280,7 +289,8 @@ public static class NativeExports
         int potionLen,
         int playerGold,
         int completedCombatRoomsBeforeCurrent,
-        int* obsBuf)
+        int* obsBuf
+    )
     {
         return RunNativeExports.Sts2Run_StartCombat(
             handle,
@@ -295,7 +305,8 @@ public static class NativeExports
             potionLen,
             playerGold,
             completedCombatRoomsBeforeCurrent,
-            obsBuf);
+            obsBuf
+        );
     }
 
     [UnmanagedCallersOnly]
@@ -323,7 +334,8 @@ public static class NativeExports
     public static int Sts2Run_PlayerWon(int handle) => RunNativeExports.Sts2Run_PlayerWon(handle);
 
     [UnmanagedCallersOnly]
-    public static int Sts2Run_EncounterId(int handle) => RunNativeExports.Sts2Run_EncounterId(handle);
+    public static int Sts2Run_EncounterId(int handle) =>
+        RunNativeExports.Sts2Run_EncounterId(handle);
 
     [UnmanagedCallersOnly]
     public static int Sts2Run_GetShuffleRngCallCount(int handle)

@@ -11,18 +11,25 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class DropletOfPrecognition : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Rare;
+    public override PotionRarity Rarity => PotionRarity.Rare;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.Self;
+    public override TargetType TargetType => TargetType.Self;
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		CardModel cardModel = (await CardSelectCmd.FromCombatPile(choiceContext, PileType.Draw.GetPile(base.Owner), base.Owner, new CardSelectorPrefs(base.SelectionScreenPrompt, 1))).FirstOrDefault();
-		if (cardModel != null)
-		{
-			await CardPileCmd.Add(cardModel, PileType.Hand);
-		}
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        CardModel cardModel = (
+            await CardSelectCmd.FromCombatPile(
+                choiceContext,
+                PileType.Draw.GetPile(base.Owner),
+                base.Owner,
+                new CardSelectorPrefs(base.SelectionScreenPrompt, 1)
+            )
+        ).FirstOrDefault();
+        if (cardModel != null)
+        {
+            await CardPileCmd.Add(cardModel, PileType.Hand);
+        }
+    }
 }

@@ -14,26 +14,40 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class CrackedCore : RelicModel
 {
-	private const string _lightningKey = "Lightning";
+    private const string _lightningKey = "Lightning";
 
-	public override RelicRarity Rarity => RelicRarity.Starter;
+    public override RelicRarity Rarity => RelicRarity.Starter;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Lightning", 1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("Lightning", 1m)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.Channeling),
-		HoverTipFactory.FromOrb<LightningOrb>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.Channeling),
+                HoverTipFactory.FromOrb<LightningOrb>(),
+            }
+        );
 
-	public override async Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature) && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			for (int i = 0; (decimal)i < base.DynamicVars["Lightning"].BaseValue; i++)
-			{
-				await OrbCmd.Channel<LightningOrb>(new BlockingPlayerChoiceContext(), base.Owner);
-			}
-		}
-	}
+    public override async Task BeforeSideTurnStart(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (
+            participants.Contains(base.Owner.Creature)
+            && base.Owner.PlayerCombatState.TurnNumber <= 1
+        )
+        {
+            for (int i = 0; (decimal)i < base.DynamicVars["Lightning"].BaseValue; i++)
+            {
+                await OrbCmd.Channel<LightningOrb>(new BlockingPlayerChoiceContext(), base.Owner);
+            }
+        }
+    }
 }

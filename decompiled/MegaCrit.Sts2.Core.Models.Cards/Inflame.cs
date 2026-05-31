@@ -15,31 +15,47 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Inflame : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<StrengthPower>(2m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<StrengthPower>(2m)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<StrengthPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<StrengthPower>()
+        );
 
-	protected override IEnumerable<string> ExtraRunAssetPaths => NGroundFireVfx.AssetPaths;
+    protected override IEnumerable<string> ExtraRunAssetPaths => NGroundFireVfx.AssetPaths;
 
-	public Inflame()
-		: base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Inflame()
+        : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		NPowerUpVfx.CreateNormal(base.Owner.Creature);
-		await PowerCmd.Apply<StrengthPower>(choiceContext, base.Owner.Creature, base.DynamicVars["StrengthPower"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        NPowerUpVfx.CreateNormal(base.Owner.Creature);
+        await PowerCmd.Apply<StrengthPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["StrengthPower"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	public override async Task OnEnqueuePlayVfx(Creature? target)
-	{
-		NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(NGroundFireVfx.Create(base.Owner.Creature));
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-	}
+    public override async Task OnEnqueuePlayVfx(Creature? target)
+    {
+        NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(
+            NGroundFireVfx.Create(base.Owner.Creature)
+        );
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars["StrengthPower"].UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars["StrengthPower"].UpgradeValueBy(1m);
+    }
 }

@@ -11,29 +11,38 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Distraction : CardModel
 {
-	public override CardPoolModel VisualCardPool => ModelDb.CardPool<SilentCardPool>();
+    public override CardPoolModel VisualCardPool => ModelDb.CardPool<SilentCardPool>();
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	public Distraction()
-		: base(1, CardType.Skill, CardRarity.Event, TargetType.Self)
-	{
-	}
+    public Distraction()
+        : base(1, CardType.Skill, CardRarity.Event, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		CardModel cardModel = CardFactory.GetDistinctForCombat(base.Owner, from c in base.Owner.Character.CardPool.GetUnlockedCards(base.Owner.UnlockState, base.Owner.RunState.CardMultiplayerConstraint)
-			where c.Type == CardType.Skill
-			select c, 1, base.Owner.RunState.Rng.CombatCardGeneration).FirstOrDefault();
-		if (cardModel != null)
-		{
-			cardModel.SetToFreeThisTurn();
-			await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        CardModel cardModel = CardFactory
+            .GetDistinctForCombat(
+                base.Owner,
+                from c in base.Owner.Character.CardPool.GetUnlockedCards(
+                    base.Owner.UnlockState,
+                    base.Owner.RunState.CardMultiplayerConstraint
+                )
+                where c.Type == CardType.Skill
+                select c,
+                1,
+                base.Owner.RunState.Rng.CombatCardGeneration
+            )
+            .FirstOrDefault();
+        if (cardModel != null)
+        {
+            cardModel.SetToFreeThisTurn();
+            await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.EnergyCost.UpgradeBy(-1);
-	}
+    protected override void OnUpgrade()
+    {
+        base.EnergyCost.UpgradeBy(-1);
+    }
 }

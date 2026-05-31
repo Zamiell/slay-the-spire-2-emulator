@@ -4,7 +4,7 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class ManglePower : TemporaryStrengthPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<Mangle>();
+    public override AbstractModel OriginModel => ModelDb.Card<Mangle>();
 
-	protected override bool IsPositive => false;
+    protected override bool IsPositive => false;
 }

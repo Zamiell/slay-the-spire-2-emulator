@@ -14,22 +14,34 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class TriBoomerang : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromEnchantment<Instinct>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromEnchantment<Instinct>();
 
-	public override async Task AfterObtained()
-	{
-		foreach (CardModel item in await CardSelectCmd.FromDeckForEnchantment(prefs: new CardSelectorPrefs(CardSelectorPrefs.EnchantSelectionPrompt, base.DynamicVars.Cards.IntValue), player: base.Owner, enchantment: ModelDb.Enchantment<Instinct>(), amount: 1))
-		{
-			CardCmd.Enchant<Instinct>(item, 1m);
-			NCardEnchantVfx nCardEnchantVfx = NCardEnchantVfx.Create(item);
-			if (nCardEnchantVfx != null)
-			{
-				NRun.Instance?.GlobalUi.CardPreviewContainer.AddChildSafely(nCardEnchantVfx);
-			}
-		}
-	}
+    public override async Task AfterObtained()
+    {
+        foreach (
+            CardModel item in await CardSelectCmd.FromDeckForEnchantment(
+                prefs: new CardSelectorPrefs(
+                    CardSelectorPrefs.EnchantSelectionPrompt,
+                    base.DynamicVars.Cards.IntValue
+                ),
+                player: base.Owner,
+                enchantment: ModelDb.Enchantment<Instinct>(),
+                amount: 1
+            )
+        )
+        {
+            CardCmd.Enchant<Instinct>(item, 1m);
+            NCardEnchantVfx nCardEnchantVfx = NCardEnchantVfx.Create(item);
+            if (nCardEnchantVfx != null)
+            {
+                NRun.Instance?.GlobalUi.CardPreviewContainer.AddChildSafely(nCardEnchantVfx);
+            }
+        }
+    }
 }

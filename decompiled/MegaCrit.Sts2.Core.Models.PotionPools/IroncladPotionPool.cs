@@ -9,21 +9,21 @@ namespace MegaCrit.Sts2.Core.Models.PotionPools;
 
 public sealed class IroncladPotionPool : PotionPoolModel
 {
-	public override string EnergyColorName => "ironclad";
+    public override string EnergyColorName => "ironclad";
 
-	public override Color LabOutlineColor => StsColors.red;
+    public override Color LabOutlineColor => StsColors.red;
 
-	protected override IEnumerable<PotionModel> GenerateAllPotions()
-	{
-		return Ironclad4Epoch.Potions;
-	}
+    protected override IEnumerable<PotionModel> GenerateAllPotions()
+    {
+        return Ironclad4Epoch.Potions;
+    }
 
-	public override IEnumerable<PotionModel> GetUnlockedPotions(UnlockState unlockState)
-	{
-		if (!unlockState.IsEpochRevealed<Ironclad4Epoch>())
-		{
-			return Array.Empty<PotionModel>();
-		}
-		return GenerateAllPotions();
-	}
+    public override IEnumerable<PotionModel> GetUnlockedPotions(UnlockState unlockState)
+    {
+        if (!unlockState.IsEpochRevealed<Ironclad4Epoch>())
+        {
+            return Array.Empty<PotionModel>();
+        }
+        return GenerateAllPotions();
+    }
 }

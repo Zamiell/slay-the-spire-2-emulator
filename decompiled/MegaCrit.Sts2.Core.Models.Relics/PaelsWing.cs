@@ -15,86 +15,96 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class PaelsWing : RelicModel
 {
-	public const string sacrificeAlternativeKey = "SACRIFICE";
+    public const string sacrificeAlternativeKey = "SACRIFICE";
 
-	private const string _sacrificesKey = "Sacrifices";
+    private const string _sacrificesKey = "Sacrifices";
 
-	private bool _isActivating;
+    private bool _isActivating;
 
-	private int _rewardsSacrificed;
+    private int _rewardsSacrificed;
 
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	public override bool ShowCounter => true;
+    public override bool ShowCounter => true;
 
-	public override int DisplayAmount
-	{
-		get
-		{
-			if (!IsActivating)
-			{
-				return RewardsSacrificed % base.DynamicVars["Sacrifices"].IntValue;
-			}
-			return base.DynamicVars["Sacrifices"].IntValue;
-		}
-	}
+    public override int DisplayAmount
+    {
+        get
+        {
+            if (!IsActivating)
+            {
+                return RewardsSacrificed % base.DynamicVars["Sacrifices"].IntValue;
+            }
+            return base.DynamicVars["Sacrifices"].IntValue;
+        }
+    }
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Sacrifices", 2m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("Sacrifices", 2m)
+        );
 
-	private bool IsActivating
-	{
-		get
-		{
-			return _isActivating;
-		}
-		set
-		{
-			AssertMutable();
-			_isActivating = value;
-			InvokeDisplayAmountChanged();
-		}
-	}
+    private bool IsActivating
+    {
+        get { return _isActivating; }
+        set
+        {
+            AssertMutable();
+            _isActivating = value;
+            InvokeDisplayAmountChanged();
+        }
+    }
 
-	[SavedProperty]
-	public int RewardsSacrificed
-	{
-		get
-		{
-			return _rewardsSacrificed;
-		}
-		set
-		{
-			AssertMutable();
-			_rewardsSacrificed = value;
-			InvokeDisplayAmountChanged();
-		}
-	}
+    [SavedProperty]
+    public int RewardsSacrificed
+    {
+        get { return _rewardsSacrificed; }
+        set
+        {
+            AssertMutable();
+            _rewardsSacrificed = value;
+            InvokeDisplayAmountChanged();
+        }
+    }
 
-	public override bool TryModifyCardRewardAlternatives(Player player, CardReward cardReward, List<CardRewardAlternative> alternatives)
-	{
-		if (base.Owner != player)
-		{
-			return false;
-		}
-		alternatives.Add(new CardRewardAlternative("SACRIFICE", OnSacrifice, PostAlternateCardRewardAction.EndSelectionAndCompleteReward));
-		return true;
-	}
+    public override bool TryModifyCardRewardAlternatives(
+        Player player,
+        CardReward cardReward,
+        List<CardRewardAlternative> alternatives
+    )
+    {
+        if (base.Owner != player)
+        {
+            return false;
+        }
+        alternatives.Add(
+            new CardRewardAlternative(
+                "SACRIFICE",
+                OnSacrifice,
+                PostAlternateCardRewardAction.EndSelectionAndCompleteReward
+            )
+        );
+        return true;
+    }
 
-	public async Task OnSacrifice()
-	{
-		RewardsSacrificed++;
-		Flash();
-		if (RewardsSacrificed % base.DynamicVars["Sacrifices"].IntValue == 0)
-		{
-			TaskHelper.RunSafely(DoActivateVisuals());
-			await RelicCmd.Obtain(RelicFactory.PullNextRelicFromFront(base.Owner).ToMutable(), base.Owner);
-		}
-	}
+    public async Task OnSacrifice()
+    {
+        RewardsSacrificed++;
+        Flash();
+        if (RewardsSacrificed % base.DynamicVars["Sacrifices"].IntValue == 0)
+        {
+            TaskHelper.RunSafely(DoActivateVisuals());
+            await RelicCmd.Obtain(
+                RelicFactory.PullNextRelicFromFront(base.Owner).ToMutable(),
+                base.Owner
+            );
+        }
+    }
 
-	private async Task DoActivateVisuals()
-	{
-		IsActivating = true;
-		await Cmd.Wait(1f);
-		IsActivating = false;
-	}
+    private async Task DoActivateVisuals()
+    {
+        IsActivating = true;
+        await Cmd.Wait(1f);
+        IsActivating = false;
+    }
 }

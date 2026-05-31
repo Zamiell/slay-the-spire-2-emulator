@@ -10,16 +10,25 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Pomander : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(1));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(1));
 
-	public override async Task AfterObtained()
-	{
-		List<CardModel> list = (await CardSelectCmd.FromDeckForUpgrade(prefs: new CardSelectorPrefs(CardSelectorPrefs.UpgradeSelectionPrompt, base.DynamicVars.Cards.IntValue), player: base.Owner)).ToList();
-		foreach (CardModel item in list)
-		{
-			CardCmd.Upgrade(item);
-		}
-	}
+    public override async Task AfterObtained()
+    {
+        List<CardModel> list = (
+            await CardSelectCmd.FromDeckForUpgrade(
+                prefs: new CardSelectorPrefs(
+                    CardSelectorPrefs.UpgradeSelectionPrompt,
+                    base.DynamicVars.Cards.IntValue
+                ),
+                player: base.Owner
+            )
+        ).ToList();
+        foreach (CardModel item in list)
+        {
+            CardCmd.Upgrade(item);
+        }
+    }
 }

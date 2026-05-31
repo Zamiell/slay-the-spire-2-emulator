@@ -13,23 +13,35 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class HeartOfIron : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Uncommon;
+    public override PotionRarity Rarity => PotionRarity.Uncommon;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyPlayer;
+    public override TargetType TargetType => TargetType.AnyPlayer;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<PlatingPower>(7m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<PlatingPower>(7m)
+        );
 
-	public override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.FromPower<PlatingPower>(),
-		HoverTipFactory.Static(StaticHoverTip.Block)
-	});
+    public override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.FromPower<PlatingPower>(),
+                HoverTipFactory.Static(StaticHoverTip.Block),
+            }
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		await PowerCmd.Apply<PlatingPower>(choiceContext, target, base.DynamicVars["PlatingPower"].BaseValue, base.Owner.Creature, null);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        await PowerCmd.Apply<PlatingPower>(
+            choiceContext,
+            target,
+            base.DynamicVars["PlatingPower"].BaseValue,
+            base.Owner.Creature,
+            null
+        );
+    }
 }

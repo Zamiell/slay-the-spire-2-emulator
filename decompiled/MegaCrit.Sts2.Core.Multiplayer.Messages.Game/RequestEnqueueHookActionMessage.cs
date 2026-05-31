@@ -6,35 +6,38 @@ using MegaCrit.Sts2.Core.Runs;
 
 namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game;
 
-public struct RequestEnqueueHookActionMessage : INetMessage, IPacketSerializable, IRunLocationTargetedMessage
+public struct RequestEnqueueHookActionMessage
+    : INetMessage,
+        IPacketSerializable,
+        IRunLocationTargetedMessage
 {
-	public RunLocation location;
+    public RunLocation location;
 
-	public uint hookActionId;
+    public uint hookActionId;
 
-	public GameActionType gameActionType;
+    public GameActionType gameActionType;
 
-	public bool ShouldBroadcast => false;
+    public bool ShouldBroadcast => false;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public RunLocation Location => location;
+    public RunLocation Location => location;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(location);
-		writer.WriteUInt(hookActionId);
-		writer.WriteEnum(gameActionType);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(location);
+        writer.WriteUInt(hookActionId);
+        writer.WriteEnum(gameActionType);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		location = reader.Read<RunLocation>();
-		hookActionId = reader.ReadUInt();
-		gameActionType = reader.ReadEnum<GameActionType>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        location = reader.Read<RunLocation>();
+        hookActionId = reader.ReadUInt();
+        gameActionType = reader.ReadEnum<GameActionType>();
+    }
 }

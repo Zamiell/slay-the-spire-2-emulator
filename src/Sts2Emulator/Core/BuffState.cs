@@ -9,58 +9,58 @@ public enum BuffId
     Frail,
     Poison,
     Burn,
-    Ritual,       // enemy: gain N Strength at end of each turn (skips turn applied)
-    DemonForm,    // player: gain N Strength at start of each player turn
-    Aggression,   // player: start of turn, add a random upgraded card
-    Hellraiser,   // player: whenever you draw a Strike, play it automatically
-    Rage,         // player: gain N block when playing an Attack; removed at end of player turn
-    FeelNoPain,   // player: gain N block when any card is exhausted
-    DarkEmbrace,  // player: draw N cards when any card is exhausted
-    Barricade,    // player: block does not clear at start of turn
-    Colossus,     // player: Vulnerable enemies deal half attack damage
-    Corruption,   // player: Skills cost 0 and exhaust
-    Inferno,      // player: after unblocked self-damage on player turn, deal N damage to all enemies
+    Ritual, // enemy: gain N Strength at end of each turn (skips turn applied)
+    DemonForm, // player: gain N Strength at start of each player turn
+    Aggression, // player: start of turn, add a random upgraded card
+    Hellraiser, // player: whenever you draw a Strike, play it automatically
+    Rage, // player: gain N block when playing an Attack; removed at end of player turn
+    FeelNoPain, // player: gain N block when any card is exhausted
+    DarkEmbrace, // player: draw N cards when any card is exhausted
+    Barricade, // player: block does not clear at start of turn
+    Colossus, // player: Vulnerable enemies deal half attack damage
+    Corruption, // player: Skills cost 0 and exhaust
+    Inferno, // player: after unblocked self-damage on player turn, deal N damage to all enemies
     InfernoSelfDamage, // player: unblockable HP loss at start of each player turn from Inferno
-    Metallicize,  // player: gain N block at end of player turn
+    Metallicize, // player: gain N block at end of player turn
     FlameBarrier, // player: deal N damage to melee attackers; removed at end of enemy turn
-    Juggernaut,   // player: deal N unpowered damage to random enemy when gaining block
+    Juggernaut, // player: deal N unpowered damage to random enemy when gaining block
     RupturePower, // player: gain 1 Strength when losing HP from card effects
-    Juggling,     // player: copy the third Attack played each turn into hand
-    Stampede,     // player: auto-play random Attacks when play phase starts
-    Vicious,      // player: draw N cards when applying Vulnerable
-    OneTwoPunch,  // player: duplicate the next N Attack cards this turn
+    Juggling, // player: copy the third Attack played each turn into hand
+    Stampede, // player: auto-play random Attacks when play phase starts
+    Vicious, // player: draw N cards when applying Vulnerable
+    OneTwoPunch, // player: duplicate the next N Attack cards this turn
     CrueltyPower, // player: increase Vulnerable multiplier by N%
-    PyrePower,    // player: gain N extra energy each turn
+    PyrePower, // player: gain N extra energy each turn
     UnmovablePower, // player: first N block gains each turn are doubled
     CrimsonMantleBlock, // player: gain N block at start of turn
     CrimsonMantleSelfDamage, // player: lose N HP at start of turn
     SetupStrikePower, // player: temporary Strength marker
-    EntropyPower,     // player: transform N cards in hand at turn start
-    FastenPower,      // player: gain extra block from Defend cards
+    EntropyPower, // player: transform N cards in hand at turn start
+    FastenPower, // player: gain extra block from Defend cards
     FranticEscapePlayedCount, // player: track plays to increase cost
-    RetainHand,   // player: keep remaining hand at end of player turn
+    RetainHand, // player: keep remaining hand at end of player turn
     BlockNextTurn, // player: gain N unpowered block after next turn's block clear
-    Nostalgia,    // player: first N Attack/Skill cards each turn go on top of draw pile
+    Nostalgia, // player: first N Attack/Skill cards each turn go on top of draw pile
     TemporaryStrength, // player/enemy: remove this much Strength at side turn end
-    Artifact,     // prevent the next N debuffs
-    HardToKill,   // damage taken per hit is capped at N
-    Thorns,       // enemy: retaliatory damage, currently observed but not triggered
-    Shrink,       // player debuff from Shrinker Beetle, currently observed but not otherwise modeled
-    Ravenous,     // enemy: gain Strength and skip next move when an ally dies
-    Stunned,      // enemy: skip the next intent
-    Slippery,     // enemy: each unblocked hit loses at most 1 HP, then decrements
-    Surprise,     // Gremlin Merc: spawn reinforcements on death
+    Artifact, // prevent the next N debuffs
+    HardToKill, // damage taken per hit is capped at N
+    Thorns, // enemy: retaliatory damage, currently observed but not triggered
+    Shrink, // player debuff from Shrinker Beetle, currently observed but not otherwise modeled
+    Ravenous, // enemy: gain Strength and skip next move when an ally dies
+    Stunned, // enemy: skip the next intent
+    Slippery, // enemy: each unblocked hit loses at most 1 HP, then decrements
+    Surprise, // Gremlin Merc: spawn reinforcements on death
     SummonCooldown, // Two-Tailed Rat: turns until Call for Backup is available
-    BackupCount,    // Two-Tailed Rat: number of successful backup calls
-    Plating,      // Sewer Clam: recurring block that decays each turn
-    Suck,         // Fossil Stalker: gain Strength after each unblocked attack command
+    BackupCount, // Two-Tailed Rat: number of successful backup calls
+    Plating, // Sewer Clam: recurring block that decays each turn
+    Suck, // Fossil Stalker: gain Strength after each unblocked attack command
     HardenedShell, // Skulking Colony: cannot lose more than N HP each turn
-    Tangled,      // Vine Shambler card debuff, currently tracked as a player debuff
-    Constrict,    // Slithering Strangler pressure debuff, currently tracked
-    Smoggy,       // Living Fog card affliction debuff, currently tracked
-    Illusion,     // Fogmog summon marker
-    Minion,       // Living Fog Gas Bomb marker
-    PaperCuts,    // Scroll of Biting max-HP chip at end of enemy action
+    Tangled, // Vine Shambler card debuff, currently tracked as a player debuff
+    Constrict, // Slithering Strangler pressure debuff, currently tracked
+    Smoggy, // Living Fog card affliction debuff, currently tracked
+    Illusion, // Fogmog summon marker
+    Minion, // Living Fog Gas Bomb marker
+    PaperCuts, // Scroll of Biting max-HP chip at end of enemy action
     Hex,
     Dampen,
     Adaptable,

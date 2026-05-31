@@ -6,12 +6,17 @@ namespace MegaCrit.Sts2.Core.Models.Encounters;
 
 public sealed class LouseProgenitorNormal : EncounterModel
 {
-	public override RoomType RoomType => RoomType.Monster;
+    public override RoomType RoomType => RoomType.Monster;
 
-	public override IEnumerable<MonsterModel> AllPossibleMonsters => new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(ModelDb.Monster<LouseProgenitor>());
+    public override IEnumerable<MonsterModel> AllPossibleMonsters =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(
+            ModelDb.Monster<LouseProgenitor>()
+        );
 
-	protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
-	{
-		return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>((ModelDb.Monster<LouseProgenitor>().ToMutable(), null));
-	}
+    protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
+    {
+        return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>(
+            (ModelDb.Monster<LouseProgenitor>().ToMutable(), null)
+        );
+    }
 }

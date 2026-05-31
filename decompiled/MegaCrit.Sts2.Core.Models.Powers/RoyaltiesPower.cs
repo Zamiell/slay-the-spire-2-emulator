@@ -7,13 +7,13 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class RoyaltiesPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override Task AfterCombatEnd(CombatRoom room)
-	{
-		room.AddExtraReward(base.Owner.Player, new GoldReward(base.Amount, base.Owner.Player));
-		return Task.CompletedTask;
-	}
+    public override Task AfterCombatEnd(CombatRoom room)
+    {
+        room.AddExtraReward(base.Owner.Player, new GoldReward(base.Amount, base.Owner.Player));
+        return Task.CompletedTask;
+    }
 }

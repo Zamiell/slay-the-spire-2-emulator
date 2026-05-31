@@ -12,21 +12,32 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class FestivePopper : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Common;
+    public override RelicRarity Rarity => RelicRarity.Common;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(9m, ValueProp.Unpowered));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(9m, ValueProp.Unpowered)
+        );
 
-	public override async Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player == base.Owner)
-		{
-			ICombatState combatState = player.Creature.CombatState;
-			if (base.Owner.PlayerCombatState.TurnNumber == 1)
-			{
-				Flash();
-				VfxCmd.PlayOnCreatureCenters(combatState.HittableEnemies, "vfx/vfx_attack_slash");
-				await CreatureCmd.Damage(choiceContext, combatState.HittableEnemies, base.DynamicVars.Damage, base.Owner.Creature);
-			}
-		}
-	}
+    public override async Task AfterPlayerTurnStart(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player == base.Owner)
+        {
+            ICombatState combatState = player.Creature.CombatState;
+            if (base.Owner.PlayerCombatState.TurnNumber == 1)
+            {
+                Flash();
+                VfxCmd.PlayOnCreatureCenters(combatState.HittableEnemies, "vfx/vfx_attack_slash");
+                await CreatureCmd.Damage(
+                    choiceContext,
+                    combatState.HittableEnemies,
+                    base.DynamicVars.Damage,
+                    base.Owner.Creature
+                );
+            }
+        }
+    }
 }

@@ -7,29 +7,32 @@ using MegaCrit.Sts2.Core.Runs;
 
 namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game;
 
-public class CrystalSphereRewardsMessage : INetMessage, IPacketSerializable, IRunLocationTargetedMessage
+public class CrystalSphereRewardsMessage
+    : INetMessage,
+        IPacketSerializable,
+        IRunLocationTargetedMessage
 {
-	public List<SerializableCrystalSphereItem> rewards = new List<SerializableCrystalSphereItem>();
+    public List<SerializableCrystalSphereItem> rewards = new List<SerializableCrystalSphereItem>();
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public RunLocation Location { get; set; }
+    public RunLocation Location { get; set; }
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(Location);
-		writer.WriteList(rewards);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(Location);
+        writer.WriteList(rewards);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		Location = reader.Read<RunLocation>();
-		rewards = reader.ReadList<SerializableCrystalSphereItem>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        Location = reader.Read<RunLocation>();
+        rewards = reader.ReadList<SerializableCrystalSphereItem>();
+    }
 }

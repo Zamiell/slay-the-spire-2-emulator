@@ -4,7 +4,7 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Circlet : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.None;
+    public override RelicRarity Rarity => RelicRarity.None;
 
-	public override bool IsStackable => true;
+    public override bool IsStackable => true;
 }

@@ -5,5 +5,5 @@ namespace MegaCrit.Sts2.Core.Platform.Steam;
 
 public class SteamLeaderboardHandle : ILeaderboardHandle
 {
-	public SteamLeaderboard_t leaderboard;
+    public SteamLeaderboard_t leaderboard;
 }

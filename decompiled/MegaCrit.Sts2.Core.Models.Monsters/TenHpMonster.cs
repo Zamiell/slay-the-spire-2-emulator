@@ -9,23 +9,23 @@ namespace MegaCrit.Sts2.Core.Models.Monsters;
 
 public sealed class TenHpMonster : MonsterModel
 {
-	public override LocString Title => MonsterModel.L10NMonsterLookup("BIG_DUMMY.name");
+    public override LocString Title => MonsterModel.L10NMonsterLookup("BIG_DUMMY.name");
 
-	public override int MinInitialHp => 10;
+    public override int MinInitialHp => 10;
 
-	public override int MaxInitialHp => 10;
+    public override int MaxInitialHp => 10;
 
-	protected override MonsterMoveStateMachine GenerateMoveStateMachine()
-	{
-		List<MonsterState> list = new List<MonsterState>();
-		MoveState moveState = new MoveState("NOTHING", NothingMove, new HiddenIntent());
-		moveState.FollowUpState = moveState;
-		list.Add(moveState);
-		return new MonsterMoveStateMachine(list, moveState);
-	}
+    protected override MonsterMoveStateMachine GenerateMoveStateMachine()
+    {
+        List<MonsterState> list = new List<MonsterState>();
+        MoveState moveState = new MoveState("NOTHING", NothingMove, new HiddenIntent());
+        moveState.FollowUpState = moveState;
+        list.Add(moveState);
+        return new MonsterMoveStateMachine(list, moveState);
+    }
 
-	private Task NothingMove(IReadOnlyList<Creature> targets)
-	{
-		return Task.CompletedTask;
-	}
+    private Task NothingMove(IReadOnlyList<Creature> targets)
+    {
+        return Task.CompletedTask;
+    }
 }

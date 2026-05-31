@@ -11,20 +11,27 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class DanseMacabrePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(2));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(2));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	public override async Task BeforeCardPlayed(CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner.Creature == base.Owner && cardPlay.Card.EnergyCost.GetResolved() >= base.DynamicVars.Energy.IntValue)
-		{
-			Flash();
-			await CreatureCmd.GainBlock(base.Owner, base.Amount, ValueProp.Unpowered, null);
-		}
-	}
+    public override async Task BeforeCardPlayed(CardPlay cardPlay)
+    {
+        if (
+            cardPlay.Card.Owner.Creature == base.Owner
+            && cardPlay.Card.EnergyCost.GetResolved() >= base.DynamicVars.Energy.IntValue
+        )
+        {
+            Flash();
+            await CreatureCmd.GainBlock(base.Owner, base.Amount, ValueProp.Unpowered, null);
+        }
+    }
 }

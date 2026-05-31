@@ -5,9 +5,9 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Game.Lobby;
 
 public interface IRunLobbyListener
 {
-	ClientRejoinResponseMessage GetRejoinMessage();
+    ClientRejoinResponseMessage GetRejoinMessage();
 
-	void LocalPlayerDisconnected(NetErrorInfo info);
+    void LocalPlayerDisconnected(NetErrorInfo info);
 
-	void RunAbandoned();
+    void RunAbandoned();
 }

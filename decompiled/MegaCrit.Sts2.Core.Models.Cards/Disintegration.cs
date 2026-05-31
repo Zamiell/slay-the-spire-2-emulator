@@ -11,19 +11,26 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Disintegration : CardModel, KnowledgeDemon.IChoosable
 {
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	public override bool CanBeGeneratedInCombat => false;
+    public override bool CanBeGeneratedInCombat => false;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<DisintegrationPower>(6m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<DisintegrationPower>(6m)
+        );
 
-	public Disintegration()
-		: base(-1, CardType.Status, CardRarity.Status, TargetType.None)
-	{
-	}
+    public Disintegration()
+        : base(-1, CardType.Status, CardRarity.Status, TargetType.None) { }
 
-	public async Task OnChosen()
-	{
-		await PowerCmd.Apply<DisintegrationPower>(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars["DisintegrationPower"].BaseValue, base.Owner.Creature, this);
-	}
+    public async Task OnChosen()
+    {
+        await PowerCmd.Apply<DisintegrationPower>(
+            new ThrowingPlayerChoiceContext(),
+            base.Owner.Creature,
+            base.DynamicVars["DisintegrationPower"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 }

@@ -11,79 +11,81 @@ namespace MegaCrit.Sts2.Core.Combat;
 
 public interface ICombatState
 {
-	IRunState RunState { get; }
+    IRunState RunState { get; }
 
-	IReadOnlyList<Creature> Allies { get; }
+    IReadOnlyList<Creature> Allies { get; }
 
-	IReadOnlyList<Creature> Enemies { get; }
+    IReadOnlyList<Creature> Enemies { get; }
 
-	IReadOnlyList<Creature> Creatures { get; }
+    IReadOnlyList<Creature> Creatures { get; }
 
-	IReadOnlyList<Creature> PlayerCreatures { get; }
+    IReadOnlyList<Creature> PlayerCreatures { get; }
 
-	IReadOnlyList<Player> Players { get; }
+    IReadOnlyList<Player> Players { get; }
 
-	IReadOnlyList<ModifierModel> Modifiers { get; }
+    IReadOnlyList<ModifierModel> Modifiers { get; }
 
-	MultiplayerScalingModel? MultiplayerScalingModel { get; }
+    MultiplayerScalingModel? MultiplayerScalingModel { get; }
 
-	int RoundNumber { get; set; }
+    int RoundNumber { get; set; }
 
-	CombatSide CurrentSide { get; set; }
+    CombatSide CurrentSide { get; set; }
 
-	EncounterModel? Encounter { get; }
+    EncounterModel? Encounter { get; }
 
-	IReadOnlyList<Creature> EscapedCreatures { get; }
+    IReadOnlyList<Creature> EscapedCreatures { get; }
 
-	IReadOnlyList<Creature> CreaturesOnCurrentSide { get; }
+    IReadOnlyList<Creature> CreaturesOnCurrentSide { get; }
 
-	IReadOnlyList<Creature> HittableEnemies { get; }
+    IReadOnlyList<Creature> HittableEnemies { get; }
 
-	event Action<ICombatState>? CreaturesChanged;
+    event Action<ICombatState>? CreaturesChanged;
 
-	T CreateCard<T>(Player owner) where T : CardModel;
+    T CreateCard<T>(Player owner)
+        where T : CardModel;
 
-	CardModel CreateCard(CardModel canonicalCard, Player owner);
+    CardModel CreateCard(CardModel canonicalCard, Player owner);
 
-	CardModel CloneCard(CardModel mutableCard);
+    CardModel CloneCard(CardModel mutableCard);
 
-	void AddCard(CardModel card, Player owner);
+    void AddCard(CardModel card, Player owner);
 
-	void RemoveCard(CardModel card);
+    void RemoveCard(CardModel card);
 
-	bool ContainsCard(CardModel card);
+    bool ContainsCard(CardModel card);
 
-	void AddPlayer(Player player);
+    void AddPlayer(Player player);
 
-	Creature CreateCreature(MonsterModel monster, CombatSide side, string? slot);
+    Creature CreateCreature(MonsterModel monster, CombatSide side, string? slot);
 
-	void CreatureEscaped(Creature creature);
+    void CreatureEscaped(Creature creature);
 
-	void RemoveCreature(Creature creature, bool unattach = true);
+    void RemoveCreature(Creature creature, bool unattach = true);
 
-	bool ContainsCreature(Creature creature);
+    bool ContainsCreature(Creature creature);
 
-	bool ContainsMonster<T>() where T : MonsterModel;
+    bool ContainsMonster<T>()
+        where T : MonsterModel;
 
-	Creature? GetCreature(uint? combatId);
+    Creature? GetCreature(uint? combatId);
 
-	Task<Creature?> GetCreatureAsync(uint? combatId, double timeoutSec);
+    Task<Creature?> GetCreatureAsync(uint? combatId, double timeoutSec);
 
-	IReadOnlyList<Creature> GetCreaturesOnSide(CombatSide side);
+    IReadOnlyList<Creature> GetCreaturesOnSide(CombatSide side);
 
-	IReadOnlyList<Creature> GetOpponentsOf(Creature creature);
+    IReadOnlyList<Creature> GetOpponentsOf(Creature creature);
 
-	IReadOnlyList<Creature> GetTeammatesOf(Creature creature);
+    IReadOnlyList<Creature> GetTeammatesOf(Creature creature);
 
-	Player? GetPlayer(ulong playerId);
+    Player? GetPlayer(ulong playerId);
 
-	IEnumerable<AbstractModel> IterateHookListeners();
+    IEnumerable<AbstractModel> IterateHookListeners();
 
-	void SortEnemiesBySlotName();
+    void SortEnemiesBySlotName();
 
-	void SetEnemyIndex(Creature creature, int index);
+    void SetEnemyIndex(Creature creature, int index);
 
-	void AddCreature(Creature creature);
+    void AddCreature(Creature creature);
 
-	bool IsLiveCombat();
+    bool IsLiveCombat();
 }

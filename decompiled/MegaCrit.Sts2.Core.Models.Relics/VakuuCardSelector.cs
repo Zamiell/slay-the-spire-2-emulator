@@ -9,16 +9,20 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public class VakuuCardSelector : ICardSelector
 {
-	public Task<IEnumerable<CardModel>> GetSelectedCards(IEnumerable<CardModel> options, int minSelect, int maxSelect)
-	{
-		return Task.FromResult((IEnumerable<CardModel>)options.Take(maxSelect).ToList());
-	}
+    public Task<IEnumerable<CardModel>> GetSelectedCards(
+        IEnumerable<CardModel> options,
+        int minSelect,
+        int maxSelect
+    )
+    {
+        return Task.FromResult((IEnumerable<CardModel>)options.Take(maxSelect).ToList());
+    }
 
-	public CardRewardSelection GetSelectedCardReward(IReadOnlyList<CardCreationResult> options, IReadOnlyList<CardRewardAlternative> alternatives)
-	{
-		return new CardRewardSelection
-		{
-			card = options.FirstOrDefault()?.Card
-		};
-	}
+    public CardRewardSelection GetSelectedCardReward(
+        IReadOnlyList<CardCreationResult> options,
+        IReadOnlyList<CardRewardAlternative> alternatives
+    )
+    {
+        return new CardRewardSelection { card = options.FirstOrDefault()?.Card };
+    }
 }

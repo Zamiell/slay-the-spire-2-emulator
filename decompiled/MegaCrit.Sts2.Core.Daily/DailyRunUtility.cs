@@ -13,40 +13,65 @@ namespace MegaCrit.Sts2.Core.Daily;
 
 public static class DailyRunUtility
 {
-	public static async Task UploadScore(DateTimeOffset time, int score, List<SerializablePlayer> players)
-	{
-		List<ulong> playerIdsInRun = players.Select((SerializablePlayer p) => p.NetId).ToList();
-		if (playerIdsInRun != null && playerIdsInRun.Count == 1 && playerIdsInRun[0] == 1)
-		{
-			playerIdsInRun[0] = PlatformUtil.GetLocalPlayerId(LeaderboardManager.CurrentPlatform);
-		}
-		string leaderboardName = GetLeaderboardName(time, players.Count);
-		if (!(await ShouldUploadScore(await LeaderboardManager.GetLeaderboard(leaderboardName), playerIdsInRun)))
-		{
-			Log.Info($"Player already uploaded score for daily {time}, ignoring new score");
-			return;
-		}
-		await LeaderboardManager.UploadLocalScore(await LeaderboardManager.GetOrCreateLeaderboard(leaderboardName), score, playerIdsInRun);
-		Log.Info($"Uploaded score of {score} for daily {time} to leaderboard {leaderboardName}");
-	}
+    public static async Task UploadScore(
+        DateTimeOffset time,
+        int score,
+        List<SerializablePlayer> players
+    )
+    {
+        List<ulong> playerIdsInRun = players.Select((SerializablePlayer p) => p.NetId).ToList();
+        if (playerIdsInRun != null && playerIdsInRun.Count == 1 && playerIdsInRun[0] == 1)
+        {
+            playerIdsInRun[0] = PlatformUtil.GetLocalPlayerId(LeaderboardManager.CurrentPlatform);
+        }
+        string leaderboardName = GetLeaderboardName(time, players.Count);
+        if (
+            !(
+                await ShouldUploadScore(
+                    await LeaderboardManager.GetLeaderboard(leaderboardName),
+                    playerIdsInRun
+                )
+            )
+        )
+        {
+            Log.Info($"Player already uploaded score for daily {time}, ignoring new score");
+            return;
+        }
+        await LeaderboardManager.UploadLocalScore(
+            await LeaderboardManager.GetOrCreateLeaderboard(leaderboardName),
+            score,
+            playerIdsInRun
+        );
+        Log.Info($"Uploaded score of {score} for daily {time} to leaderboard {leaderboardName}");
+    }
 
-	public static async Task<bool> ShouldUploadScore(ILeaderboardHandle? handle, IReadOnlyList<ulong> playerIdsInRun, CancellationToken cancelToken = default(CancellationToken))
-	{
-		if (handle == null)
-		{
-			return true;
-		}
-		return (await LeaderboardManager.QueryLeaderboardForUsers(handle, playerIdsInRun, cancelToken)).Count <= 0;
-	}
+    public static async Task<bool> ShouldUploadScore(
+        ILeaderboardHandle? handle,
+        IReadOnlyList<ulong> playerIdsInRun,
+        CancellationToken cancelToken = default(CancellationToken)
+    )
+    {
+        if (handle == null)
+        {
+            return true;
+        }
+        return (
+                await LeaderboardManager.QueryLeaderboardForUsers(
+                    handle,
+                    playerIdsInRun,
+                    cancelToken
+                )
+            ).Count <= 0;
+    }
 
-	public static string GetLeaderboardName(DateTimeOffset dateTime, int playerCount)
-	{
-		PlatformBranch platformBranch = PlatformUtil.GetPlatformBranch();
-		bool flag = (uint)(platformBranch - 1) <= 2u;
-		if (!flag && NGame.IsReleaseGame())
-		{
-			return $"{dateTime.Year}_{dateTime.Month:D2}_{dateTime.Day:D2}_{playerCount}p";
-		}
-		return $"{dateTime.Year}_{dateTime.Month:D2}_{dateTime.Day:D2}_{playerCount}p_BETA";
-	}
+    public static string GetLeaderboardName(DateTimeOffset dateTime, int playerCount)
+    {
+        PlatformBranch platformBranch = PlatformUtil.GetPlatformBranch();
+        bool flag = (uint)(platformBranch - 1) <= 2u;
+        if (!flag && NGame.IsReleaseGame())
+        {
+            return $"{dateTime.Year}_{dateTime.Month:D2}_{dateTime.Day:D2}_{playerCount}p";
+        }
+        return $"{dateTime.Year}_{dateTime.Month:D2}_{dateTime.Day:D2}_{playerCount}p_BETA";
+    }
 }

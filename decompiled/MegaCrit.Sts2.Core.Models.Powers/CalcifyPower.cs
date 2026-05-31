@@ -7,24 +7,30 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class CalcifyPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override decimal ModifyDamageAdditive(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (!(dealer?.Monster is Osty))
-		{
-			return 0m;
-		}
-		if (base.Owner != dealer.PetOwner?.Creature)
-		{
-			return 0m;
-		}
-		if (!props.IsPoweredAttack())
-		{
-			return 0m;
-		}
-		return base.Amount;
-	}
+    public override decimal ModifyDamageAdditive(
+        Creature? target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (!(dealer?.Monster is Osty))
+        {
+            return 0m;
+        }
+        if (base.Owner != dealer.PetOwner?.Creature)
+        {
+            return 0m;
+        }
+        if (!props.IsPoweredAttack())
+        {
+            return 0m;
+        }
+        return base.Amount;
+    }
 }

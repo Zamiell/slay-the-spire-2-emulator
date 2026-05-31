@@ -5,9 +5,9 @@ namespace MegaCrit.Sts2.Core.Runs;
 
 public interface IPlayerCollection
 {
-	IReadOnlyList<Player> Players { get; }
+    IReadOnlyList<Player> Players { get; }
 
-	int GetPlayerSlotIndex(Player player);
+    int GetPlayerSlotIndex(Player player);
 
-	Player? GetPlayer(ulong netId);
+    Player? GetPlayer(ulong netId);
 }

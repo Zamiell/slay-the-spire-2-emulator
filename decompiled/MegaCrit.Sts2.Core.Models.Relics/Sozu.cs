@@ -8,23 +8,27 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Sozu : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(1));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(1));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	public override bool ShouldProcurePotion(PotionModel potion, Player player)
-	{
-		return player != base.Owner;
-	}
+    public override bool ShouldProcurePotion(PotionModel potion, Player player)
+    {
+        return player != base.Owner;
+    }
 
-	public override decimal ModifyMaxEnergy(Player player, decimal amount)
-	{
-		if (player != base.Owner)
-		{
-			return amount;
-		}
-		return amount + (decimal)base.DynamicVars.Energy.IntValue;
-	}
+    public override decimal ModifyMaxEnergy(Player player, decimal amount)
+    {
+        if (player != base.Owner)
+        {
+            return amount;
+        }
+        return amount + (decimal)base.DynamicVars.Energy.IntValue;
+    }
 }

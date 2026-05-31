@@ -11,16 +11,26 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ShadowStepPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Apply<DoubleDamagePower>(new ThrowingPlayerChoiceContext(), base.Owner, base.Amount, base.Owner, null);
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Apply<DoubleDamagePower>(
+                new ThrowingPlayerChoiceContext(),
+                base.Owner,
+                base.Amount,
+                base.Owner,
+                null
+            );
+            await PowerCmd.Remove(this);
+        }
+    }
 }

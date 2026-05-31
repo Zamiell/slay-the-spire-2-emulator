@@ -12,18 +12,30 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Vajra : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Common;
+    public override RelicRarity Rarity => RelicRarity.Common;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<StrengthPower>(1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<StrengthPower>(1m)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<StrengthPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<StrengthPower>()
+        );
 
-	public override async Task AfterRoomEntered(AbstractRoom room)
-	{
-		if (room is CombatRoom)
-		{
-			Flash();
-			await PowerCmd.Apply<StrengthPower>(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars.Strength.BaseValue, base.Owner.Creature, null);
-		}
-	}
+    public override async Task AfterRoomEntered(AbstractRoom room)
+    {
+        if (room is CombatRoom)
+        {
+            Flash();
+            await PowerCmd.Apply<StrengthPower>(
+                new ThrowingPlayerChoiceContext(),
+                base.Owner.Creature,
+                base.DynamicVars.Strength.BaseValue,
+                base.Owner.Creature,
+                null
+            );
+        }
+    }
 }

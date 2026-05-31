@@ -11,26 +11,36 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class NemesisPower : PowerModel
 {
-	private bool _shouldApplyIntangible;
+    private bool _shouldApplyIntangible;
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			_shouldApplyIntangible = !_shouldApplyIntangible;
-			if (_shouldApplyIntangible)
-			{
-				Flash();
-				await PowerCmd.Apply<IntangiblePower>(choiceContext, base.Owner, 1m, base.Owner, null);
-			}
-			else if (base.Owner.HasPower<IntangiblePower>())
-			{
-				await PowerCmd.Remove(base.Owner.GetPower<IntangiblePower>());
-			}
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            _shouldApplyIntangible = !_shouldApplyIntangible;
+            if (_shouldApplyIntangible)
+            {
+                Flash();
+                await PowerCmd.Apply<IntangiblePower>(
+                    choiceContext,
+                    base.Owner,
+                    1m,
+                    base.Owner,
+                    null
+                );
+            }
+            else if (base.Owner.HasPower<IntangiblePower>())
+            {
+                await PowerCmd.Remove(base.Owner.GetPower<IntangiblePower>());
+            }
+        }
+    }
 }

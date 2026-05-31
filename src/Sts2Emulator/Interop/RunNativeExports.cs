@@ -51,12 +51,19 @@ public static class RunNativeExports
         int* obsBuf,
         float* rewardOut,
         int* terminalOut,
-        int* truncatedOut)
+        int* truncatedOut
+    )
     {
         if (!TryGet(handle, out var run))
             return -1;
 
-        int status = run.Step(action, targetEnemyIndex, out float reward, out bool terminal, out bool truncated);
+        int status = run.Step(
+            action,
+            targetEnemyIndex,
+            out float reward,
+            out bool terminal,
+            out bool truncated
+        );
         run.WriteObservation(new Span<int>(obsBuf, RunConstants.RunObsSize));
         *rewardOut = reward;
         *terminalOut = terminal ? 1 : 0;
@@ -77,7 +84,8 @@ public static class RunNativeExports
         int potionLen,
         int playerGold,
         int completedCombatRoomsBeforeCurrent,
-        int* obsBuf)
+        int* obsBuf
+    )
     {
         if (!TryGet(handle, out var run))
             return -1;
@@ -90,7 +98,8 @@ public static class RunNativeExports
             playerMaxHp,
             new ReadOnlySpan<int>(potionIds, potionLen),
             playerGold,
-            completedCombatRoomsBeforeCurrent);
+            completedCombatRoomsBeforeCurrent
+        );
         run.WriteObservation(new Span<int>(obsBuf, RunConstants.RunObsSize));
         return status;
     }
@@ -209,7 +218,10 @@ public static class RunNativeExports
         return values.Length;
     }
 
-    private static bool TryGet(int handle, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out RunEngine? run)
+    private static bool TryGet(
+        int handle,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out RunEngine? run
+    )
     {
         if ((uint)handle < _pool.Length && _pool[handle] is { } existing)
         {

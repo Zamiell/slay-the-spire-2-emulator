@@ -4,7 +4,7 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class CrushUnderPower : TemporaryStrengthPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<CrushUnder>();
+    public override AbstractModel OriginModel => ModelDb.Card<CrushUnder>();
 
-	protected override bool IsPositive => false;
+    protected override bool IsPositive => false;
 }

@@ -11,22 +11,26 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class EscapeArtistPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			if (base.Amount > 1)
-			{
-				await PowerCmd.Decrement(this);
-			}
-			if (base.Amount == 1)
-			{
-				StartPulsing();
-			}
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            if (base.Amount > 1)
+            {
+                await PowerCmd.Decrement(this);
+            }
+            if (base.Amount == 1)
+            {
+                StartPulsing();
+            }
+        }
+    }
 }

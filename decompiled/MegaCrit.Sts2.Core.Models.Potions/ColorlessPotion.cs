@@ -13,20 +13,37 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class ColorlessPotion : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Common;
+    public override PotionRarity Rarity => PotionRarity.Common;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.Self;
+    public override TargetType TargetType => TargetType.Self;
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		List<CardModel> cards = CardFactory.GetDistinctForCombat(base.Owner, ModelDb.CardPool<ColorlessCardPool>().GetUnlockedCards(base.Owner.UnlockState, base.Owner.RunState.CardMultiplayerConstraint), 3, base.Owner.RunState.Rng.CombatCardGeneration).ToList();
-		CardModel cardModel = await CardSelectCmd.FromChooseACardScreen(choiceContext, cards, base.Owner, canSkip: true);
-		if (cardModel != null)
-		{
-			cardModel.SetToFreeThisTurn();
-			await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
-		}
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        List<CardModel> cards = CardFactory
+            .GetDistinctForCombat(
+                base.Owner,
+                ModelDb
+                    .CardPool<ColorlessCardPool>()
+                    .GetUnlockedCards(
+                        base.Owner.UnlockState,
+                        base.Owner.RunState.CardMultiplayerConstraint
+                    ),
+                3,
+                base.Owner.RunState.Rng.CombatCardGeneration
+            )
+            .ToList();
+        CardModel cardModel = await CardSelectCmd.FromChooseACardScreen(
+            choiceContext,
+            cards,
+            base.Owner,
+            canSkip: true
+        );
+        if (cardModel != null)
+        {
+            cardModel.SetToFreeThisTurn();
+            await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
+        }
+    }
 }

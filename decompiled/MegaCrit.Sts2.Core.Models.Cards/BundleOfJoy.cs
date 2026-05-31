@@ -11,26 +11,33 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class BundleOfJoy : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	public BundleOfJoy()
-		: base(1, CardType.Skill, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public BundleOfJoy()
+        : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		IEnumerable<CardModel> distinctForCombat = CardFactory.GetDistinctForCombat(base.Owner, ModelDb.CardPool<ColorlessCardPool>().GetUnlockedCards(base.Owner.UnlockState, base.RunState.CardMultiplayerConstraint), base.DynamicVars.Cards.IntValue, base.Owner.RunState.Rng.CombatCardGeneration);
-		foreach (CardModel item in distinctForCombat)
-		{
-			await CardPileCmd.AddGeneratedCardToCombat(item, PileType.Hand, base.Owner);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        IEnumerable<CardModel> distinctForCombat = CardFactory.GetDistinctForCombat(
+            base.Owner,
+            ModelDb
+                .CardPool<ColorlessCardPool>()
+                .GetUnlockedCards(base.Owner.UnlockState, base.RunState.CardMultiplayerConstraint),
+            base.DynamicVars.Cards.IntValue,
+            base.Owner.RunState.Rng.CombatCardGeneration
+        );
+        foreach (CardModel item in distinctForCombat)
+        {
+            await CardPileCmd.AddGeneratedCardToCombat(item, PileType.Hand, base.Owner);
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Cards.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Cards.UpgradeValueBy(1m);
+    }
 }

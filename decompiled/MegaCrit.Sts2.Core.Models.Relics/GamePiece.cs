@@ -11,18 +11,23 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class GamePiece : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override string FlashSfx => "event:/sfx/ui/relic_activate_draw";
+    public override string FlashSfx => "event:/sfx/ui/relic_activate_draw";
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(1));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(1));
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner == base.Owner && CombatManager.Instance.IsInProgress && cardPlay.Card.Type == CardType.Power)
-		{
-			Flash();
-			await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, base.Owner);
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (
+            cardPlay.Card.Owner == base.Owner
+            && CombatManager.Instance.IsInProgress
+            && cardPlay.Card.Type == CardType.Power
+        )
+        {
+            Flash();
+            await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, base.Owner);
+        }
+    }
 }

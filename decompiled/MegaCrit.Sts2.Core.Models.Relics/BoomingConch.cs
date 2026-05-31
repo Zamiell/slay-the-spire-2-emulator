@@ -14,44 +14,53 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class BoomingConch : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new CardsVar(2),
-		new EnergyVar(1)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new CardsVar(2), new EnergyVar(1) }
+        );
 
-	public override decimal ModifyHandDraw(Player player, decimal count)
-	{
-		if (player != base.Owner)
-		{
-			return count;
-		}
-		if (base.Owner.PlayerCombatState.TurnNumber > 1)
-		{
-			return count;
-		}
-		AbstractRoom? currentRoom = player.RunState.CurrentRoom;
-		if (currentRoom == null || currentRoom.RoomType != RoomType.Elite)
-		{
-			return count;
-		}
-		return count + (decimal)base.DynamicVars.Cards.IntValue;
-	}
+    public override decimal ModifyHandDraw(Player player, decimal count)
+    {
+        if (player != base.Owner)
+        {
+            return count;
+        }
+        if (base.Owner.PlayerCombatState.TurnNumber > 1)
+        {
+            return count;
+        }
+        AbstractRoom? currentRoom = player.RunState.CurrentRoom;
+        if (currentRoom == null || currentRoom.RoomType != RoomType.Elite)
+        {
+            return count;
+        }
+        return count + (decimal)base.DynamicVars.Cards.IntValue;
+    }
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature) && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			AbstractRoom? currentRoom = combatState.RunState.CurrentRoom;
-			if (currentRoom != null && currentRoom.RoomType == RoomType.Elite)
-			{
-				Flash();
-				await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, base.Owner);
-			}
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (
+            participants.Contains(base.Owner.Creature)
+            && base.Owner.PlayerCombatState.TurnNumber <= 1
+        )
+        {
+            AbstractRoom? currentRoom = combatState.RunState.CurrentRoom;
+            if (currentRoom != null && currentRoom.RoomType == RoomType.Elite)
+            {
+                Flash();
+                await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, base.Owner);
+            }
+        }
+    }
 }

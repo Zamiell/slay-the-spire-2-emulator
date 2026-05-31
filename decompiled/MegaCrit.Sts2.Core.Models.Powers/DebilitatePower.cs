@@ -13,47 +13,66 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class DebilitatePower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.FromPower<VulnerablePower>(),
-		HoverTipFactory.FromPower<WeakPower>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.FromPower<VulnerablePower>(),
+                HoverTipFactory.FromPower<WeakPower>(),
+            }
+        );
 
-	public decimal ModifyVulnerableMultiplier(Creature target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target != base.Owner)
-		{
-			return amount;
-		}
-		if (!props.IsPoweredAttack())
-		{
-			return amount;
-		}
-		return amount + (amount - 1m);
-	}
+    public decimal ModifyVulnerableMultiplier(
+        Creature target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (target != base.Owner)
+        {
+            return amount;
+        }
+        if (!props.IsPoweredAttack())
+        {
+            return amount;
+        }
+        return amount + (amount - 1m);
+    }
 
-	public decimal ModifyWeakMultiplier(Creature target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (dealer != base.Owner)
-		{
-			return amount;
-		}
-		if (!props.IsPoweredAttack())
-		{
-			return amount;
-		}
-		return amount - (1m - amount);
-	}
+    public decimal ModifyWeakMultiplier(
+        Creature target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (dealer != base.Owner)
+        {
+            return amount;
+        }
+        if (!props.IsPoweredAttack())
+        {
+            return amount;
+        }
+        return amount - (1m - amount);
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Decrement(this);
+        }
+    }
 }

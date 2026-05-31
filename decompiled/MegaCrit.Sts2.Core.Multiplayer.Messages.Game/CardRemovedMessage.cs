@@ -7,23 +7,23 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game;
 
 public class CardRemovedMessage : INetMessage, IPacketSerializable, IRunLocationTargetedMessage
 {
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public RunLocation Location { get; set; }
+    public RunLocation Location { get; set; }
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(Location);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(Location);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		Location = reader.Read<RunLocation>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        Location = reader.Read<RunLocation>();
+    }
 }

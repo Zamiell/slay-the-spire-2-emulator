@@ -12,26 +12,34 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class ByrdSwoop : CardModel
 {
-	public const string attackSfx = "event:/sfx/byrdpip/byrdpip_attack";
+    public const string attackSfx = "event:/sfx/byrdpip/byrdpip_attack";
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(14m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(14m, ValueProp.Move)
+        );
 
-	public ByrdSwoop()
-		: base(0, CardType.Attack, CardRarity.Event, TargetType.AnyEnemy)
-	{
-	}
+    public ByrdSwoop()
+        : base(0, CardType.Attack, CardRarity.Event, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-			.WithAttackerAnim("Attack", base.Owner.Character.AttackAnimDelay, base.Owner.PlayerCombatState.GetPet<Byrdpip>())
-			.WithHitFx("vfx/vfx_attack_slash", "event:/sfx/byrdpip/byrdpip_attack")
-			.Execute(choiceContext);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithAttackerAnim(
+                "Attack",
+                base.Owner.Character.AttackAnimDelay,
+                base.Owner.PlayerCombatState.GetPet<Byrdpip>()
+            )
+            .WithHitFx("vfx/vfx_attack_slash", "event:/sfx/byrdpip/byrdpip_attack")
+            .Execute(choiceContext);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(4m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(4m);
+    }
 }

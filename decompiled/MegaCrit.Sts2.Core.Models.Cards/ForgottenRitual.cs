@@ -16,39 +16,54 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class ForgottenRitual : CardModel
 {
-	protected override bool ShouldGlowGoldInternal => WasCardExhaustedThisTurn;
+    protected override bool ShouldGlowGoldInternal => WasCardExhaustedThisTurn;
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(3));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(3));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		base.EnergyHoverTip,
-		HoverTipFactory.FromKeyword(CardKeyword.Exhaust)
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                base.EnergyHoverTip,
+                HoverTipFactory.FromKeyword(CardKeyword.Exhaust),
+            }
+        );
 
-	protected override IEnumerable<string> ExtraRunAssetPaths => NGroundFireVfx.AssetPaths;
+    protected override IEnumerable<string> ExtraRunAssetPaths => NGroundFireVfx.AssetPaths;
 
-	private bool WasCardExhaustedThisTurn => CombatManager.Instance.History.Entries.OfType<CardExhaustedEntry>().Any((CardExhaustedEntry e) => e.HappenedThisTurn(base.CombatState) && e.Card.Owner == base.Owner);
+    private bool WasCardExhaustedThisTurn =>
+        CombatManager
+            .Instance.History.Entries.OfType<CardExhaustedEntry>()
+            .Any(
+                (CardExhaustedEntry e) =>
+                    e.HappenedThisTurn(base.CombatState) && e.Card.Owner == base.Owner
+            );
 
-	public ForgottenRitual()
-		: base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public ForgottenRitual()
+        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(NGroundFireVfx.Create(base.Owner.Creature, VfxColor.Purple));
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		if (WasCardExhaustedThisTurn)
-		{
-			await PlayerCmd.GainEnergy(base.DynamicVars.Energy.IntValue, base.Owner);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(
+            NGroundFireVfx.Create(base.Owner.Creature, VfxColor.Purple)
+        );
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        if (WasCardExhaustedThisTurn)
+        {
+            await PlayerCmd.GainEnergy(base.DynamicVars.Energy.IntValue, base.Owner);
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Energy.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Energy.UpgradeValueBy(1m);
+    }
 }

@@ -6,28 +6,28 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby;
 
 public struct PlayerLeftMessage : INetMessage, IPacketSerializable
 {
-	public ulong playerId;
+    public ulong playerId;
 
-	public bool ShouldBroadcast => false;
+    public bool ShouldBroadcast => false;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public PlayerLeftMessage(ulong playerId)
-	{
-		this.playerId = playerId;
-	}
+    public PlayerLeftMessage(ulong playerId)
+    {
+        this.playerId = playerId;
+    }
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteULong(playerId);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteULong(playerId);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		playerId = reader.ReadULong();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        playerId = reader.ReadULong();
+    }
 }

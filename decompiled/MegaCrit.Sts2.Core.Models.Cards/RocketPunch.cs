@@ -12,47 +12,47 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class RocketPunch : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new DamageVar(13m, ValueProp.Move),
-		new CardsVar(1)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new DamageVar(13m, ValueProp.Move), new CardsVar(1) }
+        );
 
-	public RocketPunch()
-		: base(2, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
-	{
-	}
+    public RocketPunch()
+        : base(2, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_attack_blunt", null, "blunt_attack.mp3")
-			.Execute(choiceContext);
-		await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, base.Owner);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_attack_blunt", null, "blunt_attack.mp3")
+            .Execute(choiceContext);
+        await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, base.Owner);
+    }
 
-	public override Task AfterCardGeneratedForCombat(CardModel card, Player? creator)
-	{
-		if (creator != base.Owner)
-		{
-			return Task.CompletedTask;
-		}
-		if (card.Owner != base.Owner)
-		{
-			return Task.CompletedTask;
-		}
-		if (card.Type != CardType.Status)
-		{
-			return Task.CompletedTask;
-		}
-		base.EnergyCost.SetUntilPlayed(0);
-		return Task.CompletedTask;
-	}
+    public override Task AfterCardGeneratedForCombat(CardModel card, Player? creator)
+    {
+        if (creator != base.Owner)
+        {
+            return Task.CompletedTask;
+        }
+        if (card.Owner != base.Owner)
+        {
+            return Task.CompletedTask;
+        }
+        if (card.Type != CardType.Status)
+        {
+            return Task.CompletedTask;
+        }
+        base.EnergyCost.SetUntilPlayed(0);
+        return Task.CompletedTask;
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(1m);
-		base.DynamicVars.Cards.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(1m);
+        base.DynamicVars.Cards.UpgradeValueBy(1m);
+    }
 }

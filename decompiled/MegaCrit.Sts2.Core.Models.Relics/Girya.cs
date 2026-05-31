@@ -15,58 +15,67 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Girya : RelicModel
 {
-	private int _timesLifted;
+    private int _timesLifted;
 
-	public const int maxLifts = 3;
+    public const int maxLifts = 3;
 
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override bool ShowCounter => true;
+    public override bool ShowCounter => true;
 
-	public override int DisplayAmount => TimesLifted;
+    public override int DisplayAmount => TimesLifted;
 
-	[SavedProperty]
-	public int TimesLifted
-	{
-		get
-		{
-			return _timesLifted;
-		}
-		set
-		{
-			AssertMutable();
-			_timesLifted = value;
-			InvokeDisplayAmountChanged();
-		}
-	}
+    [SavedProperty]
+    public int TimesLifted
+    {
+        get { return _timesLifted; }
+        set
+        {
+            AssertMutable();
+            _timesLifted = value;
+            InvokeDisplayAmountChanged();
+        }
+    }
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<StrengthPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<StrengthPower>()
+        );
 
-	public override bool IsAllowed(IRunState runState)
-	{
-		return RelicModel.IsBeforeAct3TreasureChest(runState);
-	}
+    public override bool IsAllowed(IRunState runState)
+    {
+        return RelicModel.IsBeforeAct3TreasureChest(runState);
+    }
 
-	public override async Task AfterRoomEntered(AbstractRoom room)
-	{
-		if (TimesLifted > 0 && room is CombatRoom)
-		{
-			Flash();
-			await PowerCmd.Apply<StrengthPower>(new ThrowingPlayerChoiceContext(), base.Owner.Creature, TimesLifted, base.Owner.Creature, null);
-		}
-	}
+    public override async Task AfterRoomEntered(AbstractRoom room)
+    {
+        if (TimesLifted > 0 && room is CombatRoom)
+        {
+            Flash();
+            await PowerCmd.Apply<StrengthPower>(
+                new ThrowingPlayerChoiceContext(),
+                base.Owner.Creature,
+                TimesLifted,
+                base.Owner.Creature,
+                null
+            );
+        }
+    }
 
-	public override bool TryModifyRestSiteOptions(Player player, ICollection<RestSiteOption> options)
-	{
-		if (player != base.Owner)
-		{
-			return false;
-		}
-		if (TimesLifted >= 3)
-		{
-			return false;
-		}
-		options.Add(new LiftRestSiteOption(player));
-		return true;
-	}
+    public override bool TryModifyRestSiteOptions(
+        Player player,
+        ICollection<RestSiteOption> options
+    )
+    {
+        if (player != base.Owner)
+        {
+            return false;
+        }
+        if (TimesLifted >= 3)
+        {
+            return false;
+        }
+        options.Add(new LiftRestSiteOption(player));
+        return true;
+    }
 }

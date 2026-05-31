@@ -12,21 +12,29 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class WasteAway : CardModel, KnowledgeDemon.IChoosable
 {
-	public override bool CanBeGeneratedInCombat => false;
+    public override bool CanBeGeneratedInCombat => false;
 
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(base.EnergyHoverTip);
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(base.EnergyHoverTip);
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<WasteAwayPower>(1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<WasteAwayPower>(1m)
+        );
 
-	public WasteAway()
-		: base(-1, CardType.Status, CardRarity.Status, TargetType.None)
-	{
-	}
+    public WasteAway()
+        : base(-1, CardType.Status, CardRarity.Status, TargetType.None) { }
 
-	public async Task OnChosen()
-	{
-		await PowerCmd.Apply<WasteAwayPower>(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars["WasteAwayPower"].IntValue, base.Owner.Creature, this);
-	}
+    public async Task OnChosen()
+    {
+        await PowerCmd.Apply<WasteAwayPower>(
+            new ThrowingPlayerChoiceContext(),
+            base.Owner.Creature,
+            base.DynamicVars["WasteAwayPower"].IntValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 }

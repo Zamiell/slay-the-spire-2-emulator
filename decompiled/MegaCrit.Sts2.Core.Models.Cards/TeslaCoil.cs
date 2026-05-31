@@ -14,34 +14,43 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class TeslaCoil : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromOrb<LightningOrb>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromOrb<LightningOrb>()
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(3m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(3m, ValueProp.Move)
+        );
 
-	public TeslaCoil()
-		: base(0, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
-	{
-	}
+    public TeslaCoil()
+        : base(0, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_attack_slash")
-			.Execute(choiceContext);
-		List<LightningOrb> list = base.Owner.PlayerCombatState.OrbQueue.Orbs.OfType<LightningOrb>().ToList();
-		foreach (LightningOrb lightningOrb in list)
-		{
-			await OrbCmd.Passive(choiceContext, lightningOrb, cardPlay.Target);
-			if (base.IsUpgraded)
-			{
-				await OrbCmd.Passive(choiceContext, lightningOrb, cardPlay.Target);
-			}
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.Damage.BaseValue)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_attack_slash")
+            .Execute(choiceContext);
+        List<LightningOrb> list = base
+            .Owner.PlayerCombatState.OrbQueue.Orbs.OfType<LightningOrb>()
+            .ToList();
+        foreach (LightningOrb lightningOrb in list)
+        {
+            await OrbCmd.Passive(choiceContext, lightningOrb, cardPlay.Target);
+            if (base.IsUpgraded)
+            {
+                await OrbCmd.Passive(choiceContext, lightningOrb, cardPlay.Target);
+            }
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Damage.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Damage.UpgradeValueBy(1m);
+    }
 }

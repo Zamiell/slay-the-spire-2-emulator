@@ -9,62 +9,62 @@ namespace MegaCrit.Sts2.Core.Rooms;
 
 public abstract class AbstractRoom
 {
-	public abstract RoomType RoomType { get; }
+    public abstract RoomType RoomType { get; }
 
-	public abstract ModelId? ModelId { get; }
+    public abstract ModelId? ModelId { get; }
 
-	public virtual bool IsPreFinished => false;
+    public virtual bool IsPreFinished => false;
 
-	public int? Id { get; private set; }
+    public int? Id { get; private set; }
 
-	public bool IsVictoryRoom
-	{
-		get
-		{
-			if (this is EventRoom eventRoom)
-			{
-				return eventRoom.CanonicalEvent is TheArchitect;
-			}
-			return false;
-		}
-	}
+    public bool IsVictoryRoom
+    {
+        get
+        {
+            if (this is EventRoom eventRoom)
+            {
+                return eventRoom.CanonicalEvent is TheArchitect;
+            }
+            return false;
+        }
+    }
 
-	public Task Enter(IRunState? runState, bool isRestoringRoomStackBase)
-	{
-		Id = runState?.GetAndIncrementNextRoomId();
-		return EnterInternal(runState, isRestoringRoomStackBase);
-	}
+    public Task Enter(IRunState? runState, bool isRestoringRoomStackBase)
+    {
+        Id = runState?.GetAndIncrementNextRoomId();
+        return EnterInternal(runState, isRestoringRoomStackBase);
+    }
 
-	public abstract Task EnterInternal(IRunState? runState, bool isRestoringRoomStackBase);
+    public abstract Task EnterInternal(IRunState? runState, bool isRestoringRoomStackBase);
 
-	public abstract Task Exit(IRunState? runState);
+    public abstract Task Exit(IRunState? runState);
 
-	public abstract Task Resume(AbstractRoom exitedRoom, IRunState? runState);
+    public abstract Task Resume(AbstractRoom exitedRoom, IRunState? runState);
 
-	public virtual SerializableRoom ToSerializable()
-	{
-		return new SerializableRoom
-		{
-			RoomType = RoomType
-		};
-	}
+    public virtual SerializableRoom ToSerializable()
+    {
+        return new SerializableRoom { RoomType = RoomType };
+    }
 
-	public static AbstractRoom? FromSerializable(SerializableRoom? serializableRoom, IRunState? runState)
-	{
-		if (serializableRoom == null)
-		{
-			return null;
-		}
-		switch (serializableRoom.RoomType)
-		{
-		case RoomType.Monster:
-		case RoomType.Elite:
-		case RoomType.Boss:
-			return CombatRoom.FromSerializable(serializableRoom, runState);
-		case RoomType.Event:
-			return new EventRoom(serializableRoom);
-		default:
-			throw new ArgumentOutOfRangeException();
-		}
-	}
+    public static AbstractRoom? FromSerializable(
+        SerializableRoom? serializableRoom,
+        IRunState? runState
+    )
+    {
+        if (serializableRoom == null)
+        {
+            return null;
+        }
+        switch (serializableRoom.RoomType)
+        {
+            case RoomType.Monster:
+            case RoomType.Elite:
+            case RoomType.Boss:
+                return CombatRoom.FromSerializable(serializableRoom, runState);
+            case RoomType.Event:
+                return new EventRoom(serializableRoom);
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
 }

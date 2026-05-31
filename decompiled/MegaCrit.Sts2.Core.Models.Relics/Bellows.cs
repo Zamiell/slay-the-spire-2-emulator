@@ -10,20 +10,20 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Bellows : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player != base.Owner)
-		{
-			return Task.CompletedTask;
-		}
-		if (base.Owner.PlayerCombatState.TurnNumber > 1)
-		{
-			return Task.CompletedTask;
-		}
-		Flash();
-		CardCmd.Upgrade(PileType.Hand.GetPile(base.Owner).Cards, CardPreviewStyle.HorizontalLayout);
-		return Task.CompletedTask;
-	}
+    public override Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
+    {
+        if (player != base.Owner)
+        {
+            return Task.CompletedTask;
+        }
+        if (base.Owner.PlayerCombatState.TurnNumber > 1)
+        {
+            return Task.CompletedTask;
+        }
+        Flash();
+        CardCmd.Upgrade(PileType.Hand.GetPile(base.Owner).Cards, CardPreviewStyle.HorizontalLayout);
+        return Task.CompletedTask;
+    }
 }

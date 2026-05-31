@@ -6,8 +6,8 @@ namespace MegaCrit.Sts2.Core.Models.Events;
 
 public sealed class DeprecatedEvent : EventModel
 {
-	protected override IReadOnlyList<EventOption> GenerateInitialOptions()
-	{
-		return Array.Empty<EventOption>();
-	}
+    protected override IReadOnlyList<EventOption> GenerateInitialOptions()
+    {
+        return Array.Empty<EventOption>();
+    }
 }

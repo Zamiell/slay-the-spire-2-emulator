@@ -20,73 +20,86 @@ namespace MegaCrit.Sts2.Core.Entities.RestSite;
 
 public sealed class SmithRestSiteOption : RestSiteOption
 {
-	private IEnumerable<CardModel>? _selection;
+    private IEnumerable<CardModel>? _selection;
 
-	public override string OptionId => "SMITH";
+    public override string OptionId => "SMITH";
 
-	public override IEnumerable<string> AssetPaths => base.AssetPaths.Concat(NCardSmithVfx.AssetPaths);
+    public override IEnumerable<string> AssetPaths =>
+        base.AssetPaths.Concat(NCardSmithVfx.AssetPaths);
 
-	public int SmithCount { get; set; } = 1;
+    public int SmithCount { get; set; } = 1;
 
-	public override LocString Description
-	{
-		get
-		{
-			LocString locString;
-			if (base.IsEnabled)
-			{
-				locString = new LocString("rest_site_ui", "OPTION_" + OptionId + ".description");
-				locString.Add("Count", SmithCount);
-			}
-			else
-			{
-				locString = new LocString("rest_site_ui", "OPTION_" + OptionId + ".descriptionDisabled");
-			}
-			return locString;
-		}
-	}
+    public override LocString Description
+    {
+        get
+        {
+            LocString locString;
+            if (base.IsEnabled)
+            {
+                locString = new LocString("rest_site_ui", "OPTION_" + OptionId + ".description");
+                locString.Add("Count", SmithCount);
+            }
+            else
+            {
+                locString = new LocString(
+                    "rest_site_ui",
+                    "OPTION_" + OptionId + ".descriptionDisabled"
+                );
+            }
+            return locString;
+        }
+    }
 
-	public SmithRestSiteOption(Player owner)
-		: base(owner)
-	{
-		base.IsEnabled = owner.Deck.UpgradableCardCount != 0;
-	}
+    public SmithRestSiteOption(Player owner)
+        : base(owner)
+    {
+        base.IsEnabled = owner.Deck.UpgradableCardCount != 0;
+    }
 
-	public override async Task<bool> OnSelect()
-	{
-		CardSelectorPrefs cardSelectorPrefs = new CardSelectorPrefs(CardSelectorPrefs.UpgradeSelectionPrompt, SmithCount);
-		cardSelectorPrefs.Cancelable = true;
-		cardSelectorPrefs.RequireManualConfirmation = true;
-		CardSelectorPrefs prefs = cardSelectorPrefs;
-		_selection = await CardSelectCmd.FromDeckForUpgrade(base.Owner, prefs);
-		if (!_selection.Any())
-		{
-			return false;
-		}
-		foreach (CardModel item in _selection)
-		{
-			CardCmd.Upgrade(item, CardPreviewStyle.None);
-		}
-		await Hook.AfterRestSiteSmith(base.Owner.RunState, base.Owner);
-		return true;
-	}
+    public override async Task<bool> OnSelect()
+    {
+        CardSelectorPrefs cardSelectorPrefs = new CardSelectorPrefs(
+            CardSelectorPrefs.UpgradeSelectionPrompt,
+            SmithCount
+        );
+        cardSelectorPrefs.Cancelable = true;
+        cardSelectorPrefs.RequireManualConfirmation = true;
+        CardSelectorPrefs prefs = cardSelectorPrefs;
+        _selection = await CardSelectCmd.FromDeckForUpgrade(base.Owner, prefs);
+        if (!_selection.Any())
+        {
+            return false;
+        }
+        foreach (CardModel item in _selection)
+        {
+            CardCmd.Upgrade(item, CardPreviewStyle.None);
+        }
+        await Hook.AfterRestSiteSmith(base.Owner.RunState, base.Owner);
+        return true;
+    }
 
-	public override async Task DoLocalPostSelectVfx(CancellationToken ct = default(CancellationToken))
-	{
-		NRun.Instance?.GlobalUi.CardPreviewContainer.AddChildSafely(NCardSmithVfx.Create(_selection.ToArray()));
-		await Cmd.CustomScaledWait(1f, 2f, ignoreCombatEnd: false, ct);
-	}
+    public override async Task DoLocalPostSelectVfx(
+        CancellationToken ct = default(CancellationToken)
+    )
+    {
+        NRun.Instance?.GlobalUi.CardPreviewContainer.AddChildSafely(
+            NCardSmithVfx.Create(_selection.ToArray())
+        );
+        await Cmd.CustomScaledWait(1f, 2f, ignoreCombatEnd: false, ct);
+    }
 
-	public override Task DoRemotePostSelectVfx()
-	{
-		NRestSiteCharacter nRestSiteCharacter = NRestSiteRoom.Instance?.Characters.First((NRestSiteCharacter c) => c.Player == base.Owner);
-		NCardSmithVfx nCardSmithVfx = NCardSmithVfx.Create();
-		if (nCardSmithVfx == null)
-		{
-			return Task.CompletedTask;
-		}
-		nRestSiteCharacter?.AddChildSafely(nCardSmithVfx);
-		nCardSmithVfx.Position = Vector2.Zero;
-		return Task.CompletedTask;
-	}
+    public override Task DoRemotePostSelectVfx()
+    {
+        NRestSiteCharacter nRestSiteCharacter = NRestSiteRoom.Instance?.Characters.First(
+            (NRestSiteCharacter c) => c.Player == base.Owner
+        );
+        NCardSmithVfx nCardSmithVfx = NCardSmithVfx.Create();
+        if (nCardSmithVfx == null)
+        {
+            return Task.CompletedTask;
+        }
+        nRestSiteCharacter?.AddChildSafely(nCardSmithVfx);
+        nCardSmithVfx.Position = Vector2.Zero;
+        return Task.CompletedTask;
+    }
 }

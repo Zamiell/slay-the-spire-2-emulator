@@ -7,33 +7,33 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game.Sync;
 
 public class RewardSelectedMessage : INetMessage, IPacketSerializable, IRunLocationTargetedMessage
 {
-	public RunLocation location;
+    public RunLocation location;
 
-	public int setId;
+    public int setId;
 
-	public int rewardIndex;
+    public int rewardIndex;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.Debug;
+    public LogLevel LogLevel => LogLevel.Debug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public RunLocation Location => location;
+    public RunLocation Location => location;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(location);
-		writer.WriteInt(setId);
-		writer.WriteInt(rewardIndex, 8);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(location);
+        writer.WriteInt(setId);
+        writer.WriteInt(rewardIndex, 8);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		location = reader.Read<RunLocation>();
-		setId = reader.ReadInt();
-		rewardIndex = reader.ReadInt(8);
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        location = reader.Read<RunLocation>();
+        setId = reader.ReadInt();
+        rewardIndex = reader.ReadInt(8);
+    }
 }

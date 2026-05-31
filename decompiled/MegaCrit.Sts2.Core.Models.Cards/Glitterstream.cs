@@ -12,34 +12,53 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Glitterstream : CardModel
 {
-	private const string _blockNextTurnKey = "BlockNextTurn";
+    private const string _blockNextTurnKey = "BlockNextTurn";
 
-	public override bool GainsBlock => true;
+    public override bool GainsBlock => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new BlockVar(11m, ValueProp.Move),
-		new BlockVar("BlockNextTurn", 5m, ValueProp.Move)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2]
+            {
+                new BlockVar(11m, ValueProp.Move),
+                new BlockVar("BlockNextTurn", 5m, ValueProp.Move),
+            }
+        );
 
-	public Glitterstream()
-		: base(2, CardType.Skill, CardRarity.Common, TargetType.Self)
-	{
-	}
+    public Glitterstream()
+        : base(2, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		BlockVar blockVar = (BlockVar)base.DynamicVars["BlockNextTurn"];
-		IEnumerable<AbstractModel> modifiers;
-		decimal blockNextTurnAmount = Hook.ModifyBlock(base.CombatState, base.Owner.Creature, blockVar.BaseValue, blockVar.Props, this, cardPlay, out modifiers);
-		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		await PowerCmd.Apply<BlockNextTurnPower>(choiceContext, base.Owner.Creature, blockNextTurnAmount, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        BlockVar blockVar = (BlockVar)base.DynamicVars["BlockNextTurn"];
+        IEnumerable<AbstractModel> modifiers;
+        decimal blockNextTurnAmount = Hook.ModifyBlock(
+            base.CombatState,
+            base.Owner.Creature,
+            blockVar.BaseValue,
+            blockVar.Props,
+            this,
+            cardPlay,
+            out modifiers
+        );
+        await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
+        await PowerCmd.Apply<BlockNextTurnPower>(
+            choiceContext,
+            base.Owner.Creature,
+            blockNextTurnAmount,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Block.UpgradeValueBy(2m);
-		base.DynamicVars["BlockNextTurn"].UpgradeValueBy(2m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Block.UpgradeValueBy(2m);
+        base.DynamicVars["BlockNextTurn"].UpgradeValueBy(2m);
+    }
 }

@@ -12,23 +12,39 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ConstrictPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await CreatureCmd.Damage(choiceContext, base.Owner, base.Amount, ValueProp.Unpowered, base.Owner, null);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await CreatureCmd.Damage(
+                choiceContext,
+                base.Owner,
+                base.Amount,
+                ValueProp.Unpowered,
+                base.Owner,
+                null
+            );
+        }
+    }
 
-	public override async Task AfterDeath(PlayerChoiceContext choiceContext, Creature creature, bool wasRemovalPrevented, float deathAnimLength)
-	{
-		if (!wasRemovalPrevented && creature == base.Applier)
-		{
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterDeath(
+        PlayerChoiceContext choiceContext,
+        Creature creature,
+        bool wasRemovalPrevented,
+        float deathAnimLength
+    )
+    {
+        if (!wasRemovalPrevented && creature == base.Applier)
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
 }

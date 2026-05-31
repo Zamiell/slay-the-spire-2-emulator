@@ -6,27 +6,27 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages;
 
 public record struct HeartbeatResponseMessage : INetMessage, IPacketSerializable
 {
-	public bool ShouldBroadcast => false;
+    public bool ShouldBroadcast => false;
 
-	public NetTransferMode Mode => NetTransferMode.Unreliable;
+    public NetTransferMode Mode => NetTransferMode.Unreliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => false;
+    public bool ShouldBuffer => false;
 
-	public int counter;
+    public int counter;
 
-	public bool isLoading;
+    public bool isLoading;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteInt(counter);
-		writer.WriteBool(isLoading);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteInt(counter);
+        writer.WriteBool(isLoading);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		counter = reader.ReadInt();
-		isLoading = reader.ReadBool();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        counter = reader.ReadInt();
+        isLoading = reader.ReadBool();
+    }
 }

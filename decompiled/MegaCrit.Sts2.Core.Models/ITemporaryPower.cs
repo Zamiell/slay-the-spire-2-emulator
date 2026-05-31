@@ -2,9 +2,9 @@ namespace MegaCrit.Sts2.Core.Models;
 
 public interface ITemporaryPower
 {
-	AbstractModel OriginModel { get; }
+    AbstractModel OriginModel { get; }
 
-	PowerModel InternallyAppliedPower { get; }
+    PowerModel InternallyAppliedPower { get; }
 
-	void IgnoreNextInstance();
+    void IgnoreNextInstance();
 }

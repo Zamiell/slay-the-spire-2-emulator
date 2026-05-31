@@ -9,21 +9,21 @@ namespace MegaCrit.Sts2.Core.Models.PotionPools;
 
 public sealed class SilentPotionPool : PotionPoolModel
 {
-	public override string EnergyColorName => "silent";
+    public override string EnergyColorName => "silent";
 
-	public override Color LabOutlineColor => StsColors.green;
+    public override Color LabOutlineColor => StsColors.green;
 
-	protected override IEnumerable<PotionModel> GenerateAllPotions()
-	{
-		return Silent4Epoch.Potions;
-	}
+    protected override IEnumerable<PotionModel> GenerateAllPotions()
+    {
+        return Silent4Epoch.Potions;
+    }
 
-	public override IEnumerable<PotionModel> GetUnlockedPotions(UnlockState unlockState)
-	{
-		if (!unlockState.IsEpochRevealed<Silent4Epoch>())
-		{
-			return Array.Empty<PotionModel>();
-		}
-		return GenerateAllPotions();
-	}
+    public override IEnumerable<PotionModel> GetUnlockedPotions(UnlockState unlockState)
+    {
+        if (!unlockState.IsEpochRevealed<Silent4Epoch>())
+        {
+            return Array.Empty<PotionModel>();
+        }
+        return GenerateAllPotions();
+    }
 }

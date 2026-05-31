@@ -8,23 +8,24 @@ namespace MegaCrit.Sts2.Core.Runs;
 
 public interface ICardScope
 {
-	T CreateCard<T>(Player owner) where T : CardModel;
+    T CreateCard<T>(Player owner)
+        where T : CardModel;
 
-	CardModel CreateCard(CardModel canonicalCard, Player owner);
+    CardModel CreateCard(CardModel canonicalCard, Player owner);
 
-	CardModel CloneCard(CardModel mutableCard);
+    CardModel CloneCard(CardModel mutableCard);
 
-	void AddCard(CardModel mutableCard, Player owner);
+    void AddCard(CardModel mutableCard, Player owner);
 
-	void RemoveCard(CardModel card);
+    void RemoveCard(CardModel card);
 
-	static ICardScope DebugOnlyGet(CardScope scope)
-	{
-		return scope switch
-		{
-			CardScope.Run => RunManager.Instance.DebugOnlyGetState(), 
-			CardScope.Combat => CombatManager.Instance.DebugOnlyGetState(), 
-			_ => throw new ArgumentOutOfRangeException("scope", scope, null), 
-		};
-	}
+    static ICardScope DebugOnlyGet(CardScope scope)
+    {
+        return scope switch
+        {
+            CardScope.Run => RunManager.Instance.DebugOnlyGetState(),
+            CardScope.Combat => CombatManager.Instance.DebugOnlyGetState(),
+            _ => throw new ArgumentOutOfRangeException("scope", scope, null),
+        };
+    }
 }

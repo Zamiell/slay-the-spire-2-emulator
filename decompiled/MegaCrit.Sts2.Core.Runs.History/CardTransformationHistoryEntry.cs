@@ -7,27 +7,27 @@ namespace MegaCrit.Sts2.Core.Runs.History;
 
 public struct CardTransformationHistoryEntry : IPacketSerializable
 {
-	[JsonPropertyName("original_card")]
-	public SerializableCard OriginalCard { get; set; }
+    [JsonPropertyName("original_card")]
+    public SerializableCard OriginalCard { get; set; }
 
-	[JsonPropertyName("final_card")]
-	public SerializableCard FinalCard { get; set; }
+    [JsonPropertyName("final_card")]
+    public SerializableCard FinalCard { get; set; }
 
-	public CardTransformationHistoryEntry(CardModel originalCard, CardModel finalCard)
-	{
-		OriginalCard = originalCard.ToSerializable();
-		FinalCard = finalCard.ToSerializable();
-	}
+    public CardTransformationHistoryEntry(CardModel originalCard, CardModel finalCard)
+    {
+        OriginalCard = originalCard.ToSerializable();
+        FinalCard = finalCard.ToSerializable();
+    }
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.Write(OriginalCard);
-		writer.Write(FinalCard);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.Write(OriginalCard);
+        writer.Write(FinalCard);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		OriginalCard = reader.Read<SerializableCard>();
-		FinalCard = reader.Read<SerializableCard>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        OriginalCard = reader.Read<SerializableCard>();
+        FinalCard = reader.Read<SerializableCard>();
+    }
 }

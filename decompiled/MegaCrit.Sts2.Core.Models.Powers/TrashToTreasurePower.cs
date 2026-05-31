@@ -9,20 +9,22 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class TrashToTreasurePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterCardGeneratedForCombat(CardModel card, Player? creator)
-	{
-		if (card.Type == CardType.Status && creator != null && creator.Creature == base.Owner)
-		{
-			Flash();
-			for (int i = 0; i < base.Amount; i++)
-			{
-				OrbModel orb = OrbModel.GetRandomOrb(base.Owner.Player.RunState.Rng.CombatOrbGeneration).ToMutable();
-				await OrbCmd.Channel(new ThrowingPlayerChoiceContext(), orb, base.Owner.Player);
-			}
-		}
-	}
+    public override async Task AfterCardGeneratedForCombat(CardModel card, Player? creator)
+    {
+        if (card.Type == CardType.Status && creator != null && creator.Creature == base.Owner)
+        {
+            Flash();
+            for (int i = 0; i < base.Amount; i++)
+            {
+                OrbModel orb = OrbModel
+                    .GetRandomOrb(base.Owner.Player.RunState.Rng.CombatOrbGeneration)
+                    .ToMutable();
+                await OrbCmd.Channel(new ThrowingPlayerChoiceContext(), orb, base.Owner.Player);
+            }
+        }
+    }
 }

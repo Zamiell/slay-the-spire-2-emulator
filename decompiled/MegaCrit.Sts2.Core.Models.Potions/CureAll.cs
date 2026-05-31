@@ -14,25 +14,27 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class CureAll : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Uncommon;
+    public override PotionRarity Rarity => PotionRarity.Uncommon;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyPlayer;
+    public override TargetType TargetType => TargetType.AnyPlayer;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new EnergyVar(1),
-		new CardsVar(2)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new EnergyVar(1), new CardsVar(2) }
+        );
 
-	public override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    public override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		NCombatRoom.Instance?.PlaySplashVfx(target, new Color("a296a3"));
-		await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, target.Player);
-		await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, target.Player);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        NCombatRoom.Instance?.PlaySplashVfx(target, new Color("a296a3"));
+        await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, target.Player);
+        await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, target.Player);
+    }
 }

@@ -10,30 +10,35 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Tempest : CardModel
 {
-	protected override bool HasEnergyCostX => true;
+    protected override bool HasEnergyCostX => true;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.Channeling),
-		HoverTipFactory.FromOrb<LightningOrb>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.Channeling),
+                HoverTipFactory.FromOrb<LightningOrb>(),
+            }
+        );
 
-	public Tempest()
-		: base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Tempest()
+        : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		int numOfOrbs = ResolveEnergyXValue();
-		if (base.IsUpgraded)
-		{
-			numOfOrbs++;
-		}
-		for (int i = 0; i < numOfOrbs; i++)
-		{
-			await OrbCmd.Channel<LightningOrb>(choiceContext, base.Owner);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        int numOfOrbs = ResolveEnergyXValue();
+        if (base.IsUpgraded)
+        {
+            numOfOrbs++;
+        }
+        for (int i = 0; i < numOfOrbs; i++)
+        {
+            await OrbCmd.Channel<LightningOrb>(choiceContext, base.Owner);
+        }
+    }
 }

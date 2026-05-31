@@ -10,23 +10,34 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Burst : CardModel
 {
-	private const string _skills = "Skills";
+    private const string _skills = "Skills";
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Skills", 1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("Skills", 1m)
+        );
 
-	public Burst()
-		: base(1, CardType.Skill, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public Burst()
+        : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.TriggerAnim(base.Owner.Creature, "Cast", base.Owner.Character.CastAnimDelay);
-		await PowerCmd.Apply<BurstPower>(choiceContext, base.Owner.Creature, base.DynamicVars["Skills"].BaseValue, base.Owner.Creature, this);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.TriggerAnim(
+            base.Owner.Creature,
+            "Cast",
+            base.Owner.Character.CastAnimDelay
+        );
+        await PowerCmd.Apply<BurstPower>(
+            choiceContext,
+            base.Owner.Creature,
+            base.DynamicVars["Skills"].BaseValue,
+            base.Owner.Creature,
+            this
+        );
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars["Skills"].UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars["Skills"].UpgradeValueBy(1m);
+    }
 }

@@ -12,24 +12,28 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class RetainHandPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override bool ShouldFlush(Player player)
-	{
-		if (player != base.Owner.Player)
-		{
-			return true;
-		}
-		return false;
-	}
+    public override bool ShouldFlush(Player player)
+    {
+        if (player != base.Owner.Player)
+        {
+            return true;
+        }
+        return false;
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Decrement(this);
+        }
+    }
 }

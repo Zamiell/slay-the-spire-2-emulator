@@ -11,28 +11,39 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ToolsOfTheTradePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override decimal ModifyHandDraw(Player player, decimal count)
-	{
-		if (player != base.Owner.Player)
-		{
-			return count;
-		}
-		return count + (decimal)base.Amount;
-	}
+    public override decimal ModifyHandDraw(Player player, decimal count)
+    {
+        if (player != base.Owner.Player)
+        {
+            return count;
+        }
+        return count + (decimal)base.Amount;
+    }
 
-	public override async Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player == base.Owner.Player)
-		{
-			List<CardModel> list = (await CardSelectCmd.FromHandForDiscard(choiceContext, player, new CardSelectorPrefs(CardSelectorPrefs.DiscardSelectionPrompt, base.Amount), null, this)).ToList();
-			if (list.Count != 0)
-			{
-				await CardCmd.Discard(choiceContext, list);
-			}
-		}
-	}
+    public override async Task AfterPlayerTurnStart(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player == base.Owner.Player)
+        {
+            List<CardModel> list = (
+                await CardSelectCmd.FromHandForDiscard(
+                    choiceContext,
+                    player,
+                    new CardSelectorPrefs(CardSelectorPrefs.DiscardSelectionPrompt, base.Amount),
+                    null,
+                    this
+                )
+            ).ToList();
+            if (list.Count != 0)
+            {
+                await CardCmd.Discard(choiceContext, list);
+            }
+        }
+    }
 }

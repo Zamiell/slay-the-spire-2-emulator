@@ -14,127 +14,182 @@ namespace MegaCrit.Sts2.Core.Nodes.Vfx.Cards;
 [ScriptPath("res://src/Core/Nodes/Vfx/Cards/NNightmareHandsVfx.cs")]
 public class NNightmareHandsVfx : Control
 {
-	public new class MethodName : Control.MethodName
-	{
-		public new static readonly StringName _ExitTree = "_ExitTree";
+    public new class MethodName : Control.MethodName
+    {
+        public static new readonly StringName _ExitTree = "_ExitTree";
 
-		public static readonly StringName Create = "Create";
+        public static readonly StringName Create = "Create";
 
-		public new static readonly StringName _Ready = "_Ready";
-	}
+        public static new readonly StringName _Ready = "_Ready";
+    }
 
-	public new class PropertyName : Control.PropertyName
-	{
-	}
+    public new class PropertyName : Control.PropertyName { }
 
-	public new class SignalName : Control.SignalName
-	{
-	}
+    public new class SignalName : Control.SignalName { }
 
-	private static readonly string _scenePath = SceneHelper.GetScenePath("vfx/cards/nightmare_hands_vfx");
+    private static readonly string _scenePath = SceneHelper.GetScenePath(
+        "vfx/cards/nightmare_hands_vfx"
+    );
 
-	private CancellationTokenSource? _cts;
+    private CancellationTokenSource? _cts;
 
-	public static IEnumerable<string> AssetPaths => new global::_003C_003Ez__ReadOnlySingleElementList<string>(_scenePath);
+    public static IEnumerable<string> AssetPaths =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<string>(_scenePath);
 
-	public override void _ExitTree()
-	{
-		_cts?.Cancel();
-	}
+    public override void _ExitTree()
+    {
+        _cts?.Cancel();
+    }
 
-	public static NNightmareHandsVfx? Create()
-	{
-		if (TestMode.IsOn)
-		{
-			return null;
-		}
-		return PreloadManager.Cache.GetScene(_scenePath).Instantiate<NNightmareHandsVfx>(PackedScene.GenEditState.Disabled);
-	}
+    public static NNightmareHandsVfx? Create()
+    {
+        if (TestMode.IsOn)
+        {
+            return null;
+        }
+        return PreloadManager
+            .Cache.GetScene(_scenePath)
+            .Instantiate<NNightmareHandsVfx>(PackedScene.GenEditState.Disabled);
+    }
 
-	public override void _Ready()
-	{
-		TaskHelper.RunSafely(SelfDestruct());
-	}
+    public override void _Ready()
+    {
+        TaskHelper.RunSafely(SelfDestruct());
+    }
 
-	private async Task SelfDestruct()
-	{
-		_cts = new CancellationTokenSource();
-		await Task.Delay(2000, _cts.Token);
-		this.QueueFreeSafely();
-	}
+    private async Task SelfDestruct()
+    {
+        _cts = new CancellationTokenSource();
+        await Task.Delay(2000, _cts.Token);
+        this.QueueFreeSafely();
+    }
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	internal static List<MethodInfo> GetGodotMethodList()
-	{
-		List<MethodInfo> list = new List<MethodInfo>(3);
-		list.Add(new MethodInfo(MethodName._ExitTree, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		list.Add(new MethodInfo(MethodName.Create, new PropertyInfo(Variant.Type.Object, "", PropertyHint.None, "", PropertyUsageFlags.Default, new StringName("Control"), exported: false), MethodFlags.Normal | MethodFlags.Static, null, null));
-		list.Add(new MethodInfo(MethodName._Ready, new PropertyInfo(Variant.Type.Nil, "", PropertyHint.None, "", PropertyUsageFlags.Default, exported: false), MethodFlags.Normal, null, null));
-		return list;
-	}
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal static List<MethodInfo> GetGodotMethodList()
+    {
+        List<MethodInfo> list = new List<MethodInfo>(3);
+        list.Add(
+            new MethodInfo(
+                MethodName._ExitTree,
+                new PropertyInfo(
+                    Variant.Type.Nil,
+                    "",
+                    PropertyHint.None,
+                    "",
+                    PropertyUsageFlags.Default,
+                    exported: false
+                ),
+                MethodFlags.Normal,
+                null,
+                null
+            )
+        );
+        list.Add(
+            new MethodInfo(
+                MethodName.Create,
+                new PropertyInfo(
+                    Variant.Type.Object,
+                    "",
+                    PropertyHint.None,
+                    "",
+                    PropertyUsageFlags.Default,
+                    new StringName("Control"),
+                    exported: false
+                ),
+                MethodFlags.Normal | MethodFlags.Static,
+                null,
+                null
+            )
+        );
+        list.Add(
+            new MethodInfo(
+                MethodName._Ready,
+                new PropertyInfo(
+                    Variant.Type.Nil,
+                    "",
+                    PropertyHint.None,
+                    "",
+                    PropertyUsageFlags.Default,
+                    exported: false
+                ),
+                MethodFlags.Normal,
+                null,
+                null
+            )
+        );
+        return list;
+    }
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	protected override bool InvokeGodotClassMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
-	{
-		if (method == MethodName._ExitTree && args.Count == 0)
-		{
-			_ExitTree();
-			ret = default(godot_variant);
-			return true;
-		}
-		if (method == MethodName.Create && args.Count == 0)
-		{
-			ret = VariantUtils.CreateFrom<NNightmareHandsVfx>(Create());
-			return true;
-		}
-		if (method == MethodName._Ready && args.Count == 0)
-		{
-			_Ready();
-			ret = default(godot_variant);
-			return true;
-		}
-		return base.InvokeGodotClassMethod(in method, args, out ret);
-	}
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected override bool InvokeGodotClassMethod(
+        in godot_string_name method,
+        NativeVariantPtrArgs args,
+        out godot_variant ret
+    )
+    {
+        if (method == MethodName._ExitTree && args.Count == 0)
+        {
+            _ExitTree();
+            ret = default(godot_variant);
+            return true;
+        }
+        if (method == MethodName.Create && args.Count == 0)
+        {
+            ret = VariantUtils.CreateFrom<NNightmareHandsVfx>(Create());
+            return true;
+        }
+        if (method == MethodName._Ready && args.Count == 0)
+        {
+            _Ready();
+            ret = default(godot_variant);
+            return true;
+        }
+        return base.InvokeGodotClassMethod(in method, args, out ret);
+    }
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	internal static bool InvokeGodotClassStaticMethod(in godot_string_name method, NativeVariantPtrArgs args, out godot_variant ret)
-	{
-		if (method == MethodName.Create && args.Count == 0)
-		{
-			ret = VariantUtils.CreateFrom<NNightmareHandsVfx>(Create());
-			return true;
-		}
-		ret = default(godot_variant);
-		return false;
-	}
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal static bool InvokeGodotClassStaticMethod(
+        in godot_string_name method,
+        NativeVariantPtrArgs args,
+        out godot_variant ret
+    )
+    {
+        if (method == MethodName.Create && args.Count == 0)
+        {
+            ret = VariantUtils.CreateFrom<NNightmareHandsVfx>(Create());
+            return true;
+        }
+        ret = default(godot_variant);
+        return false;
+    }
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	protected override bool HasGodotClassMethod(in godot_string_name method)
-	{
-		if (method == MethodName._ExitTree)
-		{
-			return true;
-		}
-		if (method == MethodName.Create)
-		{
-			return true;
-		}
-		if (method == MethodName._Ready)
-		{
-			return true;
-		}
-		return base.HasGodotClassMethod(in method);
-	}
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected override bool HasGodotClassMethod(in godot_string_name method)
+    {
+        if (method == MethodName._ExitTree)
+        {
+            return true;
+        }
+        if (method == MethodName.Create)
+        {
+            return true;
+        }
+        if (method == MethodName._Ready)
+        {
+            return true;
+        }
+        return base.HasGodotClassMethod(in method);
+    }
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	protected override void SaveGodotObjectData(GodotSerializationInfo info)
-	{
-		base.SaveGodotObjectData(info);
-	}
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected override void SaveGodotObjectData(GodotSerializationInfo info)
+    {
+        base.SaveGodotObjectData(info);
+    }
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	protected override void RestoreGodotObjectData(GodotSerializationInfo info)
-	{
-		base.RestoreGodotObjectData(info);
-	}
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected override void RestoreGodotObjectData(GodotSerializationInfo info)
+    {
+        base.RestoreGodotObjectData(info);
+    }
 }

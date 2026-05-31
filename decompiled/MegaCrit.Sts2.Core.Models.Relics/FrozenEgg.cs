@@ -11,52 +11,59 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class FrozenEgg : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override bool IsAllowed(IRunState runState)
-	{
-		return RelicModel.IsBeforeAct3TreasureChest(runState);
-	}
+    public override bool IsAllowed(IRunState runState)
+    {
+        return RelicModel.IsBeforeAct3TreasureChest(runState);
+    }
 
-	public override bool TryModifyCardRewardOptionsLate(Player player, List<CardCreationResult> cardRewards, CardCreationOptions options)
-	{
-		if (player != base.Owner)
-		{
-			return false;
-		}
-		if (options.Flags.HasFlag(CardCreationFlags.NoHookUpgrades))
-		{
-			return false;
-		}
-		EggRelicHelper.UpgradeValidCards(cardRewards, CardType.Power, this);
-		return true;
-	}
+    public override bool TryModifyCardRewardOptionsLate(
+        Player player,
+        List<CardCreationResult> cardRewards,
+        CardCreationOptions options
+    )
+    {
+        if (player != base.Owner)
+        {
+            return false;
+        }
+        if (options.Flags.HasFlag(CardCreationFlags.NoHookUpgrades))
+        {
+            return false;
+        }
+        EggRelicHelper.UpgradeValidCards(cardRewards, CardType.Power, this);
+        return true;
+    }
 
-	public override void ModifyMerchantCardCreationResults(Player player, List<CardCreationResult> cards)
-	{
-		if (player == base.Owner)
-		{
-			EggRelicHelper.UpgradeValidCards(cards, CardType.Power, this);
-		}
-	}
+    public override void ModifyMerchantCardCreationResults(
+        Player player,
+        List<CardCreationResult> cards
+    )
+    {
+        if (player == base.Owner)
+        {
+            EggRelicHelper.UpgradeValidCards(cards, CardType.Power, this);
+        }
+    }
 
-	public override bool TryModifyCardBeingAddedToDeck(CardModel card, out CardModel? newCard)
-	{
-		newCard = null;
-		if (card.Owner != base.Owner)
-		{
-			return false;
-		}
-		if (card.Type != CardType.Power)
-		{
-			return false;
-		}
-		if (!card.IsUpgradable)
-		{
-			return false;
-		}
-		newCard = base.Owner.RunState.CloneCard(card);
-		CardCmd.Upgrade(newCard, CardPreviewStyle.None);
-		return true;
-	}
+    public override bool TryModifyCardBeingAddedToDeck(CardModel card, out CardModel? newCard)
+    {
+        newCard = null;
+        if (card.Owner != base.Owner)
+        {
+            return false;
+        }
+        if (card.Type != CardType.Power)
+        {
+            return false;
+        }
+        if (!card.IsUpgradable)
+        {
+            return false;
+        }
+        newCard = base.Owner.RunState.CloneCard(card);
+        CardCmd.Upgrade(newCard, CardPreviewStyle.None);
+        return true;
+    }
 }

@@ -18,111 +18,113 @@ namespace MegaCrit.Sts2.Core.Rewards;
 
 public class RelicReward : Reward
 {
-	private readonly RelicRarity _rarity;
+    private readonly RelicRarity _rarity;
 
-	private RelicModel? _predeterminedRelic;
+    private RelicModel? _predeterminedRelic;
 
-	private RelicModel? _relic;
+    private RelicModel? _relic;
 
-	private bool _wasTaken;
+    private bool _wasTaken;
 
-	protected override RewardType RewardType => RewardType.Relic;
+    protected override RewardType RewardType => RewardType.Relic;
 
-	public override int RewardsSetIndex => 3;
+    public override int RewardsSetIndex => 3;
 
-	public RelicRarity Rarity => _rarity;
+    public RelicRarity Rarity => _rarity;
 
-	public RelicModel? ClaimedRelic { get; private set; }
+    public RelicModel? ClaimedRelic { get; private set; }
 
-	public RelicModel? Relic => _relic;
+    public RelicModel? Relic => _relic;
 
-	public override LocString Description => _relic.Title;
+    public override LocString Description => _relic.Title;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => _relic.HoverTips;
+    protected override IEnumerable<IHoverTip> ExtraHoverTips => _relic.HoverTips;
 
-	public override bool IsPopulated => _relic != null;
+    public override bool IsPopulated => _relic != null;
 
-	public RelicReward(Player player)
-		: base(player)
-	{
-	}
+    public RelicReward(Player player)
+        : base(player) { }
 
-	public RelicReward(RelicModel relic, Player player)
-		: base(player)
-	{
-		relic.AssertMutable();
-		_predeterminedRelic = relic;
-		_relic = relic;
-	}
+    public RelicReward(RelicModel relic, Player player)
+        : base(player)
+    {
+        relic.AssertMutable();
+        _predeterminedRelic = relic;
+        _relic = relic;
+    }
 
-	public RelicReward(RelicRarity rarity, Player player)
-		: base(player)
-	{
-		_rarity = rarity;
-	}
+    public RelicReward(RelicRarity rarity, Player player)
+        : base(player)
+    {
+        _rarity = rarity;
+    }
 
-	public override void Populate()
-	{
-		if (_relic != null)
-		{
-			return;
-		}
-		if (_rarity == RelicRarity.None)
-		{
-			if (_rngOverride != null)
-			{
-				_relic = RelicFactory.PullNextRelicFromFront(base.Player, _rngOverride).ToMutable();
-			}
-			else
-			{
-				_relic = RelicFactory.PullNextRelicFromFront(base.Player).ToMutable();
-			}
-		}
-		else
-		{
-			_relic = RelicFactory.PullNextRelicFromFront(base.Player, _rarity).ToMutable();
-		}
-	}
+    public override void Populate()
+    {
+        if (_relic != null)
+        {
+            return;
+        }
+        if (_rarity == RelicRarity.None)
+        {
+            if (_rngOverride != null)
+            {
+                _relic = RelicFactory.PullNextRelicFromFront(base.Player, _rngOverride).ToMutable();
+            }
+            else
+            {
+                _relic = RelicFactory.PullNextRelicFromFront(base.Player).ToMutable();
+            }
+        }
+        else
+        {
+            _relic = RelicFactory.PullNextRelicFromFront(base.Player, _rarity).ToMutable();
+        }
+    }
 
-	public override TextureRect CreateIcon()
-	{
-		TextureRect textureRect = new TextureRect();
-		textureRect.Texture = _relic.BigIcon;
-		textureRect.Material = (ShaderMaterial)PreloadManager.Cache.GetMaterial("res://materials/ui/relic_mat.tres").Duplicate(deep: true);
-		_relic.UpdateTexture(textureRect);
-		textureRect.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-		textureRect.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-		return textureRect;
-	}
+    public override TextureRect CreateIcon()
+    {
+        TextureRect textureRect = new TextureRect();
+        textureRect.Texture = _relic.BigIcon;
+        textureRect.Material = (ShaderMaterial)
+            PreloadManager
+                .Cache.GetMaterial("res://materials/ui/relic_mat.tres")
+                .Duplicate(deep: true);
+        _relic.UpdateTexture(textureRect);
+        textureRect.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        textureRect.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+        return textureRect;
+    }
 
-	protected override async Task<bool> OnSelect()
-	{
-		Log.Info($"Player {base.Player.NetId} obtained {_relic.Id} from relic reward");
-		ClaimedRelic = await RelicCmd.Obtain(_relic, base.Player);
-		_wasTaken = true;
-		return true;
-	}
+    protected override async Task<bool> OnSelect()
+    {
+        Log.Info($"Player {base.Player.NetId} obtained {_relic.Id} from relic reward");
+        ClaimedRelic = await RelicCmd.Obtain(_relic, base.Player);
+        _wasTaken = true;
+        return true;
+    }
 
-	public override void OnSkipped()
-	{
-		if (!_wasTaken)
-		{
-			base.Player.RunState.CurrentMapPointHistoryEntry.GetEntry(base.Player.NetId).RelicChoices.Add(new ModelChoiceHistoryEntry(_relic.Id, wasPicked: false));
-		}
-	}
+    public override void OnSkipped()
+    {
+        if (!_wasTaken)
+        {
+            base.Player.RunState.CurrentMapPointHistoryEntry.GetEntry(base.Player.NetId)
+                .RelicChoices.Add(new ModelChoiceHistoryEntry(_relic.Id, wasPicked: false));
+        }
+    }
 
-	public override void MarkContentAsSeen()
-	{
-		SaveManager.Instance.MarkRelicAsSeen(_relic);
-	}
+    public override void MarkContentAsSeen()
+    {
+        SaveManager.Instance.MarkRelicAsSeen(_relic);
+    }
 
-	public override SerializableReward ToSerializable()
-	{
-		SerializableReward serializableReward = base.ToSerializable();
-		if (_predeterminedRelic != null)
-		{
-			serializableReward.PredeterminedModelId = _predeterminedRelic.Id;
-		}
-		return serializableReward;
-	}
+    public override SerializableReward ToSerializable()
+    {
+        SerializableReward serializableReward = base.ToSerializable();
+        if (_predeterminedRelic != null)
+        {
+            serializableReward.PredeterminedModelId = _predeterminedRelic.Id;
+        }
+        return serializableReward;
+    }
 }

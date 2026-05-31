@@ -13,20 +13,21 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class BottledPotential : PotionModel
 {
-	public override PotionRarity Rarity => PotionRarity.Rare;
+    public override PotionRarity Rarity => PotionRarity.Rare;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyPlayer;
+    public override TargetType TargetType => TargetType.AnyPlayer;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(5));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(5));
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		NCombatRoom.Instance?.PlaySplashVfx(target, new Color("e645db"));
-		await CardPileCmd.Add(PileType.Hand.GetPile(target.Player).Cards, PileType.Draw);
-		await CardPileCmd.Shuffle(choiceContext, target.Player);
-		await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, target.Player);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        NCombatRoom.Instance?.PlaySplashVfx(target, new Color("e645db"));
+        await CardPileCmd.Add(PileType.Hand.GetPile(target.Player).Cards, PileType.Draw);
+        await CardPileCmd.Shuffle(choiceContext, target.Player);
+        await CardPileCmd.Draw(choiceContext, base.DynamicVars.Cards.BaseValue, target.Player);
+    }
 }

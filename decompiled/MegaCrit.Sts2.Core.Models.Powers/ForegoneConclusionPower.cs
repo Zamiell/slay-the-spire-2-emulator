@@ -11,17 +11,29 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ForegoneConclusionPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player == base.Owner.Player)
-		{
-			await CardPileCmd.ShuffleIfNecessary(choiceContext, base.Owner.Player);
-			await CardPileCmd.Add(await CardSelectCmd.FromCombatPile(choiceContext, PileType.Draw.GetPile(base.Owner.Player), base.Owner.Player, new CardSelectorPrefs(base.SelectionScreenPrompt, base.Amount)), PileType.Hand);
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player == base.Owner.Player)
+        {
+            await CardPileCmd.ShuffleIfNecessary(choiceContext, base.Owner.Player);
+            await CardPileCmd.Add(
+                await CardSelectCmd.FromCombatPile(
+                    choiceContext,
+                    PileType.Draw.GetPile(base.Owner.Player),
+                    base.Owner.Player,
+                    new CardSelectorPrefs(base.SelectionScreenPrompt, base.Amount)
+                ),
+                PileType.Hand
+            );
+            await PowerCmd.Remove(this);
+        }
+    }
 }

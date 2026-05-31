@@ -7,23 +7,23 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby;
 
 public struct LobbyPlayerChangedCharacterMessage : INetMessage, IPacketSerializable
 {
-	public CharacterModel character;
+    public CharacterModel character;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteModel(character);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteModel(character);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		character = reader.ReadModel<CharacterModel>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        character = reader.ReadModel<CharacterModel>();
+    }
 }

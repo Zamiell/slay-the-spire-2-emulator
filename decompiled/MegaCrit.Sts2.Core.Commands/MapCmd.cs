@@ -8,13 +8,13 @@ namespace MegaCrit.Sts2.Core.Commands;
 
 public static class MapCmd
 {
-	public static void SetBossEncounter(IRunState runState, EncounterModel boss)
-	{
-		runState.Act.SetBossEncounter(boss);
-		if (TestMode.IsOff)
-		{
-			NRun.Instance.GlobalUi.TopBar.BossIcon.RefreshBossIcon();
-			NMapScreen.Instance?.SetMap(runState.Map, runState.Rng.Seed, clearDrawings: false);
-		}
-	}
+    public static void SetBossEncounter(IRunState runState, EncounterModel boss)
+    {
+        runState.Act.SetBossEncounter(boss);
+        if (TestMode.IsOff)
+        {
+            NRun.Instance.GlobalUi.TopBar.BossIcon.RefreshBossIcon();
+            NMapScreen.Instance?.SetMap(runState.Map, runState.Rng.Seed, clearDrawings: false);
+        }
+    }
 }

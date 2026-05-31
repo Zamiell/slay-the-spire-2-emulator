@@ -8,16 +8,22 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class EnragePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Type == CardType.Skill)
-		{
-			await Cmd.Wait(0.5f);
-			await PowerCmd.Apply<StrengthPower>(choiceContext, base.Owner, base.Amount, base.Owner, null);
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Type == CardType.Skill)
+        {
+            await Cmd.Wait(0.5f);
+            await PowerCmd.Apply<StrengthPower>(
+                choiceContext,
+                base.Owner,
+                base.Amount,
+                base.Owner,
+                null
+            );
+        }
+    }
 }

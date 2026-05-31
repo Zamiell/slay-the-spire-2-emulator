@@ -2,9 +2,9 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Quality;
 
 public struct HeartbeatStatus
 {
-	public int counter;
+    public int counter;
 
-	public ulong sentMsec;
+    public ulong sentMsec;
 
-	public ulong? receivedMsec;
+    public ulong? receivedMsec;
 }

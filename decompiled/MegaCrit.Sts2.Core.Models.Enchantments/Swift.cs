@@ -8,16 +8,16 @@ namespace MegaCrit.Sts2.Core.Models.Enchantments;
 
 public sealed class Swift : EnchantmentModel
 {
-	public override bool HasExtraCardText => true;
+    public override bool HasExtraCardText => true;
 
-	public override bool ShowAmount => true;
+    public override bool ShowAmount => true;
 
-	public override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay? cardPlay)
-	{
-		if (base.Status == EnchantmentStatus.Normal)
-		{
-			await CardPileCmd.Draw(choiceContext, base.Amount, base.Card.Owner);
-			base.Status = EnchantmentStatus.Disabled;
-		}
-	}
+    public override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay? cardPlay)
+    {
+        if (base.Status == EnchantmentStatus.Normal)
+        {
+            await CardPileCmd.Draw(choiceContext, base.Amount, base.Card.Owner);
+            base.Status = EnchantmentStatus.Disabled;
+        }
+    }
 }

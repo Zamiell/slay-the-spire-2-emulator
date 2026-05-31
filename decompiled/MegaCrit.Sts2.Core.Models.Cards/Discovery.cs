@@ -10,42 +10,56 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Discovery : CardModel
 {
-	private CardModel? _mockSelectedCard;
+    private CardModel? _mockSelectedCard;
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	public Discovery()
-		: base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public Discovery()
+        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		CardModel cardModel;
-		if (_mockSelectedCard == null)
-		{
-			List<CardModel> cards = CardFactory.GetDistinctForCombat(base.Owner, base.Owner.Character.CardPool.GetUnlockedCards(base.Owner.UnlockState, base.Owner.RunState.CardMultiplayerConstraint), 3, base.Owner.RunState.Rng.CombatCardGeneration).ToList();
-			cardModel = await CardSelectCmd.FromChooseACardScreen(choiceContext, cards, base.Owner, canSkip: true);
-		}
-		else
-		{
-			cardModel = _mockSelectedCard;
-		}
-		if (cardModel != null)
-		{
-			cardModel.SetToFreeThisTurn();
-			await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        CardModel cardModel;
+        if (_mockSelectedCard == null)
+        {
+            List<CardModel> cards = CardFactory
+                .GetDistinctForCombat(
+                    base.Owner,
+                    base.Owner.Character.CardPool.GetUnlockedCards(
+                        base.Owner.UnlockState,
+                        base.Owner.RunState.CardMultiplayerConstraint
+                    ),
+                    3,
+                    base.Owner.RunState.Rng.CombatCardGeneration
+                )
+                .ToList();
+            cardModel = await CardSelectCmd.FromChooseACardScreen(
+                choiceContext,
+                cards,
+                base.Owner,
+                canSkip: true
+            );
+        }
+        else
+        {
+            cardModel = _mockSelectedCard;
+        }
+        if (cardModel != null)
+        {
+            cardModel.SetToFreeThisTurn();
+            await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		RemoveKeyword(CardKeyword.Exhaust);
-	}
+    protected override void OnUpgrade()
+    {
+        RemoveKeyword(CardKeyword.Exhaust);
+    }
 
-	public void MockSelectedCard(CardModel card)
-	{
-		AssertMutable();
-		_mockSelectedCard = card;
-	}
+    public void MockSelectedCard(CardModel card)
+    {
+        AssertMutable();
+        _mockSelectedCard = card;
+    }
 }

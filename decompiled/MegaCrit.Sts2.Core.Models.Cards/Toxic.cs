@@ -10,21 +10,23 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class Toxic : CardModel
 {
-	public override int MaxUpgradeLevel => 0;
+    public override int MaxUpgradeLevel => 0;
 
-	public override IEnumerable<CardKeyword> CanonicalKeywords => new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<CardKeyword>(CardKeyword.Exhaust);
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(5m, ValueProp.Unpowered | ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(5m, ValueProp.Unpowered | ValueProp.Move)
+        );
 
-	public override bool HasTurnEndInHandEffect => true;
+    public override bool HasTurnEndInHandEffect => true;
 
-	public Toxic()
-		: base(1, CardType.Status, CardRarity.Status, TargetType.None)
-	{
-	}
+    public Toxic()
+        : base(1, CardType.Status, CardRarity.Status, TargetType.None) { }
 
-	protected override async Task OnTurnEndInHand(PlayerChoiceContext choiceContext)
-	{
-		await CreatureCmd.Damage(choiceContext, base.Owner.Creature, base.DynamicVars.Damage, this);
-	}
+    protected override async Task OnTurnEndInHand(PlayerChoiceContext choiceContext)
+    {
+        await CreatureCmd.Damage(choiceContext, base.Owner.Creature, base.DynamicVars.Damage, this);
+    }
 }

@@ -14,60 +14,64 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class BoneTea : RelicModel
 {
-	private const string _combatsKey = "Combats";
+    private const string _combatsKey = "Combats";
 
-	private int _combatsLeft = 1;
+    private int _combatsLeft = 1;
 
-	public override RelicRarity Rarity => RelicRarity.Event;
+    public override RelicRarity Rarity => RelicRarity.Event;
 
-	public override bool IsUsedUp => CombatsLeft <= 0;
+    public override bool IsUsedUp => CombatsLeft <= 0;
 
-	public override bool ShowCounter => false;
+    public override bool ShowCounter => false;
 
-	public override int DisplayAmount => Math.Max(0, CombatsLeft);
+    public override int DisplayAmount => Math.Max(0, CombatsLeft);
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Combats", CombatsLeft));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("Combats", CombatsLeft)
+        );
 
-	[SavedProperty]
-	public int CombatsLeft
-	{
-		get
-		{
-			return _combatsLeft;
-		}
-		set
-		{
-			AssertMutable();
-			_combatsLeft = value;
-			base.DynamicVars["Combats"].BaseValue = _combatsLeft;
-			InvokeDisplayAmountChanged();
-			if (IsUsedUp)
-			{
-				base.Status = RelicStatus.Disabled;
-			}
-		}
-	}
+    [SavedProperty]
+    public int CombatsLeft
+    {
+        get { return _combatsLeft; }
+        set
+        {
+            AssertMutable();
+            _combatsLeft = value;
+            base.DynamicVars["Combats"].BaseValue = _combatsLeft;
+            InvokeDisplayAmountChanged();
+            if (IsUsedUp)
+            {
+                base.Status = RelicStatus.Disabled;
+            }
+        }
+    }
 
-	public override Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (IsUsedUp)
-		{
-			return Task.CompletedTask;
-		}
-		if (!participants.Contains(base.Owner.Creature))
-		{
-			return Task.CompletedTask;
-		}
-		if (base.Owner.PlayerCombatState.TurnNumber > 1)
-		{
-			return Task.CompletedTask;
-		}
-		foreach (CardModel card in PileType.Hand.GetPile(base.Owner).Cards)
-		{
-			CardCmd.Upgrade(card);
-		}
-		CombatsLeft--;
-		Flash();
-		return Task.CompletedTask;
-	}
+    public override Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (IsUsedUp)
+        {
+            return Task.CompletedTask;
+        }
+        if (!participants.Contains(base.Owner.Creature))
+        {
+            return Task.CompletedTask;
+        }
+        if (base.Owner.PlayerCombatState.TurnNumber > 1)
+        {
+            return Task.CompletedTask;
+        }
+        foreach (CardModel card in PileType.Hand.GetPile(base.Owner).Cards)
+        {
+            CardCmd.Upgrade(card);
+        }
+        CombatsLeft--;
+        Flash();
+        return Task.CompletedTask;
+    }
 }

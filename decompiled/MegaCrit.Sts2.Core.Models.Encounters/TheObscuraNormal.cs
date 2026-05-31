@@ -6,24 +6,26 @@ namespace MegaCrit.Sts2.Core.Models.Encounters;
 
 public sealed class TheObscuraNormal : EncounterModel
 {
-	public const string illusionSlot = "illusion";
+    public const string illusionSlot = "illusion";
 
-	private const string _obscuraSlot = "obscura";
+    private const string _obscuraSlot = "obscura";
 
-	public override RoomType RoomType => RoomType.Monster;
+    public override RoomType RoomType => RoomType.Monster;
 
-	public override IReadOnlyList<string> Slots => new global::_003C_003Ez__ReadOnlyArray<string>(new string[2] { "illusion", "obscura" });
+    public override IReadOnlyList<string> Slots =>
+        new global::_003C_003Ez__ReadOnlyArray<string>(new string[2] { "illusion", "obscura" });
 
-	public override bool HasScene => true;
+    public override bool HasScene => true;
 
-	public override IEnumerable<MonsterModel> AllPossibleMonsters => new global::_003C_003Ez__ReadOnlyArray<MonsterModel>(new MonsterModel[2]
-	{
-		ModelDb.Monster<TheObscura>(),
-		ModelDb.Monster<Parafright>()
-	});
+    public override IEnumerable<MonsterModel> AllPossibleMonsters =>
+        new global::_003C_003Ez__ReadOnlyArray<MonsterModel>(
+            new MonsterModel[2] { ModelDb.Monster<TheObscura>(), ModelDb.Monster<Parafright>() }
+        );
 
-	protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
-	{
-		return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>((ModelDb.Monster<TheObscura>().ToMutable(), "obscura"));
-	}
+    protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
+    {
+        return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>(
+            (ModelDb.Monster<TheObscura>().ToMutable(), "obscura")
+        );
+    }
 }

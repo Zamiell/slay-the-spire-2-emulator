@@ -12,20 +12,26 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class NinjaScroll : RelicModel
 {
-	private const string _shivKey = "Shivs";
+    private const string _shivKey = "Shivs";
 
-	public override RelicRarity Rarity => RelicRarity.Shop;
+    public override RelicRarity Rarity => RelicRarity.Shop;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Shivs", 3m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Shivs", 3m));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromCardWithCardHoverTips<Shiv>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromCardWithCardHoverTips<Shiv>();
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			Flash();
-			await Shiv.CreateInHand(base.Owner, base.DynamicVars["Shivs"].IntValue, combatState);
-		}
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber <= 1)
+        {
+            Flash();
+            await Shiv.CreateInHand(base.Owner, base.DynamicVars["Shivs"].IntValue, combatState);
+        }
+    }
 }

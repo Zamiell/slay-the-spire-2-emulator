@@ -13,44 +13,59 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class DarkEmbracePower : PowerModel
 {
-	private class Data
-	{
-		public int etherealCount;
-	}
+    private class Data
+    {
+        public int etherealCount;
+    }
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromKeyword(CardKeyword.Exhaust));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromKeyword(CardKeyword.Exhaust)
+        );
 
-	protected override object InitInternalData()
-	{
-		return new Data();
-	}
+    protected override object InitInternalData()
+    {
+        return new Data();
+    }
 
-	public override async Task AfterCardExhausted(PlayerChoiceContext choiceContext, CardModel card, bool causedByEthereal)
-	{
-		if (card.Owner.Creature == base.Owner)
-		{
-			if (causedByEthereal)
-			{
-				GetInternalData<Data>().etherealCount++;
-			}
-			else
-			{
-				await CardPileCmd.Draw(choiceContext, base.Amount, base.Owner.Player);
-			}
-		}
-	}
+    public override async Task AfterCardExhausted(
+        PlayerChoiceContext choiceContext,
+        CardModel card,
+        bool causedByEthereal
+    )
+    {
+        if (card.Owner.Creature == base.Owner)
+        {
+            if (causedByEthereal)
+            {
+                GetInternalData<Data>().etherealCount++;
+            }
+            else
+            {
+                await CardPileCmd.Draw(choiceContext, base.Amount, base.Owner.Player);
+            }
+        }
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			Data data = GetInternalData<Data>();
-			await CardPileCmd.Draw(choiceContext, base.Amount * data.etherealCount, base.Owner.Player);
-			data.etherealCount = 0;
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            Data data = GetInternalData<Data>();
+            await CardPileCmd.Draw(
+                choiceContext,
+                base.Amount * data.etherealCount,
+                base.Owner.Player
+            );
+            data.etherealCount = 0;
+        }
+    }
 }

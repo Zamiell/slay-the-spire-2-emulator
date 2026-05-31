@@ -8,13 +8,13 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class SmallCapsule : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	public override async Task AfterObtained()
-	{
-		await RewardsCmd.OfferCustom(base.Owner, new List<Reward>(1)
-		{
-			new RelicReward(base.Owner)
-		});
-	}
+    public override async Task AfterObtained()
+    {
+        await RewardsCmd.OfferCustom(
+            base.Owner,
+            new List<Reward>(1) { new RelicReward(base.Owner) }
+        );
+    }
 }

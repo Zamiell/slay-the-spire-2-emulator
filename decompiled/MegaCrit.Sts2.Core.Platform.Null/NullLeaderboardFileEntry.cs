@@ -5,15 +5,15 @@ namespace MegaCrit.Sts2.Core.Platform.Null;
 
 public class NullLeaderboardFileEntry
 {
-	[JsonPropertyName("name")]
-	public required string name;
+    [JsonPropertyName("name")]
+    public required string name;
 
-	[JsonPropertyName("score")]
-	public int score;
+    [JsonPropertyName("score")]
+    public int score;
 
-	[JsonPropertyName("id")]
-	public ulong id;
+    [JsonPropertyName("id")]
+    public ulong id;
 
-	[JsonPropertyName("other_ids")]
-	public List<ulong> userIds = new List<ulong>();
+    [JsonPropertyName("other_ids")]
+    public List<ulong> userIds = new List<ulong>();
 }

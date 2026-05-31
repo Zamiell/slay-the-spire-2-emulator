@@ -6,5 +6,8 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Connection;
 
 public interface IClientConnectionInitializer
 {
-	Task<NetErrorInfo?> Connect(NetClientGameService gameService, CancellationToken cancelToken = default(CancellationToken));
+    Task<NetErrorInfo?> Connect(
+        NetClientGameService gameService,
+        CancellationToken cancelToken = default(CancellationToken)
+    );
 }

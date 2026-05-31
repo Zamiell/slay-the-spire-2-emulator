@@ -11,17 +11,38 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class ReaperFormPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<DoomPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<DoomPower>()
+        );
 
-	public override async Task AfterDamageGiven(PlayerChoiceContext choiceContext, Creature? dealer, DamageResult result, ValueProp props, Creature target, CardModel? cardSource)
-	{
-		if (dealer != null && (dealer == base.Owner || dealer.PetOwner?.Creature == base.Owner) && props.IsPoweredAttack() && result.TotalDamage > 0)
-		{
-			await PowerCmd.Apply<DoomPower>(choiceContext, target, result.TotalDamage * base.Amount, base.Owner, null);
-		}
-	}
+    public override async Task AfterDamageGiven(
+        PlayerChoiceContext choiceContext,
+        Creature? dealer,
+        DamageResult result,
+        ValueProp props,
+        Creature target,
+        CardModel? cardSource
+    )
+    {
+        if (
+            dealer != null
+            && (dealer == base.Owner || dealer.PetOwner?.Creature == base.Owner)
+            && props.IsPoweredAttack()
+            && result.TotalDamage > 0
+        )
+        {
+            await PowerCmd.Apply<DoomPower>(
+                choiceContext,
+                target,
+                result.TotalDamage * base.Amount,
+                base.Owner,
+                null
+            );
+        }
+    }
 }

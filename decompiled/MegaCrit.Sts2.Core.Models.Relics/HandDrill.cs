@@ -13,18 +13,41 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class HandDrill : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Event;
+    public override RelicRarity Rarity => RelicRarity.Event;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new PowerVar<VulnerablePower>(2m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new PowerVar<VulnerablePower>(2m)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<VulnerablePower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<VulnerablePower>()
+        );
 
-	public override async Task AfterDamageGiven(PlayerChoiceContext choiceContext, Creature? dealer, DamageResult result, ValueProp props, Creature target, CardModel? cardSource)
-	{
-		if ((dealer == base.Owner.Creature || dealer?.PetOwner == base.Owner) && !target.IsPlayer && result.WasBlockBroken)
-		{
-			Flash();
-			await PowerCmd.Apply<VulnerablePower>(choiceContext, target, base.DynamicVars.Vulnerable.BaseValue, base.Owner.Creature, null);
-		}
-	}
+    public override async Task AfterDamageGiven(
+        PlayerChoiceContext choiceContext,
+        Creature? dealer,
+        DamageResult result,
+        ValueProp props,
+        Creature target,
+        CardModel? cardSource
+    )
+    {
+        if (
+            (dealer == base.Owner.Creature || dealer?.PetOwner == base.Owner)
+            && !target.IsPlayer
+            && result.WasBlockBroken
+        )
+        {
+            Flash();
+            await PowerCmd.Apply<VulnerablePower>(
+                choiceContext,
+                target,
+                base.DynamicVars.Vulnerable.BaseValue,
+                base.Owner.Creature,
+                null
+            );
+        }
+    }
 }

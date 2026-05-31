@@ -11,24 +11,29 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class IvoryTile : RelicModel
 {
-	private const string _energyThresholdKey = "EnergyThreshold";
+    private const string _energyThresholdKey = "EnergyThreshold";
 
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new EnergyVar(1),
-		new EnergyVar("EnergyThreshold", 3)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new EnergyVar(1), new EnergyVar("EnergyThreshold", 3) }
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner == base.Owner && cardPlay.Resources.EnergyValue >= base.DynamicVars["EnergyThreshold"].IntValue)
-		{
-			Flash();
-			await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, base.Owner);
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (
+            cardPlay.Card.Owner == base.Owner
+            && cardPlay.Resources.EnergyValue >= base.DynamicVars["EnergyThreshold"].IntValue
+        )
+        {
+            Flash();
+            await PlayerCmd.GainEnergy(base.DynamicVars.Energy.BaseValue, base.Owner);
+        }
+    }
 }

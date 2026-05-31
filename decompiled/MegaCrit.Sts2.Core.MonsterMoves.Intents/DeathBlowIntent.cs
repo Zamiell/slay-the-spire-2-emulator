@@ -9,25 +9,23 @@ namespace MegaCrit.Sts2.Core.MonsterMoves.Intents;
 
 public class DeathBlowIntent : SingleAttackIntent
 {
-	protected override string IntentPrefix => "DEATH_BLOW";
+    protected override string IntentPrefix => "DEATH_BLOW";
 
-	protected override string SpritePath => "atlases/intent_atlas.sprites/intent_death_blow.tres";
+    protected override string SpritePath => "atlases/intent_atlas.sprites/intent_death_blow.tres";
 
-	public override IntentType IntentType => IntentType.DeathBlow;
+    public override IntentType IntentType => IntentType.DeathBlow;
 
-	public override Texture2D GetTexture(IEnumerable<Creature> targets, Creature owner)
-	{
-		string imagePath = ImageHelper.GetImagePath(SpritePath);
-		return PreloadManager.Cache.GetTexture2D(imagePath);
-	}
+    public override Texture2D GetTexture(IEnumerable<Creature> targets, Creature owner)
+    {
+        string imagePath = ImageHelper.GetImagePath(SpritePath);
+        return PreloadManager.Cache.GetTexture2D(imagePath);
+    }
 
-	public override string GetAnimation(IEnumerable<Creature> targets, Creature owner)
-	{
-		return _cachedAnimationName ?? (_cachedAnimationName = IntentPrefix.ToLowerInvariant());
-	}
+    public override string GetAnimation(IEnumerable<Creature> targets, Creature owner)
+    {
+        return _cachedAnimationName ?? (_cachedAnimationName = IntentPrefix.ToLowerInvariant());
+    }
 
-	public DeathBlowIntent(Func<decimal> damageCalc)
-		: base(damageCalc)
-	{
-	}
+    public DeathBlowIntent(Func<decimal> damageCalc)
+        : base(damageCalc) { }
 }

@@ -14,33 +14,49 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class ManifestAuthority : CardModel
 {
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	public override bool GainsBlock => true;
+    public override bool GainsBlock => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(7m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(7m, ValueProp.Move)
+        );
 
-	public ManifestAuthority()
-		: base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
-	{
-	}
+    public ManifestAuthority()
+        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-		CardModel cardModel = CardFactory.GetDistinctForCombat(base.Owner, ModelDb.CardPool<ColorlessCardPool>().GetUnlockedCards(base.Owner.UnlockState, base.Owner.RunState.CardMultiplayerConstraint), 1, base.Owner.RunState.Rng.CombatCardGeneration).FirstOrDefault();
-		if (cardModel != null)
-		{
-			if (base.IsUpgraded)
-			{
-				CardCmd.Upgrade(cardModel);
-			}
-			await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
+        CardModel cardModel = CardFactory
+            .GetDistinctForCombat(
+                base.Owner,
+                ModelDb
+                    .CardPool<ColorlessCardPool>()
+                    .GetUnlockedCards(
+                        base.Owner.UnlockState,
+                        base.Owner.RunState.CardMultiplayerConstraint
+                    ),
+                1,
+                base.Owner.RunState.Rng.CombatCardGeneration
+            )
+            .FirstOrDefault();
+        if (cardModel != null)
+        {
+            if (base.IsUpgraded)
+            {
+                CardCmd.Upgrade(cardModel);
+            }
+            await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, base.Owner);
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Block.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Block.UpgradeValueBy(1m);
+    }
 }

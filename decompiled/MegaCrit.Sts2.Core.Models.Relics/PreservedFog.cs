@@ -11,18 +11,28 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class PreservedFog : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromCardWithCardHoverTips<Folly>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromCardWithCardHoverTips<Folly>();
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(3));
 
-	public override async Task AfterObtained()
-	{
-		foreach (CardModel item in await CardSelectCmd.FromDeckForRemoval(prefs: new CardSelectorPrefs(CardSelectorPrefs.RemoveSelectionPrompt, base.DynamicVars.Cards.IntValue), player: base.Owner))
-		{
-			await CardPileCmd.RemoveFromDeck(item);
-		}
-		await CardPileCmd.AddCurseToDeck<Folly>(base.Owner);
-	}
+    public override async Task AfterObtained()
+    {
+        foreach (
+            CardModel item in await CardSelectCmd.FromDeckForRemoval(
+                prefs: new CardSelectorPrefs(
+                    CardSelectorPrefs.RemoveSelectionPrompt,
+                    base.DynamicVars.Cards.IntValue
+                ),
+                player: base.Owner
+            )
+        )
+        {
+            await CardPileCmd.RemoveFromDeck(item);
+        }
+        await CardPileCmd.AddCurseToDeck<Folly>(base.Owner);
+    }
 }

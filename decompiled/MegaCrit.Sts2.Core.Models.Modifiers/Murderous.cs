@@ -10,22 +10,34 @@ namespace MegaCrit.Sts2.Core.Models.Modifiers;
 
 public class Murderous : ModifierModel
 {
-	private const int _strengthAmount = 3;
+    private const int _strengthAmount = 3;
 
-	public override async Task AfterRoomEntered(AbstractRoom room)
-	{
-		if (room is CombatRoom combatRoom)
-		{
-			await PowerCmd.Apply<StrengthPower>(new ThrowingPlayerChoiceContext(), combatRoom.CombatState.Creatures, 3m, null, null);
-		}
-	}
+    public override async Task AfterRoomEntered(AbstractRoom room)
+    {
+        if (room is CombatRoom combatRoom)
+        {
+            await PowerCmd.Apply<StrengthPower>(
+                new ThrowingPlayerChoiceContext(),
+                combatRoom.CombatState.Creatures,
+                3m,
+                null,
+                null
+            );
+        }
+    }
 
-	public override Task AfterCreatureAddedToCombat(Creature creature)
-	{
-		if (creature.Side == CombatSide.Player)
-		{
-			return Task.CompletedTask;
-		}
-		return PowerCmd.Apply<StrengthPower>(new ThrowingPlayerChoiceContext(), creature, 3m, null, null);
-	}
+    public override Task AfterCreatureAddedToCombat(Creature creature)
+    {
+        if (creature.Side == CombatSide.Player)
+        {
+            return Task.CompletedTask;
+        }
+        return PowerCmd.Apply<StrengthPower>(
+            new ThrowingPlayerChoiceContext(),
+            creature,
+            3m,
+            null,
+            null
+        );
+    }
 }

@@ -11,18 +11,25 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class InfiniteBladesPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromCard<Shiv>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromCard<Shiv>()
+        );
 
-	public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
-	{
-		if (player == base.Owner.Player)
-		{
-			Flash();
-			await Shiv.CreateInHand(base.Owner.Player, base.Amount, combatState);
-		}
-	}
+    public override async Task BeforeHandDraw(
+        Player player,
+        PlayerChoiceContext choiceContext,
+        ICombatState combatState
+    )
+    {
+        if (player == base.Owner.Player)
+        {
+            Flash();
+            await Shiv.CreateInHand(base.Owner.Player, base.Amount, combatState);
+        }
+    }
 }

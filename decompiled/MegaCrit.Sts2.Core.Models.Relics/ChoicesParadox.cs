@@ -18,34 +18,62 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class ChoicesParadox : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(5));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(5));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromKeyword(CardKeyword.Retain));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromKeyword(CardKeyword.Retain)
+        );
 
-	public override async Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player != base.Owner || base.Owner.PlayerCombatState.TurnNumber != 1)
-		{
-			return;
-		}
-		Flash();
-		List<CardModel> list = CardFactory.GetDistinctForCombat(base.Owner, base.Owner.Character.CardPool.GetUnlockedCards(base.Owner.UnlockState, base.Owner.RunState.CardMultiplayerConstraint), base.DynamicVars.Cards.IntValue, base.Owner.RunState.Rng.CombatCardGeneration).ToList();
-		if (list.Count == 0)
-		{
-			string text = "ChoicesParadox generated no cards for selection. Returning early to prevent softlock.";
-			Log.Error(text);
-			SentryService.CaptureException(new SoftlockException(text));
-			return;
-		}
-		foreach (CardModel item in list)
-		{
-			CardCmd.ApplyKeyword(item, CardKeyword.Retain);
-		}
-		foreach (CardModel item2 in await CardSelectCmd.FromSimpleGrid(choiceContext, list, base.Owner, new CardSelectorPrefs(RelicModel.L10NLookup("CHOICES_PARADOX.selectionScreenPrompt"), 1)))
-		{
-			await CardPileCmd.AddGeneratedCardToCombat(item2, PileType.Hand, base.Owner);
-		}
-	}
+    public override async Task AfterPlayerTurnStart(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player != base.Owner || base.Owner.PlayerCombatState.TurnNumber != 1)
+        {
+            return;
+        }
+        Flash();
+        List<CardModel> list = CardFactory
+            .GetDistinctForCombat(
+                base.Owner,
+                base.Owner.Character.CardPool.GetUnlockedCards(
+                    base.Owner.UnlockState,
+                    base.Owner.RunState.CardMultiplayerConstraint
+                ),
+                base.DynamicVars.Cards.IntValue,
+                base.Owner.RunState.Rng.CombatCardGeneration
+            )
+            .ToList();
+        if (list.Count == 0)
+        {
+            string text =
+                "ChoicesParadox generated no cards for selection. Returning early to prevent softlock.";
+            Log.Error(text);
+            SentryService.CaptureException(new SoftlockException(text));
+            return;
+        }
+        foreach (CardModel item in list)
+        {
+            CardCmd.ApplyKeyword(item, CardKeyword.Retain);
+        }
+        foreach (
+            CardModel item2 in await CardSelectCmd.FromSimpleGrid(
+                choiceContext,
+                list,
+                base.Owner,
+                new CardSelectorPrefs(
+                    RelicModel.L10NLookup("CHOICES_PARADOX.selectionScreenPrompt"),
+                    1
+                )
+            )
+        )
+        {
+            await CardPileCmd.AddGeneratedCardToCombat(item2, PileType.Hand, base.Owner);
+        }
+    }
 }

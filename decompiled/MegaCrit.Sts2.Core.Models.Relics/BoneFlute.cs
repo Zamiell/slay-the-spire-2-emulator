@@ -12,21 +12,24 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class BoneFlute : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Common;
+    public override RelicRarity Rarity => RelicRarity.Common;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(2m, ValueProp.Unpowered));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(2m, ValueProp.Unpowered)
+        );
 
-	public override Task AfterAttack(PlayerChoiceContext choiceContext, AttackCommand command)
-	{
-		if (!(command.Attacker?.Monster is Osty))
-		{
-			return Task.CompletedTask;
-		}
-		if (command.Attacker.PetOwner?.Creature != base.Owner.Creature)
-		{
-			return Task.CompletedTask;
-		}
-		Flash();
-		return CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
-	}
+    public override Task AfterAttack(PlayerChoiceContext choiceContext, AttackCommand command)
+    {
+        if (!(command.Attacker?.Monster is Osty))
+        {
+            return Task.CompletedTask;
+        }
+        if (command.Attacker.PetOwner?.Creature != base.Owner.Creature)
+        {
+            return Task.CompletedTask;
+        }
+        Flash();
+        return CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null);
+    }
 }

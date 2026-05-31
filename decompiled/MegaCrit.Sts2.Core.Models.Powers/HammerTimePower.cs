@@ -10,22 +10,24 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class HammerTimePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromForge();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromForge();
 
-	public override async Task AfterForge(decimal amount, Player forger, AbstractModel? source)
-	{
-		if (source is HammerTimePower || forger != base.Owner.Player)
-		{
-			return;
-		}
-		IEnumerable<Player> enumerable = base.CombatState.Players.Where((Player p) => p.Creature.IsAlive && p != forger);
-		foreach (Player item in enumerable)
-		{
-			await ForgeCmd.Forge(amount, item, this);
-		}
-	}
+    public override async Task AfterForge(decimal amount, Player forger, AbstractModel? source)
+    {
+        if (source is HammerTimePower || forger != base.Owner.Player)
+        {
+            return;
+        }
+        IEnumerable<Player> enumerable = base.CombatState.Players.Where(
+            (Player p) => p.Creature.IsAlive && p != forger
+        );
+        foreach (Player item in enumerable)
+        {
+            await ForgeCmd.Forge(amount, item, this);
+        }
+    }
 }

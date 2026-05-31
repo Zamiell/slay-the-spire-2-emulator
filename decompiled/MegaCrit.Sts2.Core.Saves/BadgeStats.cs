@@ -5,12 +5,12 @@ namespace MegaCrit.Sts2.Core.Saves;
 
 public class BadgeStats
 {
-	[JsonPropertyName("id")]
-	public required string Id { get; init; }
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
 
-	[JsonPropertyName("count")]
-	public required int Count { get; set; }
+    [JsonPropertyName("count")]
+    public required int Count { get; set; }
 
-	[JsonPropertyName("rarity")]
-	public required BadgeRarity Rarity { get; set; }
+    [JsonPropertyName("rarity")]
+    public required BadgeRarity Rarity { get; set; }
 }

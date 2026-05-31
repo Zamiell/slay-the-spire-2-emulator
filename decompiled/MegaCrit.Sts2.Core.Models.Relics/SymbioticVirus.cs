@@ -14,26 +14,37 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class SymbioticVirus : RelicModel
 {
-	private const string _darknessKey = "Dark";
+    private const string _darknessKey = "Dark";
 
-	public override RelicRarity Rarity => RelicRarity.Uncommon;
+    public override RelicRarity Rarity => RelicRarity.Uncommon;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Dark", 1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("Dark", 1m));
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.Static(StaticHoverTip.Channeling),
-		HoverTipFactory.FromOrb<DarkOrb>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.Static(StaticHoverTip.Channeling),
+                HoverTipFactory.FromOrb<DarkOrb>(),
+            }
+        );
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature) && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			for (int i = 0; (decimal)i < base.DynamicVars["Dark"].BaseValue; i++)
-			{
-				await OrbCmd.Channel<DarkOrb>(new BlockingPlayerChoiceContext(), base.Owner);
-			}
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (
+            participants.Contains(base.Owner.Creature)
+            && base.Owner.PlayerCombatState.TurnNumber <= 1
+        )
+        {
+            for (int i = 0; (decimal)i < base.DynamicVars["Dark"].BaseValue; i++)
+            {
+                await OrbCmd.Channel<DarkOrb>(new BlockingPlayerChoiceContext(), base.Owner);
+            }
+        }
+    }
 }

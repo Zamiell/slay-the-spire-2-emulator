@@ -8,19 +8,15 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game.Flavor;
 [StructLayout(LayoutKind.Sequential, Size = 1)]
 public struct EndTurnPingMessage : INetMessage, IPacketSerializable
 {
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Unreliable;
+    public NetTransferMode Mode => NetTransferMode.Unreliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-	}
+    public void Serialize(PacketWriter writer) { }
 
-	public void Deserialize(PacketReader reader)
-	{
-	}
+    public void Deserialize(PacketReader reader) { }
 }

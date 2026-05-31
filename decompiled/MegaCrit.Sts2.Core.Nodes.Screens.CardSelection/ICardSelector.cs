@@ -6,5 +6,5 @@ namespace MegaCrit.Sts2.Core.Nodes.Screens.CardSelection;
 
 public interface ICardSelector
 {
-	Task<IEnumerable<CardModel>> CardsSelected();
+    Task<IEnumerable<CardModel>> CardsSelected();
 }

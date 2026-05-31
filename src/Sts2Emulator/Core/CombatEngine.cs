@@ -7,7 +7,12 @@ namespace Sts2Emulator.Core;
 
 public static class CombatEngine
 {
-    public static StepResult Step(CombatState state, int action, Random rng, int targetEnemyIndex = -1)
+    public static StepResult Step(
+        CombatState state,
+        int action,
+        Random rng,
+        int targetEnemyIndex = -1
+    )
     {
         state.TargetEnemyIndex = targetEnemyIndex;
         int endTurnAction = state.Hand.Count;
@@ -38,10 +43,7 @@ public static class CombatEngine
             bool allDead = state.Enemies.All(e => e.Hp <= 0);
             if (playerDead || allDead)
             {
-                result = result with {
-                    Terminal = true,
-                    PlayerWon = allDead && !playerDead
-                };
+                result = result with { Terminal = true, PlayerWon = allDead && !playerDead };
             }
         }
 
@@ -105,12 +107,13 @@ public static class CombatEngine
             }
 
             int rage = BuffSystem.Get(state.PlayerBuffs, BuffId.Rage);
-            if (rage > 0) Effects.CardEffects.GainBlock(state, rage);
+            if (rage > 0)
+                Effects.CardEffects.GainBlock(state, rage);
         }
 
         // Corruption: Skills exhaust instead of discard.
-        bool corruptedSkill = def.Type == CardType.Skill
-            && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0;
+        bool corruptedSkill =
+            def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0;
         if (ShouldExhaustAfterPlay(def, card) || corruptedSkill)
             Effects.CardEffects.ExhaustCard(state, card, rng: rng);
         else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
@@ -142,10 +145,12 @@ public static class CombatEngine
         // ── End of player turn ────────────────────────────────────────────────
         // Metallicize: gain block at end of player turn.
         int metallicize = BuffSystem.Get(state.PlayerBuffs, BuffId.Metallicize);
-        if (metallicize > 0) Effects.CardEffects.GainBlock(state, metallicize);
+        if (metallicize > 0)
+            Effects.CardEffects.GainBlock(state, metallicize);
         // Plating (Stone Armor): gain block at end of player turn.
         int plating = BuffSystem.Get(state.PlayerBuffs, BuffId.Plating);
-        if (plating > 0) Effects.CardEffects.GainBlock(state, plating);
+        if (plating > 0)
+            Effects.CardEffects.GainBlock(state, plating);
         Effects.RelicEffects.ApplyEndOfPlayerTurn(state);
 
         // Tick player debuffs at end of player turn (Vulnerable etc. tick down).
@@ -181,7 +186,7 @@ public static class CombatEngine
                 Effects.CardEffects.ExhaustCard(state, card, causedByEthereal: true, rng: rng);
                 continue;
             }
-            
+
             // Status card end-of-turn effects
             if (def.Id == Effects.ST.Burn)
                 Effects.CardEffects.DealDamageToPlayer(state, 2);
@@ -217,7 +222,8 @@ public static class CombatEngine
             {
                 enemy.Hp -= poison;
                 BuffSystem.Apply(enemy.Buffs, BuffId.Poison, -1);
-                if (enemy.Hp <= 0) continue;
+                if (enemy.Hp <= 0)
+                    continue;
             }
 
             int sandpit = BuffSystem.Get(enemy.Buffs, BuffId.Sandpit);
@@ -295,7 +301,11 @@ public static class CombatEngine
         foreach (var enemy in state.Enemies)
         {
             if (enemy.DefId == KE.SkulkingColony)
-                BuffSystem.Apply(enemy.Buffs, BuffId.HardenedShell, 20 - BuffSystem.Get(enemy.Buffs, BuffId.HardenedShell));
+                BuffSystem.Apply(
+                    enemy.Buffs,
+                    BuffId.HardenedShell,
+                    20 - BuffSystem.Get(enemy.Buffs, BuffId.HardenedShell)
+                );
         }
 
         Effects.RelicEffects.ApplyStartOfPlayerTurn(state);
@@ -331,8 +341,10 @@ public static class CombatEngine
         int platingNow = BuffSystem.Get(state.PlayerBuffs, BuffId.Plating);
         if (platingNow > 0)
         {
-            if (platingNow == 1) BuffSystem.Remove(state.PlayerBuffs, BuffId.Plating);
-            else BuffSystem.Apply(state.PlayerBuffs, BuffId.Plating, -1);
+            if (platingNow == 1)
+                BuffSystem.Remove(state.PlayerBuffs, BuffId.Plating);
+            else
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Plating, -1);
         }
 
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Tangled);
@@ -378,8 +390,12 @@ public static class CombatEngine
     // Shaped reward: fraction of enemy HP dealt minus fraction of player HP lost,
     // plus ±1 terminal bonus for win/death.
     private static float ComputeReward(
-        CombatState state, bool playerDead, bool allDead,
-        int playerHpBefore, ReadOnlySpan<int> enemyHpsBefore)
+        CombatState state,
+        bool playerDead,
+        bool allDead,
+        int playerHpBefore,
+        ReadOnlySpan<int> enemyHpsBefore
+    )
     {
         float totalMaxHp = 0f;
         float dmgDealt = 0f;
@@ -392,8 +408,8 @@ public static class CombatEngine
 
         float dmgTaken = Math.Max(0, playerHpBefore - state.PlayerHp);
 
-        float shaped = (totalMaxHp > 0f ? dmgDealt / totalMaxHp : 0f)
-                     - dmgTaken / (float)state.PlayerMaxHp;
+        float shaped =
+            (totalMaxHp > 0f ? dmgDealt / totalMaxHp : 0f) - dmgTaken / (float)state.PlayerMaxHp;
 
         float terminal = (allDead && !playerDead) ? 1f : (playerDead ? -1f : 0f);
 
@@ -459,7 +475,11 @@ public static class CombatEngine
         return [.. actions];
     }
 
-    private static void HandleEnemyDeaths(CombatState state, ReadOnlySpan<int> enemyHpsBefore, Random rng)
+    private static void HandleEnemyDeaths(
+        CombatState state,
+        ReadOnlySpan<int> enemyHpsBefore,
+        Random rng
+    )
     {
         for (int i = 0; i < state.Enemies.Count && i < enemyHpsBefore.Length; i++)
         {
@@ -468,9 +488,11 @@ public static class CombatEngine
 
             if (BuffSystem.Get(state.Enemies[i].Buffs, BuffId.Surprise) > 0)
                 SpawnGremlinMercReinforcements(state, rng, state.Enemies[i].StolenGold);
-            else if (state.Enemies[i].DefId == KE.FatGremlin
+            else if (
+                state.Enemies[i].DefId == KE.FatGremlin
                 && state.EncounterId != Run.RunConstants.GremlinMercEncounterId
-                && state.Enemies[i].HeistGold > 0)
+                && state.Enemies[i].HeistGold > 0
+            )
             {
                 state.PlayerGold += state.Enemies[i].HeistGold;
                 state.Enemies[i].HeistGold = 0;
@@ -491,7 +513,11 @@ public static class CombatEngine
         }
     }
 
-    private static void SpawnGremlinMercReinforcements(CombatState state, Random rng, int stolenGold)
+    private static void SpawnGremlinMercReinforcements(
+        CombatState state,
+        Random rng,
+        int stolenGold
+    )
     {
         state.Enemies.Add(CreateEnemy(78, rng, new Intent(IntentType.Unknown, 0), stunned: true));
         var fatGremlin = CreateEnemy(28, rng, new Intent(IntentType.Unknown, 0), stunned: true);
@@ -504,8 +530,8 @@ public static class CombatEngine
         int stampede = BuffSystem.Get(state.PlayerBuffs, BuffId.Stampede);
         for (int i = 0; i < stampede && state.Enemies.Any(e => e.Hp > 0); i++)
         {
-            var attackIndexes = state.Hand
-                .Select((card, index) => (card, index))
+            var attackIndexes = state
+                .Hand.Select((card, index) => (card, index))
                 .Where(item =>
                 {
                     var def = GeneratedData.Cards.Get(item.card.DefId);
@@ -536,7 +562,8 @@ public static class CombatEngine
     private static void RemoveFirstMatchingCard(List<CardInstance> pile, CardInstance card)
     {
         int index = pile.FindIndex(pileCard =>
-            pileCard.DefId == card.DefId && pileCard.Upgraded == card.Upgraded);
+            pileCard.DefId == card.DefId && pileCard.Upgraded == card.Upgraded
+        );
         if (index >= 0)
             pile.RemoveAt(index);
     }
@@ -578,7 +605,8 @@ public static class CombatEngine
             }
 
             int rage = BuffSystem.Get(state.PlayerBuffs, BuffId.Rage);
-            if (rage > 0) Effects.CardEffects.GainBlock(state, rage);
+            if (rage > 0)
+                Effects.CardEffects.GainBlock(state, rage);
         }
 
         if (ShouldExhaustAfterPlay(def, card))
@@ -600,8 +628,10 @@ public static class CombatEngine
 
     private static bool ShouldExhaustAfterPlay(CardDef def, CardInstance card)
     {
-        if (def.Id == Effects.IC.Stampede) return false;
-        if (def.Type == CardType.Power) return true;
+        if (def.Id == Effects.IC.Stampede)
+            return false;
+        if (def.Type == CardType.Power)
+            return true;
         if (def.Id == Effects.CL.Prolong && card.Upgraded)
             return false;
         return def.Exhaust;
@@ -643,6 +673,7 @@ public static class CombatEngine
         IncrementPlayedCardTypeCounters(state, def);
         Effects.RelicEffects.ApplyAfterPlayerHpChanged(state);
     }
+
     private static void IncrementPlayedCardTypeCounters(CombatState state, CardDef def)
     {
         if (def.Type == CardType.Attack || def.Type == CardType.Skill)
@@ -659,7 +690,12 @@ public static class CombatEngine
         BuffSystem.Remove(state.PlayerBuffs, BuffId.BlockNextTurn);
     }
 
-    private static EnemyState CreateEnemy(int defId, Random rng, Intent intent, bool stunned = false)
+    private static EnemyState CreateEnemy(
+        int defId,
+        Random rng,
+        Intent intent,
+        bool stunned = false
+    )
     {
         var def = GeneratedData.Enemies.Get(defId);
         int hp = rng.Next(def.MinHp, def.MaxHp + 1);

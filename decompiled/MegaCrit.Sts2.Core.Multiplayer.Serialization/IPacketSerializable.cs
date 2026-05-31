@@ -2,7 +2,7 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Serialization;
 
 public interface IPacketSerializable
 {
-	void Serialize(PacketWriter writer);
+    void Serialize(PacketWriter writer);
 
-	void Deserialize(PacketReader reader);
+    void Deserialize(PacketReader reader);
 }

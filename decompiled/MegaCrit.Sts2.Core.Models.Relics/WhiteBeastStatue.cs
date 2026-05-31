@@ -7,23 +7,23 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class WhiteBeastStatue : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override bool IsAllowed(IRunState runState)
-	{
-		return RelicModel.IsBeforeAct3TreasureChest(runState);
-	}
+    public override bool IsAllowed(IRunState runState)
+    {
+        return RelicModel.IsBeforeAct3TreasureChest(runState);
+    }
 
-	public override bool ShouldForcePotionReward(Player player, RoomType roomType)
-	{
-		if (player != base.Owner)
-		{
-			return false;
-		}
-		if (!roomType.IsCombatRoom())
-		{
-			return false;
-		}
-		return true;
-	}
+    public override bool ShouldForcePotionReward(Player player, RoomType roomType)
+    {
+        if (player != base.Owner)
+        {
+            return false;
+        }
+        if (!roomType.IsCombatRoom())
+        {
+            return false;
+        }
+        return true;
+    }
 }

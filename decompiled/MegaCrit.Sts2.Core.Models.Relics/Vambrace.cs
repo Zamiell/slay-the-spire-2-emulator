@@ -12,112 +12,119 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Vambrace : RelicModel
 {
-	private CardModel? _triggeringCard;
+    private CardModel? _triggeringCard;
 
-	private bool _blockGainedThisCombat;
+    private bool _blockGainedThisCombat;
 
-	public override RelicRarity Rarity => RelicRarity.Uncommon;
+    public override RelicRarity Rarity => RelicRarity.Uncommon;
 
-	private CardModel? TriggeringCard
-	{
-		get
-		{
-			return _triggeringCard;
-		}
-		set
-		{
-			AssertMutable();
-			_triggeringCard = value;
-		}
-	}
+    private CardModel? TriggeringCard
+    {
+        get { return _triggeringCard; }
+        set
+        {
+            AssertMutable();
+            _triggeringCard = value;
+        }
+    }
 
-	private bool BlockGainedThisCombat
-	{
-		get
-		{
-			return _blockGainedThisCombat;
-		}
-		set
-		{
-			AssertMutable();
-			_blockGainedThisCombat = value;
-		}
-	}
+    private bool BlockGainedThisCombat
+    {
+        get { return _blockGainedThisCombat; }
+        set
+        {
+            AssertMutable();
+            _blockGainedThisCombat = value;
+        }
+    }
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	public override Task BeforeCombatStart()
-	{
-		TriggeringCard = null;
-		BlockGainedThisCombat = false;
-		base.Status = RelicStatus.Active;
-		return Task.CompletedTask;
-	}
+    public override Task BeforeCombatStart()
+    {
+        TriggeringCard = null;
+        BlockGainedThisCombat = false;
+        base.Status = RelicStatus.Active;
+        return Task.CompletedTask;
+    }
 
-	public override decimal ModifyBlockMultiplicative(Creature target, decimal block, ValueProp props, CardModel? cardSource, CardPlay? cardPlay)
-	{
-		if (!props.IsCardOrMonsterMove())
-		{
-			return 1m;
-		}
-		if (cardSource == null)
-		{
-			return 1m;
-		}
-		if (TriggeringCard != null && TriggeringCard != cardSource)
-		{
-			return 1m;
-		}
-		if (cardSource.Owner != base.Owner)
-		{
-			return 1m;
-		}
-		if (BlockGainedThisCombat)
-		{
-			return 1m;
-		}
-		return 2m;
-	}
+    public override decimal ModifyBlockMultiplicative(
+        Creature target,
+        decimal block,
+        ValueProp props,
+        CardModel? cardSource,
+        CardPlay? cardPlay
+    )
+    {
+        if (!props.IsCardOrMonsterMove())
+        {
+            return 1m;
+        }
+        if (cardSource == null)
+        {
+            return 1m;
+        }
+        if (TriggeringCard != null && TriggeringCard != cardSource)
+        {
+            return 1m;
+        }
+        if (cardSource.Owner != base.Owner)
+        {
+            return 1m;
+        }
+        if (BlockGainedThisCombat)
+        {
+            return 1m;
+        }
+        return 2m;
+    }
 
-	public override Task AfterModifyingBlockAmount(decimal modifiedAmount, CardModel? cardSource, CardPlay? cardPlay)
-	{
-		if (modifiedAmount <= 0m)
-		{
-			return Task.CompletedTask;
-		}
-		if (cardSource == null)
-		{
-			return Task.CompletedTask;
-		}
-		Flash();
-		base.Status = RelicStatus.Normal;
-		TriggeringCard = cardSource;
-		return Task.CompletedTask;
-	}
+    public override Task AfterModifyingBlockAmount(
+        decimal modifiedAmount,
+        CardModel? cardSource,
+        CardPlay? cardPlay
+    )
+    {
+        if (modifiedAmount <= 0m)
+        {
+            return Task.CompletedTask;
+        }
+        if (cardSource == null)
+        {
+            return Task.CompletedTask;
+        }
+        Flash();
+        base.Status = RelicStatus.Normal;
+        TriggeringCard = cardSource;
+        return Task.CompletedTask;
+    }
 
-	public override Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner != base.Owner)
-		{
-			return Task.CompletedTask;
-		}
-		if (cardPlay.Card != TriggeringCard)
-		{
-			return Task.CompletedTask;
-		}
-		if (BlockGainedThisCombat)
-		{
-			return Task.CompletedTask;
-		}
-		BlockGainedThisCombat = true;
-		return Task.CompletedTask;
-	}
+    public override Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Owner != base.Owner)
+        {
+            return Task.CompletedTask;
+        }
+        if (cardPlay.Card != TriggeringCard)
+        {
+            return Task.CompletedTask;
+        }
+        if (BlockGainedThisCombat)
+        {
+            return Task.CompletedTask;
+        }
+        BlockGainedThisCombat = true;
+        return Task.CompletedTask;
+    }
 
-	public override Task AfterCombatEnd(CombatRoom room)
-	{
-		TriggeringCard = null;
-		BlockGainedThisCombat = false;
-		base.Status = RelicStatus.Normal;
-		return Task.CompletedTask;
-	}
+    public override Task AfterCombatEnd(CombatRoom room)
+    {
+        TriggeringCard = null;
+        BlockGainedThisCombat = false;
+        base.Status = RelicStatus.Normal;
+        return Task.CompletedTask;
+    }
 }

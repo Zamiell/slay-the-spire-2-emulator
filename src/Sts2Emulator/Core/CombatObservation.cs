@@ -77,7 +77,10 @@ public static class CombatObservation
         offset = 8 + MaxHand * 2 + 6 + MaxPlayerBuffs * 2 + MaxEnemies * enemySlotSize;
         for (int enemyIndex = 0; enemyIndex < MaxEnemies; enemyIndex++)
         {
-            if (enemyIndex < s.Enemies.Count && s.Enemies[enemyIndex].SecondaryIntent is { } secondary)
+            if (
+                enemyIndex < s.Enemies.Count
+                && s.Enemies[enemyIndex].SecondaryIntent is { } secondary
+            )
             {
                 obs[offset + enemyIndex * 2] = (int)secondary.Type + 1;
                 obs[offset + enemyIndex * 2 + 1] = secondary.Magnitude;

@@ -9,25 +9,25 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class UnceasingTop : RelicModel
 {
-	public override string FlashSfx => "event:/sfx/ui/relic_activate_draw";
+    public override string FlashSfx => "event:/sfx/ui/relic_activate_draw";
 
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override async Task AfterHandEmptied(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player == base.Owner && IsValidPhase(player.PlayerCombatState.Phase))
-		{
-			Flash();
-			await CardPileCmd.Draw(choiceContext, player);
-		}
-	}
+    public override async Task AfterHandEmptied(PlayerChoiceContext choiceContext, Player player)
+    {
+        if (player == base.Owner && IsValidPhase(player.PlayerCombatState.Phase))
+        {
+            Flash();
+            await CardPileCmd.Draw(choiceContext, player);
+        }
+    }
 
-	private static bool IsValidPhase(PlayerTurnPhase phase)
-	{
-		if ((uint)(phase - 2) <= 2u)
-		{
-			return true;
-		}
-		return false;
-	}
+    private static bool IsValidPhase(PlayerTurnPhase phase)
+    {
+        if ((uint)(phase - 2) <= 2u)
+        {
+            return true;
+        }
+        return false;
+    }
 }

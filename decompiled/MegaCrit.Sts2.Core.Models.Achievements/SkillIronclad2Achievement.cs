@@ -10,19 +10,26 @@ namespace MegaCrit.Sts2.Core.Models.Achievements;
 
 public class SkillIronclad2Achievement : AchievementModel
 {
-	private const int _damageRequirement = 999;
+    private const int _damageRequirement = 999;
 
-	public override Task AfterDamageGiven(PlayerChoiceContext choiceContext, Creature? dealer, DamageResult result, ValueProp props, Creature target, CardModel? cardSource)
-	{
-		if (!LocalContext.IsMe(dealer))
-		{
-			return Task.CompletedTask;
-		}
-		if (result.UnblockedDamage < 999)
-		{
-			return Task.CompletedTask;
-		}
-		AchievementsUtil.Unlock(Achievement.CharacterSkillIronclad2, dealer.Player);
-		return Task.CompletedTask;
-	}
+    public override Task AfterDamageGiven(
+        PlayerChoiceContext choiceContext,
+        Creature? dealer,
+        DamageResult result,
+        ValueProp props,
+        Creature target,
+        CardModel? cardSource
+    )
+    {
+        if (!LocalContext.IsMe(dealer))
+        {
+            return Task.CompletedTask;
+        }
+        if (result.UnblockedDamage < 999)
+        {
+            return Task.CompletedTask;
+        }
+        AchievementsUtil.Unlock(Achievement.CharacterSkillIronclad2, dealer.Player);
+        return Task.CompletedTask;
+    }
 }

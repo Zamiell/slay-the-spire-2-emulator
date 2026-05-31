@@ -12,29 +12,60 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class EbbPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(new IHoverTip[2]
-	{
-		HoverTipFactory.FromPower<StrengthPower>(),
-		HoverTipFactory.FromPower<DexterityPower>()
-	});
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlyArray<IHoverTip>(
+            new IHoverTip[2]
+            {
+                HoverTipFactory.FromPower<StrengthPower>(),
+                HoverTipFactory.FromPower<DexterityPower>(),
+            }
+        );
 
-	public override async Task AfterApplied(Creature? applier, CardModel? cardSource)
-	{
-		await PowerCmd.Apply<StrengthPower>(new ThrowingPlayerChoiceContext(), base.Owner, -base.Amount, applier, null);
-		await PowerCmd.Apply<DexterityPower>(new ThrowingPlayerChoiceContext(), base.Owner, -base.Amount, applier, null);
-	}
+    public override async Task AfterApplied(Creature? applier, CardModel? cardSource)
+    {
+        await PowerCmd.Apply<StrengthPower>(
+            new ThrowingPlayerChoiceContext(),
+            base.Owner,
+            -base.Amount,
+            applier,
+            null
+        );
+        await PowerCmd.Apply<DexterityPower>(
+            new ThrowingPlayerChoiceContext(),
+            base.Owner,
+            -base.Amount,
+            applier,
+            null
+        );
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (participants.Contains(base.Owner))
-		{
-			await PowerCmd.Apply<StrengthPower>(choiceContext, base.Owner, base.Amount, base.Applier, null);
-			await PowerCmd.Apply<DexterityPower>(choiceContext, base.Owner, base.Amount, base.Applier, null);
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (participants.Contains(base.Owner))
+        {
+            await PowerCmd.Apply<StrengthPower>(
+                choiceContext,
+                base.Owner,
+                base.Amount,
+                base.Applier,
+                null
+            );
+            await PowerCmd.Apply<DexterityPower>(
+                choiceContext,
+                base.Owner,
+                base.Amount,
+                base.Applier,
+                null
+            );
+            await PowerCmd.Remove(this);
+        }
+    }
 }

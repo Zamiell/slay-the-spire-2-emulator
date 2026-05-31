@@ -18,78 +18,99 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class WhisperingEarring : RelicModel
 {
-	public const int maxCardsToPlay = 13;
+    public const int maxCardsToPlay = 13;
 
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.ForEnergy(this));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.ForEnergy(this)
+        );
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(1));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new EnergyVar(1));
 
-	public override decimal ModifyMaxEnergy(Player player, decimal amount)
-	{
-		if (player != base.Owner)
-		{
-			return amount;
-		}
-		return amount + base.DynamicVars.Energy.BaseValue;
-	}
+    public override decimal ModifyMaxEnergy(Player player, decimal amount)
+    {
+        if (player != base.Owner)
+        {
+            return amount;
+        }
+        return amount + base.DynamicVars.Energy.BaseValue;
+    }
 
-	public override async Task AfterAutoPrePlayPhaseEnteredLate(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player != base.Owner)
-		{
-			return;
-		}
-		ICombatState combatState = player.Creature.CombatState;
-		if (base.Owner.PlayerCombatState.TurnNumber > 1)
-		{
-			return;
-		}
-		Flash();
-		bool flag;
-		using (CardSelectCmd.PushSelector(new VakuuCardSelector()))
-		{
-			int cardsPlayed;
-			for (cardsPlayed = 0; cardsPlayed < 13; cardsPlayed++)
-			{
-				if (CombatManager.Instance.IsOverOrEnding)
-				{
-					break;
-				}
-				if (CombatManager.Instance.IsPlayerReadyToEndTurn(player))
-				{
-					break;
-				}
-				CardPile pile = PileType.Hand.GetPile(base.Owner);
-				CardModel card = pile.Cards.FirstOrDefault((CardModel c) => c.CanPlay());
-				if (card == null)
-				{
-					break;
-				}
-				Creature target = GetTarget(card, combatState);
-				await card.SpendResources();
-				await CardCmd.AutoPlay(choiceContext, card, target, AutoPlayType.Default, skipXCapture: true);
-			}
-			flag = cardsPlayed >= 13;
-			if (cardsPlayed == 0)
-			{
-				return;
-			}
-		}
-		LocString line = (flag ? new LocString("relics", "WHISPERING_EARRING.warning") : new LocString("relics", "WHISPERING_EARRING.approval"));
-		TalkCmd.Play(line, base.Owner.Creature, VfxColor.Purple);
-	}
+    public override async Task AfterAutoPrePlayPhaseEnteredLate(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player != base.Owner)
+        {
+            return;
+        }
+        ICombatState combatState = player.Creature.CombatState;
+        if (base.Owner.PlayerCombatState.TurnNumber > 1)
+        {
+            return;
+        }
+        Flash();
+        bool flag;
+        using (CardSelectCmd.PushSelector(new VakuuCardSelector()))
+        {
+            int cardsPlayed;
+            for (cardsPlayed = 0; cardsPlayed < 13; cardsPlayed++)
+            {
+                if (CombatManager.Instance.IsOverOrEnding)
+                {
+                    break;
+                }
+                if (CombatManager.Instance.IsPlayerReadyToEndTurn(player))
+                {
+                    break;
+                }
+                CardPile pile = PileType.Hand.GetPile(base.Owner);
+                CardModel card = pile.Cards.FirstOrDefault((CardModel c) => c.CanPlay());
+                if (card == null)
+                {
+                    break;
+                }
+                Creature target = GetTarget(card, combatState);
+                await card.SpendResources();
+                await CardCmd.AutoPlay(
+                    choiceContext,
+                    card,
+                    target,
+                    AutoPlayType.Default,
+                    skipXCapture: true
+                );
+            }
+            flag = cardsPlayed >= 13;
+            if (cardsPlayed == 0)
+            {
+                return;
+            }
+        }
+        LocString line = (
+            flag
+                ? new LocString("relics", "WHISPERING_EARRING.warning")
+                : new LocString("relics", "WHISPERING_EARRING.approval")
+        );
+        TalkCmd.Play(line, base.Owner.Creature, VfxColor.Purple);
+    }
 
-	private Creature? GetTarget(CardModel card, ICombatState combatState)
-	{
-		Rng combatTargets = base.Owner.RunState.Rng.CombatTargets;
-		return card.TargetType switch
-		{
-			TargetType.AnyEnemy => combatState.HittableEnemies.FirstOrDefault(), 
-			TargetType.AnyAlly => combatTargets.NextItem(combatState.Allies.Where((Creature c) => c != null && c.IsAlive && c.IsPlayer && c != base.Owner.Creature)), 
-			TargetType.AnyPlayer => base.Owner.Creature, 
-			_ => null, 
-		};
-	}
+    private Creature? GetTarget(CardModel card, ICombatState combatState)
+    {
+        Rng combatTargets = base.Owner.RunState.Rng.CombatTargets;
+        return card.TargetType switch
+        {
+            TargetType.AnyEnemy => combatState.HittableEnemies.FirstOrDefault(),
+            TargetType.AnyAlly => combatTargets.NextItem(
+                combatState.Allies.Where(
+                    (Creature c) => c != null && c.IsAlive && c.IsPlayer && c != base.Owner.Creature
+                )
+            ),
+            TargetType.AnyPlayer => base.Owner.Creature,
+            _ => null,
+        };
+    }
 }

@@ -23,7 +23,7 @@ jobs:
         run: dotnet tool restore
 
       - name: Check formatting
-        run: dotnet csharpier . --check
+        run: dotnet csharpier check .
 
       - name: Restore
         run: dotnet restore src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj

@@ -8,7 +8,14 @@ namespace MegaCrit.Sts2.Core.TestSupport;
 
 public interface ICardSelector
 {
-	Task<IEnumerable<CardModel>> GetSelectedCards(IEnumerable<CardModel> options, int minSelect, int maxSelect);
+    Task<IEnumerable<CardModel>> GetSelectedCards(
+        IEnumerable<CardModel> options,
+        int minSelect,
+        int maxSelect
+    );
 
-	CardRewardSelection GetSelectedCardReward(IReadOnlyList<CardCreationResult> options, IReadOnlyList<CardRewardAlternative> alternatives);
+    CardRewardSelection GetSelectedCardReward(
+        IReadOnlyList<CardCreationResult> options,
+        IReadOnlyList<CardRewardAlternative> alternatives
+    );
 }

@@ -7,11 +7,11 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Serialization;
 [GenerateSubtypes]
 public interface INetMessage : IPacketSerializable
 {
-	bool ShouldBroadcast { get; }
+    bool ShouldBroadcast { get; }
 
-	NetTransferMode Mode { get; }
+    NetTransferMode Mode { get; }
 
-	LogLevel LogLevel { get; }
+    LogLevel LogLevel { get; }
 
-	bool ShouldBuffer { get; }
+    bool ShouldBuffer { get; }
 }

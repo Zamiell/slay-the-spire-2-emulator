@@ -9,40 +9,40 @@ namespace MegaCrit.Sts2.Core.GameActions;
 
 public class VoteForMapCoordAction : GameAction
 {
-	private readonly Player _player;
+    private readonly Player _player;
 
-	private readonly MapLocation _source;
+    private readonly MapLocation _source;
 
-	private readonly MapVote? _destination;
+    private readonly MapVote? _destination;
 
-	public override ulong OwnerId => _player.NetId;
+    public override ulong OwnerId => _player.NetId;
 
-	public override GameActionType ActionType => GameActionType.NonCombat;
+    public override GameActionType ActionType => GameActionType.NonCombat;
 
-	public VoteForMapCoordAction(Player player, MapLocation source, MapVote? destination)
-	{
-		_player = player;
-		_source = source;
-		_destination = destination;
-	}
+    public VoteForMapCoordAction(Player player, MapLocation source, MapVote? destination)
+    {
+        _player = player;
+        _source = source;
+        _destination = destination;
+    }
 
-	protected override Task ExecuteAction()
-	{
-		RunManager.Instance.MapSelectionSynchronizer.PlayerVotedForMapCoord(_player, _source, _destination);
-		return Task.CompletedTask;
-	}
+    protected override Task ExecuteAction()
+    {
+        RunManager.Instance.MapSelectionSynchronizer.PlayerVotedForMapCoord(
+            _player,
+            _source,
+            _destination
+        );
+        return Task.CompletedTask;
+    }
 
-	public override INetAction ToNetAction()
-	{
-		return new NetVoteForMapCoordAction
-		{
-			source = _source,
-			destination = _destination
-		};
-	}
+    public override INetAction ToNetAction()
+    {
+        return new NetVoteForMapCoordAction { source = _source, destination = _destination };
+    }
 
-	public override string ToString()
-	{
-		return $"{"VoteForMapCoordAction"} {_player.NetId} {_source}->{_destination}";
-	}
+    public override string ToString()
+    {
+        return $"{"VoteForMapCoordAction"} {_player.NetId} {_source}->{_destination}";
+    }
 }

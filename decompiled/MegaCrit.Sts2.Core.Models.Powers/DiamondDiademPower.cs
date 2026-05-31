@@ -11,28 +11,38 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class DiamondDiademPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target != base.Owner)
-		{
-			return 1m;
-		}
-		if (!props.IsPoweredAttack())
-		{
-			return 1m;
-		}
-		return 0.5m;
-	}
+    public override decimal ModifyDamageMultiplicative(
+        Creature? target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (target != base.Owner)
+        {
+            return 1m;
+        }
+        if (!props.IsPoweredAttack())
+        {
+            return 1m;
+        }
+        return 0.5m;
+    }
 
-	public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (side == CombatSide.Enemy)
-		{
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (side == CombatSide.Enemy)
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
 }

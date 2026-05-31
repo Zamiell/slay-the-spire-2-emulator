@@ -16,39 +16,53 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class TheBombPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
+    public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DamageVar(40m, ValueProp.Unpowered));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DamageVar(40m, ValueProp.Unpowered)
+        );
 
-	public void SetDamage(decimal damage)
-	{
-		AssertMutable();
-		base.DynamicVars.Damage.BaseValue = damage;
-	}
+    public void SetDamage(decimal damage)
+    {
+        AssertMutable();
+        base.DynamicVars.Damage.BaseValue = damage;
+    }
 
-	public override async Task BeforeSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
-	{
-		if (!participants.Contains(base.Owner))
-		{
-			return;
-		}
-		if (base.Amount > 1)
-		{
-			await PowerCmd.Decrement(this);
-			return;
-		}
-		Flash();
-		await Cmd.CustomScaledWait(0.2f, 0.4f);
-		foreach (Creature hittableEnemy in base.CombatState.HittableEnemies)
-		{
-			NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(NFireSmokePuffVfx.Create(hittableEnemy));
-		}
-		await Cmd.CustomScaledWait(0.2f, 0.4f);
-		await CreatureCmd.Damage(choiceContext, base.CombatState.HittableEnemies, base.DynamicVars.Damage, base.Owner);
-		await PowerCmd.Remove(this);
-	}
+    public override async Task BeforeSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        CombatSide side,
+        IEnumerable<Creature> participants
+    )
+    {
+        if (!participants.Contains(base.Owner))
+        {
+            return;
+        }
+        if (base.Amount > 1)
+        {
+            await PowerCmd.Decrement(this);
+            return;
+        }
+        Flash();
+        await Cmd.CustomScaledWait(0.2f, 0.4f);
+        foreach (Creature hittableEnemy in base.CombatState.HittableEnemies)
+        {
+            NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(
+                NFireSmokePuffVfx.Create(hittableEnemy)
+            );
+        }
+        await Cmd.CustomScaledWait(0.2f, 0.4f);
+        await CreatureCmd.Damage(
+            choiceContext,
+            base.CombatState.HittableEnemies,
+            base.DynamicVars.Damage,
+            base.Owner
+        );
+        await PowerCmd.Remove(this);
+    }
 }

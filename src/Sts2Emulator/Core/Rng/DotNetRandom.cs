@@ -25,7 +25,10 @@ public sealed class DotNetRandom
     public int Next(int minValue, int maxValue)
     {
         if (minValue > maxValue)
-            throw new ArgumentOutOfRangeException(nameof(minValue), "minValue cannot be greater than maxValue.");
+            throw new ArgumentOutOfRangeException(
+                nameof(minValue),
+                "minValue cannot be greater than maxValue."
+            );
 
         long range = (long)maxValue - minValue;
         if (range <= int.MaxValue)
@@ -90,7 +93,6 @@ public sealed class DotNetRandom
                 int n = i + 30;
                 if (n >= 55)
                     n -= 55;
-
                 unchecked
                 {
                     _seedArray[i] -= _seedArray[1 + n];

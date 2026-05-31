@@ -12,34 +12,41 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class DualWield : CardModel
 {
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(1));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(1));
 
-	public override CardPoolModel VisualCardPool => ModelDb.CardPool<IroncladCardPool>();
+    public override CardPoolModel VisualCardPool => ModelDb.CardPool<IroncladCardPool>();
 
-	public DualWield()
-		: base(1, CardType.Skill, CardRarity.Event, TargetType.Self)
-	{
-	}
+    public DualWield()
+        : base(1, CardType.Skill, CardRarity.Event, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		CardModel selection = (await CardSelectCmd.FromHand(prefs: new CardSelectorPrefs(base.SelectionScreenPrompt, 1), context: choiceContext, player: base.Owner, filter: delegate(CardModel c)
-		{
-			CardType type = c.Type;
-			return (type == CardType.Attack || type == CardType.Power) ? true : false;
-		}, source: this)).FirstOrDefault();
-		if (selection != null)
-		{
-			for (int i = 0; i < base.DynamicVars.Cards.IntValue; i++)
-			{
-				CardModel card = selection.CreateClone();
-				await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, base.Owner);
-			}
-		}
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        CardModel selection = (
+            await CardSelectCmd.FromHand(
+                prefs: new CardSelectorPrefs(base.SelectionScreenPrompt, 1),
+                context: choiceContext,
+                player: base.Owner,
+                filter: delegate(CardModel c)
+                {
+                    CardType type = c.Type;
+                    return (type == CardType.Attack || type == CardType.Power) ? true : false;
+                },
+                source: this
+            )
+        ).FirstOrDefault();
+        if (selection != null)
+        {
+            for (int i = 0; i < base.DynamicVars.Cards.IntValue; i++)
+            {
+                CardModel card = selection.CreateClone();
+                await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, base.Owner);
+            }
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Cards.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Cards.UpgradeValueBy(1m);
+    }
 }

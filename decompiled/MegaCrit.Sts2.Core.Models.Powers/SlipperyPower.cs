@@ -10,36 +10,55 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class SlipperyPower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	public override bool ShouldScaleInMultiplayer => true;
+    public override bool ShouldScaleInMultiplayer => true;
 
-	public override decimal ModifyHpLostAfterOsty(Creature target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target != base.Owner)
-		{
-			return amount;
-		}
-		if (amount < 1m)
-		{
-			return amount;
-		}
-		return 1m;
-	}
+    public override decimal ModifyHpLostAfterOsty(
+        Creature target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (target != base.Owner)
+        {
+            return amount;
+        }
+        if (amount < 1m)
+        {
+            return amount;
+        }
+        return 1m;
+    }
 
-	public override async Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target, DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target == base.Owner && result.UnblockedDamage >= 1)
-		{
-			Flash();
-			await PowerCmd.Decrement(this);
-		}
-	}
+    public override async Task AfterDamageReceived(
+        PlayerChoiceContext choiceContext,
+        Creature target,
+        DamageResult result,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (target == base.Owner && result.UnblockedDamage >= 1)
+        {
+            Flash();
+            await PowerCmd.Decrement(this);
+        }
+    }
 
-	public override decimal GetScaledAmountForMultiplayer(ICombatState combatState, Creature? applier, decimal amount, Creature target, CardModel? cardSource)
-	{
-		return amount * (decimal)combatState.Players.Count;
-	}
+    public override decimal GetScaledAmountForMultiplayer(
+        ICombatState combatState,
+        Creature? applier,
+        decimal amount,
+        Creature target,
+        CardModel? cardSource
+    )
+    {
+        return amount * (decimal)combatState.Players.Count;
+    }
 }

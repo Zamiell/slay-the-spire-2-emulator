@@ -14,24 +14,29 @@ namespace MegaCrit.Sts2.Core.Models.Potions;
 
 public sealed class BeetleJuice : PotionModel
 {
-	private const string _damageDecreaseKey = "DamageDecrease";
+    private const string _damageDecreaseKey = "DamageDecrease";
 
-	public override PotionRarity Rarity => PotionRarity.Rare;
+    public override PotionRarity Rarity => PotionRarity.Rare;
 
-	public override PotionUsage Usage => PotionUsage.CombatOnly;
+    public override PotionUsage Usage => PotionUsage.CombatOnly;
 
-	public override TargetType TargetType => TargetType.AnyEnemy;
+    public override TargetType TargetType => TargetType.AnyEnemy;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new DynamicVar("DamageDecrease", 30m),
-		new RepeatVar(4)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2] { new DynamicVar("DamageDecrease", 30m), new RepeatVar(4) }
+        );
 
-	protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
-	{
-		PotionModel.AssertValidForTargetedPotion(target);
-		NCombatRoom.Instance?.PlaySplashVfx(target, new Color("65cf81"));
-		await PowerCmd.Apply<ShrinkPower>(choiceContext, target, base.DynamicVars.Repeat.BaseValue, base.Owner.Creature, null);
-	}
+    protected override async Task OnUse(PlayerChoiceContext choiceContext, Creature? target)
+    {
+        PotionModel.AssertValidForTargetedPotion(target);
+        NCombatRoom.Instance?.PlaySplashVfx(target, new Color("65cf81"));
+        await PowerCmd.Apply<ShrinkPower>(
+            choiceContext,
+            target,
+            base.DynamicVars.Repeat.BaseValue,
+            base.Owner.Creature,
+            null
+        );
+    }
 }

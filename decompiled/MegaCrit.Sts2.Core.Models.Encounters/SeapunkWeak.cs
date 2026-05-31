@@ -7,16 +7,22 @@ namespace MegaCrit.Sts2.Core.Models.Encounters;
 
 public sealed class SeapunkWeak : EncounterModel
 {
-	public override RoomType RoomType => RoomType.Monster;
+    public override RoomType RoomType => RoomType.Monster;
 
-	public override IEnumerable<EncounterTag> Tags => new global::_003C_003Ez__ReadOnlySingleElementList<EncounterTag>(EncounterTag.Seapunk);
+    public override IEnumerable<EncounterTag> Tags =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<EncounterTag>(EncounterTag.Seapunk);
 
-	public override bool IsWeak => true;
+    public override bool IsWeak => true;
 
-	public override IEnumerable<MonsterModel> AllPossibleMonsters => new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(ModelDb.Monster<Seapunk>());
+    public override IEnumerable<MonsterModel> AllPossibleMonsters =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(
+            ModelDb.Monster<Seapunk>()
+        );
 
-	protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
-	{
-		return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>((ModelDb.Monster<Seapunk>().ToMutable(), null));
-	}
+    protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
+    {
+        return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>(
+            (ModelDb.Monster<Seapunk>().ToMutable(), null)
+        );
+    }
 }

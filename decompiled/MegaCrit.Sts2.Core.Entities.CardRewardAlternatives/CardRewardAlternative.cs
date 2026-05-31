@@ -11,49 +11,74 @@ namespace MegaCrit.Sts2.Core.Entities.CardRewardAlternatives;
 
 public class CardRewardAlternative
 {
-	public string OptionId { get; }
+    public string OptionId { get; }
 
-	public LocString Title => new LocString("card_reward_ui", "OPTION_" + OptionId.ToUpperInvariant() + ".name");
+    public LocString Title =>
+        new LocString("card_reward_ui", "OPTION_" + OptionId.ToUpperInvariant() + ".name");
 
-	public string Hotkey { get; }
+    public string Hotkey { get; }
 
-	public Func<Task> OnSelect { get; private set; }
+    public Func<Task> OnSelect { get; private set; }
 
-	public PostAlternateCardRewardAction AfterSelected { get; private set; }
+    public PostAlternateCardRewardAction AfterSelected { get; private set; }
 
-	public CardRewardAlternative(string optionId, PostAlternateCardRewardAction afterSelected)
-		: this(optionId, () => Task.CompletedTask, afterSelected)
-	{
-	}
+    public CardRewardAlternative(string optionId, PostAlternateCardRewardAction afterSelected)
+        : this(optionId, () => Task.CompletedTask, afterSelected) { }
 
-	public CardRewardAlternative(string optionId, Func<Task> onSelect, PostAlternateCardRewardAction afterSelected)
-	{
-		OptionId = optionId;
-		OnSelect = onSelect;
-		AfterSelected = afterSelected;
-		Hotkey = ((afterSelected == PostAlternateCardRewardAction.EndSelectionAndDoNotCompleteReward) ? MegaInput.cancel : MegaInput.viewExhaustPileAndTabRight);
-	}
+    public CardRewardAlternative(
+        string optionId,
+        Func<Task> onSelect,
+        PostAlternateCardRewardAction afterSelected
+    )
+    {
+        OptionId = optionId;
+        OnSelect = onSelect;
+        AfterSelected = afterSelected;
+        Hotkey = (
+            (afterSelected == PostAlternateCardRewardAction.EndSelectionAndDoNotCompleteReward)
+                ? MegaInput.cancel
+                : MegaInput.viewExhaustPileAndTabRight
+        );
+    }
 
-	public static IReadOnlyList<CardRewardAlternative> Generate(CardReward cardReward)
-	{
-		List<CardRewardAlternative> list = new List<CardRewardAlternative>();
-		if (cardReward.CanSkip)
-		{
-			list.Add(new CardRewardAlternative("Skip", PostAlternateCardRewardAction.EndSelectionAndDoNotCompleteReward));
-		}
-		if (cardReward.CanReroll)
-		{
-			list.Add(new CardRewardAlternative("REROLL", delegate
-			{
-				cardReward.Reroll();
-				return Task.CompletedTask;
-			}, PostAlternateCardRewardAction.DoNothing));
-		}
-		Hook.ModifyCardRewardAlternatives(cardReward.Player.RunState, cardReward.Player, cardReward, list);
-		if (list.Count > 2)
-		{
-			throw new InvalidOperationException("More than 2 card reward alternatives are not supported.");
-		}
-		return list;
-	}
+    public static IReadOnlyList<CardRewardAlternative> Generate(CardReward cardReward)
+    {
+        List<CardRewardAlternative> list = new List<CardRewardAlternative>();
+        if (cardReward.CanSkip)
+        {
+            list.Add(
+                new CardRewardAlternative(
+                    "Skip",
+                    PostAlternateCardRewardAction.EndSelectionAndDoNotCompleteReward
+                )
+            );
+        }
+        if (cardReward.CanReroll)
+        {
+            list.Add(
+                new CardRewardAlternative(
+                    "REROLL",
+                    delegate
+                    {
+                        cardReward.Reroll();
+                        return Task.CompletedTask;
+                    },
+                    PostAlternateCardRewardAction.DoNothing
+                )
+            );
+        }
+        Hook.ModifyCardRewardAlternatives(
+            cardReward.Player.RunState,
+            cardReward.Player,
+            cardReward,
+            list
+        );
+        if (list.Count > 2)
+        {
+            throw new InvalidOperationException(
+                "More than 2 card reward alternatives are not supported."
+            );
+        }
+        return list;
+    }
 }

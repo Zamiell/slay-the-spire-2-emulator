@@ -14,30 +14,53 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Brimstone : RelicModel
 {
-	private const string _selfStrengthKey = "SelfStrength";
+    private const string _selfStrengthKey = "SelfStrength";
 
-	private const string _enemyStrengthKey = "EnemyStrength";
+    private const string _enemyStrengthKey = "EnemyStrength";
 
-	public override RelicRarity Rarity => RelicRarity.Shop;
+    public override RelicRarity Rarity => RelicRarity.Shop;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[2]
-	{
-		new PowerVar<StrengthPower>("SelfStrength", 2m),
-		new PowerVar<StrengthPower>("EnemyStrength", 1m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[2]
+            {
+                new PowerVar<StrengthPower>("SelfStrength", 2m),
+                new PowerVar<StrengthPower>("EnemyStrength", 1m),
+            }
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromPower<StrengthPower>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromPower<StrengthPower>()
+        );
 
-	public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
-	{
-		if (participants.Contains(base.Owner.Creature))
-		{
-			Flash();
-			await PowerCmd.Apply<StrengthPower>(new ThrowingPlayerChoiceContext(), base.Owner.Creature, base.DynamicVars["SelfStrength"].BaseValue, base.Owner.Creature, null);
-			IEnumerable<Creature> targets = from c in combatState.GetOpponentsOf(base.Owner.Creature)
-				where c.IsAlive
-				select c;
-			await PowerCmd.Apply<StrengthPower>(new ThrowingPlayerChoiceContext(), targets, base.DynamicVars["EnemyStrength"].BaseValue, null, null);
-		}
-	}
+    public override async Task AfterSideTurnStart(
+        CombatSide side,
+        IReadOnlyList<Creature> participants,
+        ICombatState combatState
+    )
+    {
+        if (participants.Contains(base.Owner.Creature))
+        {
+            Flash();
+            await PowerCmd.Apply<StrengthPower>(
+                new ThrowingPlayerChoiceContext(),
+                base.Owner.Creature,
+                base.DynamicVars["SelfStrength"].BaseValue,
+                base.Owner.Creature,
+                null
+            );
+            IEnumerable<Creature> targets =
+                from c in combatState.GetOpponentsOf(base.Owner.Creature)
+                where c.IsAlive
+                select c;
+            await PowerCmd.Apply<StrengthPower>(
+                new ThrowingPlayerChoiceContext(),
+                targets,
+                base.DynamicVars["EnemyStrength"].BaseValue,
+                null,
+                null
+            );
+        }
+    }
 }

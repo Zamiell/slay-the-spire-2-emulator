@@ -1,8 +1,27 @@
 namespace Sts2Emulator.Core;
 
-public enum CardType { Attack, Skill, Power, Status, Curse }
+public enum CardType
+{
+    Attack,
+    Skill,
+    Power,
+    Status,
+    Curse,
+}
 
-public enum CardRarity { Basic, Common, Uncommon, Rare, Status, Curse, Special, Ancient, Event, Token }
+public enum CardRarity
+{
+    Basic,
+    Common,
+    Uncommon,
+    Rare,
+    Status,
+    Curse,
+    Special,
+    Ancient,
+    Event,
+    Token,
+}
 
 public readonly record struct CardDef(
     int Id,
@@ -20,4 +39,9 @@ public readonly record struct CardDef(
     bool Retain = false
 );
 
-public readonly record struct CardInstance(int DefId, bool Upgraded, bool FreeThisTurn = false, bool Retain = false);
+public readonly record struct CardInstance(
+    int DefId,
+    bool Upgraded,
+    bool FreeThisTurn = false,
+    bool Retain = false
+);

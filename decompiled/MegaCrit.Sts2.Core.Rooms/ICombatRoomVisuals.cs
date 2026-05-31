@@ -6,11 +6,11 @@ namespace MegaCrit.Sts2.Core.Rooms;
 
 public interface ICombatRoomVisuals
 {
-	EncounterModel Encounter { get; }
+    EncounterModel Encounter { get; }
 
-	IEnumerable<Creature> Allies { get; }
+    IEnumerable<Creature> Allies { get; }
 
-	IEnumerable<Creature> Enemies { get; }
+    IEnumerable<Creature> Enemies { get; }
 
-	ActModel Act { get; }
+    ActModel Act { get; }
 }

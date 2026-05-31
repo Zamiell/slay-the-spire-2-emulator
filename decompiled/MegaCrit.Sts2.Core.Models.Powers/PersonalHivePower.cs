@@ -14,30 +14,45 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class PersonalHivePower : PowerModel
 {
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromCard<Dazed>());
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.FromCard<Dazed>()
+        );
 
-	public override async Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target, DamageResult _, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target == base.Owner && dealer != null && props.IsPoweredAttack())
-		{
-			if (dealer.Monster is Osty)
-			{
-				dealer = dealer.PetOwner.Creature;
-			}
-			CardPileAddResult[] statusCards = new CardPileAddResult[base.Amount];
-			for (int i = 0; i < base.Amount; i++)
-			{
-				CardModel card = base.CombatState.CreateCard<Dazed>(dealer.Player);
-				CardPileAddResult[] array = statusCards;
-				int num = i;
-				array[num] = await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Draw, null, CardPilePosition.Random);
-			}
-			CardCmd.PreviewCardPileAdd(statusCards);
-			await Cmd.Wait(0.5f);
-		}
-	}
+    public override async Task AfterDamageReceived(
+        PlayerChoiceContext choiceContext,
+        Creature target,
+        DamageResult _,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (target == base.Owner && dealer != null && props.IsPoweredAttack())
+        {
+            if (dealer.Monster is Osty)
+            {
+                dealer = dealer.PetOwner.Creature;
+            }
+            CardPileAddResult[] statusCards = new CardPileAddResult[base.Amount];
+            for (int i = 0; i < base.Amount; i++)
+            {
+                CardModel card = base.CombatState.CreateCard<Dazed>(dealer.Player);
+                CardPileAddResult[] array = statusCards;
+                int num = i;
+                array[num] = await CardPileCmd.AddGeneratedCardToCombat(
+                    card,
+                    PileType.Draw,
+                    null,
+                    CardPilePosition.Random
+                );
+            }
+            CardCmd.PreviewCardPileAdd(statusCards);
+            await Cmd.Wait(0.5f);
+        }
+    }
 }

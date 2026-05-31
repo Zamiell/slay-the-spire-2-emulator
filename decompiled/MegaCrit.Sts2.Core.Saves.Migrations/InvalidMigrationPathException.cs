@@ -4,8 +4,6 @@ namespace MegaCrit.Sts2.Core.Saves.Migrations;
 
 public class InvalidMigrationPathException : Exception
 {
-	protected InvalidMigrationPathException(string message)
-		: base(message)
-	{
-	}
+    protected InvalidMigrationPathException(string message)
+        : base(message) { }
 }

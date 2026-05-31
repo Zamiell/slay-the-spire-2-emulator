@@ -8,37 +8,38 @@ namespace MegaCrit.Sts2.Core.Models.Badges;
 
 public class Restful : Badge
 {
-	public override BadgeRarity Rarity => BadgeRarity.Bronze;
+    public override BadgeRarity Rarity => BadgeRarity.Bronze;
 
-	public Restful(SerializableRun run, bool won, ulong playerId)
-		: base(run, won, playerId, "RESTFUL", requiresWin: true, multiplayerOnly: false)
-	{
-	}
+    public Restful(SerializableRun run, bool won, ulong playerId)
+        : base(run, won, playerId, "RESTFUL", requiresWin: true, multiplayerOnly: false) { }
 
-	public override bool IsObtained()
-	{
-		int num = 0;
-		foreach (List<MapPointHistoryEntry> item in _run.MapPointHistory)
-		{
-			foreach (MapPointHistoryEntry item2 in item)
-			{
-				foreach (MapPointRoomHistoryEntry room in item2.Rooms)
-				{
-					if (room.RoomType != RoomType.RestSite)
-					{
-						continue;
-					}
-					num++;
-					foreach (PlayerMapPointHistoryEntry playerStat in item2.PlayerStats)
-					{
-						if (playerStat.PlayerId == _localPlayer.NetId && !playerStat.RestSiteChoices.Contains("HEAL"))
-						{
-							return false;
-						}
-					}
-				}
-			}
-		}
-		return num > 0;
-	}
+    public override bool IsObtained()
+    {
+        int num = 0;
+        foreach (List<MapPointHistoryEntry> item in _run.MapPointHistory)
+        {
+            foreach (MapPointHistoryEntry item2 in item)
+            {
+                foreach (MapPointRoomHistoryEntry room in item2.Rooms)
+                {
+                    if (room.RoomType != RoomType.RestSite)
+                    {
+                        continue;
+                    }
+                    num++;
+                    foreach (PlayerMapPointHistoryEntry playerStat in item2.PlayerStats)
+                    {
+                        if (
+                            playerStat.PlayerId == _localPlayer.NetId
+                            && !playerStat.RestSiteChoices.Contains("HEAL")
+                        )
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return num > 0;
+    }
 }

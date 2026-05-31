@@ -8,29 +8,29 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Game.Flavor;
 
 public struct ReactionMessage : INetMessage, IPacketSerializable
 {
-	private static readonly QuantizeParams _quantizeParams = new QuantizeParams(-3f, 3f, 16);
+    private static readonly QuantizeParams _quantizeParams = new QuantizeParams(-3f, 3f, 16);
 
-	public ReactionType type;
+    public ReactionType type;
 
-	public Vector2 normalizedPosition;
+    public Vector2 normalizedPosition;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Unreliable;
+    public NetTransferMode Mode => NetTransferMode.Unreliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteEnum(type);
-		writer.WriteVector2(normalizedPosition, _quantizeParams, _quantizeParams);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteEnum(type);
+        writer.WriteVector2(normalizedPosition, _quantizeParams, _quantizeParams);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		type = reader.ReadEnum<ReactionType>();
-		normalizedPosition = reader.ReadVector2(_quantizeParams, _quantizeParams);
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        type = reader.ReadEnum<ReactionType>();
+        normalizedPosition = reader.ReadVector2(_quantizeParams, _quantizeParams);
+    }
 }

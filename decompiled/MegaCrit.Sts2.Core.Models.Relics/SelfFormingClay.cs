@@ -14,19 +14,42 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class SelfFormingClay : RelicModel
 {
-	private const string _blockNextTurnKey = "BlockNextTurn";
+    private const string _blockNextTurnKey = "BlockNextTurn";
 
-	public override RelicRarity Rarity => RelicRarity.Uncommon;
+    public override RelicRarity Rarity => RelicRarity.Uncommon;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("BlockNextTurn", 3m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("BlockNextTurn", 3m)
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	public override async Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target, DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (CombatManager.Instance.IsInProgress && target == base.Owner.Creature && result.UnblockedDamage > 0)
-		{
-			await PowerCmd.Apply<SelfFormingClayPower>(choiceContext, base.Owner.Creature, base.DynamicVars["BlockNextTurn"].BaseValue, base.Owner.Creature, null);
-		}
-	}
+    public override async Task AfterDamageReceived(
+        PlayerChoiceContext choiceContext,
+        Creature target,
+        DamageResult result,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (
+            CombatManager.Instance.IsInProgress
+            && target == base.Owner.Creature
+            && result.UnblockedDamage > 0
+        )
+        {
+            await PowerCmd.Apply<SelfFormingClayPower>(
+                choiceContext,
+                base.Owner.Creature,
+                base.DynamicVars["BlockNextTurn"].BaseValue,
+                base.Owner.Creature,
+                null
+            );
+        }
+    }
 }

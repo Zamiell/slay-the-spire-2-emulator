@@ -7,12 +7,16 @@ namespace MegaCrit.Sts2.Core.Models.Powers.Mocks;
 
 public sealed class MockRemoveDrawnCardsFromCombatPower : PowerModel
 {
-	public override PowerType Type => PowerType.Debuff;
+    public override PowerType Type => PowerType.Debuff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	public override async Task AfterCardDrawn(PlayerChoiceContext choiceContext, CardModel card, bool fromHandDraw)
-	{
-		await CardPileCmd.RemoveFromCombat(card, skipVisuals: true);
-	}
+    public override async Task AfterCardDrawn(
+        PlayerChoiceContext choiceContext,
+        CardModel card,
+        bool fromHandDraw
+    )
+    {
+        await CardPileCmd.RemoveFromCombat(card, skipVisuals: true);
+    }
 }

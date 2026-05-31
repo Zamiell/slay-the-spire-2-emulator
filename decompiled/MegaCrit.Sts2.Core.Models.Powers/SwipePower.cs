@@ -14,64 +14,68 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class SwipePower : PowerModel
 {
-	private CardModel? _stolenCard;
+    private CardModel? _stolenCard;
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
+    public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
 
-	public CardModel? StolenCard
-	{
-		get
-		{
-			return _stolenCard;
-		}
-		set
-		{
-			AssertMutable();
-			_stolenCard = value;
-		}
-	}
+    public CardModel? StolenCard
+    {
+        get { return _stolenCard; }
+        set
+        {
+            AssertMutable();
+            _stolenCard = value;
+        }
+    }
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips
-	{
-		get
-		{
-			if (StolenCard == null)
-			{
-				return Array.Empty<IHoverTip>();
-			}
-			return new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.FromCard(StolenCard));
-		}
-	}
+    protected override IEnumerable<IHoverTip> ExtraHoverTips
+    {
+        get
+        {
+            if (StolenCard == null)
+            {
+                return Array.Empty<IHoverTip>();
+            }
+            return new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+                HoverTipFactory.FromCard(StolenCard)
+            );
+        }
+    }
 
-	public override Task BeforeDeath(Creature target)
-	{
-		if (base.Owner != target)
-		{
-			return Task.CompletedTask;
-		}
-		if (StolenCard?.DeckVersion == null)
-		{
-			return Task.CompletedTask;
-		}
-		IRunState runState = base.CombatState.RunState;
-		runState.AddCard(StolenCard.DeckVersion, base.Target.Player);
-		SpecialCardReward specialCardReward = new SpecialCardReward(StolenCard.DeckVersion, base.Target.Player);
-		specialCardReward.SetCustomDescriptionEncounterSource(ModelDb.Encounter<ThievingHopperWeak>().Id);
-		((CombatRoom)runState.CurrentRoom).AddExtraReward(base.Target.Player, specialCardReward);
-		return Task.CompletedTask;
-	}
+    public override Task BeforeDeath(Creature target)
+    {
+        if (base.Owner != target)
+        {
+            return Task.CompletedTask;
+        }
+        if (StolenCard?.DeckVersion == null)
+        {
+            return Task.CompletedTask;
+        }
+        IRunState runState = base.CombatState.RunState;
+        runState.AddCard(StolenCard.DeckVersion, base.Target.Player);
+        SpecialCardReward specialCardReward = new SpecialCardReward(
+            StolenCard.DeckVersion,
+            base.Target.Player
+        );
+        specialCardReward.SetCustomDescriptionEncounterSource(
+            ModelDb.Encounter<ThievingHopperWeak>().Id
+        );
+        ((CombatRoom)runState.CurrentRoom).AddExtraReward(base.Target.Player, specialCardReward);
+        return Task.CompletedTask;
+    }
 
-	public async Task Steal(CardModel card)
-	{
-		base.Target = card.Owner.Creature;
-		StolenCard = card;
-		if (card.DeckVersion != null)
-		{
-			await CardPileCmd.RemoveFromDeck(card.DeckVersion, showPreview: false);
-		}
-	}
+    public async Task Steal(CardModel card)
+    {
+        base.Target = card.Owner.Creature;
+        StolenCard = card;
+        if (card.DeckVersion != null)
+        {
+            await CardPileCmd.RemoveFromDeck(card.DeckVersion, showPreview: false);
+        }
+    }
 }

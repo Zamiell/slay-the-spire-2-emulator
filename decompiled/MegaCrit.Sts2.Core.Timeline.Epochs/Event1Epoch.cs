@@ -10,40 +10,40 @@ namespace MegaCrit.Sts2.Core.Timeline.Epochs;
 
 public class Event1Epoch : EpochModel
 {
-	public override string Id => "EVENT1_EPOCH";
+    public override string Id => "EVENT1_EPOCH";
 
-	public override EpochEra Era => EpochEra.Flourish1;
+    public override EpochEra Era => EpochEra.Flourish1;
 
-	public override int EraPosition => 0;
+    public override int EraPosition => 0;
 
-	public override string StoryId => "Tales_From_The_Spire";
+    public override string StoryId => "Tales_From_The_Spire";
 
-	public static List<EventModel> Events
-	{
-		get
-		{
-			int num = 1;
-			List<EventModel> list = new List<EventModel>(num);
-			CollectionsMarshal.SetCount(list, num);
-			Span<EventModel> span = CollectionsMarshal.AsSpan(list);
-			int index = 0;
-			span[index] = ModelDb.Event<TrashHeap>();
-			return list;
-		}
-	}
+    public static List<EventModel> Events
+    {
+        get
+        {
+            int num = 1;
+            List<EventModel> list = new List<EventModel>(num);
+            CollectionsMarshal.SetCount(list, num);
+            Span<EventModel> span = CollectionsMarshal.AsSpan(list);
+            int index = 0;
+            span[index] = ModelDb.Event<TrashHeap>();
+            return list;
+        }
+    }
 
-	public override string UnlockText
-	{
-		get
-		{
-			LocString locString = new LocString("epochs", Id + ".unlockText");
-			locString.Add("Event", Events[0].Title);
-			return locString.GetFormattedText();
-		}
-	}
+    public override string UnlockText
+    {
+        get
+        {
+            LocString locString = new LocString("epochs", Id + ".unlockText");
+            locString.Add("Event", Events[0].Title);
+            return locString.GetFormattedText();
+        }
+    }
 
-	public override void QueueUnlocks()
-	{
-		NTimelineScreen.Instance.QueueMiscUnlock(UnlockText);
-	}
+    public override void QueueUnlocks()
+    {
+        NTimelineScreen.Instance.QueueMiscUnlock(UnlockText);
+    }
 }

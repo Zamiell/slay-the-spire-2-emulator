@@ -6,21 +6,21 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Game.Lobby;
 
 public interface IStartRunLobbyListener
 {
-	void PlayerConnected(LobbyPlayer player);
+    void PlayerConnected(LobbyPlayer player);
 
-	void PlayerChanged(LobbyPlayer player, bool isRandomCharacterResolution);
+    void PlayerChanged(LobbyPlayer player, bool isRandomCharacterResolution);
 
-	void AscensionChanged();
+    void AscensionChanged();
 
-	void SeedChanged();
+    void SeedChanged();
 
-	void ModifiersChanged();
+    void ModifiersChanged();
 
-	void MaxAscensionChanged();
+    void MaxAscensionChanged();
 
-	void RemotePlayerDisconnected(LobbyPlayer player);
+    void RemotePlayerDisconnected(LobbyPlayer player);
 
-	void BeginRun(string seed, List<ActModel> acts, IReadOnlyList<ModifierModel> modifiers);
+    void BeginRun(string seed, List<ActModel> acts, IReadOnlyList<ModifierModel> modifiers);
 
-	void LocalPlayerDisconnected(NetErrorInfo info);
+    void LocalPlayerDisconnected(NetErrorInfo info);
 }

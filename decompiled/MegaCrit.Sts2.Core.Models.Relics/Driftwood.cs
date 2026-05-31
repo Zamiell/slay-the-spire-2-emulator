@@ -9,18 +9,22 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public class Driftwood : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	public override bool TryModifyRewardsLate(Player player, List<Reward> rewards, AbstractRoom? room)
-	{
-		if (player != base.Owner)
-		{
-			return false;
-		}
-		foreach (CardReward item in rewards.OfType<CardReward>())
-		{
-			item.CanReroll = true;
-		}
-		return true;
-	}
+    public override bool TryModifyRewardsLate(
+        Player player,
+        List<Reward> rewards,
+        AbstractRoom? room
+    )
+    {
+        if (player != base.Owner)
+        {
+            return false;
+        }
+        foreach (CardReward item in rewards.OfType<CardReward>())
+        {
+            item.CanReroll = true;
+        }
+        return true;
+    }
 }

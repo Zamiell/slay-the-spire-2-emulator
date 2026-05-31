@@ -7,33 +7,36 @@ namespace MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 public class ExtraDamageVar : DynamicVar
 {
-	public const string defaultName = "ExtraDamage";
+    public const string defaultName = "ExtraDamage";
 
-	public bool IsFromOsty { get; private set; }
+    public bool IsFromOsty { get; private set; }
 
-	public ExtraDamageVar FromOsty()
-	{
-		IsFromOsty = true;
-		return this;
-	}
+    public ExtraDamageVar FromOsty()
+    {
+        IsFromOsty = true;
+        return this;
+    }
 
-	public ExtraDamageVar(decimal damage)
-		: base("ExtraDamage", damage)
-	{
-	}
+    public ExtraDamageVar(decimal damage)
+        : base("ExtraDamage", damage) { }
 
-	public override void UpdateCardPreview(CardModel card, CardPreviewMode previewMode, Creature? target, bool runGlobalHooks)
-	{
-		decimal baseValue = base.BaseValue;
-		EnchantmentModel enchantment = card.Enchantment;
-		if (enchantment != null)
-		{
-			baseValue *= enchantment.EnchantDamageMultiplicative(baseValue, ValueProp.Move);
-			if (!card.IsEnchantmentPreview)
-			{
-				base.EnchantedValue = baseValue;
-			}
-		}
-		base.PreviewValue = baseValue;
-	}
+    public override void UpdateCardPreview(
+        CardModel card,
+        CardPreviewMode previewMode,
+        Creature? target,
+        bool runGlobalHooks
+    )
+    {
+        decimal baseValue = base.BaseValue;
+        EnchantmentModel enchantment = card.Enchantment;
+        if (enchantment != null)
+        {
+            baseValue *= enchantment.EnchantDamageMultiplicative(baseValue, ValueProp.Move);
+            if (!card.IsEnchantmentPreview)
+            {
+                base.EnchantedValue = baseValue;
+            }
+        }
+        base.PreviewValue = baseValue;
+    }
 }

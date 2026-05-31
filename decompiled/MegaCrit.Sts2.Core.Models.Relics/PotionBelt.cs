@@ -8,16 +8,19 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class PotionBelt : RelicModel
 {
-	private const string _potionSlotsKey = "PotionSlots";
+    private const string _potionSlotsKey = "PotionSlots";
 
-	public override RelicRarity Rarity => RelicRarity.Common;
+    public override RelicRarity Rarity => RelicRarity.Common;
 
-	public override bool HasUponPickupEffect => true;
+    public override bool HasUponPickupEffect => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new DynamicVar("PotionSlots", 2m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new DynamicVar("PotionSlots", 2m)
+        );
 
-	public override async Task AfterObtained()
-	{
-		await PlayerCmd.GainMaxPotionCount(base.DynamicVars["PotionSlots"].IntValue, base.Owner);
-	}
+    public override async Task AfterObtained()
+    {
+        await PlayerCmd.GainMaxPotionCount(base.DynamicVars["PotionSlots"].IntValue, base.Owner);
+    }
 }

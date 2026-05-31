@@ -12,34 +12,44 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class IAmInvincible : CardModel
 {
-	public override bool GainsBlock => true;
+    public override bool GainsBlock => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(10m, ValueProp.Move));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(10m, ValueProp.Move)
+        );
 
-	public IAmInvincible()
-		: base(1, CardType.Skill, CardRarity.Rare, TargetType.Self)
-	{
-	}
+    public IAmInvincible()
+        : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, cardPlay);
+    }
 
-	public override async Task AfterAutoPostPlayPhaseEntered(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player == base.Owner)
-		{
-			CardPile pile = PileType.Draw.GetPile(base.Owner);
-			if (pile.Cards.FirstOrDefault() == this)
-			{
-				await CardPileCmd.AutoPlayFromDrawPile(choiceContext, base.Owner, 1, CardPilePosition.Top, forceExhaust: false);
-			}
-		}
-	}
+    public override async Task AfterAutoPostPlayPhaseEntered(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player == base.Owner)
+        {
+            CardPile pile = PileType.Draw.GetPile(base.Owner);
+            if (pile.Cards.FirstOrDefault() == this)
+            {
+                await CardPileCmd.AutoPlayFromDrawPile(
+                    choiceContext,
+                    base.Owner,
+                    1,
+                    CardPilePosition.Top,
+                    forceExhaust: false
+                );
+            }
+        }
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.Block.UpgradeValueBy(3m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.Block.UpgradeValueBy(3m);
+    }
 }

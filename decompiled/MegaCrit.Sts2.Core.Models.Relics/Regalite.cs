@@ -10,16 +10,24 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class Regalite : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Uncommon;
+    public override RelicRarity Rarity => RelicRarity.Uncommon;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new BlockVar(2m, ValueProp.Unpowered));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(
+            new BlockVar(2m, ValueProp.Unpowered)
+        );
 
-	public override async Task AfterCardGeneratedForCombat(CardModel card, Player? creator)
-	{
-		if (creator != null && creator == base.Owner)
-		{
-			Flash();
-			await CreatureCmd.GainBlock(base.Owner.Creature, base.DynamicVars.Block, null, fast: true);
-		}
-	}
+    public override async Task AfterCardGeneratedForCombat(CardModel card, Player? creator)
+    {
+        if (creator != null && creator == base.Owner)
+        {
+            Flash();
+            await CreatureCmd.GainBlock(
+                base.Owner.Creature,
+                base.DynamicVars.Block,
+                null,
+                fast: true
+            );
+        }
+    }
 }

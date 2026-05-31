@@ -7,23 +7,29 @@ namespace MegaCrit.Sts2.Core.Models.Encounters;
 
 public sealed class LagavulinMatriarchBoss : EncounterModel
 {
-	public override RoomType RoomType => RoomType.Boss;
+    public override RoomType RoomType => RoomType.Boss;
 
-	protected override bool HasCustomBackground => true;
+    protected override bool HasCustomBackground => true;
 
-	public override string BossNodePath => "res://images/map/placeholder/" + base.Id.Entry.ToLowerInvariant() + "_icon";
+    public override string BossNodePath =>
+        "res://images/map/placeholder/" + base.Id.Entry.ToLowerInvariant() + "_icon";
 
-	public override MegaSkeletonDataResource? BossNodeSpineResource => null;
+    public override MegaSkeletonDataResource? BossNodeSpineResource => null;
 
-	public override IEnumerable<MonsterModel> AllPossibleMonsters => new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(ModelDb.Monster<LagavulinMatriarch>());
+    public override IEnumerable<MonsterModel> AllPossibleMonsters =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<MonsterModel>(
+            ModelDb.Monster<LagavulinMatriarch>()
+        );
 
-	public override float GetCameraScaling()
-	{
-		return 0.9f;
-	}
+    public override float GetCameraScaling()
+    {
+        return 0.9f;
+    }
 
-	protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
-	{
-		return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>((ModelDb.Monster<LagavulinMatriarch>().ToMutable(), null));
-	}
+    protected override IReadOnlyList<(MonsterModel, string?)> GenerateMonsters()
+    {
+        return new global::_003C_003Ez__ReadOnlySingleElementList<(MonsterModel, string)>(
+            (ModelDb.Monster<LagavulinMatriarch>().ToMutable(), null)
+        );
+    }
 }

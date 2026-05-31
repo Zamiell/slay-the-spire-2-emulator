@@ -5,8 +5,8 @@ namespace MegaCrit.Sts2.Core.Extensions;
 
 public static class SignalAwaiterExtensions
 {
-	public static async Task ToTask(this SignalAwaiter awaiter)
-	{
-		await awaiter;
-	}
+    public static async Task ToTask(this SignalAwaiter awaiter)
+    {
+        await awaiter;
+    }
 }

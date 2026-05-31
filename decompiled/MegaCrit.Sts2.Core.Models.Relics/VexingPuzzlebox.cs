@@ -11,16 +11,29 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class VexingPuzzlebox : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Rare;
+    public override RelicRarity Rarity => RelicRarity.Rare;
 
-	public override async Task AfterPlayerTurnStart(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber == 1)
-		{
-			Flash();
-			CardModel cardModel = CardFactory.GetDistinctForCombat(base.Owner, base.Owner.Character.CardPool.GetUnlockedCards(base.Owner.UnlockState, base.Owner.RunState.CardMultiplayerConstraint), 1, base.Owner.RunState.Rng.CombatCardGeneration).First();
-			cardModel.SetToFreeThisTurn();
-			await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, player);
-		}
-	}
+    public override async Task AfterPlayerTurnStart(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber == 1)
+        {
+            Flash();
+            CardModel cardModel = CardFactory
+                .GetDistinctForCombat(
+                    base.Owner,
+                    base.Owner.Character.CardPool.GetUnlockedCards(
+                        base.Owner.UnlockState,
+                        base.Owner.RunState.CardMultiplayerConstraint
+                    ),
+                    1,
+                    base.Owner.RunState.Rng.CombatCardGeneration
+                )
+                .First();
+            cardModel.SetToFreeThisTurn();
+            await CardPileCmd.AddGeneratedCardToCombat(cardModel, PileType.Hand, player);
+        }
+    }
 }

@@ -11,37 +11,45 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class AfterimagePower : PowerModel
 {
-	private class Data
-	{
-		public readonly Dictionary<CardModel, int> amountsForPlayedCards = new Dictionary<CardModel, int>();
-	}
+    private class Data
+    {
+        public readonly Dictionary<CardModel, int> amountsForPlayedCards =
+            new Dictionary<CardModel, int>();
+    }
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Counter;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(HoverTipFactory.Static(StaticHoverTip.Block));
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<IHoverTip>(
+            HoverTipFactory.Static(StaticHoverTip.Block)
+        );
 
-	protected override object InitInternalData()
-	{
-		return new Data();
-	}
+    protected override object InitInternalData()
+    {
+        return new Data();
+    }
 
-	public override Task BeforeCardPlayed(CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner.Creature != base.Owner)
-		{
-			return Task.CompletedTask;
-		}
-		GetInternalData<Data>().amountsForPlayedCards.Add(cardPlay.Card, base.Amount);
-		return Task.CompletedTask;
-	}
+    public override Task BeforeCardPlayed(CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Owner.Creature != base.Owner)
+        {
+            return Task.CompletedTask;
+        }
+        GetInternalData<Data>().amountsForPlayedCards.Add(cardPlay.Card, base.Amount);
+        return Task.CompletedTask;
+    }
 
-	public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		if (cardPlay.Card.Owner.Creature == base.Owner && GetInternalData<Data>().amountsForPlayedCards.Remove(cardPlay.Card, out var value) && value > 0)
-		{
-			await CreatureCmd.GainBlock(base.Owner, value, ValueProp.Unpowered, null, fast: true);
-		}
-	}
+    public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (
+            cardPlay.Card.Owner.Creature == base.Owner
+            && GetInternalData<Data>().amountsForPlayedCards.Remove(cardPlay.Card, out var value)
+            && value > 0
+        )
+        {
+            await CreatureCmd.GainBlock(base.Owner, value, ValueProp.Unpowered, null, fast: true);
+        }
+    }
 }

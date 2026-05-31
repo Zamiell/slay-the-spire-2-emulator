@@ -4,5 +4,5 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class CoordinatePower : TemporaryStrengthPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<Coordinate>();
+    public override AbstractModel OriginModel => ModelDb.Card<Coordinate>();
 }

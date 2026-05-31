@@ -8,14 +8,14 @@ namespace MegaCrit.Sts2.Core.Models.Enchantments;
 
 public sealed class Sown : EnchantmentModel
 {
-	public override bool HasExtraCardText => true;
+    public override bool HasExtraCardText => true;
 
-	public override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay? cardPlay)
-	{
-		if (base.Status == EnchantmentStatus.Normal)
-		{
-			await PlayerCmd.GainEnergy(base.Amount, base.Card.Owner);
-			base.Status = EnchantmentStatus.Disabled;
-		}
-	}
+    public override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay? cardPlay)
+    {
+        if (base.Status == EnchantmentStatus.Normal)
+        {
+            await PlayerCmd.GainEnergy(base.Amount, base.Card.Owner);
+            base.Status = EnchantmentStatus.Disabled;
+        }
+    }
 }

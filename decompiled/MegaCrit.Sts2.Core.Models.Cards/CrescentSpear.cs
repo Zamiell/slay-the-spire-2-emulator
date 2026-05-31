@@ -13,30 +13,39 @@ namespace MegaCrit.Sts2.Core.Models.Cards;
 
 public sealed class CrescentSpear : CardModel
 {
-	public override int CanonicalStarCost => 1;
+    public override int CanonicalStarCost => 1;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[3]
-	{
-		new CalculationBaseVar(8m),
-		new ExtraDamageVar(2m),
-		new CalculatedDamageVar(ValueProp.Move).WithMultiplier((CardModel card, Creature? _) => card.Owner.PlayerCombatState.AllCards.Count((CardModel c) => c.CanonicalStarCost >= 0 || c.HasStarCostX))
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[3]
+            {
+                new CalculationBaseVar(8m),
+                new ExtraDamageVar(2m),
+                new CalculatedDamageVar(ValueProp.Move).WithMultiplier(
+                    (CardModel card, Creature? _) =>
+                        card.Owner.PlayerCombatState.AllCards.Count(
+                            (CardModel c) => c.CanonicalStarCost >= 0 || c.HasStarCostX
+                        )
+                ),
+            }
+        );
 
-	public CrescentSpear()
-		: base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy)
-	{
-	}
+    public CrescentSpear()
+        : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-	protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-	{
-		ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-		await DamageCmd.Attack(base.DynamicVars.CalculatedDamage).FromCard(this).Targeting(cardPlay.Target)
-			.WithHitFx("vfx/vfx_starry_impact")
-			.Execute(choiceContext);
-	}
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
+        await DamageCmd
+            .Attack(base.DynamicVars.CalculatedDamage)
+            .FromCard(this)
+            .Targeting(cardPlay.Target)
+            .WithHitFx("vfx/vfx_starry_impact")
+            .Execute(choiceContext);
+    }
 
-	protected override void OnUpgrade()
-	{
-		base.DynamicVars.ExtraDamage.UpgradeValueBy(1m);
-	}
+    protected override void OnUpgrade()
+    {
+        base.DynamicVars.ExtraDamage.UpgradeValueBy(1m);
+    }
 }

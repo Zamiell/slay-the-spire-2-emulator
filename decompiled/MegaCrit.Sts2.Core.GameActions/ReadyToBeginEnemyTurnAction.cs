@@ -11,38 +11,38 @@ namespace MegaCrit.Sts2.Core.GameActions;
 
 public class ReadyToBeginEnemyTurnAction : GameAction
 {
-	private readonly Player _player;
+    private readonly Player _player;
 
-	private readonly Func<Task>? _actionDuringEnemyTurn;
+    private readonly Func<Task>? _actionDuringEnemyTurn;
 
-	public override ulong OwnerId => _player.NetId;
+    public override ulong OwnerId => _player.NetId;
 
-	public override GameActionType ActionType => GameActionType.Combat;
+    public override GameActionType ActionType => GameActionType.Combat;
 
-	public ReadyToBeginEnemyTurnAction(Player player, Func<Task>? actionDuringEnemyTurn = null)
-	{
-		_player = player;
-		_actionDuringEnemyTurn = actionDuringEnemyTurn;
-	}
+    public ReadyToBeginEnemyTurnAction(Player player, Func<Task>? actionDuringEnemyTurn = null)
+    {
+        _player = player;
+        _actionDuringEnemyTurn = actionDuringEnemyTurn;
+    }
 
-	protected override Task ExecuteAction()
-	{
-		CombatManager.Instance.SetReadyToBeginEnemyTurn(_player, _actionDuringEnemyTurn);
-		return Task.CompletedTask;
-	}
+    protected override Task ExecuteAction()
+    {
+        CombatManager.Instance.SetReadyToBeginEnemyTurn(_player, _actionDuringEnemyTurn);
+        return Task.CompletedTask;
+    }
 
-	public override INetAction ToNetAction()
-	{
-		return default(NetReadyToBeginEnemyTurnAction);
-	}
+    public override INetAction ToNetAction()
+    {
+        return default(NetReadyToBeginEnemyTurnAction);
+    }
 
-	protected override void CancelAction()
-	{
-		Log.Debug($"Cancel\n{new StackTrace()}");
-	}
+    protected override void CancelAction()
+    {
+        Log.Debug($"Cancel\n{new StackTrace()}");
+    }
 
-	public override string ToString()
-	{
-		return $"{"ReadyToBeginEnemyTurnAction"} {_player.NetId}";
-	}
+    public override string ToString()
+    {
+        return $"{"ReadyToBeginEnemyTurnAction"} {_player.NetId}";
+    }
 }

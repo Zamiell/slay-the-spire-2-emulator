@@ -6,27 +6,21 @@ namespace MegaCrit.Sts2.Core.Localization.Formatters;
 
 public class HighlightDifferencesFormatter : IFormatter
 {
-	public string Name
-	{
-		get
-		{
-			return "diff";
-		}
-		set
-		{
-			throw new NotImplementedException();
-		}
-	}
+    public string Name
+    {
+        get { return "diff"; }
+        set { throw new NotImplementedException(); }
+    }
 
-	public bool CanAutoDetect { get; set; }
+    public bool CanAutoDetect { get; set; }
 
-	public bool TryEvaluateFormat(IFormattingInfo formattingInfo)
-	{
-		if (!(formattingInfo.CurrentValue is DynamicVar dynamicVar))
-		{
-			return false;
-		}
-		formattingInfo.Write(dynamicVar.ToHighlightedString(inverse: false));
-		return true;
-	}
+    public bool TryEvaluateFormat(IFormattingInfo formattingInfo)
+    {
+        if (!(formattingInfo.CurrentValue is DynamicVar dynamicVar))
+        {
+            return false;
+        }
+        formattingInfo.Write(dynamicVar.ToHighlightedString(inverse: false));
+        return true;
+    }
 }

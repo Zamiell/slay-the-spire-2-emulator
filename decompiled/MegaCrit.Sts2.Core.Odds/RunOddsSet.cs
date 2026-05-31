@@ -5,39 +5,37 @@ namespace MegaCrit.Sts2.Core.Odds;
 
 public class RunOddsSet
 {
-	public UnknownMapPointOdds UnknownMapPoint { get; private init; }
+    public UnknownMapPointOdds UnknownMapPoint { get; private init; }
 
-	private RunOddsSet()
-	{
-	}
+    private RunOddsSet() { }
 
-	public RunOddsSet(Rng unknownMapPointRng)
-	{
-		UnknownMapPoint = new UnknownMapPointOdds(unknownMapPointRng);
-	}
+    public RunOddsSet(Rng unknownMapPointRng)
+    {
+        UnknownMapPoint = new UnknownMapPointOdds(unknownMapPointRng);
+    }
 
-	public SerializableRunOddsSet ToSerializable()
-	{
-		return new SerializableRunOddsSet
-		{
-			UnknownMapPointMonsterOddsValue = UnknownMapPoint.MonsterOdds,
-			UnknownMapPointEliteOddsValue = UnknownMapPoint.EliteOdds,
-			UnknownMapPointTreasureOddsValue = UnknownMapPoint.TreasureOdds,
-			UnknownMapPointShopOddsValue = UnknownMapPoint.ShopOdds
-		};
-	}
+    public SerializableRunOddsSet ToSerializable()
+    {
+        return new SerializableRunOddsSet
+        {
+            UnknownMapPointMonsterOddsValue = UnknownMapPoint.MonsterOdds,
+            UnknownMapPointEliteOddsValue = UnknownMapPoint.EliteOdds,
+            UnknownMapPointTreasureOddsValue = UnknownMapPoint.TreasureOdds,
+            UnknownMapPointShopOddsValue = UnknownMapPoint.ShopOdds,
+        };
+    }
 
-	public static RunOddsSet FromSerializable(SerializableRunOddsSet save, Rng unknownMapPointRng)
-	{
-		return new RunOddsSet
-		{
-			UnknownMapPoint = new UnknownMapPointOdds(unknownMapPointRng)
-			{
-				MonsterOdds = save.UnknownMapPointMonsterOddsValue,
-				EliteOdds = save.UnknownMapPointEliteOddsValue,
-				TreasureOdds = save.UnknownMapPointTreasureOddsValue,
-				ShopOdds = save.UnknownMapPointShopOddsValue
-			}
-		};
-	}
+    public static RunOddsSet FromSerializable(SerializableRunOddsSet save, Rng unknownMapPointRng)
+    {
+        return new RunOddsSet
+        {
+            UnknownMapPoint = new UnknownMapPointOdds(unknownMapPointRng)
+            {
+                MonsterOdds = save.UnknownMapPointMonsterOddsValue,
+                EliteOdds = save.UnknownMapPointEliteOddsValue,
+                TreasureOdds = save.UnknownMapPointTreasureOddsValue,
+                ShopOdds = save.UnknownMapPointShopOddsValue,
+            },
+        };
+    }
 }

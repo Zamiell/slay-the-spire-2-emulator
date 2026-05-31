@@ -10,47 +10,46 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class GoldenCompass : RelicModel
 {
-	private int _goldenPathAct = -1;
+    private int _goldenPathAct = -1;
 
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	public override bool HasUponPickupEffect => true;
+    public override bool HasUponPickupEffect => true;
 
-	[SavedProperty]
-	public int GoldenPathAct
-	{
-		get
-		{
-			return _goldenPathAct;
-		}
-		set
-		{
-			AssertMutable();
-			_goldenPathAct = value;
-		}
-	}
+    [SavedProperty]
+    public int GoldenPathAct
+    {
+        get { return _goldenPathAct; }
+        set
+        {
+            AssertMutable();
+            _goldenPathAct = value;
+        }
+    }
 
-	public override async Task AfterObtained()
-	{
-		GoldenPathAct = base.Owner.RunState.CurrentActIndex;
-		await RunManager.Instance.GenerateMap();
-	}
+    public override async Task AfterObtained()
+    {
+        GoldenPathAct = base.Owner.RunState.CurrentActIndex;
+        await RunManager.Instance.GenerateMap();
+    }
 
-	public override ActMap ModifyGeneratedMap(IRunState runState, ActMap map, int actIndex)
-	{
-		if (GoldenPathAct != actIndex)
-		{
-			return map;
-		}
-		return new GoldenPathActMap(runState);
-	}
+    public override ActMap ModifyGeneratedMap(IRunState runState, ActMap map, int actIndex)
+    {
+        if (GoldenPathAct != actIndex)
+        {
+            return map;
+        }
+        return new GoldenPathActMap(runState);
+    }
 
-	public override IReadOnlySet<RoomType> ModifyUnknownMapPointRoomTypes(IReadOnlySet<RoomType> roomTypes)
-	{
-		if (GoldenPathAct != base.Owner.RunState.CurrentActIndex)
-		{
-			return roomTypes;
-		}
-		return new HashSet<RoomType> { RoomType.Event };
-	}
+    public override IReadOnlySet<RoomType> ModifyUnknownMapPointRoomTypes(
+        IReadOnlySet<RoomType> roomTypes
+    )
+    {
+        if (GoldenPathAct != base.Owner.RunState.CurrentActIndex)
+        {
+            return roomTypes;
+        }
+        return new HashSet<RoomType> { RoomType.Event };
+    }
 }

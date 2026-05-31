@@ -13,31 +13,37 @@ namespace MegaCrit.Sts2.Core.Models.Monsters.Mocks;
 
 public sealed class MockArtifactMonster : MonsterModel
 {
-	public override LocString Title => MonsterModel.L10NMonsterLookup("BIG_DUMMY.name");
+    public override LocString Title => MonsterModel.L10NMonsterLookup("BIG_DUMMY.name");
 
-	protected override string VisualsPath => SceneHelper.GetScenePath("creature_visuals/defect");
+    protected override string VisualsPath => SceneHelper.GetScenePath("creature_visuals/defect");
 
-	public override int MinInitialHp => 9999;
+    public override int MinInitialHp => 9999;
 
-	public override int MaxInitialHp => 9999;
+    public override int MaxInitialHp => 9999;
 
-	protected override MonsterMoveStateMachine GenerateMoveStateMachine()
-	{
-		List<MonsterState> list = new List<MonsterState>();
-		MoveState moveState = new MoveState("NOTHING", NothingMove, new HiddenIntent());
-		moveState.FollowUpState = moveState;
-		list.Add(moveState);
-		return new MonsterMoveStateMachine(list, moveState);
-	}
+    protected override MonsterMoveStateMachine GenerateMoveStateMachine()
+    {
+        List<MonsterState> list = new List<MonsterState>();
+        MoveState moveState = new MoveState("NOTHING", NothingMove, new HiddenIntent());
+        moveState.FollowUpState = moveState;
+        list.Add(moveState);
+        return new MonsterMoveStateMachine(list, moveState);
+    }
 
-	public override async Task AfterAddedToRoom()
-	{
-		await base.AfterAddedToRoom();
-		await PowerCmd.Apply<ArtifactPower>(new ThrowingPlayerChoiceContext(), base.Creature, 1m, base.Creature, null);
-	}
+    public override async Task AfterAddedToRoom()
+    {
+        await base.AfterAddedToRoom();
+        await PowerCmd.Apply<ArtifactPower>(
+            new ThrowingPlayerChoiceContext(),
+            base.Creature,
+            1m,
+            base.Creature,
+            null
+        );
+    }
 
-	private Task NothingMove(IReadOnlyList<Creature> targets)
-	{
-		return Task.CompletedTask;
-	}
+    private Task NothingMove(IReadOnlyList<Creature> targets)
+    {
+        return Task.CompletedTask;
+    }
 }

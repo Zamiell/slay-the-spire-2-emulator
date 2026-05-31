@@ -7,5 +7,5 @@ namespace MegaCrit.Sts2.Core.GameActions.Multiplayer;
 [GenerateSubtypes]
 public interface INetAction : IPacketSerializable
 {
-	GameAction ToGameAction(Player player);
+    GameAction ToGameAction(Player player);
 }

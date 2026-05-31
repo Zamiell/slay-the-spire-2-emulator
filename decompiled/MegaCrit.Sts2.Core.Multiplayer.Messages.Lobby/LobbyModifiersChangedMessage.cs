@@ -8,23 +8,23 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby;
 
 public struct LobbyModifiersChangedMessage : INetMessage, IPacketSerializable
 {
-	public List<SerializableModifier> modifiers;
+    public List<SerializableModifier> modifiers;
 
-	public bool ShouldBroadcast => true;
+    public bool ShouldBroadcast => true;
 
-	public NetTransferMode Mode => NetTransferMode.Reliable;
+    public NetTransferMode Mode => NetTransferMode.Reliable;
 
-	public LogLevel LogLevel => LogLevel.VeryDebug;
+    public LogLevel LogLevel => LogLevel.VeryDebug;
 
-	public bool ShouldBuffer => true;
+    public bool ShouldBuffer => true;
 
-	public void Serialize(PacketWriter writer)
-	{
-		writer.WriteList(modifiers);
-	}
+    public void Serialize(PacketWriter writer)
+    {
+        writer.WriteList(modifiers);
+    }
 
-	public void Deserialize(PacketReader reader)
-	{
-		modifiers = reader.ReadList<SerializableModifier>();
-	}
+    public void Deserialize(PacketReader reader)
+    {
+        modifiers = reader.ReadList<SerializableModifier>();
+    }
 }

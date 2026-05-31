@@ -9,17 +9,26 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class EmptyCage : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	public override bool HasUponPickupEffect => true;
+    public override bool HasUponPickupEffect => true;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(2));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new CardsVar(2));
 
-	public override async Task AfterObtained()
-	{
-		foreach (CardModel item in await CardSelectCmd.FromDeckForRemoval(prefs: new CardSelectorPrefs(CardSelectorPrefs.RemoveSelectionPrompt, base.DynamicVars.Cards.IntValue), player: base.Owner))
-		{
-			await CardPileCmd.RemoveFromDeck(item);
-		}
-	}
+    public override async Task AfterObtained()
+    {
+        foreach (
+            CardModel item in await CardSelectCmd.FromDeckForRemoval(
+                prefs: new CardSelectorPrefs(
+                    CardSelectorPrefs.RemoveSelectionPrompt,
+                    base.DynamicVars.Cards.IntValue
+                ),
+                player: base.Owner
+            )
+        )
+        {
+            await CardPileCmd.RemoveFromDeck(item);
+        }
+    }
 }

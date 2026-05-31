@@ -4,7 +4,7 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public class MonarchsGazeStrengthDownPower : TemporaryStrengthPower
 {
-	public override AbstractModel OriginModel => ModelDb.Card<MonarchsGaze>();
+    public override AbstractModel OriginModel => ModelDb.Card<MonarchsGaze>();
 
-	protected override bool IsPositive => false;
+    protected override bool IsPositive => false;
 }

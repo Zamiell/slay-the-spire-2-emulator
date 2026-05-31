@@ -7,15 +7,15 @@ namespace MegaCrit.Sts2.Core.Multiplayer.Game;
 
 public interface INetHostGameService : INetGameService
 {
-	IReadOnlyList<NetClientData> ConnectedPeers { get; }
+    IReadOnlyList<NetClientData> ConnectedPeers { get; }
 
-	NetHost? NetHost { get; }
+    NetHost? NetHost { get; }
 
-	event Action<ulong>? ClientConnected;
+    event Action<ulong>? ClientConnected;
 
-	event Action<ulong, NetErrorInfo>? ClientDisconnected;
+    event Action<ulong, NetErrorInfo>? ClientDisconnected;
 
-	void DisconnectClient(ulong peerId, NetError reason, bool now = false);
+    void DisconnectClient(ulong peerId, NetError reason, bool now = false);
 
-	void SetPeerReadyForBroadcasting(ulong peerId);
+    void SetPeerReadyForBroadcasting(ulong peerId);
 }

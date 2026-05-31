@@ -5,15 +5,15 @@ namespace MegaCrit.Sts2.Core.Saves;
 
 public class AncientCharacterStats
 {
-	[JsonPropertyName("character")]
-	public required ModelId Character { get; init; }
+    [JsonPropertyName("character")]
+    public required ModelId Character { get; init; }
 
-	[JsonPropertyName("wins")]
-	public int Wins { get; set; }
+    [JsonPropertyName("wins")]
+    public int Wins { get; set; }
 
-	[JsonPropertyName("losses")]
-	public int Losses { get; set; }
+    [JsonPropertyName("losses")]
+    public int Losses { get; set; }
 
-	[JsonIgnore]
-	public int Visits => Wins + Losses;
+    [JsonIgnore]
+    public int Visits => Wins + Losses;
 }

@@ -16,7 +16,8 @@ public sealed class GameRng
         _rng = new DotNetRandom(RawSeed);
     }
 
-    public GameRng(int seed) : this(unchecked((uint)seed)) { }
+    public GameRng(int seed)
+        : this(unchecked((uint)seed)) { }
 
     public int NextInt(int maxExclusive) => _rng.Next(maxExclusive);
 
@@ -65,7 +66,10 @@ public sealed class GameRng
     public void AdvanceToCallCount(int callCount)
     {
         if (callCount < CallCount)
-            throw new ArgumentOutOfRangeException(nameof(callCount), "Cannot rewind an RNG stream.");
+            throw new ArgumentOutOfRangeException(
+                nameof(callCount),
+                "Cannot rewind an RNG stream."
+            );
         while (CallCount < callCount)
             NextDouble();
     }

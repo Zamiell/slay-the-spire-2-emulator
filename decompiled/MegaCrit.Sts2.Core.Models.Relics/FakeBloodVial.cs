@@ -10,17 +10,21 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class FakeBloodVial : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Event;
+    public override RelicRarity Rarity => RelicRarity.Event;
 
-	public override int MerchantCost => 50;
+    public override int MerchantCost => 50;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new HealVar(1m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new HealVar(1m));
 
-	public override async Task AfterPlayerTurnStartLate(PlayerChoiceContext choiceContext, Player player)
-	{
-		if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber <= 1)
-		{
-			await CreatureCmd.Heal(base.Owner.Creature, base.DynamicVars.Heal.IntValue);
-		}
-	}
+    public override async Task AfterPlayerTurnStartLate(
+        PlayerChoiceContext choiceContext,
+        Player player
+    )
+    {
+        if (player == base.Owner && base.Owner.PlayerCombatState.TurnNumber <= 1)
+        {
+            await CreatureCmd.Heal(base.Owner.Creature, base.DynamicVars.Heal.IntValue);
+        }
+    }
 }

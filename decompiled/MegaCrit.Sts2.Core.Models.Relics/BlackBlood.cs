@@ -9,16 +9,17 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class BlackBlood : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Starter;
+    public override RelicRarity Rarity => RelicRarity.Starter;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new HealVar(12m));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new HealVar(12m));
 
-	public override async Task AfterCombatVictory(CombatRoom _)
-	{
-		if (!base.Owner.Creature.IsDead)
-		{
-			Flash();
-			await CreatureCmd.Heal(base.Owner.Creature, base.DynamicVars.Heal.BaseValue);
-		}
-	}
+    public override async Task AfterCombatVictory(CombatRoom _)
+    {
+        if (!base.Owner.Creature.IsDead)
+        {
+            Flash();
+            await CreatureCmd.Heal(base.Owner.Creature, base.DynamicVars.Heal.BaseValue);
+        }
+    }
 }

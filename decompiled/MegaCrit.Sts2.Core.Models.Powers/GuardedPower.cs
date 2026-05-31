@@ -13,40 +13,55 @@ namespace MegaCrit.Sts2.Core.Models.Powers;
 
 public sealed class GuardedPower : PowerModel
 {
-	private const string _applierTag = "Applier";
+    private const string _applierTag = "Applier";
 
-	public override PowerType Type => PowerType.Buff;
+    public override PowerType Type => PowerType.Buff;
 
-	public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Single;
 
-	public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
+    public override PowerInstanceType InstanceType => PowerInstanceType.Instanced;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new StringVar("Applier"));
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlySingleElementList<DynamicVar>(new StringVar("Applier"));
 
-	public override Task AfterApplied(Creature? applier, CardModel? cardSource)
-	{
-		((StringVar)base.DynamicVars["Applier"]).StringValue = PlatformUtil.GetPlayerName(RunManager.Instance.NetService.Platform, base.Applier.Player.NetId);
-		return Task.CompletedTask;
-	}
+    public override Task AfterApplied(Creature? applier, CardModel? cardSource)
+    {
+        ((StringVar)base.DynamicVars["Applier"]).StringValue = PlatformUtil.GetPlayerName(
+            RunManager.Instance.NetService.Platform,
+            base.Applier.Player.NetId
+        );
+        return Task.CompletedTask;
+    }
 
-	public override async Task AfterDeath(PlayerChoiceContext choiceContext, Creature creature, bool wasRemovalPrevented, float deathAnimLength)
-	{
-		if (!wasRemovalPrevented && creature == base.Applier)
-		{
-			await PowerCmd.Remove(this);
-		}
-	}
+    public override async Task AfterDeath(
+        PlayerChoiceContext choiceContext,
+        Creature creature,
+        bool wasRemovalPrevented,
+        float deathAnimLength
+    )
+    {
+        if (!wasRemovalPrevented && creature == base.Applier)
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
 
-	public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
-	{
-		if (target != base.Owner)
-		{
-			return 1m;
-		}
-		if (!props.IsPoweredAttack())
-		{
-			return 1m;
-		}
-		return 0.5m;
-	}
+    public override decimal ModifyDamageMultiplicative(
+        Creature? target,
+        decimal amount,
+        ValueProp props,
+        Creature? dealer,
+        CardModel? cardSource
+    )
+    {
+        if (target != base.Owner)
+        {
+            return 1m;
+        }
+        if (!props.IsPoweredAttack())
+        {
+            return 1m;
+        }
+        return 0.5m;
+    }
 }

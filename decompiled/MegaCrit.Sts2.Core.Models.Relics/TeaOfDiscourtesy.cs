@@ -12,54 +12,61 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class TeaOfDiscourtesy : RelicModel
 {
-	private const string _combatsKey = "Combats";
+    private const string _combatsKey = "Combats";
 
-	private const string _dazedCountKey = "DazedCount";
+    private const string _dazedCountKey = "DazedCount";
 
-	private int _combatsLeft = 1;
+    private int _combatsLeft = 1;
 
-	public override RelicRarity Rarity => RelicRarity.Event;
+    public override RelicRarity Rarity => RelicRarity.Event;
 
-	public override bool IsUsedUp => CombatsLeft <= 0;
+    public override bool IsUsedUp => CombatsLeft <= 0;
 
-	public override bool ShowCounter => false;
+    public override bool ShowCounter => false;
 
-	protected override IEnumerable<DynamicVar> CanonicalVars => new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(new DynamicVar[3]
-	{
-		new HealVar(1m),
-		new DynamicVar("Combats", CombatsLeft),
-		new DynamicVar("DazedCount", 2m)
-	});
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        new global::_003C_003Ez__ReadOnlyArray<DynamicVar>(
+            new DynamicVar[3]
+            {
+                new HealVar(1m),
+                new DynamicVar("Combats", CombatsLeft),
+                new DynamicVar("DazedCount", 2m),
+            }
+        );
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromCardWithCardHoverTips<Dazed>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromCardWithCardHoverTips<Dazed>();
 
-	[SavedProperty]
-	private int CombatsLeft
-	{
-		get
-		{
-			return _combatsLeft;
-		}
-		set
-		{
-			AssertMutable();
-			_combatsLeft = value;
-			base.DynamicVars["Combats"].BaseValue = _combatsLeft;
-			InvokeDisplayAmountChanged();
-			if (IsUsedUp)
-			{
-				base.Status = RelicStatus.Disabled;
-			}
-		}
-	}
+    [SavedProperty]
+    private int CombatsLeft
+    {
+        get { return _combatsLeft; }
+        set
+        {
+            AssertMutable();
+            _combatsLeft = value;
+            base.DynamicVars["Combats"].BaseValue = _combatsLeft;
+            InvokeDisplayAmountChanged();
+            if (IsUsedUp)
+            {
+                base.Status = RelicStatus.Disabled;
+            }
+        }
+    }
 
-	public override async Task BeforeCombatStart()
-	{
-		if (CombatsLeft > 0)
-		{
-			await CardPileCmd.AddToCombatAndPreview<Dazed>(base.Owner.Creature, PileType.Draw, base.DynamicVars["DazedCount"].IntValue, base.Owner, CardPilePosition.Random);
-			CombatsLeft--;
-			Flash();
-		}
-	}
+    public override async Task BeforeCombatStart()
+    {
+        if (CombatsLeft > 0)
+        {
+            await CardPileCmd.AddToCombatAndPreview<Dazed>(
+                base.Owner.Creature,
+                PileType.Draw,
+                base.DynamicVars["DazedCount"].IntValue,
+                base.Owner,
+                CardPilePosition.Random
+            );
+            CombatsLeft--;
+            Flash();
+        }
+    }
 }

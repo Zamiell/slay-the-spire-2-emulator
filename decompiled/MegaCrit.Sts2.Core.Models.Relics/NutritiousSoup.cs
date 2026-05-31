@@ -14,25 +14,30 @@ namespace MegaCrit.Sts2.Core.Models.Relics;
 
 public sealed class NutritiousSoup : RelicModel
 {
-	public override RelicRarity Rarity => RelicRarity.Ancient;
+    public override RelicRarity Rarity => RelicRarity.Ancient;
 
-	protected override IEnumerable<IHoverTip> ExtraHoverTips => HoverTipFactory.FromEnchantment<TezcatarasEmber>();
+    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
+        HoverTipFactory.FromEnchantment<TezcatarasEmber>();
 
-	public override Task AfterObtained()
-	{
-		IEnumerable<CardModel> enumerable = PileType.Deck.GetPile(base.Owner).Cards.ToList();
-		foreach (CardModel item in enumerable)
-		{
-			if (item.Rarity == CardRarity.Basic && item.Tags.Contains(CardTag.Strike) && ModelDb.Enchantment<TezcatarasEmber>().CanEnchant(item))
-			{
-				CardCmd.Enchant<TezcatarasEmber>(item, 1m);
-				NCardEnchantVfx nCardEnchantVfx = NCardEnchantVfx.Create(item);
-				if (nCardEnchantVfx != null)
-				{
-					NRun.Instance?.GlobalUi.CardPreviewContainer.AddChildSafely(nCardEnchantVfx);
-				}
-			}
-		}
-		return Task.CompletedTask;
-	}
+    public override Task AfterObtained()
+    {
+        IEnumerable<CardModel> enumerable = PileType.Deck.GetPile(base.Owner).Cards.ToList();
+        foreach (CardModel item in enumerable)
+        {
+            if (
+                item.Rarity == CardRarity.Basic
+                && item.Tags.Contains(CardTag.Strike)
+                && ModelDb.Enchantment<TezcatarasEmber>().CanEnchant(item)
+            )
+            {
+                CardCmd.Enchant<TezcatarasEmber>(item, 1m);
+                NCardEnchantVfx nCardEnchantVfx = NCardEnchantVfx.Create(item);
+                if (nCardEnchantVfx != null)
+                {
+                    NRun.Instance?.GlobalUi.CardPreviewContainer.AddChildSafely(nCardEnchantVfx);
+                }
+            }
+        }
+        return Task.CompletedTask;
+    }
 }
