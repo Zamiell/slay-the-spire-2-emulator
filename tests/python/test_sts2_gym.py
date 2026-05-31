@@ -259,10 +259,6 @@ class Sts2GymTests(unittest.TestCase):
                 "step 70 field state_type: reference='event' emulator='map'",
                 "step 78: unsupported action",
             ),
-            "FULLRUN_INSTANT_9.json": (
-                "step 88 field player.hp: reference=14 emulator=16",
-                None,
-            ),
             "FULLRUN_INSTANT_10.json": (
                 "step 19 field player.hp: reference=55 emulator=49",
                 None,
@@ -292,6 +288,25 @@ class Sts2GymTests(unittest.TestCase):
                 else:
                     self.assertIsNotNone(result.unsupported_action)
                     self.assertIn(expected_unsupported, result.unsupported_action)
+
+    def test_full_run_instant_9_trace_matches_boundary_snapshots(self):
+        trace_dir = Path(__file__).resolve().parents[2] / "traces" / "full-run"
+        payload = replay_full_run_trace.load_payload(
+            trace_dir / "FULLRUN_INSTANT_9.json"
+        )
+        result = replay_full_run_trace.replay_trace(
+            payload, emulator_seed=payload.get("seed", "0")
+        )
+        diffs = replay_full_run_trace.compare_boundary_snapshots(
+            replay_full_run_trace.compare_traces.load_trace_from_payload(payload),
+            replay_full_run_trace.compare_traces.load_trace_from_payload(
+                result.payload
+            ),
+            replay_full_run_trace.DEFAULT_BOUNDARY_FIELDS,
+        )
+
+        self.assertEqual([], diffs)
+        self.assertIsNone(result.unsupported_action)
 
     def test_full_run_trace_boundaries_include_floor_and_combat_edges(self):
         trace = [

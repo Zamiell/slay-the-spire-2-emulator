@@ -20,7 +20,7 @@ Make the emulator complete enough for repeatable reinforcement-learning training
 - Bash-style damage-then-debuff card effects now keep their original target, preventing dead targets from redirecting Vulnerable to the next live enemy in slime combats.
 - Twig Slime (M) and Leaf Slime (S) now use decompiled RandomBranchState logic: TwigSlimeM starts at Sticky Shot (no RNG), then each turn consumes one AI RNG call (forced attack after sticky, 50/50 after single attack, forced sticky after two consecutive attacks); LeafSlimeS initializes with a 50/50 RNG roll and alternates strictly with one RNG call per turn. This fixed per-combat AI RNG alignment so TwigSlimeM round-3 intent matches the reference.
 - ShrinkerBeetle now applies permanent Shrink (magnitude=−1, never decremented by TickEndOfTurn), removed on death, matching ShrinkPower.AfterDeath behavior; permanent debuffs (negative magnitude) are skipped in TickEndOfTurn and detected via != 0 in IncomingDamage.
-- INSTANT_9 trace boundary mismatches now reduced to 2 HP difference at step 88 (VineShambler combat card-shuffle divergence) only; gold and state_type mismatches were resolved.
+- INSTANT_9 now matches all configured full-run boundary fields. The final HP mismatch was caused by the emulator offering `HowlFromBeyond` where the retained live trace offered adjacent-pool `Hemokinesis`; excluding `HowlFromBeyond` from generated Ironclad rewards/shop attack cards restores the Hemokinesis self-HP-loss path and Burning Blood heal parity.
 
 ## Priority gaps
 
